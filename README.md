@@ -36,14 +36,11 @@ Then run `make` in the *imagegrid-viewer* directory to build.
 
 To display a list of sequentially numbered images:
 
-> $ ./imagegrid-viewer -w [width of grid in number of images] -h [height of grid in number of images] -p [path with sequentially numbered images]
-
-To specify a list of images to display:
-
 > $ ./imagegrid-viewer -w [width of grid in number of images] -h [height of grid in number of images] [list of images]
 
-The order of either the sequence of images or list of images should be
-left to right/top to bottom.
+To display a list of images:
+
+> $ ./imagegrid-viewer -w [width of grid in number of images] -h [height of grid in number of images] -p [path with sequentially numbered images]
 
 The current key bindings are:
 
@@ -86,11 +83,7 @@ the command:
 > $ ./demo-download-canmatrix.sh
 
 
-In the `canmatrix` path in the *imagegrid-viewer* directory run the command:
-
-> for i in *.zip; do unzip "$i"; done
-
-Then in the *imagegrid-viewer* directory run the command:
+Then run the command:
 
 ```
 $ ./imagegrid-viewer -w 5 -h 5 ./canmatrix/092j06_01.tif ./canmatrix/092j07_02.tif ./canmatrix/092j08_02.tif ./canmatrix/092i05_02.tif ./canmatrix/092i06_03.tif \
@@ -104,9 +97,9 @@ $ ./imagegrid-viewer -w 5 -h 5 ./canmatrix/092j06_01.tif ./canmatrix/092j07_02.t
 The above file names were tested on March 25th, 2022.  They are
 subject to change due to the versioning of NTS maps.
 
-The set of maps that will be shown by *imagegrid-viewer* is a region
-the lower mainland British Columbia given by the dark black box in the
-following image: ![NTS lower mainland example](./nts-example.png)
+This area of lower mainland British Columbia that will be shown by
+*imagegrid-viewer* is given by the dark black box: ![NTS lower
+mainland example](./nts-example.png)
 
 # Features to be added
 
