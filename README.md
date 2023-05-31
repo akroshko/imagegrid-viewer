@@ -107,8 +107,6 @@ mainland example](./nts-example.png)
 
 - Variable window sizes and reading the actual screen size rather than
   assuming 1080p.
-- Multithreaded conversion of image data into textures, which will
-  avoid pauses while scrolling or zooming.
 - Add more robust error checking.
 - Directly use zip files, pdf files, or other file formats images are
   distributed in.

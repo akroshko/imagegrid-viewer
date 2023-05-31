@@ -2,18 +2,22 @@
 
 #define GRIDCLASSES_HPP
 
-#include "imagegrid-viewer.hpp"
+#include "config.hpp"
+#include "debug.hpp"
+#include "error.hpp"
 // C++ headers
 #include <vector>
 #include <iostream>
 #include <string>
+#include <mutex>
 using namespace std;
 
 // library headers
 #include <SDL2/SDL.h>
 
-// an individual square of the grid of images
+
 class ImageGridSquare {
+  /* An individual square on the grid. */
 public:
   ImageGridSquare();
   ~ImageGridSquare();
@@ -27,14 +31,14 @@ public:
   void load_file(string filename);
 };
 
-// a grid of images
 class ImageGrid {
+  /* The grid of images.  In the future these will be lazily loaded from disk/cache. */
 public:
   ImageGrid(int width, int height);
   ~ImageGrid();
   // the width of this grid in images
   int images_wgrid;
-  // the heigh of this grid in images
+  // the height of this grid in images
   int images_hgrid;
   // the maximum width of an image square in pixels
   int images_max_wpixel;
@@ -51,8 +55,18 @@ private:
   bool load_grid(vector<string> file_list);
 };
 
-// an individual square of a grid of textures
+class TextureGridSquareZoomLevel {
+  /* An individual square at a particular zoom level in the texture grid. */
+public:
+  TextureGridSquareZoomLevel();
+  ~TextureGridSquareZoomLevel();
+  // lock when the display_area is being worked on
+  mutex display_mutex;
+  SDL_Surface* display_texture;
+};
+
 class TextureGridSquare {
+  /* An individual square in the texture grid. */
 public:
   TextureGridSquare();
   ~TextureGridSquare();
@@ -63,12 +77,11 @@ public:
   // an array of textures
   // the first element of the array is the full-size texture
   // the subsequent elements are zoomed textures each reduced by a factor of 2
-  SDL_Surface** image_array;
+  TextureGridSquareZoomLevel** image_array;
 };
 
-// a grid of textures
-//
 class TextureGrid {
+  /* The grid as textures.  These are generally loaded lazily. */
 public:
   TextureGrid(int width, int height);
   ~TextureGrid();

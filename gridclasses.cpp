@@ -1,7 +1,7 @@
 // local headers
 #include "config.hpp"
-#include "error.hpp"
 #include "debug.hpp"
+#include "error.hpp"
 #include "fileload.hpp"
 #include "gridclasses.hpp"
 // C headers
@@ -63,7 +63,6 @@ bool ImageGrid::load_images(char *pathname) {
 bool ImageGrid::load_grid(vector<string> filenames) {
   bool successful=true;
   // new zoom stuff
-  // a test image
   for (size_t i = 0; i < images_wgrid; i++) {
     if (!successful) {
       squares[i]=nullptr;
@@ -77,7 +76,6 @@ bool ImageGrid::load_grid(vector<string> filenames) {
       MSG("Loading: " << filenames[ij]);
       squares[i][j].load_file(filenames[ij]);
       // set the RGB of the surface
-      // TODO: move
       if (squares[i][j].rgb_wpixel > images_max_wpixel) {
         images_max_wpixel=squares[i][j].rgb_wpixel+(TEXTURE_ALIGNMENT - (squares[i][j].rgb_wpixel % TEXTURE_ALIGNMENT));
       }
@@ -89,19 +87,31 @@ bool ImageGrid::load_grid(vector<string> filenames) {
   return successful;
 }
 
+TextureGridSquareZoomLevel::TextureGridSquareZoomLevel () {
+  display_texture=nullptr;
+}
+
+TextureGridSquareZoomLevel::~TextureGridSquareZoomLevel () {
+  if (display_texture) {
+    SDL_FreeSurface(display_texture);
+  }
+}
+
 TextureGridSquare::TextureGridSquare () {
-  image_array=new SDL_Surface*[10]();
+  DEBUG("TextureGridSquare Constructor");
+  image_array=new TextureGridSquareZoomLevel*[10]();
+  for (size_t i = 0; i < 10; i++) {
+    image_array[i]=new TextureGridSquareZoomLevel();
+  }
 }
 
 TextureGridSquare::~TextureGridSquare () {
   for (size_t i = 0; i < 10; i++) {
-    if (image_array[i]) {
-      SDL_FreeSurface(image_array[i]);
-    }
-    image_array=nullptr;
-    delete[] image_array;
-    image_array=nullptr;
+    delete image_array[i];
+    image_array[i]=nullptr;
   }
+  delete[] image_array;
+  image_array=nullptr;
 }
 
 TextureGrid::TextureGrid (int width, int height) {
@@ -136,15 +146,15 @@ bool TextureGrid::load_texture (TextureGridSquare &dest_square, ImageGridSquare 
   int dest_wpixel=(dest_square.texture_wpixel)/((int)pow(2,z));
   int dest_hpixel=(dest_square.texture_hpixel)/((int)pow(2,z));
   dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
-  dest_square.image_array[z] = SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
-  SDL_LockSurface(dest_square.image_array[z]);
+  dest_square.image_array[z]->display_texture = SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
+  SDL_LockSurface(dest_square.image_array[z]->display_texture);
   int skip = ((int)pow(2,z));
   if (z == 0) {
     // use memcpy to hopefully take advantage of standard library when zoom index is zero
     for (size_t l = 0; l < source_hpixel; l+=skip) {
       int dest_index = (l*dest_wpixel)*3;
       int source_index = (l*source_wpixel)*3;
-      memcpy(((unsigned char *)dest_square.image_array[z]->pixels)+dest_index,((unsigned char *)source_square.rgb_data)+source_index,sizeof(unsigned char)*source_wpixel*3);
+      memcpy(((unsigned char *)dest_square.image_array[z]->display_texture->pixels)+dest_index,((unsigned char *)source_square.rgb_data)+source_index,sizeof(unsigned char)*source_wpixel*3);
     }
   } else {
     int ld=0;
@@ -153,15 +163,15 @@ bool TextureGrid::load_texture (TextureGridSquare &dest_square, ImageGridSquare 
       for (size_t k = 0; k < source_wpixel; k+=skip) {
         int dest_index = (ld*dest_wpixel+kd)*3;
         int source_index = (l*source_wpixel+k)*3;
-        ((unsigned char *)dest_square.image_array[z]->pixels)[dest_index]=source_square.rgb_data[source_index];
-        ((unsigned char *)dest_square.image_array[z]->pixels)[dest_index+1]=source_square.rgb_data[source_index+1];
-        ((unsigned char *)dest_square.image_array[z]->pixels)[dest_index+2]=source_square.rgb_data[source_index+2];
+        ((unsigned char *)dest_square.image_array[z]->display_texture->pixels)[dest_index]=source_square.rgb_data[source_index];
+        ((unsigned char *)dest_square.image_array[z]->display_texture->pixels)[dest_index+1]=source_square.rgb_data[source_index+1];
+        ((unsigned char *)dest_square.image_array[z]->display_texture->pixels)[dest_index+2]=source_square.rgb_data[source_index+2];
         kd++;
       }
       ld++;
     }
   }
-  SDL_UnlockSurface(dest_square.image_array[z]);
+  SDL_UnlockSurface(dest_square.image_array[z]->display_texture);
   return successful;
 }
 
@@ -183,25 +193,28 @@ void TextureGrid::update_textures (ImageGrid *grid, float xgrid, float ygrid, in
   // j,i is better for plotting a grid
   for (size_t j = 0; j < textures_hgrid; j++) {
     MSGNONEWLINE("| ");
-    // TODO: document my reasoning better
+    // TODO: this will eventually be a switch statement to load in different things
     for (size_t i = 0; i < textures_wgrid; i++) {
-      if (!load_all &&                                            \
-          ((i < next_smallest(xgrid)) ||                         \
-           (i > next_largest(xgrid)) ||                          \
-           (j < next_smallest(ygrid)) ||                         \
-           (j > next_largest(ygrid)))) {
-        // is this loaded? then clear it
-        MSGNONEWLINE("0 ");
-        if (squares[i][j].image_array[zoom_level] != nullptr) {
-          SDL_FreeSurface(squares[i][j].image_array[zoom_level]);
-          squares[i][j].image_array[zoom_level] = nullptr;
-        }
-      } else {
-        MSGNONEWLINE("L ");
-        squares[i][j].texture_wpixel=textures_max_wpixel;
-        squares[i][j].texture_hpixel=textures_max_hpixel;
-        if (squares[i][j].image_array[zoom_level] == nullptr) {
-          load_texture(squares[i][j], grid->squares[i][j], zoom_level);
+      std::unique_lock<std::mutex> lock(squares[i][j].image_array[zoom_level]->display_mutex, std::defer_lock);
+      // skip everything if locked
+      if (lock.try_lock()) {
+        if (!load_all &&                                         \
+            ((i < next_smallest(xgrid)) ||                       \
+             (i > next_largest(xgrid)) ||                        \
+             (j < next_smallest(ygrid)) ||                       \
+             (j > next_largest(ygrid)))) {
+          MSGNONEWLINE("0 ");
+          if (squares[i][j].image_array[zoom_level]->display_texture != nullptr) {
+            SDL_FreeSurface(squares[i][j].image_array[zoom_level]->display_texture);
+            squares[i][j].image_array[zoom_level]->display_texture = nullptr;
+          }
+        } else {
+          MSGNONEWLINE("L ");
+          squares[i][j].texture_wpixel=textures_max_wpixel;
+          squares[i][j].texture_hpixel=textures_max_hpixel;
+          if (squares[i][j].image_array[zoom_level]->display_texture == nullptr) {
+            load_texture(squares[i][j], grid->squares[i][j], zoom_level);
+          }
         }
       }
     }

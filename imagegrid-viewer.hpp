@@ -7,6 +7,7 @@
 #include "error.hpp"
 #include "defaults.hpp"
 #include "gridclasses.hpp"
+#include "texture_update.hpp"
 #include "viewport.hpp"
 #include "fileload.hpp"
 
@@ -18,8 +19,8 @@ using namespace std;
 // library headers
 #include <SDL2/SDL.h>
 
-// a class to contain SDL boilerplate
 class SDLApp {
+/* An object to contain all the SDL boilerplate. */
 public:
   SDLApp();
   ~SDLApp();

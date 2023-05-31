@@ -6,7 +6,7 @@ HEADERS=$(wildcard *.hpp)
 SRC = $(wildcard *.cpp)
 OBJ = $(SRC:.cpp=.o)
 
-LDFLAGS = -lstdc++ -lstdc++fs -lm -lpng -ltiff -lSDL2
+LDFLAGS = -lstdc++ -lstdc++fs -lm -lpng -ltiff -lSDL2 -pthread
 CXXFLAGS = -std=c++17 -g -Wall
 # doesn't make a huge difference for now
 # CXXFLAGS = -std=c++17 -O3 -funroll-loops -Wall

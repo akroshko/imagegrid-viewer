@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <thread>
 // C headers
 #include <math.h>
 #include <getopt.h>
@@ -51,12 +52,23 @@ SDLApp::~SDLApp() {
   SDL_Quit();
 }
 
+// TODO: expand this, but use RAII more
 void cleanup(ImageGrid* &grid) {
+  /* Run cleanup. */
   if (grid) {
     delete grid;
     grid=nullptr;
   }
 }
+
+void update_texture_thread (TextureUpdate *texture_update, ImageGrid *grid, TextureGrid *texture_grid) {
+  /* Function to update textures.*/
+  while (1) {
+    texture_update->find_current_textures(grid,texture_grid);
+    std::this_thread::sleep_for (std::chrono::milliseconds(10));
+  }
+}
+
 
 int main(int argc, char *argv[]) {
   bool continue_flag = true;
@@ -105,11 +117,13 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // Singletons for this application
+  // singletons for this application
   SDLApp sdl_app;
   ImageGrid* grid;
   TextureGrid* texture_grid;
-  ViewPort viewport;
+  ViewPortCurrentState viewport_current_state;
+  TextureUpdate texture_update = TextureUpdate(&viewport_current_state);
+  ViewPort viewport = ViewPort(&viewport_current_state);
   vector<BlitItem> blititems;
 
   if (!sdl_app.successful) {
@@ -126,8 +140,11 @@ int main(int argc, char *argv[]) {
       ERROR("Failed to load images!");
     } else {
       texture_grid=new TextureGrid(width,height);
-      // TODO: need info above from down here
       texture_grid->init_max_size_zoom(grid);
+      // move this somewhere later, needed for do_input()
+      // make private
+      viewport.max_wpixel=grid->images_max_wpixel;
+      viewport.max_hpixel=grid->images_max_hpixel;
       // initialize initial position
       if (width == 1) {
         viewport.viewport_xgrid = 0.5;
@@ -135,6 +152,14 @@ int main(int argc, char *argv[]) {
       if (height == 1) {
         viewport.viewport_ygrid = 0.5;
       }
+      // run everything once before starting thread
+      DEBUG("input() initial");
+      continue_flag=viewport.do_input();
+      DEBUG("input() done");
+      DEBUG("find_current_textures() initial");
+      texture_update.find_current_textures(grid,texture_grid);
+      DEBUG("find_current_textures() initial done");
+      std::thread texture_thread(&update_texture_thread, &texture_update, grid, texture_grid);
       while (continue_flag) {
         DEBUG("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
         DEBUG("++ Main loop begin");
@@ -142,20 +167,12 @@ int main(int argc, char *argv[]) {
         DEBUG("input()");
         continue_flag=viewport.do_input();
         DEBUG("input() done");
-        // updates global variables
-        DEBUG("find_viewport_grid()");
-        // TODO: texture grid loading here
-        viewport.find_viewport(grid,texture_grid,blititems);
-        DEBUG("find_viewport_grid() done");
-        // blit blitables
-        viewport.blank_viewport(sdl_app.screen_surface, sdl_app.format);
-        DEBUG("Loop count: " << loop_count);
-        for (size_t i = 0; i < blititems.size(); i++) {
-          DEBUG("blit loop:" << i);
-          blititems[i].blit_this(sdl_app.screen_surface);
-        }
+        DEBUG("find_viewport_blit()");
+        viewport.find_viewport_blit(texture_grid, blititems, sdl_app.screen_surface, sdl_app.format);
+        DEBUG("find_viewport_blit() done");
         SDL_UpdateWindowSurface(sdl_app.window);
         SDL_Delay(SDL_DELAY);
+        DEBUG("Loop count: " << loop_count);
         loop_count++;
       }
     }

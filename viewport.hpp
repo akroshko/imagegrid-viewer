@@ -3,46 +3,76 @@
 #define VIEWPORT_HPP
 
 // local headers
+#include "config.hpp"
+#include "debug.hpp"
+#include "error.hpp"
+#include "defaults.hpp"
 #include "gridclasses.hpp"
 // C++ headers
 #include <vector>
 #include <iostream>
 #include <string>
+#include <mutex>
 using namespace std;
 
 // library headers
 #include <SDL2/SDL.h>
 
-// an item to blit to the screen
 class BlitItem {
+  /* Class that stores an item that ready to be blit to the screen. */
 public:
-  // create
-    // surface: the SDL_Surface to blit
-    // count: just counting the number of items to be blit, mostly for debugging
-    // xpixel: the x location on the viewport that this texture is being blitted to
-    // ypixel: the y location on the viewport that this texture is being blitted to
-    // wpixel: the width on the viewport of this texture
-    // hpixel: the height on the viewport of this texture
-  BlitItem(SDL_Surface* surface, int count, float xpixel, float ypixel, float wpixel, float hpixel);
+  BlitItem(TextureGridSquareZoomLevel* square, int count, float xpixel, float ypixel, float wpixel, float hpixel);
   ~BlitItem();
-  // the SDL_Surface to blit
-  SDL_Surface* blit_surface;
+  // the square that will be blit to the screen
+  TextureGridSquareZoomLevel* blit_square;
   // just counting the number of items to be blit, mostly for debugging
   int blit_index;
-  // the x location on the viewport that this texture is being blitted to
+  // the x location on the viewport that this texture is being blit to
   float viewport_xpixel;
-  // the y location on the viewport that this texture is being blitted to
+  // the y location on the viewport that this texture is being blit to
   float viewport_ypixel;
   // the width on the viewport of this texture
   float viewport_wpixel;
   // the height on the viewport of this texture
   float viewport_hpixel;
+  // method that does the blitting
   void blit_this(SDL_Surface* screen_surface);
 };
 
-class ViewPort {
+// TODO: convert to threadsafe singleton
+class ViewPortCurrentState {
+  /* Class for transfering the current state of the viewport between
+   * threads. Updated every single time the viewport changes.  Should
+   * be a singleton class that is only meant to be produced in one
+   * place and consumed in another.
+   */
 public:
-  ViewPort();
+  ViewPortCurrentState();
+  ~ViewPortCurrentState();
+
+  void UpdateGridValues(float zoom, float xgrid, float ygrid);
+
+  bool GetGridValues(float &zoom, float &xgrid, float &ygrid);
+
+private:
+  float zoom=NAN;
+  float xgrid=NAN;
+  float ygrid=NAN;
+
+  float zoom_last=NAN;
+  float xgrid_last=NAN;
+  float ygrid_last=NAN;
+
+  bool been_updated=false;
+
+  mutex using_mutex;
+};
+
+
+class ViewPort {
+  /* Class that represents a viewport. */
+public:
+  ViewPort(ViewPortCurrentState *viewport_current_state);
   ~ViewPort();
   // the current width of the window in pixels
   float screen_pixel_width;
@@ -66,11 +96,10 @@ public:
   float current_speed_y = 0.0;
   // the current speed of zoom per SDL frame
   float current_speed_zoom = 0.0;
-  // calculate the viewport and set up the items to be blit to the screen
-  //   grid: the current ImageGrid
-  //   texturegrid: the current TextureGrid
-  //   blititems: reference to blititems found when viewport is calculated
-  void find_viewport(ImageGrid *grid, TextureGrid* texture_grid, vector<BlitItem> &blititems);
+
+  // object for transfering the state of the viewport in a threadsafe manner
+  ViewPortCurrentState *viewport_current_state;
+  void find_viewport_blit(TextureGrid* texture_grid, vector<BlitItem> &blititems, SDL_Surface* screen_surface, SDL_PixelFormat *format);
   // convert grid coordinates to pixel coordinates based on the coordinates of an origin for pixel (0,0)
   //   grid_x: the x of the grid coordinate to convert
   //   grid_y: the y of the grid coordinate to convert
@@ -86,8 +115,7 @@ public:
   //   format: the format of pixels on the surface
   void blank_viewport(SDL_Surface* screen_surface, SDL_PixelFormat *format);
   // find the grid coordinates the viewport actual lies on, based on the current coordinates and zoom
-  //   TODO: upate this
-  void find_viewport_extents_grid(TextureGrid* texture_grid, float actual_zoom, float &half_width, float &half_height, float &viewport_left_distance_grid, float &viewport_right_distance_grid, float &viewport_top_distance_grid, float &viewport_bottom_distance_grid, float &viewport_left_grid, float &viewport_right_grid, float &viewport_top_grid, float &viewport_bottom_grid, float &leftmost_grid, float &rightmost_grid, float &topmost_grid, float &bottommost_grid);
+  void find_viewport_extents_grid(float actual_zoom,float &viewport_left_grid, float &viewport_right_grid, float &viewport_top_grid, float &viewport_bottom_grid);
 };
 
 #endif

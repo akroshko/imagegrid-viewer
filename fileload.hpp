@@ -3,6 +3,9 @@
 #define FILELOAD_HPP
 
 //local includes
+#include "config.hpp"
+#include "debug.hpp"
+#include "error.hpp"
 #include "imagegrid-viewer.hpp"
 // C++ headers
 #include <utility>
