@@ -22,4 +22,8 @@ const float JOY_MAX = 32768;
 const int SDL_DELAY = 16;
 const int TEXTURE_ALIGNMENT = 4;
 
+// this is set higher than any images I'm working with
+// when data structure improve it could be dynamic
+#define MAX_ZOOM_LEVELS 10
+
 #endif

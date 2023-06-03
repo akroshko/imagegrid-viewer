@@ -18,46 +18,43 @@
 #include <tiffio.h>
 #include <png.h>
 
-using namespace std;
-
 // regex to help find files
-regex regex_digits_search("([0-9]{1,4})",regex_constants::ECMAScript | regex_constants::icase);
+std::regex regex_digits_search("([0-9]{1,4})",std::regex_constants::ECMAScript | std::regex_constants::icase);
 // match each filetype
 // TODO: have better file detection, e.g., magic numbers
-regex png_search("\\.png$",regex_constants::ECMAScript | regex_constants::icase);
-regex jpeg_search("\\.jpeg$|\\.jpg$",regex_constants::ECMAScript | regex_constants::icase);
-regex tiff_search("\\.tiff|\\.tif$",regex_constants::ECMAScript | regex_constants::icase);
+std::regex png_search("\\.png$",std::regex_constants::ECMAScript | std::regex_constants::icase);
+std::regex jpeg_search("\\.jpeg$|\\.jpg$",std::regex_constants::ECMAScript | std::regex_constants::icase);
+std::regex tiff_search("\\.tiff|\\.tif$",std::regex_constants::ECMAScript | std::regex_constants::icase);
 
-vector<string> load_numbered_images(string images_path// , IMAGEDIRECTION *direction
+std::vector<std::string> load_numbered_images(std::string images_path// , IMAGEDIRECTION *direction
                                     ) {
-  vector<string> found_files;
-  filesystem::path images_path_obj{images_path};
+  std::vector<std::string> found_files;
+  std::filesystem::path images_path_obj{images_path};
   // find files in image root
-  for (const filesystem::directory_entry& entry : filesystem::directory_iterator{images_path_obj}) {
+  for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator{images_path_obj}) {
     found_files.push_back(entry.path());
   }
-  // loop through them
   return find_sequential_images(found_files);
 };
 
-vector<string> find_sequential_images(vector<string> image_files) {
-  bool found_png = false;
-  bool found_jpeg = false;
-  bool found_tiff = false;
-  vector<string> png_files;
-  vector<string> jpeg_files;
-  vector<string> tiff_files;
-  vector<pair<string,int>> png_digit_files;
-  vector<pair<string,int>> jpeg_digit_files;
-  vector<pair<string,int>> tiff_digit_files;
-  vector<string> png_sorted_files;
-  vector<string> jpeg_sorted_files;
-  vector<string> tiff_sorted_files;
+std::vector<std::string> find_sequential_images(std::vector<std::string> image_files) {
+  auto found_png = false;
+  auto found_jpeg = false;
+  auto found_tiff = false;
+  std::vector<std::string> png_files;
+  std::vector<std::string> jpeg_files;
+  std::vector<std::string> tiff_files;
+  std::vector<std::pair<std::string,int>> png_digit_files;
+  std::vector<std::pair<std::string,int>> jpeg_digit_files;
+  std::vector<std::pair<std::string,int>> tiff_digit_files;
+  std::vector<std::string> png_sorted_files;
+  std::vector<std::string> jpeg_sorted_files;
+  std::vector<std::string> tiff_sorted_files;
 
-  vector<string> empty_files;
+  std::vector<std::string> empty_files;
 
   // find which types of image files are availible
-  for (const string &image_file:image_files) {
+  for (const std::string &image_file:image_files) {
     if (regex_search(image_file,png_search)) {
       found_png = true;
       // if actually an extension
@@ -75,51 +72,51 @@ vector<string> find_sequential_images(vector<string> image_files) {
   }
   // TODO: add an error if two or more types found
   // TODO: deduplicate code
-  smatch digits_match;
+  std::smatch digits_match;
   if (found_png) {
-    for (const string &png_file:png_files) {
+    for (const std::string &png_file:png_files) {
       // find last 1-4 digit number in each file
       if (regex_search(png_file,digits_match,regex_digits_search)) {
         // TODO: convert to int
-        png_digit_files.push_back(make_pair(png_file,stoi(digits_match.str(1))));
+        png_digit_files.push_back(make_pair(png_file,std::stoi(digits_match.str(1))));
       }
     }
     // do they form a sequence
     // TODO: this can be more advanced
-    sort(png_digit_files.begin(),png_digit_files.end(), [](const pair<string,int> &left, const pair<string,int> &right) {
+    sort(png_digit_files.begin(),png_digit_files.end(), [](const std::pair<std::string,int> &left, const std::pair<std::string,int> &right) {
       return left.second < right.second;
     });
-    for (const pair<string,int> &thepair:png_digit_files) {
+    for (const std::pair<std::string,int> &thepair:png_digit_files) {
       png_sorted_files.push_back(thepair.first);
     }
     return png_sorted_files;
   }
   if (found_jpeg) {
-    for (const string &jpeg_file:jpeg_files) {
+    for (const std::string &jpeg_file:jpeg_files) {
       // find last 1-4 digit number in each file
       if (regex_search(jpeg_file,digits_match,regex_digits_search)) {
-        jpeg_digit_files.push_back(make_pair(jpeg_file,stoi(digits_match.str(1))));
+        jpeg_digit_files.push_back(make_pair(jpeg_file,std::stoi(digits_match.str(1))));
       }
     }
-    sort(jpeg_digit_files.begin(),jpeg_digit_files.end(), [](const pair<string,int> &left, const pair<string,int> &right) {
+    sort(jpeg_digit_files.begin(),jpeg_digit_files.end(), [](const std::pair<std::string,int> &left, const std::pair<std::string,int> &right) {
       return left.second < right.second;
     });
-    for (const pair<string,int> &thepair:jpeg_digit_files) {
+    for (const std::pair<std::string,int> &thepair:jpeg_digit_files) {
       jpeg_sorted_files.push_back(thepair.first);
     }
     return jpeg_sorted_files;
   }
   if (found_tiff) {
-    for (const string &tiff_file:tiff_files) {
+    for (const std::string &tiff_file:tiff_files) {
       // find last 1-4 digit number in each file
       if (regex_search(tiff_file,digits_match,regex_digits_search)) {
-        tiff_digit_files.push_back(make_pair(tiff_file,stoi(digits_match.str(1))));
+        tiff_digit_files.push_back(make_pair(tiff_file,std::stoi(digits_match.str(1))));
       }
     }
-    sort(tiff_digit_files.begin(), tiff_digit_files.end(), [](const pair<string,int> &left, const pair<string,int> &right) {
+    sort(tiff_digit_files.begin(), tiff_digit_files.end(), [](const std::pair<std::string,int> &left, const std::pair<std::string,int> &right) {
       return left.second < right.second;
     });
-    for (const pair<string,int> &thepair:jpeg_digit_files) {
+    for (const std::pair<std::string,int> &thepair:jpeg_digit_files) {
       tiff_sorted_files.push_back(thepair.first);
     }
     return tiff_sorted_files;
@@ -130,8 +127,8 @@ vector<string> find_sequential_images(vector<string> image_files) {
 ////////////////////////////////////////////////////////////////////////////////
 // load specific files as RGB
 
-bool load_tiff_as_rgb(string filename, int &width, int &height, unsigned char** rgb_data) {
-  bool success=true;
+bool load_tiff_as_rgb(std::string filename, int &width, int &height, unsigned char** rgb_data) {
+  auto success=true;
 
   TIFF* tif = TIFFOpen(filename.c_str(), "r");
 
@@ -177,7 +174,7 @@ bool load_tiff_as_rgb(string filename, int &width, int &height, unsigned char** 
   return success;
 }
 
-bool load_png_as_rgb(string filename, int &width, int &height, unsigned char** rgb_data) {
+bool load_png_as_rgb(std::string filename, int &width, int &height, unsigned char** rgb_data) {
   bool success;
 
   png_image image;
@@ -215,7 +212,7 @@ bool load_png_as_rgb(string filename, int &width, int &height, unsigned char** r
 }
 
 
-bool check_tiff(string filename) {
+bool check_tiff(std::string filename) {
   if (regex_search(filename,tiff_search)) {
     return true;
   } else {
@@ -223,7 +220,7 @@ bool check_tiff(string filename) {
   }
 }
 
-bool check_png(string filename) {
+bool check_png(std::string filename) {
   if (regex_search(filename,png_search)) {
     return true;
   } else {

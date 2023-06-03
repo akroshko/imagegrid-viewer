@@ -14,7 +14,6 @@
 // C++ headers
 #include <vector>
 #include <iostream>
-using namespace std;
 
 // library headers
 #include <SDL2/SDL.h>

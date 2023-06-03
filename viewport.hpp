@@ -13,7 +13,6 @@
 #include <iostream>
 #include <string>
 #include <mutex>
-using namespace std;
 
 // library headers
 #include <SDL2/SDL.h>
@@ -65,7 +64,7 @@ private:
 
   bool been_updated=false;
 
-  mutex using_mutex;
+  std::mutex using_mutex;
 };
 
 
@@ -99,7 +98,7 @@ public:
 
   // object for transfering the state of the viewport in a threadsafe manner
   ViewPortCurrentState *viewport_current_state;
-  void find_viewport_blit(TextureGrid* texture_grid, vector<BlitItem> &blititems, SDL_Surface* screen_surface, SDL_PixelFormat *format);
+  void find_viewport_blit(TextureGrid* texture_grid, std::vector<BlitItem> &blititems, SDL_Surface* screen_surface, SDL_PixelFormat *format);
   // convert grid coordinates to pixel coordinates based on the coordinates of an origin for pixel (0,0)
   //   grid_x: the x of the grid coordinate to convert
   //   grid_y: the y of the grid coordinate to convert

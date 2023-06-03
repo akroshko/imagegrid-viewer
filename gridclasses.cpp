@@ -9,12 +9,11 @@
 // C++ headers
 #include <iostream>
 #include <string>
-using namespace std;
 
 ImageGridSquare::ImageGridSquare() {
 }
 
-void ImageGridSquare::load_file (string filename) {
+void ImageGridSquare::load_file (std::string filename) {
   if (check_tiff(filename)) {
     // TODO: check success
     load_tiff_as_rgb(filename,rgb_wpixel,rgb_hpixel,&rgb_data);
@@ -50,18 +49,18 @@ ImageGrid::~ImageGrid() {
   squares=nullptr;
 }
 
-bool ImageGrid::load_images(vector<string> filenames) {
+bool ImageGrid::load_images(std::vector<std::string> filenames) {
   return load_grid(filenames);
 }
 
 bool ImageGrid::load_images(char *pathname) {
-  vector<string> filenames;
-  filenames=load_numbered_images(string(pathname));
+  std::vector<std::string> filenames;
+  filenames=load_numbered_images(std::string(pathname));
   return load_grid(filenames);
 }
 
-bool ImageGrid::load_grid(vector<string> filenames) {
-  bool successful=true;
+bool ImageGrid::load_grid(std::vector<std::string> filenames) {
+  auto successful=true;
   // new zoom stuff
   for (size_t i = 0; i < images_wgrid; i++) {
     if (!successful) {
@@ -99,14 +98,14 @@ TextureGridSquareZoomLevel::~TextureGridSquareZoomLevel () {
 
 TextureGridSquare::TextureGridSquare () {
   DEBUG("TextureGridSquare Constructor");
-  image_array=new TextureGridSquareZoomLevel*[10]();
-  for (size_t i = 0; i < 10; i++) {
+  image_array=new TextureGridSquareZoomLevel*[MAX_ZOOM_LEVELS]();
+  for (size_t i = 0; i < MAX_ZOOM_LEVELS; i++) {
     image_array[i]=new TextureGridSquareZoomLevel();
   }
 }
 
 TextureGridSquare::~TextureGridSquare () {
-  for (size_t i = 0; i < 10; i++) {
+  for (size_t i = 0; i < MAX_ZOOM_LEVELS; i++) {
     delete image_array[i];
     image_array[i]=nullptr;
   }
@@ -140,20 +139,20 @@ void TextureGrid::init_max_size_zoom(ImageGrid *grid) {
 }
 
 bool TextureGrid::load_texture (TextureGridSquare &dest_square, ImageGridSquare &source_square, int z) {
-  bool successful=true;
-  int source_wpixel=source_square.rgb_wpixel;
-  int source_hpixel=source_square.rgb_hpixel;
-  int dest_wpixel=(dest_square.texture_wpixel)/((int)pow(2,z));
-  int dest_hpixel=(dest_square.texture_hpixel)/((int)pow(2,z));
+  auto successful=true;
+  auto source_wpixel=source_square.rgb_wpixel;
+  auto source_hpixel=source_square.rgb_hpixel;
+  auto dest_wpixel=(dest_square.texture_wpixel)/((int)pow(2,z));
+  auto dest_hpixel=(dest_square.texture_hpixel)/((int)pow(2,z));
   dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
   dest_square.image_array[z]->display_texture = SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
   SDL_LockSurface(dest_square.image_array[z]->display_texture);
-  int skip = ((int)pow(2,z));
+  auto skip = ((int)pow(2,z));
   if (z == 0) {
     // use memcpy to hopefully take advantage of standard library when zoom index is zero
     for (size_t l = 0; l < source_hpixel; l+=skip) {
-      int dest_index = (l*dest_wpixel)*3;
-      int source_index = (l*source_wpixel)*3;
+      auto dest_index = (l*dest_wpixel)*3;
+      auto source_index = (l*source_wpixel)*3;
       memcpy(((unsigned char *)dest_square.image_array[z]->display_texture->pixels)+dest_index,((unsigned char *)source_square.rgb_data)+source_index,sizeof(unsigned char)*source_wpixel*3);
     }
   } else {
@@ -161,8 +160,8 @@ bool TextureGrid::load_texture (TextureGridSquare &dest_square, ImageGridSquare 
     for (size_t l = 0; l < source_hpixel; l+=skip) {
       int kd=0;
       for (size_t k = 0; k < source_wpixel; k+=skip) {
-        int dest_index = (ld*dest_wpixel+kd)*3;
-        int source_index = (l*source_wpixel+k)*3;
+        auto dest_index = (ld*dest_wpixel+kd)*3;
+        auto source_index = (l*source_wpixel+k)*3;
         ((unsigned char *)dest_square.image_array[z]->display_texture->pixels)[dest_index]=source_square.rgb_data[source_index];
         ((unsigned char *)dest_square.image_array[z]->display_texture->pixels)[dest_index+1]=source_square.rgb_data[source_index+1];
         ((unsigned char *)dest_square.image_array[z]->display_texture->pixels)[dest_index+2]=source_square.rgb_data[source_index+2];
@@ -218,7 +217,7 @@ void TextureGrid::update_textures (ImageGrid *grid, float xgrid, float ygrid, in
         }
       }
     }
-    MSGNONEWLINE("|" << endl);
+    MSGNONEWLINE("|" << std::endl);
   }
   DEBUG("update_textures() end");
 }

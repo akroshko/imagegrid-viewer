@@ -10,7 +10,6 @@
 #include <iostream>
 #include <string>
 #include <mutex>
-using namespace std;
 
 // library headers
 #include <SDL2/SDL.h>
@@ -28,7 +27,7 @@ public:
   // the actual RGB data
   unsigned char* rgb_data;
   // load a file into this square
-  void load_file(string filename);
+  void load_file(std::string filename);
 };
 
 class ImageGrid {
@@ -48,11 +47,11 @@ public:
   ImageGridSquare** squares;
   // load a set of images from a path
   //   filenames: a list of files to load, order in grid is left to right, top to bottom
-  bool load_images(vector<string> filenames);
+  bool load_images(std::vector<std::string> filenames);
   //   pathname: either a preset name to load or the path
   bool load_images(char *pathname);
 private:
-  bool load_grid(vector<string> file_list);
+  bool load_grid(std::vector<std::string> file_list);
 };
 
 class TextureGridSquareZoomLevel {
@@ -61,7 +60,7 @@ public:
   TextureGridSquareZoomLevel();
   ~TextureGridSquareZoomLevel();
   // lock when the display_area is being worked on
-  mutex display_mutex;
+  std::mutex display_mutex;
   SDL_Surface* display_texture;
 };
 
@@ -78,6 +77,8 @@ public:
   // the first element of the array is the full-size texture
   // the subsequent elements are zoomed textures each reduced by a factor of 2
   TextureGridSquareZoomLevel** image_array;
+  // does not work for now because elements of image_array contain a mutex
+  // std::array<TextureGridSquareZoomLevel*, 10> image_array;
 };
 
 class TextureGrid {

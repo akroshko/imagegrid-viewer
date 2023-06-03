@@ -12,7 +12,6 @@
 // C headers
 #include <math.h>
 #include <getopt.h>
-using namespace std;
 
 // library headers
 #include <SDL2/SDL.h>
@@ -71,14 +70,14 @@ void update_texture_thread (TextureUpdate *texture_update, ImageGrid *grid, Text
 
 
 int main(int argc, char *argv[]) {
-  bool continue_flag = true;
-  bool load_images_successful = false;
+  auto continue_flag = true;
+  auto load_images_successful = false;
   int loop_count=0;
   int width=0;
   int height=0;
 
   char path_value[256] = { 0 };
-  vector<string> filenames;
+  std::vector<std::string> filenames;
 
   int opt;
 
@@ -96,9 +95,9 @@ int main(int argc, char *argv[]) {
       break;
     case '?':
       if (optopt == 'w' || optopt == 'h' || optopt == 'p') {
-        cerr << "Option " << optopt << " requires an argument.";
+        std::cerr << "Option " << optopt << " requires an argument.";
       } else {
-        cerr << "Unknown option: " << (char)optopt << endl;
+        std::cerr << "Unknown option: " << (char)optopt << std::endl;
       }
       return 1;
     default:
@@ -112,7 +111,7 @@ int main(int argc, char *argv[]) {
       ERROR("Cannot specify both a path and individual files.");
     } else {
       for (int i = optind; i < argc; i++) {
-        filenames.push_back(string(argv[i]));
+        filenames.push_back(std::string(argv[i]));
       }
     }
   }
@@ -122,9 +121,9 @@ int main(int argc, char *argv[]) {
   ImageGrid* grid;
   TextureGrid* texture_grid;
   ViewPortCurrentState viewport_current_state;
-  TextureUpdate texture_update = TextureUpdate(&viewport_current_state);
-  ViewPort viewport = ViewPort(&viewport_current_state);
-  vector<BlitItem> blititems;
+  auto texture_update = TextureUpdate(&viewport_current_state);
+  auto viewport = ViewPort(&viewport_current_state);
+  std::vector<BlitItem> blititems;
 
   if (!sdl_app.successful) {
     ERROR("Failed to initialize properly");
