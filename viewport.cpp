@@ -136,12 +136,12 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, std::vector<BlitIte
       bool texture_loaded;
       do {
         lock_succeeded=false;
-        mutex_vector.emplace_back(std::unique_lock<std::mutex>{texture_grid->squares[i][j].image_array[actual_zoom]->display_mutex,std::defer_lock});
+        mutex_vector.emplace_back(std::unique_lock<std::mutex>{texture_grid->squares[i][j].texture_array[actual_zoom]->display_mutex,std::defer_lock});
         if (mutex_vector.back().try_lock()) {
           lock_succeeded=true;
-          if ( !(texture_grid->squares[i][j].image_array[actual_zoom]->display_texture == nullptr)) {
+          if ( !(texture_grid->squares[i][j].texture_array[actual_zoom]->display_texture == nullptr)) {
             texture_loaded=true;
-            auto new_blit_item=BlitItem(texture_grid->squares[i][j].image_array[actual_zoom],
+            auto new_blit_item=BlitItem(texture_grid->squares[i][j].texture_array[actual_zoom],
                                         gi,
                                         viewport_xpixel,viewport_ypixel,
                                         max_wpixel*zoom,max_hpixel*zoom);
@@ -173,7 +173,7 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, std::vector<BlitIte
 }
 
 void ViewPort::find_viewport_extents_grid(float actual_zoom,float &viewport_left_grid, float &viewport_right_grid, float &viewport_top_grid, float &viewport_bottom_grid) {
-  /* Find the coordinates of the viewport on the grid.  */
+  /* Find the coordinates of the viewport on the grid. */
   float half_width, half_height, viewport_left_distance_grid, viewport_right_distance_grid, viewport_top_distance_grid, viewport_bottom_distance_grid;
   // , leftmost_grid, rightmost_grid, topmost_grid, bottommost_grid;
   // TODO: set these somewhereelse

@@ -14,35 +14,47 @@
 // library headers
 #include <SDL2/SDL.h>
 
+class ImageGridSquareZoomLevel {
+public:
+  ImageGridSquareZoomLevel();
+  ~ImageGridSquareZoomLevel();
+  std::mutex load_mutex;
+  size_t rgb_wpixel;
+  size_t rgb_hpixel;
+  // the actual RGB data
+  unsigned char* rgb_data;
+};
+
 
 class ImageGridSquare {
   /* An individual square on the grid. */
 public:
   ImageGridSquare();
   ~ImageGridSquare();
-  // the width in pixels of the image in this square
-  int rgb_wpixel;
-  // the height in pixels of the image in this square
-  int rgb_hpixel;
-  // the actual RGB data
-  unsigned char* rgb_data;
+  // // the width in pixels of the image in this square
+  // size_t rgb_wpixel;
+  // // the height in pixels of the image in this square
+  // size_t rgb_hpixel;
+  // // the actual RGB data
+  // unsigned char* rgb_data;
   // load a file into this square
+  ImageGridSquareZoomLevel **image_array;
   void load_file(std::string filename);
 };
 
 class ImageGrid {
   /* The grid of images.  In the future these will be lazily loaded from disk/cache. */
 public:
-  ImageGrid(int width, int height);
+  ImageGrid(size_t width, size_t height);
   ~ImageGrid();
   // the width of this grid in images
-  int images_wgrid;
+  size_t images_wgrid;
   // the height of this grid in images
-  int images_hgrid;
+  size_t images_hgrid;
   // the maximum width of an image square in pixels
-  int images_max_wpixel;
+  size_t images_max_wpixel;
   // the maximum height of an image square in pixels
-  int images_max_hpixel;
+  size_t images_max_hpixel;
   // the indidivual squares
   ImageGridSquare** squares;
   // load a set of images from a path
@@ -76,20 +88,20 @@ public:
   // an array of textures
   // the first element of the array is the full-size texture
   // the subsequent elements are zoomed textures each reduced by a factor of 2
-  TextureGridSquareZoomLevel** image_array;
-  // does not work for now because elements of image_array contain a mutex
-  // std::array<TextureGridSquareZoomLevel*, 10> image_array;
+  TextureGridSquareZoomLevel** texture_array;
+  // does not work for now because elements of texture_array contain a mutex
+  // std::array<TextureGridSquareZoomLevel*, 10> texture_array;
 };
 
 class TextureGrid {
   /* The grid as textures.  These are generally loaded lazily. */
 public:
-  TextureGrid(int width, int height);
+  TextureGrid(size_t width, size_t height);
   ~TextureGrid();
   // the width of this grid in textures
-  int textures_wgrid;
+  size_t textures_wgrid;
   // the height of this grid in textures
-  int textures_hgrid;
+  size_t textures_hgrid;
   // the maximum zoom (maximum number of reductions by a factor of 2)
   int textures_max_zoom;
   // maximum width of the individual textures in pixels

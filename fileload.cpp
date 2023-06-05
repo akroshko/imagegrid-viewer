@@ -127,7 +127,7 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
 ////////////////////////////////////////////////////////////////////////////////
 // load specific files as RGB
 
-bool load_tiff_as_rgb(std::string filename, int &width, int &height, unsigned char** rgb_data) {
+bool load_tiff_as_rgb(std::string filename, size_t &width, size_t &height, unsigned char** rgb_data) {
   auto success=true;
 
   TIFF* tif = TIFFOpen(filename.c_str(), "r");
@@ -155,8 +155,8 @@ bool load_tiff_as_rgb(std::string filename, int &width, int &height, unsigned ch
         success=false;
       } else {
         // convert raster
-        width=w;
-        height=h;
+        width=(size_t)w;
+        height=(size_t)h;
         *rgb_data = new unsigned char[npixels*3];
         DEBUG("Width: " << width << " Height: " << height);
         // naive copy
@@ -174,7 +174,7 @@ bool load_tiff_as_rgb(std::string filename, int &width, int &height, unsigned ch
   return success;
 }
 
-bool load_png_as_rgb(std::string filename, int &width, int &height, unsigned char** rgb_data) {
+bool load_png_as_rgb(std::string filename, size_t &width, size_t &height, unsigned char** rgb_data) {
   bool success;
 
   png_image image;
@@ -197,8 +197,8 @@ bool load_png_as_rgb(std::string filename, int &width, int &height, unsigned cha
       if (png_image_finish_read(&image, NULL, buffer, 0, NULL) == 0) {
         ERROR("load_png_as_rgb() failed to read full image!");
       } else {
-        width=image.width;
-        height=image.height;
+        width=(size_t)image.width;
+        height=(size_t)image.height;
         *rgb_data=new unsigned char[PNG_IMAGE_SIZE(image)];
         DEBUG("Width: " << width << " Height: " << height);
         memcpy(*rgb_data,buffer,PNG_IMAGE_SIZE(image));

@@ -26,4 +26,7 @@ const int TEXTURE_ALIGNMENT = 4;
 // when data structure improve it could be dynamic
 #define MAX_ZOOM_LEVELS 10
 
+// a placeholder index that will be changed in the future
+#define IMAGE_GRID_INDEX 0
+
 #endif
