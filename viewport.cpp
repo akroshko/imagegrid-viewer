@@ -1,15 +1,16 @@
 #include "config.hpp"
 #include "debug.hpp"
 #include "error.hpp"
+#include "utility.hpp"
 #include "viewport.hpp"
 // C++ headers
 #include <vector>
 #include <iostream>
 #include <string>
-// C headers
-#include <math.h>
 // library headers
 #include <SDL2/SDL.h>
+// C headers
+#include <math.h>
 
 BlitItem::BlitItem(TextureGridSquareZoomLevel* square, int count, float xpixel, float ypixel, float wpixel, float hpixel) {
   blit_index=count;
@@ -98,14 +99,20 @@ ViewPort::~ViewPort() {
 
 }
 
+int ViewPort::find_zoom_index(float zoom) {
+  return ::find_zoom_index(zoom);
+}
+
 void ViewPort::find_viewport_blit(TextureGrid* texture_grid, std::vector<BlitItem> &blititems,SDL_Surface* screen_surface, SDL_PixelFormat *format) {
   /* Find the textures that need to be blit to this viewport. */
   int blit_count=0;
   float viewport_left_grid, viewport_right_grid, viewport_top_grid, viewport_bottom_grid;
   // locking the textures
   std::vector<std::unique_lock<std::mutex>> mutex_vector{};
-  find_viewport_extents_grid(zoom, viewport_left_grid, viewport_right_grid, viewport_top_grid, viewport_bottom_grid);
-  int zoom_index=floor(log2(1.0/zoom));
+  this->coordinate_info->find_viewport_extents_grid(zoom, this->screen_pixel_width, this->screen_pixel_height, this->viewport_xgrid, this->viewport_ygrid,
+                                                    viewport_left_grid, viewport_right_grid, viewport_top_grid, viewport_bottom_grid);
+
+  int zoom_index=this->find_zoom_index(this->zoom);
   ////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
   // now loop over grid squares
@@ -116,10 +123,10 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, std::vector<BlitIte
       DEBUG("++ Adding Blittable " << blit_count << " at index " << gi << " ++++++++++++++++++++");
       float viewport_xpixel;
       float viewport_ypixel;
-      grid_to_pixel(i,j,
-                    viewport_left_grid,viewport_top_grid,
-                    viewport_xpixel,
-                    viewport_ypixel);
+      this->coordinate_info->grid_to_pixel(this->zoom,
+                                           i,j,
+                                           viewport_left_grid,viewport_top_grid,
+                                           viewport_xpixel,viewport_ypixel);
       // TODO: this is where I chose zoom
       int actual_zoom=zoom_index;
       auto max_zoom=texture_grid->textures_max_zoom;
@@ -144,7 +151,7 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, std::vector<BlitIte
             auto new_blit_item=BlitItem(texture_grid->squares[i][j].texture_array[actual_zoom],
                                         gi,
                                         viewport_xpixel,viewport_ypixel,
-                                        max_wpixel*zoom,max_hpixel*zoom);
+                                        this->coordinate_info->images_max_wpixel*zoom,this->coordinate_info->images_max_hpixel*zoom);
             blititems.push_back(new_blit_item);
             DEBUG("blititem actual zoom: " << actual_zoom << " viewport pixel x: " << blititems[blit_count].viewport_xpixel << " viewport pixel y: " << blititems[blit_count].viewport_ypixel);
             DEBUG("blititem actual zoom: " << actual_zoom << " viewport pixel size x: " << blititems[blit_count].viewport_wpixel << " viewport pixel size y: " << blititems[blit_count].viewport_hpixel);
@@ -172,43 +179,12 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, std::vector<BlitIte
   }
 }
 
-void ViewPort::find_viewport_extents_grid(float actual_zoom,float &viewport_left_grid, float &viewport_right_grid, float &viewport_top_grid, float &viewport_bottom_grid) {
-  /* Find the coordinates of the viewport on the grid. */
-  float half_width, half_height, viewport_left_distance_grid, viewport_right_distance_grid, viewport_top_distance_grid, viewport_bottom_distance_grid;
-  // , leftmost_grid, rightmost_grid, topmost_grid, bottommost_grid;
-  // TODO: set these somewhereelse
-  half_width = screen_pixel_width / 2.0;
-  half_height = screen_pixel_height / 2.0;
-  // find viewport dimensions in grid space
-  viewport_left_distance_grid=(half_width/max_wpixel/actual_zoom);
-  viewport_right_distance_grid=(half_width/max_wpixel/actual_zoom);
-  viewport_top_distance_grid=(half_height/max_hpixel/actual_zoom);
-  viewport_bottom_distance_grid=(half_height/max_hpixel/actual_zoom);
-  viewport_left_grid=viewport_xgrid-viewport_left_distance_grid;
-  viewport_right_grid=viewport_xgrid+viewport_right_distance_grid;
-  viewport_top_grid=viewport_ygrid-viewport_top_distance_grid;
-  viewport_bottom_grid=viewport_ygrid+viewport_bottom_distance_grid;
-  // get a list of textures to blit
-  // start at top left
-  // leftmost_grid=floor(viewport_left_grid);
-  // rightmost_grid=floor(viewport_right_grid);
-  // topmost_grid=floor(viewport_top_grid);
-  // bottommost_grid=floor(viewport_bottom_grid);
-}
-
-void ViewPort::grid_to_pixel(float xgrid, float ygrid, float pixel_0_xgrid, float pixel_0_ygrid, float &xpixel, float &ypixel) {
-  /* Convert grid coordinates to pixel coordinates */
-  DEBUG("grid_to_pixel() x: " << xgrid << " y: " << ygrid << " 0_x: " << pixel_0_xgrid << " 0_y: " << pixel_0_ygrid);
-  xpixel=(xgrid - pixel_0_xgrid)*max_wpixel*zoom;
-  ypixel=(ygrid - pixel_0_ygrid)*max_hpixel*zoom;
-}
-
 bool ViewPort::do_input() {
   /* Update the viewport based on inputs */
   SDL_Event e;
   auto keep_going=true;
   while (SDL_PollEvent(&e)) {
-    float pixel_size=(100.0/max_wpixel/zoom);
+    float pixel_size=(100.0/this->coordinate_info->images_max_wpixel/zoom);
     if (e.type == SDL_QUIT) {
       return false;
     } else if (e.type == SDL_JOYAXISMOTION) {

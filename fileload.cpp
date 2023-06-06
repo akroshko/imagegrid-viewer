@@ -127,7 +127,9 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
 ////////////////////////////////////////////////////////////////////////////////
 // load specific files as RGB
 
-bool load_tiff_as_rgb(std::string filename, size_t &width, size_t &height, unsigned char** rgb_data) {
+bool load_tiff_as_rgb(std::string filename,
+                      size_t &width, size_t &height,
+                      unsigned char** rgb_data) {
   auto success=true;
 
   TIFF* tif = TIFFOpen(filename.c_str(), "r");
@@ -174,7 +176,9 @@ bool load_tiff_as_rgb(std::string filename, size_t &width, size_t &height, unsig
   return success;
 }
 
-bool load_png_as_rgb(std::string filename, size_t &width, size_t &height, unsigned char** rgb_data) {
+bool load_png_as_rgb(std::string filename,
+                     size_t &width, size_t &height,
+                     unsigned char** rgb_data) {
   bool success;
 
   png_image image;

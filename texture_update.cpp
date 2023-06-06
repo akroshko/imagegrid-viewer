@@ -1,6 +1,7 @@
 #include "config.hpp"
 #include "debug.hpp"
 #include "error.hpp"
+#include "utility.hpp"
 #include "gridclasses.hpp"
 #include "texture_update.hpp"
 
@@ -10,6 +11,10 @@ TextureUpdate::TextureUpdate(ViewPortCurrentState *viewport_current_state) {
 
 TextureUpdate::~TextureUpdate() {
 
+}
+
+int TextureUpdate::find_zoom_index(float zoom) {
+  return ::find_zoom_index(zoom);
 }
 
 void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture_grid) {
@@ -23,7 +28,7 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
     auto max_zoom_index=max_zoom-1;
     DEBUG("max_grid_width: " << max_wpixel);
     DEBUG("max_grid_height: " << max_hpixel);
-    auto zoom_index=floor(log2(1.0/zoom));
+    auto zoom_index=this->find_zoom_index(zoom);
     DEBUG("zoom: " << zoom << " zoom index 1: " << zoom_index << " max: " << texture_grid->textures_max_zoom);
     if (zoom_index > max_zoom_index) {
       zoom_index=max_zoom_index;
@@ -41,10 +46,12 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
       }
       // calculate these with max resolution, rather than actual viewport
       auto max_zoom_this_level=1.0/(2.0+z);
-      auto max_zoom_left=viewport_xgrid-((MAX_SCREEN_WIDTH/2)/max_wpixel/max_zoom_this_level);
-      auto max_zoom_right=viewport_xgrid+((MAX_SCREEN_WIDTH/2)/max_wpixel/max_zoom_this_level);
-      auto max_zoom_top=viewport_ygrid-((MAX_SCREEN_HEIGHT/2)/max_hpixel/max_zoom_this_level);
-      auto max_zoom_bottom=viewport_ygrid+((MAX_SCREEN_HEIGHT/2)/max_hpixel/max_zoom_this_level);
+      auto half_width=(MAX_SCREEN_WIDTH/2);
+      auto half_height=(MAX_SCREEN_HEIGHT/2);
+      auto max_zoom_left=viewport_xgrid-(half_width/max_wpixel/max_zoom_this_level);
+      auto max_zoom_right=viewport_xgrid+(half_width/max_wpixel/max_zoom_this_level);
+      auto max_zoom_top=viewport_ygrid-(half_height/max_hpixel/max_zoom_this_level);
+      auto max_zoom_bottom=viewport_ygrid+(half_height/max_hpixel/max_zoom_this_level);
       auto threshold=2.0;
       // find out if this is 3x3 or full
       // edge is less than 0.5*threshold away from center

@@ -18,6 +18,9 @@ public:
   // threadsafe way of getting the state of the viewport
   ViewPortCurrentState *viewport_current_state;
 
+  // find zoom index
+  int find_zoom_index(float zoom);
+
   // find the textures for the current viewport
   void find_current_textures (ImageGrid *grid, TextureGrid* texture_grid);
 };

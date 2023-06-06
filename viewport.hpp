@@ -8,6 +8,7 @@
 #include "error.hpp"
 #include "defaults.hpp"
 #include "gridclasses.hpp"
+#include "coordinates.hpp"
 // C++ headers
 #include <vector>
 #include <iostream>
@@ -22,10 +23,10 @@ class BlitItem {
 public:
   BlitItem(TextureGridSquareZoomLevel* square, int count, float xpixel, float ypixel, float wpixel, float hpixel);
   ~BlitItem();
+  // method that does the blitting
+  void blit_this(SDL_Surface* screen_surface);
   // the square that will be blit to the screen
   TextureGridSquareZoomLevel* blit_square;
-  // just counting the number of items to be blit, mostly for debugging
-  int blit_index;
   // the x location on the viewport that this texture is being blit to
   float viewport_xpixel;
   // the y location on the viewport that this texture is being blit to
@@ -34,8 +35,9 @@ public:
   float viewport_wpixel;
   // the height on the viewport of this texture
   float viewport_hpixel;
-  // method that does the blitting
-  void blit_this(SDL_Surface* screen_surface);
+private:
+  // just counting the number of items to be blit, mostly for debugging
+  int blit_index;
 };
 
 // TODO: convert to threadsafe singleton
@@ -77,10 +79,7 @@ public:
   float screen_pixel_width;
   // the current height of the window in pxiels
   float screen_pixel_height;
-  // max width an image can be
-  float max_wpixel;
-  // max height an image can be
-  float max_hpixel;
+  GridCoordinate *coordinate_info;
   // the x grid coordinates of the center of the viewport
   float viewport_xgrid=0.0;
   // the y grid coordinates of the center of the viewport
@@ -115,6 +114,7 @@ public:
   void blank_viewport(SDL_Surface* screen_surface, SDL_PixelFormat *format);
   // find the grid coordinates the viewport actual lies on, based on the current coordinates and zoom
   void find_viewport_extents_grid(float actual_zoom,float &viewport_left_grid, float &viewport_right_grid, float &viewport_top_grid, float &viewport_bottom_grid);
+  int find_zoom_index(float zoom);
 };
 
 #endif

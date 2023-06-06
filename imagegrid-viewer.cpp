@@ -142,8 +142,7 @@ int main(int argc, char *argv[]) {
       texture_grid->init_max_size_zoom(grid);
       // move this somewhere later, needed for do_input()
       // make private
-      viewport.max_wpixel=grid->images_max_wpixel;
-      viewport.max_hpixel=grid->images_max_hpixel;
+      viewport.coordinate_info=&grid->coordinate_info;
       // initialize initial position
       if (width == 1) {
         viewport.viewport_xgrid = 0.5;

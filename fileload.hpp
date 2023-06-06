@@ -34,14 +34,18 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
 //   width: set as the width of the image in pixels
 //   height: set as the height of the image in pixels
 //   rgb_data: set as the rgb data from the image
-bool load_tiff_as_rgb(std::string filename, size_t &width, size_t &height, unsigned char** rgb_data);
+bool load_tiff_as_rgb(std::string filename,
+                      size_t &width, size_t &height,
+                      unsigned char** rgb_data);
 
 // load a tiff file using libpng
 //   filename: the filename to load
 //   width: set as the width of the image in pixels
 //   height: set as the height of the image in pixels
 //   rgb_data: set as the rgb data from the image
-bool load_png_as_rgb(std::string filename, size_t &width, size_t &height, unsigned char** rgb_data);
+bool load_png_as_rgb(std::string filename,
+                     size_t &width, size_t &height,
+                     unsigned char** rgb_data);
 
 // check if a file is a tiff file
 //   filename: the filname to check
