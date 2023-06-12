@@ -1,4 +1,6 @@
-
+/**
+ * Give errors and other messages for the user, seperate from debugging information.
+ */
 #ifndef ERROR_HPP
 #define ERROR_HPP
 

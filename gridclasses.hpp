@@ -1,11 +1,16 @@
+/**
+ * Header file for the main classes representing the grid.  Includes
+ * both loaded images and (zoomed) textures.
+ */
 #ifndef GRIDCLASSES_HPP
-
 #define GRIDCLASSES_HPP
 
-#include "config.hpp"
 #include "debug.hpp"
 #include "error.hpp"
+#include "types.hpp"
+#include "defaults.hpp"
 #include "coordinates.hpp"
+#include "gridsetup.hpp"
 // C++ headers
 #include <vector>
 #include <iostream>
@@ -15,54 +20,68 @@
 // library headers
 #include <SDL2/SDL.h>
 
+/**
+ * An individual square on the grid at a particular zoom level.
+ *
+ * TODO: Currently only stores one zoom level.  However code is in the
+ * works that improves this.
+ */
 class ImageGridSquareZoomLevel {
 public:
-  ImageGridSquareZoomLevel();
+  ImageGridSquareZoomLevel()=default;
   ~ImageGridSquareZoomLevel();
   std::mutex load_mutex;
+  // TODO: these don't use an object from coordinates.hpp since they
+  // are raw memory
+  /** */
   size_t rgb_wpixel;
+  /** */
   size_t rgb_hpixel;
   // the actual RGB data
   unsigned char* rgb_data;
 };
 
 
+/**
+ * An individual square on the grid.
+ */
 class ImageGridSquare {
-  /* An individual square on the grid. */
 public:
   ImageGridSquare();
   ~ImageGridSquare();
-  // // the width in pixels of the image in this square
-  // size_t rgb_wpixel;
-  // // the height in pixels of the image in this square
-  // size_t rgb_hpixel;
-  // // the actual RGB data
-  // unsigned char* rgb_data;
-  // load a file into this square
-  ImageGridSquareZoomLevel **image_array;
+  /**
+   * Load a file into this square.
+   *
+   * @param The filename to load.
+   */
   void load_file(std::string filename);
+  ImageGridSquareZoomLevel **image_array;
 };
 
+/**
+ * The grid of images.  In the future these will be lazily loaded from
+ * disk/cache.
+ */
 class ImageGrid {
-  /* The grid of images.  In the future these will be lazily loaded from disk/cache. */
 public:
-  ImageGrid(size_t width, size_t height);
+  ImageGrid(GridSetup *grid_setup);
   ~ImageGrid();
-  // store the coordinates
-  GridCoordinate coordinate_info;
-  // the indidivual squares
+  bool load_images(GridSetup *grid_setup);
+  /** Store the coordinates */
+  GridImageSize* grid_image_size;
+  /** Maximum size of images loaded into the grid. */
+  GridPixelSize *image_max_size;
+  /** The individual squares in the image grid. */
   ImageGridSquare** squares;
-  // load a set of images from a path
-  //   filenames: a list of files to load, order in grid is left to right, top to bottom
-  bool load_images(std::vector<std::string> filenames);
-  //   pathname: either a preset name to load or the path
-  bool load_images(char *pathname);
 private:
   bool load_grid(std::vector<std::string> file_list);
 };
 
+/**
+ * An individual square at a particular zoom level in the texture
+ * grid.
+ */
 class TextureGridSquareZoomLevel {
-  /* An individual square at a particular zoom level in the texture grid. */
 public:
   TextureGridSquareZoomLevel();
   ~TextureGridSquareZoomLevel();
@@ -71,59 +90,74 @@ public:
   SDL_Surface* display_texture;
 };
 
+/**
+ * An individual square in the texture grid.
+ */
 class TextureGridSquare {
-  /* An individual square in the texture grid. */
 public:
   TextureGridSquare();
   ~TextureGridSquare();
-  // an array of textures
-  // the first element of the array is the full-size texture
-  // the subsequent elements are zoomed textures each reduced by a factor of 2
+  /**
+   * An array of textures. The first element of the array is the
+   * full-size texture the subsequent elements are zoomed textures
+   * each reduced by a factor of 2.
+   */
   TextureGridSquareZoomLevel** texture_array;
-  // does not work for now because elements of texture_array contain a mutex
+  // TODO: does not work for now because elements of texture_array contain a mutex
+  //       this can be improved
   // std::array<TextureGridSquareZoomLevel*, 10> texture_array;
-
-  // the width of the texture with no zoom
-  int texture_wpixel;
-  // the height of the texture with no zoom
-  int texture_hpixel;
+  /** the size of the texture with no zoom */
+  GridPixelSize* texture_pixel_size;
 };
 
+/**
+ * The grid as textures.  These are generally loaded lazily.
+ */
 class TextureGrid {
-  /* The grid as textures.  These are generally loaded lazily. */
 public:
-  TextureGrid(size_t width, size_t height);
+  TextureGrid(GridSetup *grid_setup);
   ~TextureGrid();
-  // the width of this grid in textures
-  size_t textures_wgrid;
-  // the height of this grid in textures
-  size_t textures_hgrid;
-  // the maximum zoom (maximum number of reductions by a factor of 2)
-  int textures_max_zoom;
-  // maximum width of the individual textures in pixels
-  int textures_max_wpixel;
-  // maximum height of the individual textures in pixels
-  int textures_max_hpixel;
-  // the indidivual squares
-  TextureGridSquare** squares;
-  // initialize the maximum size of each texture and the maximum zoom
-  // generally has to be done after all imagesare loaded
+  /**
+   * Initialize the maximum size of each texture and the maximum zoom,
+   * generally has to be done after all imagesare loaded.
+   */
   void init_max_size_zoom(ImageGrid *grid);
-  // load a texture
-  //   source_square: the square containing the RGB data
-  //   dest_square: the destination square to load the texture into
+  /**
+   * Load a texture.
+   *
+   * @param source_square the square containing the RGB data
+   *
+   * @param dest_square the destination square to load the texture into
+   *
+   * @param zoom_level
+   */
   bool load_texture(TextureGridSquare &dest_square,
                     ImageGridSquare &source_square,
-                    int zoom);
-  // update the textures based on the current coordinates and zoom level
-  //   grid: the ImageGrid
-  //   xgrid: the x coordinate on the grid
-  //   ygrid: the y coordinate on the grid
-  //   loadall: load all textures at this zoom level, otherwise a 3x3 is loaded
+                    INT_T zoom_level);
+  /**
+   * Update the textures based on the current coordinates and zoom
+   * level.
+   *
+   * @param grid the image grid
+   *
+   * @param xgrid the x coordinate on the grid
+   *
+   * @param ygrid the y coordinate on the grid
+   *
+   * @param loadall load all textures at this zoom level, otherwise a 3x3 is loaded
+   */
   void update_textures(ImageGrid *grid,
-                       float xgrid, float ygrid,
-                       int zoom_level,
+                       GridCoordinate *grid_coordinate,
+                       INT_T zoom_level,
                        bool load_all);
+  /** the indidivual squares */
+  TextureGridSquare** squares;
+  /** this size of this grid in number of textures */
+  GridImageSize *grid_image_size;
+  /** maximum size of the individual textures in pixels */
+  GridPixelSize* max_pixel_size;
+  /** the maximum zoom (maximum number of reductions by a factor of 2) */
+  INT_T textures_max_zoom;
 };
 
 #endif

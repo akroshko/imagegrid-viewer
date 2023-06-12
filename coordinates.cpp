@@ -1,45 +1,125 @@
-// local headers
-#include "config.hpp"
+/**
+ * Implementation of the classes that represent different coordinates.
+ *
+ */
 #include "debug.hpp"
 #include "error.hpp"
+#include "types.hpp"
+#include "gridsetup.hpp"
 #include "coordinates.hpp"
+// C++ headers
+#include <cmath>
 
-GridCoordinate::GridCoordinate () {
+GridImageSize::GridImageSize(GridImageSize *grid_image_size) {
+  this->_wimage=grid_image_size->_wimage;
+  this->_himage=grid_image_size->_himage;
+};
 
+GridImageSize::GridImageSize(INT_T wimage, INT_T himage) {
+  this->_wimage=wimage;
+  this->_himage=himage;
+};
+
+INT_T GridImageSize::wimage() {
+  return this->_wimage;
 }
 
-GridCoordinate::~GridCoordinate () {
-
+INT_T GridImageSize::himage() {
+  return this->_himage;
 }
 
-void GridCoordinate::find_viewport_extents_grid(float actual_zoom, float screen_pixel_width, float screen_pixel_height, float viewport_xgrid, float viewport_ygrid,
-                                                float &viewport_left_grid, float &viewport_right_grid, float &viewport_top_grid, float &viewport_bottom_grid) {
-  /* Find the coordinates of the viewport on the grid. */
-  float half_width, half_height, viewport_left_distance_grid, viewport_right_distance_grid, viewport_top_distance_grid, viewport_bottom_distance_grid;
-  // , leftmost_grid, rightmost_grid, topmost_grid, bottommost_grid;
-  // TODO: set these somewhereelse
-  half_width = screen_pixel_width / 2.0;
-  half_height = screen_pixel_height / 2.0;
-  // find viewport dimensions in grid space
-  viewport_left_distance_grid=(half_width/this->images_max_wpixel/actual_zoom);
-  viewport_right_distance_grid=(half_width/this->images_max_wpixel/actual_zoom);
-  viewport_top_distance_grid=(half_height/this->images_max_hpixel/actual_zoom);
-  viewport_bottom_distance_grid=(half_height/this->images_max_hpixel/actual_zoom);
-  viewport_left_grid=viewport_xgrid-viewport_left_distance_grid;
-  viewport_right_grid=viewport_xgrid+viewport_right_distance_grid;
-  viewport_top_grid=viewport_ygrid-viewport_top_distance_grid;
-  viewport_bottom_grid=viewport_ygrid+viewport_bottom_distance_grid;
-  // get a list of textures to blit
-  // start at top left
-  // leftmost_grid=floor(viewport_left_grid);
-  // rightmost_grid=floor(viewport_right_grid);
-  // topmost_grid=floor(viewport_top_grid);
-  // bottommost_grid=floor(viewport_bottom_grid);
+
+GridCoordinateSize::GridCoordinateSize(GridCoordinateSize *grid_coordinate_size) {
+  this->_wgrid=grid_coordinate_size->_wgrid;
+  this->_hgrid=grid_coordinate_size->_hgrid;
 }
 
-void GridCoordinate::grid_to_pixel(float zoom, float xgrid, float ygrid, float pixel_0_xgrid, float pixel_0_ygrid, float &xpixel, float &ypixel) {
-  /* Convert grid coordinates to pixel coordinates */
-  DEBUG("grid_to_pixel() x: " << xgrid << " y: " << ygrid << " 0_x: " << pixel_0_xgrid << " 0_y: " << pixel_0_ygrid);
-  xpixel=(xgrid - pixel_0_xgrid)*this->images_max_wpixel*zoom;
-  ypixel=(ygrid - pixel_0_ygrid)*this->images_max_hpixel*zoom;
+GridCoordinateSize::GridCoordinateSize(FLOAT_T wgrid, FLOAT_T hgrid) {
+  this->_wgrid=wgrid;
+  this->_hgrid=hgrid;
+}
+
+FLOAT_T GridCoordinateSize::wgrid() {
+  return this->_wgrid;
+}
+
+FLOAT_T GridCoordinateSize::hgrid() {
+  return this->_hgrid;
+}
+
+
+GridCoordinate::GridCoordinate(GridCoordinate *grid_coordinate) {
+  this->_xgrid=grid_coordinate->_xgrid;
+  this->_ygrid=grid_coordinate->_ygrid;
+}
+
+GridCoordinate::GridCoordinate(FLOAT_T xgrid, FLOAT_T ygrid) {
+  this->_xgrid=xgrid;
+  this->_ygrid=ygrid;
+};
+
+FLOAT_T GridCoordinate::xgrid() {
+  return this->_xgrid;
+}
+
+FLOAT_T GridCoordinate::ygrid() {
+  return this->_ygrid;
+}
+
+GridPixelSize::GridPixelSize(GridPixelSize *grid_pixel_size) {
+  this->_wpixel=grid_pixel_size->_wpixel;
+  this->_hpixel=grid_pixel_size->_hpixel;
+}
+
+GridPixelSize::GridPixelSize(INT_T wpixel, INT_T hpixel) {
+  this->_wpixel=wpixel;
+  this->_hpixel=hpixel;
+};
+
+INT_T GridPixelSize::wpixel() {
+  return this->_wpixel;
+}
+INT_T GridPixelSize::hpixel() {
+  return this->_hpixel;
+}
+
+ViewportPixelCoordinate::ViewportPixelCoordinate(ViewportPixelCoordinate *viewport_pixel_coordinate) {
+  this->_xpixel=viewport_pixel_coordinate->_xpixel;
+  this->_ypixel=viewport_pixel_coordinate->_ypixel;
+}
+
+ViewportPixelCoordinate:: ViewportPixelCoordinate(INT_T xpixel, INT_T ypixel) {
+  this->_xpixel=xpixel;
+  this->_ypixel=ypixel;
+}
+
+ViewportPixelCoordinate::ViewportPixelCoordinate(GridCoordinate *grid_coordinate, FLOAT_T zoom, GridCoordinate *grid_coordinate_pixel_0, ViewportPixelSize *viewport_pixel_size) {
+  this->_xpixel=(INT_T)round((grid_coordinate->xgrid() - grid_coordinate_pixel_0->xgrid())*viewport_pixel_size->wpixel()*zoom);
+  this->_ypixel=(INT_T)round((grid_coordinate->ygrid() - grid_coordinate_pixel_0->ygrid())*viewport_pixel_size->hpixel()*zoom);
+}
+
+INT_T ViewportPixelCoordinate::xpixel() {
+  return this->_xpixel;
+}
+
+INT_T ViewportPixelCoordinate::ypixel() {
+  return this->_ypixel;
+}
+
+ViewportPixelSize::ViewportPixelSize(ViewportPixelSize *viewport_pixel_size) {
+    this->_wpixel=viewport_pixel_size->_wpixel;
+    this->_hpixel=viewport_pixel_size->_hpixel;
+}
+
+ViewportPixelSize::ViewportPixelSize(INT_T wpixel, INT_T hpixel) {
+  this->_wpixel=wpixel;
+  this->_hpixel=hpixel;
+}
+
+INT_T ViewportPixelSize::wpixel() {
+  return this->_wpixel;
+}
+
+INT_T ViewportPixelSize::hpixel() {
+  return this->_hpixel;
 }

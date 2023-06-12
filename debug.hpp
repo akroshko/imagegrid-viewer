@@ -1,4 +1,6 @@
-
+/**
+ * Contains definitions to help with debugging.
+ */
 #ifndef DEBUG_HPP
 #define DEBUG_HPP
 

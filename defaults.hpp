@@ -1,26 +1,36 @@
+/**
+ * Contains some default values.  Many of these may eventually be
+ * configurable.
+ */
 #ifndef DEFAULTS_HPP
-
 #define DEFAULTS_HPP
+#include "types.hpp"
 
 // screen width
 // TODO: make dynamic and configurable
-#define SCREEN_WIDTH  1280
-#define SCREEN_HEIGHT 720
+const INT_T SCREEN_WIDTH=1280;
+const INT_T SCREEN_HEIGHT=720;
 
 // a max screen height
 // used to decide how big of images should be loaded
 // TODO: make dynamic and configurable
-#define MAX_SCREEN_WIDTH  1920
-#define MAX_SCREEN_HEIGHT 1080
+const INT_T MAX_SCREEN_WIDTH=1920;
+const INT_T MAX_SCREEN_HEIGHT=1080;
 
 // some constants for input/ouput configuration
-const float KEY_PRESS_MOVE = 0.5;
-const float JOY_BASE_MOVE = 2.0;
-const float JOY_MAX = 32768;
+const FLOAT_T KEY_PRESS_MOVE = 0.5;
+const FLOAT_T JOY_BASE_MOVE = 2.0;
+const FLOAT_T JOY_MAX = 32768;
 
 // internal configuration settings
 const int SDL_DELAY = 16;
-const int TEXTURE_ALIGNMENT = 4;
+const INT_T TEXTURE_ALIGNMENT = 4;
+
+const double INITIAL_ZOOM = 1.0;
+
+const double INITIAL_ZOOM_SPEED = 0.0;
+
+const double INITIAL_X_Y_SPEED = 0.0;
 
 // this is set higher than any images I'm working with
 // when data structure improve it could be dynamic

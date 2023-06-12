@@ -1,27 +1,29 @@
+/**
+ * Headers for updating loaded and zoomed textures.
+ */
 #ifndef TEXTURE_UPDATE_HPP
-
 #define TEXTURE_UPDATE_HPP
 
-#include "config.hpp"
 #include "debug.hpp"
 #include "error.hpp"
+#include "types.hpp"
 #include "viewport.hpp"
+#include "coordinates.hpp"
 #include "gridclasses.hpp"
 #include "texture_update.hpp"
 
+/**
+ * This class updates the currently loaded textures
+ */
 class TextureUpdate {
-  /* This class updates the currently loaded textures */
 public:
   TextureUpdate(ViewPortCurrentState *viewport_current_state);
-  ~TextureUpdate();
-
-  // threadsafe way of getting the state of the viewport
+  ~TextureUpdate()=default;
+  /** Threadsafe class for getting the state of the viewport */
   ViewPortCurrentState *viewport_current_state;
-
-  // find zoom index
-  int find_zoom_index(float zoom);
-
-  // find the textures for the current viewport
+  /** Find zoom index (for indexing textures) based on actual zoom. */
+  int find_zoom_index(FLOAT_T zoom);
+  /** Find the textures needed to render the current viewport */
   void find_current_textures (ImageGrid *grid, TextureGrid* texture_grid);
 };
 

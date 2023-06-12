@@ -1,9 +1,13 @@
+/**
+ * The functions that in load in image files.  This file is very much
+ * a preliminary work-in-progress while I work on the rest of program.
+ *
+ */
 // local headers
-#include "config.hpp"
 #include "debug.hpp"
 #include "error.hpp"
+#include "types.hpp"
 #include "fileload.hpp"
-#include "imagegrid-viewer.hpp"
 // C++ headers
 #include <filesystem>
 #include <fstream>
@@ -26,8 +30,9 @@ std::regex png_search("\\.png$",std::regex_constants::ECMAScript | std::regex_co
 std::regex jpeg_search("\\.jpeg$|\\.jpg$",std::regex_constants::ECMAScript | std::regex_constants::icase);
 std::regex tiff_search("\\.tiff|\\.tif$",std::regex_constants::ECMAScript | std::regex_constants::icase);
 
-std::vector<std::string> load_numbered_images(std::string images_path// , IMAGEDIRECTION *direction
-                                    ) {
+std::vector<std::string> load_numbered_images(std::string images_path
+                                              // , IMAGEDIRECTION *direction
+  ) {
   std::vector<std::string> found_files;
   std::filesystem::path images_path_obj{images_path};
   // find files in image root
