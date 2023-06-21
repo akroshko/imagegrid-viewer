@@ -121,7 +121,7 @@ public:
    * Initialize the maximum size of each texture and the maximum zoom,
    * generally has to be done after all imagesare loaded.
    */
-  void init_max_size_zoom(ImageGrid *grid);
+  void init_max_zoom_index(ImageGrid *grid);
   /**
    * Load a texture.
    *
@@ -157,7 +157,7 @@ public:
   /** maximum size of the individual textures in pixels */
   GridPixelSize* max_pixel_size;
   /** the maximum zoom (maximum number of reductions by a factor of 2) */
-  INT_T textures_max_zoom;
+  INT_T textures_max_zoom_index;
 };
 
 #endif

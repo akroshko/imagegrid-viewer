@@ -106,7 +106,7 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
       auto viewport_cooridinate_pixel=new ViewportPixelCoordinate(upperleft_gridsquare,zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
       // TODO: this is where I chose zoom
       auto actual_zoom=zoom_index;
-      auto max_zoom=texture_grid->textures_max_zoom;
+      auto max_zoom=texture_grid->textures_max_zoom_index;
       auto max_zoom_index=max_zoom-1;
       if (actual_zoom > max_zoom_index) {
         actual_zoom=max_zoom_index;
@@ -114,7 +114,7 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
         actual_zoom=0;
       }
       // for testing max zoom
-      // int actual_zoom=texture_grid->textures_max_zoom-1;
+      // int actual_zoom=texture_grid->textures_max_zoom_index-1;
       DEBUG("Max zoom: " << max_zoom << " zoom index:" << zoom_index);
       auto lock_succeeded=false;
       bool texture_loaded;

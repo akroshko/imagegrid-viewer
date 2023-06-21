@@ -3,22 +3,24 @@
  *
  * General overview of this program:
  *
- * The imagegrid-viewer program is meant to view large numbers of
- * potentially extremely large images in a grid.  It began from
- * wanting to have a software equivalent to "laying out maps on a huge
- * table or the floor", given the fact that the Government of Canada
- * topo maps (and maps and large images from others) can be found for
- * free.  The government of Canada topo maps are at
+ * The imagegrid-viewer program is meant to view many potentially
+ * extremely large images that can be laid out in a grid.  It began
+ * from wanting to have a software equivalent to "laying out maps on a
+ * huge table or the floor", given the fact that the Government of
+ * Canada topo maps can be found for free.  The government of Canada
+ * topo maps are at
  * https://ftp.maps.canada.ca/pub/nrcan_rncan/raster/canmatrix2/
+ * Digital maps and other large images are of course available from
+ * other sources.
  *
- * I found it difficult to view these maps in the way I want (in a
- * similar manner to laying out paper maps on a table or floor in a
- * grid) in PDF viewers, image viewers, GIS programs, and the open
- * source large image viewers I could find.  Especially compared to
- * the ease of scrolling around in a program like Google Earth, where
- * the content is chosen by Google and not guaranteed to remain
- * static.  This program is an attempt to solve these problems for
- * local image data.
+ * I found it difficult to view these maps from the government in the
+ * way I want (in a similar manner to laying out paper maps on a table
+ * or floor in a grid) in the PDF viewers, image viewers, GIS
+ * programs, and open source large image viewers I could find.
+ * Especially compared to the ease of scrolling around in a program
+ * like Google Earth, where the content is chosen by Google and not
+ * guaranteed to remain static.  This program is an attempt to solve
+ * these problems for local image data.
  *
  * An overview of the main data structures and program flow is given
  * in the docstrings for the ImageGridViewerContext below.  As as well
@@ -45,15 +47,17 @@
 /**
  * The ImageGridViewerContext class stores the data structures
  * representing the state of the program.  This allows for a future
- * consideration where this program becomes a library to a large
- * program.  This could also useful for if a feature is added to
- * render two seperate locations at once.
+ * consideration where this program becomes a library.  This could
+ * also useful for if a feature is added to render two seperate
+ * locations at once.
  */
 class ImageGridViewerContext {
 public:
   ImageGridViewerContext()=default;
   ~ImageGridViewerContext()=default;
   /**
+   * Intialize the image grid using a subclass of the GridSetup class.
+   *
    * @param grid_setup The GridSetup class (and subclasses) read the
    *                   user specification of the grid and grid data.
    *                   Currently this consists of reading a list of
@@ -69,10 +73,10 @@ public:
   /**
    * Object to store the state of SDL.
    *
-   * The SDLApp class stores any data
-   * related to SDL (simple direct layer, see https://www.libsdl.org/,
-   * which is used as the graphics backend.  This nicely encapsulates
-   * the C++ -> C library interface away from the rest of the program.
+   * The SDLApp class stores any data related to SDL (simple direct
+   * layer, see https://www.libsdl.org/), which is used as the
+   * graphics backend.  This nicely encapsulates the C++ -> C library
+   * interface away from the rest of the program.
    */
   SDLApp sdl_app;
   /**
@@ -148,9 +152,12 @@ bool ImageGridViewerContext::initialize_grid(GridSetup *grid_setup) {
     // these depend on the images being loaded successfully but none
     // of these should not fail except in the case of OOM errors
     this->texture_grid=new TextureGrid(grid_setup);
-    this->texture_grid->init_max_size_zoom(this->grid);
+    // find the maximum index to reference zoomed out textures
+    // generally a heuristic based on image size and screen size
+    this->texture_grid->init_max_zoom_index(this->grid);
     this->viewport.image_max_size=new GridPixelSize(this->grid->image_max_size);
-    // adjust initial position to a sensible default depending on how many images are loaded
+    // adjust initial position to a sensible default depending on how
+    // many images are loaded
     this->viewport.adjust_initial_location(grid_setup);
   }
   return load_images_successful;
@@ -179,11 +186,14 @@ public:
    * @param texture_update The TextureUpdate class this thread will
    *                       run.
    *
-   * @param grid           The ImageGrid class this thread will get images from.
+   * @param grid The ImageGrid class this thread will get images from.
    *
-   * @param texture_grid   The TextureGrid class that will hold the scaled texture.
+   * @param texture_grid The TextureGrid class that will hold the
+   *                     scaled texture.
    */
-  UpdateTextureThread(TextureUpdate *texture_update, ImageGrid *grid, TextureGrid *texture_grid) {
+  UpdateTextureThread(TextureUpdate *texture_update,
+                      ImageGrid *grid,
+                      TextureGrid *texture_grid) {
     this->_texture_update=texture_update;
     this->_grid=grid;
     this->_texture_grid=texture_grid;
@@ -213,12 +223,15 @@ private:
   void run () {
     MSG("Beginning thread in UpdateTextureThread.");
     while (this->_keep_running) {
-      this->_texture_update->find_current_textures(this->_grid,this->_texture_grid);
-      // since we are lazily responding to user input, 10 milliseconds should be fine for update interval
+      this->_texture_update->find_current_textures(this->_grid,
+                                                   this->_texture_grid);
+      // since we are lazily responding to user input, 10 milliseconds
+      // should be fine for update interval
       std::this_thread::sleep_for (std::chrono::milliseconds(10));
     }
     MSG("Ending execution in UpdateTextureThread.");
   }
+  /** Flag to indicate whether the thread should keep running. */
   std::atomic<bool> _keep_running{true};
   std::thread _worker_thread;
   TextureUpdate *_texture_update;
@@ -251,7 +264,8 @@ int main(int argc, char *argv[]) {
     ERROR("Failed to SDL app initialize properly");
     return 1;
   }
-  // initialialize the main data structures in the program, described at the top of this file
+  // initialialize the main data structures in the program, described
+  // at the top of this file
   if (!imagegrid_viewer_context->initialize_grid(grid_setup)) {
     ERROR("Failed to load images!");
     return 1;
@@ -261,14 +275,20 @@ int main(int argc, char *argv[]) {
 
   // get input once before starting thread
   DEBUG("input() initial");
-  continue_flag=imagegrid_viewer_context->viewport.do_input(&imagegrid_viewer_context->sdl_app);
+  continue_flag=imagegrid_viewer_context->viewport.do_input(
+    &imagegrid_viewer_context->sdl_app);
   DEBUG("input() done");
   // update the current textures once before starting the thread
   DEBUG("find_current_textures() initial");
-  imagegrid_viewer_context->texture_update.find_current_textures(imagegrid_viewer_context->grid,imagegrid_viewer_context->texture_grid);
+  imagegrid_viewer_context->texture_update.find_current_textures(
+    imagegrid_viewer_context->grid,
+    imagegrid_viewer_context->texture_grid);
   DEBUG("find_current_textures() initial done");
   // start the thread that updates textures
-  auto update_texture_thread_class = std::make_unique<UpdateTextureThread>(&imagegrid_viewer_context->texture_update, imagegrid_viewer_context->grid, imagegrid_viewer_context->texture_grid);
+  auto update_texture_thread_class = std::make_unique<UpdateTextureThread>(
+    &imagegrid_viewer_context->texture_update,
+    imagegrid_viewer_context->grid,
+    imagegrid_viewer_context->texture_grid);
   auto update_texture_thread = update_texture_thread_class->start();
   while (continue_flag) {
     DEBUG("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
@@ -280,7 +300,9 @@ int main(int argc, char *argv[]) {
     // find the textures that need to be blit to the viewport
     // if the textures haven't been loaded, a smaller zoomed version is used
     DEBUG("find_viewport_blit()");
-    imagegrid_viewer_context->viewport.find_viewport_blit(imagegrid_viewer_context->texture_grid, &imagegrid_viewer_context->sdl_app);
+    imagegrid_viewer_context->viewport.find_viewport_blit(
+      imagegrid_viewer_context->texture_grid,
+      &imagegrid_viewer_context->sdl_app);
     DEBUG("find_viewport_blit() done");
     // update the screen and delay before starting the loop again
     imagegrid_viewer_context->delay();

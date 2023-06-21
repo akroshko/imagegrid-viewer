@@ -24,12 +24,12 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
   if (view_changed) {
     auto max_wpixel=texture_grid->max_pixel_size->wpixel();
     auto max_hpixel=texture_grid->max_pixel_size->hpixel();
-    auto max_zoom=texture_grid->textures_max_zoom;
+    auto max_zoom=texture_grid->textures_max_zoom_index;
     auto max_zoom_index=max_zoom-1;
     DEBUG("max_grid_width: " << max_wpixel);
     DEBUG("max_grid_height: " << max_hpixel);
     auto zoom_index=this->find_zoom_index(zoom);
-    DEBUG("zoom: " << zoom << " zoom index 1: " << zoom_index << " max: " << texture_grid->textures_max_zoom);
+    DEBUG("zoom: " << zoom << " zoom index 1: " << zoom_index << " max: " << texture_grid->textures_max_zoom_index);
     if (zoom_index > max_zoom_index) {
       zoom_index=max_zoom_index;
     }

@@ -6,8 +6,8 @@
 #ifndef TYPES_HPP
 #define TYPE_HPP
 
-#define FLOAT_T double
-#define UINT_T long unsigned int
-#define INT_T long signed int
+typedef double FLOAT_T;
+typedef long unsigned int UINT_T;
+typedef long signed int INT_T;
 
 #endif

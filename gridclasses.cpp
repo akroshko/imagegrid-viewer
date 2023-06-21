@@ -158,7 +158,7 @@ TextureGrid::TextureGrid (GridSetup *grid_setup) {
   }
 }
 
-void TextureGrid::init_max_size_zoom(ImageGrid *grid) {
+void TextureGrid::init_max_zoom_index(ImageGrid *grid) {
   INT_T zoom_length = 0;
   FLOAT_T current_zoom=1.0;
   auto max_wpixel=grid->image_max_size->wpixel();
@@ -173,7 +173,7 @@ void TextureGrid::init_max_size_zoom(ImageGrid *grid) {
     zoom_length += 1;
     current_zoom /= 2.0;
   }
-  textures_max_zoom=zoom_length-1;
+  this->textures_max_zoom_index=zoom_length-1;
 }
 
 bool TextureGrid::load_texture (TextureGridSquare &dest_square,

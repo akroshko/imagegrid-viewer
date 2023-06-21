@@ -61,6 +61,8 @@ class ViewPortCurrentState {
 public:
   ViewPortCurrentState();
   ~ViewPortCurrentState()=default;
+  ViewPortCurrentState(const ViewPortCurrentState&) = delete;
+  ViewPortCurrentState & operator=(const ViewPortCurrentState&) = delete;
   void UpdateGridValues(FLOAT_T zoom, GridCoordinate *grid);
   bool GetGridValues(FLOAT_T &zoom, GridCoordinate *&grid);
 private:
@@ -79,8 +81,6 @@ class ViewPort {
 public:
   ViewPort(ViewPortCurrentState *viewport_current_state);
   ~ViewPort()=default;
-  ViewPort(const ViewPort&) = delete;
-  ViewPort & operator=(const ViewPort&) = delete;
   void find_viewport_blit(TextureGrid* texture_grid,  SDLApp* sdl_app);
   /** update the values in this class with current keyboard/joystick/etc. input */
   bool do_input(SDLApp* sdl_app);
