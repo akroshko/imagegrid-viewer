@@ -55,10 +55,11 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
       auto threshold=2.0;
       // find out if this is 3x3 or full
       // edge is less than 0.5*threshold away from center
-      DEBUG("zoom level: " << z << " viewport_xgrid: " << viewport_grid->xgrid << " viewport_ygrid: " << viewport_grid->ygrid
+      DEBUG("zoom level: " << z << " viewport_xgrid: " << viewport_grid->xgrid() << " viewport_ygrid: " << viewport_grid->ygrid()
             << " max_zoom_this_level: " << max_zoom_this_level << " max_zoom_left: "
-            << max_zoom_left << " max_zoom_right: " << max_zoom_right
-            << " max_zoom_top: " << max_zoom_top << " max_zoom_bottom: " << max_zoom_bottom);
+            << max_zoom_left // << " max_zoom_right: " << max_zoom_right
+            << " max_zoom_top: " << max_zoom_top // << " max_zoom_bottom: " << max_zoom_bottom
+        );
       if (!(z == max_zoom_index) && (abs(max_zoom_left - viewport_grid->xgrid()) <= 0.5*threshold) && (abs(max_zoom_top - viewport_grid->ygrid()) <= 0.5*threshold)) {
         // can load a 3x3 grid
         DEBUG("Updating textures to 3x3 at zoom level: " << z);

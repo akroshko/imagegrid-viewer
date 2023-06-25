@@ -38,7 +38,7 @@ public:
   /** */
   size_t rgb_hpixel;
   // the actual RGB data
-  unsigned char* rgb_data;
+  unsigned char* rgb_data=nullptr;
 };
 
 
@@ -54,8 +54,9 @@ public:
    *
    * @param The filename to load.
    */
+  void read_file(std::string filename);
   void load_file(std::string filename);
-  ImageGridSquareZoomLevel **image_array;
+  ImageGridSquareZoomLevel **image_array=nullptr;
 };
 
 /**
@@ -66,15 +67,14 @@ class ImageGrid {
 public:
   ImageGrid(GridSetup *grid_setup);
   ~ImageGrid();
-  bool load_images(GridSetup *grid_setup);
+  bool read_grid_info(GridSetup *grid_setup);
+  bool load_grid(GridSetup *grid_setup);
   /** Store the coordinates */
-  GridImageSize* grid_image_size;
+  GridImageSize* grid_image_size=nullptr;
   /** Maximum size of images loaded into the grid. */
-  GridPixelSize *image_max_size;
+  GridPixelSize *image_max_size=nullptr;
   /** The individual squares in the image grid. */
-  ImageGridSquare** squares;
-private:
-  bool load_grid(std::vector<std::string> file_list);
+  ImageGridSquare** squares=nullptr;
 };
 
 /**
@@ -87,7 +87,7 @@ public:
   ~TextureGridSquareZoomLevel();
   // lock when the display_area is being worked on
   std::mutex display_mutex;
-  SDL_Surface* display_texture;
+  SDL_Surface* display_texture=nullptr;
 };
 
 /**
@@ -102,12 +102,12 @@ public:
    * full-size texture the subsequent elements are zoomed textures
    * each reduced by a factor of 2.
    */
-  TextureGridSquareZoomLevel** texture_array;
+  TextureGridSquareZoomLevel** texture_array=nullptr;
   // TODO: does not work for now because elements of texture_array contain a mutex
   //       this can be improved
   // std::array<TextureGridSquareZoomLevel*, 10> texture_array;
   /** the size of the texture with no zoom */
-  GridPixelSize* texture_pixel_size;
+  GridPixelSize* texture_pixel_size=nullptr;
 };
 
 /**
@@ -151,11 +151,11 @@ public:
                        INT_T zoom_level,
                        bool load_all);
   /** the indidivual squares */
-  TextureGridSquare** squares;
+  TextureGridSquare** squares=nullptr;
   /** this size of this grid in number of textures */
-  GridImageSize *grid_image_size;
+  GridImageSize *grid_image_size=nullptr;
   /** maximum size of the individual textures in pixels */
-  GridPixelSize* max_pixel_size;
+  GridPixelSize* max_pixel_size=nullptr;
   /** the maximum zoom (maximum number of reductions by a factor of 2) */
   INT_T textures_max_zoom_index;
 };

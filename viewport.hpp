@@ -23,7 +23,7 @@
 class BlitItem {
 public:
   BlitItem(TextureGridSquareZoomLevel* square, INT_T count, ViewportPixelCoordinate viewport_pixel_coordinate, ViewportPixelSize grid_image_size_zoomed);
-  ~BlitItem()=default;
+  ~BlitItem();
   /**
    * Method called to do the actual blitting.
    */
@@ -31,16 +31,16 @@ public:
   /**
    * The square that will be blit to the screen.
    */
-  TextureGridSquareZoomLevel* blit_square;
+  TextureGridSquareZoomLevel* blit_square=nullptr;
   /**
    * The pixel location on the viewport that this texture is being
    * blit to.
    */
-  ViewportPixelCoordinate* viewport_pixel_coordinate;
+  ViewportPixelCoordinate* viewport_pixel_coordinate=nullptr;
   /**
    * The width on the viewport of this texture.
    */
-  ViewportPixelSize* image_pixel_size_viewport;
+  ViewportPixelSize* image_pixel_size_viewport=nullptr;
 private:
   /**
    * Just counting the number of items to be blit, mostly for
@@ -60,16 +60,16 @@ class ViewPortCurrentState {
 // TODO: make sure this class is not moveable or copyable
 public:
   ViewPortCurrentState();
-  ~ViewPortCurrentState()=default;
+  ~ViewPortCurrentState();
   ViewPortCurrentState(const ViewPortCurrentState&) = delete;
   ViewPortCurrentState & operator=(const ViewPortCurrentState&) = delete;
   void UpdateGridValues(FLOAT_T zoom, GridCoordinate *grid);
   bool GetGridValues(FLOAT_T &zoom, GridCoordinate *&grid);
 private:
   FLOAT_T zoom=NAN;
-  GridCoordinate* grid;
+  GridCoordinate* grid=nullptr;
   FLOAT_T zoom_last=NAN;
-  GridCoordinate* grid_last;
+  GridCoordinate* grid_last=nullptr;
   bool been_updated=false;
   std::mutex using_mutex;
 };
@@ -80,7 +80,7 @@ private:
 class ViewPort {
 public:
   ViewPort(ViewPortCurrentState *viewport_current_state);
-  ~ViewPort()=default;
+  ~ViewPort();
   void find_viewport_blit(TextureGrid* texture_grid,  SDLApp* sdl_app);
   /** update the values in this class with current keyboard/joystick/etc. input */
   bool do_input(SDLApp* sdl_app);
@@ -105,12 +105,13 @@ public:
   /**
    * Max size of images.
    */
-  GridPixelSize *image_max_size;
+  void set_image_max_size(GridPixelSize * image_max_size);
 private:
+  GridPixelSize *_image_max_size=nullptr;
   /** The current size of the window in pixels. */
-  ViewportPixelSize *viewport_pixel_size;
+  ViewportPixelSize *viewport_pixel_size=nullptr;
   /** the grid coordinates of the center of the viewport */
-  GridCoordinate *viewport_grid;
+  GridCoordinate *viewport_grid=nullptr;
   /** the zoom level, 1.0 indicates all pixels are 1:1, 0.5 indicates zoomed out by a factor of 2 */
   FLOAT_T zoom=INITIAL_ZOOM;
   /** a zoom speed per SDL frame */
@@ -122,7 +123,7 @@ private:
   /** the current speed of zoom per SDL frame */
   FLOAT_T current_speed_zoom = INITIAL_ZOOM_SPEED;
   /** object for transfering the state of the viewport in a threadsafe manner */
-  ViewPortCurrentState *viewport_current_state;
+  ViewPortCurrentState *viewport_current_state=nullptr;
   /** Stores the next items to be blit to the viewport. */
   std::vector<BlitItem> blititems;
 };

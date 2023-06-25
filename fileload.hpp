@@ -40,7 +40,7 @@ std::vector<std::string> load_numbered_images(std::string images_path// , IMAGED
 std::vector<std::string> find_sequential_images(std::vector<std::string> image_files);
 
 /**
- * Load a tiff file using libtiff,based off of
+ * Read data about a tiff file using libtiff,based off of
  * http://www.libtiff.org/libtiff.html
  *
  * @param filename the filename to load
@@ -48,26 +48,55 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
  * @param width set as the width of the image in pixels
  *
  * @param height set as the height of the image in pixels
+ */
+bool read_tiff_data(std::string filename, size_t &width, size_t &height);
+
+/**
+ * Load a tiff file using libtiff,based off of
+ * http://www.libtiff.org/libtiff.html
+ *
+ * @param filename the filename to load
+ *
+ * @param width width of the image in pixels, generally used to check
+ * discrepencies
+ *
+ * @param height height of the image in pixels, generally used to
+ * check discrepencies
  *
  * @param rgb_data set as the rgb data from the image
  */
 bool load_tiff_as_rgb(std::string filename,
-                      size_t &width, size_t &height,
+                      size_t width, size_t height,
                       unsigned char** rgb_data);
 
+
 /**
- * Load a tiff file using libpng.
+ * Read data about a png file using libpng.
  *
  * @param filename the filename to load
  *
  * @param width set as the width of the image in pixels
  *
  * @param height set as the height of the image in pixels
+ */
+bool read_png_data(std::string filename, size_t &width, size_t &height);
+
+/**
+ * Load a png file using libpng.
+ *
+ * @param filename the filename to load
+ *
+ * @param width width of the image in pixels, generally used to check
+ * discrepencies
+ *
+ *
+ @param height height of the image in pixels, generally used to
+ * check discrepencies
  *
  * @param rgb_data set as the rgb data from the image
  */
 bool load_png_as_rgb(std::string filename,
-                     size_t &width, size_t &height,
+                     size_t width, size_t height,
                      unsigned char** rgb_data);
 
 /**

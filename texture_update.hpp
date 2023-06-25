@@ -10,7 +10,7 @@
 #include "viewport.hpp"
 #include "coordinates.hpp"
 #include "gridclasses.hpp"
-#include "texture_update.hpp"
+
 
 /**
  * This class updates the currently loaded textures

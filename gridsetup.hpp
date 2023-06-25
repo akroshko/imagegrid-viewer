@@ -19,11 +19,11 @@
 class GridSetup {
 public:
   GridSetup()=default;
-  ~GridSetup()=default;
+  ~GridSetup();
   /** Indicate whether setup was successful. */
   bool successful();
   /** The size of the grid loaded. */
-  GridImageSize* grid_image_size;
+  GridImageSize* grid_image_size=nullptr;
   /** Stores a path of images to load. */
   std::vector<std::string> filenames;
   // TODO move internally to constructor

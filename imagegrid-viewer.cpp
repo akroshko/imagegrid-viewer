@@ -54,7 +54,7 @@
 class ImageGridViewerContext {
 public:
   ImageGridViewerContext()=default;
-  ~ImageGridViewerContext()=default;
+  ~ImageGridViewerContext();
   /**
    * Intialize the image grid using a subclass of the GridSetup class.
    *
@@ -89,7 +89,7 @@ public:
    * work is done this program should be able to view substantially
    * larger maps than it does now.
    */
-  ImageGrid* grid;
+  ImageGrid* grid = nullptr;
   /** Class representing the view the user has of the image grid.
    *
    * The ViewPort class contains the state of the viewing window and
@@ -108,7 +108,7 @@ public:
    * TextureGridSquareZoomLevel, contains a mutex so that textures are
    * not being updated and displayed at the same time.
    */
-  TextureGrid* texture_grid;
+  TextureGrid* texture_grid = nullptr;
   /**
    * Class to the textures based on the current state of the viewport.
    *
@@ -134,7 +134,7 @@ public:
 };
 
 /**
- * Initialize the context of an imagegrid-viewer program.
+ * Initialize the grid of an imagegrid-viewer program.
  *
  * @param grid_setup This contains the final configuration information
  *                   and files to setup the image grid.  This is
@@ -147,21 +147,36 @@ bool ImageGridViewerContext::initialize_grid(GridSetup *grid_setup) {
   this->grid=new ImageGrid(grid_setup);
   // this is where the images are loaded and can fail since it involves file I/O
   // TODO: work is in progress to load in a seperate thread
-  auto load_images_successful=this->grid->load_images(grid_setup);
-  if(load_images_successful) {
-    // these depend on the images being loaded successfully but none
-    // of these should not fail except in the case of OOM errors
-    this->texture_grid=new TextureGrid(grid_setup);
-    // find the maximum index to reference zoomed out textures
-    // generally a heuristic based on image size and screen size
-    this->texture_grid->init_max_zoom_index(this->grid);
-    this->viewport.image_max_size=new GridPixelSize(this->grid->image_max_size);
-    // adjust initial position to a sensible default depending on how
-    // many images are loaded
-    this->viewport.adjust_initial_location(grid_setup);
+  auto read_images_successful=this->grid->read_grid_info(grid_setup);
+  if (read_images_successful) {
+    auto load_images_successful=this->grid->load_grid(grid_setup);
+    if(load_images_successful) {
+      // these depend on the images being loaded successfully but none
+      // of these should not fail except in the case of OOM errors
+      this->texture_grid=new TextureGrid(grid_setup);
+      // find the maximum index to reference zoomed out textures
+      // generally a heuristic based on image size and screen size
+      this->texture_grid->init_max_zoom_index(this->grid);
+      this->viewport.set_image_max_size(this->grid->image_max_size);
+      // adjust initial position to a sensible default depending on how
+      // many images are loaded
+      this->viewport.adjust_initial_location(grid_setup);
+    }
+    return load_images_successful;
   }
-  return load_images_successful;
+  return read_images_successful;
 };
+
+ImageGridViewerContext::~ImageGridViewerContext() {
+  if (this->grid != nullptr) {
+    delete this->grid;
+    this->grid=nullptr;
+  }
+  if (this->texture_grid != nullptr) {
+    delete this->texture_grid;
+    this->texture_grid=nullptr;
+  }
+}
 
 /**
  * The delay function for the main loop will be backend-specific and
@@ -255,6 +270,9 @@ int main(int argc, char *argv[]) {
   // like and where the images come from
   auto grid_setup=new GridSetupFromCommandLine(argc,argv);
   if (!grid_setup->successful()) {
+    if (grid_setup != nullptr) {
+      delete grid_setup;
+    }
     return 1;
   }
   // initialize application context
@@ -262,12 +280,24 @@ int main(int argc, char *argv[]) {
   // initialize SDL
   if (!imagegrid_viewer_context->sdl_app.successful()) {
     ERROR("Failed to SDL app initialize properly");
+    if (grid_setup != nullptr) {
+      delete grid_setup;
+    }
+    if (imagegrid_viewer_context != nullptr) {
+      delete imagegrid_viewer_context;
+    }
     return 1;
   }
   // initialialize the main data structures in the program, described
   // at the top of this file
   if (!imagegrid_viewer_context->initialize_grid(grid_setup)) {
     ERROR("Failed to load images!");
+    if (grid_setup != nullptr) {
+      delete grid_setup;
+    }
+    if (imagegrid_viewer_context != nullptr) {
+      delete imagegrid_viewer_context;
+    }
     return 1;
   }
   // TODO once the current development is done, see description at the
@@ -317,6 +347,12 @@ int main(int argc, char *argv[]) {
     MSG("Joining update_texture_thread.");
     update_texture_thread.join();
     MSG("Finished joining update_texture_thread.");
+  }
+  if (grid_setup != nullptr) {
+    delete grid_setup;
+  }
+  if (imagegrid_viewer_context != nullptr) {
+    delete imagegrid_viewer_context;
   }
   return 0;
 }

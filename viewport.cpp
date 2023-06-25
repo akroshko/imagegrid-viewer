@@ -18,18 +18,29 @@ BlitItem::BlitItem(TextureGridSquareZoomLevel* square, INT_T count, ViewportPixe
   this->image_pixel_size_viewport=new ViewportPixelSize(grid_image_size_zoomed);
 }
 
+BlitItem::~BlitItem () {
+  // if (this->viewport_pixel_coordinate != nullptr) {
+  //   delete this->viewport_pixel_coordinate;
+  //   this->viewport_pixel_coordinate=nullptr;
+  // }
+  // if (this->image_pixel_size_viewport != nullptr) {
+  //   delete this->image_pixel_size_viewport;
+  //   this->image_pixel_size_viewport=nullptr;
+  // }
+}
+
 void BlitItem::blit_this(SDLApp* sdl_app) {
   DEBUG("blit index: " << blit_index);
-  DEBUG("Viewport x: " << this->viewport_pixel_coordinate->xpixel << " Blit y: " << this->viewport_pixel_coordinate->ypixel
-        << " Viewport x size: " << this->image_pixel_size_viewport->wpixel << " Viewport y size: "  << this->image_pixel_size_viewport->hpixel);
+  DEBUG("Viewport x: " << this->viewport_pixel_coordinate->xpixel() << " Blit y: " << this->viewport_pixel_coordinate->ypixel()
+        << " Viewport x size: " << this->image_pixel_size_viewport->wpixel() << " Viewport y size: "  << this->image_pixel_size_viewport->hpixel());
   SDL_Rect scaled_rect;
   scaled_rect.x=this->viewport_pixel_coordinate->xpixel();
   scaled_rect.y=this->viewport_pixel_coordinate->ypixel();
   scaled_rect.w=this->image_pixel_size_viewport->wpixel();
   scaled_rect.h=this->image_pixel_size_viewport->hpixel();
-  DEBUG("blitscaled()");
+  DEBUG("SDL_BlitScaled()");
   SDL_BlitScaled(blit_square->display_texture, NULL, sdl_app->screen_surface, &scaled_rect);
-  DEBUG("blitscaled() done");
+  DEBUG("SDL_BlitScaled() done");
 }
 
 ViewPortCurrentState::ViewPortCurrentState () {
@@ -38,6 +49,17 @@ ViewPortCurrentState::ViewPortCurrentState () {
   this->zoom_last=NAN;
   this->grid_last = nullptr;
   this->been_updated=false;
+}
+
+ViewPortCurrentState::~ViewPortCurrentState () {
+  if (this->grid != nullptr) {
+    delete this->grid;
+    this->grid=nullptr;
+  }
+  if (this->grid_last != nullptr) {
+    delete this->grid_last;
+    this->grid_last=nullptr;
+  }
 }
 
 void ViewPortCurrentState::UpdateGridValues(FLOAT_T zoom, GridCoordinate *gridarg) {
@@ -74,8 +96,27 @@ ViewPort::ViewPort(ViewPortCurrentState *viewport_current_state) {
   viewport_current_state->UpdateGridValues(zoom,this->viewport_grid);
 }
 
+ViewPort::~ViewPort() {
+  if (this->viewport_pixel_size != nullptr) {
+    delete this->viewport_pixel_size;
+    this->viewport_pixel_size=nullptr;
+  }
+  if (this->viewport_grid != nullptr) {
+    delete this->viewport_grid;
+    this->viewport_grid=nullptr;
+  }
+  if (this->_image_max_size != nullptr) {
+    delete this->_image_max_size;
+    this->_image_max_size=nullptr;
+  }
+}
+
 INT_T ViewPort::find_zoom_index(FLOAT_T zoom) {
   return ::find_zoom_index(zoom);
+}
+
+void ViewPort::set_image_max_size(GridPixelSize * image_max_size) {
+  this->_image_max_size=new GridPixelSize(image_max_size);
 }
 
 void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
@@ -87,8 +128,8 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
   // I don't use objects for some things because I want to use FLOAT_T for intermediate calculations
   auto half_width = this->viewport_pixel_size->wpixel() / 2.0;
   auto half_height = this->viewport_pixel_size->hpixel() / 2.0;
-  auto viewport_left_distance_grid=(half_width/this->image_max_size->wpixel()/zoom);
-  auto viewport_top_distance_grid=(half_height/this->image_max_size->hpixel()/zoom);
+  auto viewport_left_distance_grid=(half_width/this->_image_max_size->wpixel()/zoom);
+  auto viewport_top_distance_grid=(half_height/this->_image_max_size->hpixel()/zoom);
   auto viewport_left_grid = this->viewport_grid->xgrid()-viewport_left_distance_grid;;
   auto viewport_top_grid = this->viewport_grid->ygrid()-viewport_top_distance_grid;
   auto zoom_index=this->find_zoom_index(this->zoom);
@@ -102,7 +143,7 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
       DEBUG("++ Adding Blittable " << blit_count << " at index " << gi << " ++++++++++++++++++++");
       auto upperleft_gridsquare=new GridCoordinate(i,j);
       auto viewport_pixel_0_grid=new GridCoordinate(viewport_left_grid,viewport_top_grid);
-      auto new_viewport_pixel_size=new ViewportPixelSize(this->image_max_size->wpixel(),this->image_max_size->hpixel());
+      auto new_viewport_pixel_size=new ViewportPixelSize(this->_image_max_size->wpixel(),this->_image_max_size->hpixel());
       auto viewport_cooridinate_pixel=new ViewportPixelCoordinate(upperleft_gridsquare,zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
       // TODO: this is where I chose zoom
       auto actual_zoom=zoom_index;
@@ -125,14 +166,14 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
           lock_succeeded=true;
           if ( !(texture_grid->squares[i][j].texture_array[actual_zoom]->display_texture == nullptr)) {
             texture_loaded=true;
-            auto grid_image_size_zoomed=new ViewportPixelSize((int)round(this->image_max_size->wpixel()*zoom),(int)round(this->image_max_size->hpixel()*zoom));
+            auto grid_image_size_zoomed=new ViewportPixelSize((int)round(this->_image_max_size->wpixel()*zoom),(int)round(this->_image_max_size->hpixel()*zoom));
             auto new_blit_item=BlitItem(texture_grid->squares[i][j].texture_array[actual_zoom],
                                         gi,
                                         viewport_cooridinate_pixel,
                                         grid_image_size_zoomed);
             this->blititems.push_back(new_blit_item);
-            DEBUG("blititem actual zoom: " << actual_zoom << " viewport pixel x: " << this->blititems[blit_count].viewport_pixel_coordinate->xpixel << " viewport pixel y: " << blititems[blit_count].viewport_pixel_coordinate->ypixel);
-            DEBUG("blititem actual zoom: " << actual_zoom << " viewport pixel size x: " << this->blititems[blit_count].image_pixel_size_viewport->wpixel << " viewport pixel size y: " << blititems[blit_count].image_pixel_size_viewport->hpixel);
+            DEBUG("blititem actual zoom: " << actual_zoom << " viewport pixel x: " << this->blititems[blit_count].viewport_pixel_coordinate->xpixel() << " viewport pixel y: " << blititems[blit_count].viewport_pixel_coordinate->ypixel());
+            DEBUG("blititem actual zoom: " << actual_zoom << " viewport pixel size x: " << this->blititems[blit_count].image_pixel_size_viewport->wpixel() << " viewport pixel size y: " << blititems[blit_count].image_pixel_size_viewport->hpixel());
           } else {
             texture_loaded=false;
           }
@@ -142,9 +183,13 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
         }
         // TODO: else raise error if things are terrible
         actual_zoom+=1;
+
       } while ( (actual_zoom <= max_zoom_index) && (!lock_succeeded || !texture_loaded)  );
-
-
+      // clean up
+      delete upperleft_gridsquare;
+      delete viewport_pixel_0_grid;
+      delete new_viewport_pixel_size;
+      delete viewport_cooridinate_pixel;
       DEBUG("++ End Blittable");
       blit_count++;
     }
@@ -161,7 +206,7 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
 bool ViewPort::do_input(SDLApp* sdl_app) {
   auto xgrid=this->viewport_grid->xgrid();
   auto ygrid=this->viewport_grid->ygrid();
-  auto keep_going = sdl_app->do_input(this->current_speed_x,this->current_speed_y,this->current_speed_zoom,this->zoom, this->zoom_speed, this->image_max_size, xgrid, ygrid);
+  auto keep_going = sdl_app->do_input(this->current_speed_x,this->current_speed_y,this->current_speed_zoom,this->zoom, this->zoom_speed, this->_image_max_size, xgrid, ygrid);
   this->viewport_grid=new GridCoordinate(xgrid,ygrid);
   // update the viewport
   this->viewport_current_state->UpdateGridValues(zoom,this->viewport_grid);

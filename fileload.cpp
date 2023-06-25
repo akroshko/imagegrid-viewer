@@ -132,8 +132,30 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
 ////////////////////////////////////////////////////////////////////////////////
 // load specific files as RGB
 
+bool read_tiff_data(std::string filename,
+                    size_t &width, size_t &height) {
+  auto success=true;
+
+  TIFF* tif = TIFFOpen(filename.c_str(), "r");
+
+  DEBUG("load_tiff_as_rgb() begin: " << filename);
+  if (!tif) {
+    ERROR("load_tiff_as_rgb() Failed to allocate raster for: " << filename);
+    success=false;
+  } else {
+    uint32 w,h;
+
+    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
+    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
+    width=w;
+    height=h;
+    TIFFClose(tif);
+  }
+  return success;
+}
+
 bool load_tiff_as_rgb(std::string filename,
-                      size_t &width, size_t &height,
+                      size_t width, size_t height,
                       unsigned char** rgb_data) {
   auto success=true;
 
@@ -151,6 +173,15 @@ bool load_tiff_as_rgb(std::string filename,
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
 
+    if (width != w) {
+      ERROR("Mismatched size of tiff width!");
+      return false;
+    }
+    if (height != h) {
+      ERROR("Mismatched size of tiff height!");
+      return false;
+    }
+
     npixels=w*h;
     raster = (uint32*) _TIFFmalloc(npixels * sizeof (uint32));
     if (raster == NULL) {
@@ -162,10 +193,10 @@ bool load_tiff_as_rgb(std::string filename,
         success=false;
       } else {
         // convert raster
-        width=(size_t)w;
-        height=(size_t)h;
+        // width=(size_t)w;
+        // height=(size_t)h;
         *rgb_data = new unsigned char[npixels*3];
-        DEBUG("Width: " << width << " Height: " << height);
+        // DEBUG("Width: " << width << " Height: " << height);
         // naive copy
         for (size_t i=0; i < npixels; i++) {
           (*rgb_data)[i*3]=(unsigned char)TIFFGetR(raster[i]);
@@ -181,8 +212,28 @@ bool load_tiff_as_rgb(std::string filename,
   return success;
 }
 
+bool read_png_data(std::string filename,
+                   size_t &width, size_t &height) {
+  bool success;
+  png_image image;
+  DEBUG("read_png_data() begin");
+
+  memset(&image, 0, (sizeof image));
+  image.version = PNG_IMAGE_VERSION;
+  if (png_image_begin_read_from_file(&image, filename.c_str()) == 0) {
+    ERROR("read_png_data() failed to read from file: " << filename);
+    success=false;
+  } else {
+    width=(size_t)image.width;
+    height=(size_t)image.height;
+    png_image_free(&image);
+  }
+  DEBUG("read_png_data() end");
+  return success;
+}
+
 bool load_png_as_rgb(std::string filename,
-                     size_t &width, size_t &height,
+                     size_t width, size_t height,
                      unsigned char** rgb_data) {
   bool success;
 
@@ -206,13 +257,15 @@ bool load_png_as_rgb(std::string filename,
       if (png_image_finish_read(&image, NULL, buffer, 0, NULL) == 0) {
         ERROR("load_png_as_rgb() failed to read full image!");
       } else {
-        width=(size_t)image.width;
-        height=(size_t)image.height;
+        // TODO: test for mismatched size
+        // width=(size_t)image.width;
+        // height=(size_t)image.height;
         *rgb_data=new unsigned char[PNG_IMAGE_SIZE(image)];
         DEBUG("Width: " << width << " Height: " << height);
         memcpy(*rgb_data,buffer,PNG_IMAGE_SIZE(image));
       }
       delete[] buffer;
+      buffer=nullptr;
     }
     png_image_free(&image);
   }
