@@ -28,9 +28,13 @@ const INT_T TEXTURE_ALIGNMENT = 4;
 
 const double INITIAL_ZOOM = 1.0;
 
-const double INITIAL_ZOOM_SPEED = 0.0;
+const double INITIAL_ZOOM_SPEED = 1.0;
+const double INITIAL_CURRENT_ZOOM_SPEED=0.0;
 
 const double INITIAL_X_Y_SPEED = 0.0;
+
+const double INITIAL_X = 1.0;
+const double INITIAL_Y = 1.0;
 
 // this is set higher than any images I'm working with
 // when data structure improve it could be dynamic

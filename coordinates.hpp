@@ -7,6 +7,7 @@
 #include "debug.hpp"
 #include "error.hpp"
 #include "types.hpp"
+#include <memory>
 
 class GridCoordinate;
 class GridPixelCoordinate;

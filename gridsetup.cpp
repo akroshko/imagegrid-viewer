@@ -12,12 +12,6 @@
 #include <getopt.h>
 #include <string.h>
 
-GridSetup::~GridSetup() {
-  if (this->grid_image_size != nullptr) {
-    delete this->grid_image_size;
-  }
-}
-
 bool GridSetup::successful() {
   return this->_successful;
 }

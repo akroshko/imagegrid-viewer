@@ -53,8 +53,6 @@
  */
 class ImageGridViewerContext {
 public:
-  ImageGridViewerContext()=default;
-  ~ImageGridViewerContext();
   /**
    * Intialize the image grid using a subclass of the GridSetup class.
    *
@@ -67,7 +65,8 @@ public:
    *                   as map coorindates, configuration files, or the
    *                   input from GUI could be considered.
    */
-  bool initialize_grid(GridSetup *grid_setup);
+  ImageGridViewerContext(GridSetup *grid_setup);
+  ~ImageGridViewerContext();
   /** A backend neutral delay that occurs at the end of the main loop */
   void delay();
   /**
@@ -78,7 +77,7 @@ public:
    * graphics backend.  This nicely encapsulates the C++ -> C library
    * interface away from the rest of the program.
    */
-  SDLApp sdl_app;
+  SDLApp *sdl_app=nullptr;
   /**
    * Represents the loaded images as a grid.
    *
@@ -98,7 +97,7 @@ public:
    * the zoom level, any move/zoom speed data, and any information on
    * user input.
    */
-  ViewPort viewport = ViewPort(&viewport_current_state);
+  ViewPort *viewport = nullptr;
   /**
    * Stores textures at various zoom levels reflecting the needs of the viewport.
    *
@@ -118,7 +117,7 @@ public:
    * objects.  The least-zoomed textures are always available so
    * something can always be rendered.
    */
-  TextureUpdate texture_update = TextureUpdate(&viewport_current_state);
+  TextureUpdate *texture_update = nullptr;
   /**
    * Class used to transfer the current state of the viewport in a
    * threadsafe way.
@@ -130,7 +129,8 @@ public:
    * description of ImageGrid above) I will evaluate whether this is
    * the best technique.
    */
-  ViewPortCurrentState viewport_current_state;
+  ViewPortCurrentState *viewport_current_state = nullptr;
+  bool successful;
 };
 
 /**
@@ -143,38 +143,54 @@ public:
  *                   could be used to setup the command line
  *                   arguments.
  */
-bool ImageGridViewerContext::initialize_grid(GridSetup *grid_setup) {
+ImageGridViewerContext::ImageGridViewerContext(GridSetup *grid_setup) {
+  this->sdl_app=new SDLApp();
+  this->viewport_current_state=new ViewPortCurrentState();
+  this->viewport=new ViewPort(this->viewport_current_state);
+  this->texture_update=new TextureUpdate(this->viewport_current_state);
   this->grid=new ImageGrid(grid_setup);
   // this is where the images are loaded and can fail since it involves file I/O
   // TODO: work is in progress to load in a seperate thread
   auto read_images_successful=this->grid->read_grid_info(grid_setup);
-  if (read_images_successful) {
-    auto load_images_successful=this->grid->load_grid(grid_setup);
-    if(load_images_successful) {
-      // these depend on the images being loaded successfully but none
-      // of these should not fail except in the case of OOM errors
-      this->texture_grid=new TextureGrid(grid_setup);
-      // find the maximum index to reference zoomed out textures
-      // generally a heuristic based on image size and screen size
-      this->texture_grid->init_max_zoom_index(this->grid);
-      this->viewport.set_image_max_size(this->grid->image_max_size);
-      // adjust initial position to a sensible default depending on how
-      // many images are loaded
-      this->viewport.adjust_initial_location(grid_setup);
-    }
-    return load_images_successful;
+  if(read_images_successful) {
+    // these depend on the images being loaded successfully but none
+    // of these should not fail except in the case of OOM errors
+    this->texture_grid=new TextureGrid(grid_setup);
+    // find the maximum index to reference zoomed out textures
+    // generally a heuristic based on image size and screen size
+    this->texture_grid->init_max_zoom_index(this->grid);
+    this->viewport->set_image_max_size(this->grid->image_max_size);
+    // adjust initial position to a sensible default depending on how
+    // many images are loaded
+    this->viewport->adjust_initial_location(grid_setup);
   }
-  return read_images_successful;
+  this->successful=read_images_successful;
 };
 
 ImageGridViewerContext::~ImageGridViewerContext() {
+  if (this->texture_grid != nullptr) {
+    delete this->texture_grid;
+    this->texture_grid=nullptr;
+  }
   if (this->grid != nullptr) {
     delete this->grid;
     this->grid=nullptr;
   }
-  if (this->texture_grid != nullptr) {
-    delete this->texture_grid;
-    this->texture_grid=nullptr;
+  if (this->texture_update != nullptr) {
+    delete this->texture_update;
+    this->texture_update=nullptr;
+  }
+  if (this->viewport != nullptr) {
+    delete this->viewport;
+    this->viewport=nullptr;
+  }
+  if (this->viewport_current_state != nullptr) {
+    delete this->viewport_current_state;
+    this->viewport_current_state=nullptr;
+  }
+  if (this->sdl_app != nullptr) {
+    delete this->sdl_app;
+    this->sdl_app=nullptr;
   }
 }
 
@@ -186,7 +202,60 @@ ImageGridViewerContext::~ImageGridViewerContext() {
  * usage pattern of SDL.
  */
 void ImageGridViewerContext::delay () {
-  this->sdl_app.delay();
+  this->sdl_app->delay();
+};
+
+
+/**
+ * Class to hold the thread that continually updates the loaded data
+ * for the ImageGrid.
+ *
+ */
+class UpdateImageGridThread {
+public:
+  UpdateImageGridThread(GridSetup *grid_setup, ImageGrid *grid) {
+    this->_grid=grid;
+    this->_grid_setup=grid_setup;
+  }
+  UpdateImageGridThread(const UpdateImageGridThread&) = delete;
+  UpdateImageGridThread & operator=(const UpdateImageGridThread&) = delete;
+  /**
+   * Start the thread itself.
+   */
+  // std::thread
+  std::thread start() {
+    std::thread _worker_thread(&UpdateImageGridThread::run, this);
+    return _worker_thread;
+  }
+  void terminate() {
+    this->_keep_running=false;
+  }
+  void wait_till_load() {
+    while (!this->_all_loaded) {
+      std::this_thread::sleep_for (std::chrono::milliseconds(10));
+    }
+  }
+private:
+  /**
+   * Actually runs the function and holds the loop that updates the
+   * textures.
+   */
+  void run () {
+    MSG("Beginning thread in UpdateImageGridThread.");
+    auto load_images_successful=this->_grid->load_grid(this->_grid_setup);
+    MSG("Finished loading images in UpdateImageGridThread.");
+    this->_all_loaded=true;
+    while (this->_keep_running) {
+      // should be fine for update interval
+      std::this_thread::sleep_for (std::chrono::milliseconds(10));
+    }
+    MSG("Ending execution in UpdateImageGridThread.");
+  }
+  ImageGrid *_grid;
+  GridSetup *_grid_setup;
+  std::atomic<bool> _keep_running{true};
+  std::atomic<bool> _all_loaded{false};
+  std::thread _worker_thread;
 };
 
 /**
@@ -242,7 +311,7 @@ private:
                                                    this->_texture_grid);
       // since we are lazily responding to user input, 10 milliseconds
       // should be fine for update interval
-      std::this_thread::sleep_for (std::chrono::milliseconds(10));
+      std::this_thread::sleep_for (std::chrono::milliseconds(100));
     }
     MSG("Ending execution in UpdateTextureThread.");
   }
@@ -276,9 +345,12 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   // initialize application context
-  auto imagegrid_viewer_context = new ImageGridViewerContext();
+  // for (auto & f :grid_setup->filenames) {
+  //   DEBUG("+++++ " << f);
+  // }
+  auto imagegrid_viewer_context = new ImageGridViewerContext(grid_setup);
   // initialize SDL
-  if (!imagegrid_viewer_context->sdl_app.successful()) {
+  if (!imagegrid_viewer_context->sdl_app->successful()) {
     ERROR("Failed to SDL app initialize properly");
     if (grid_setup != nullptr) {
       delete grid_setup;
@@ -290,8 +362,8 @@ int main(int argc, char *argv[]) {
   }
   // initialialize the main data structures in the program, described
   // at the top of this file
-  if (!imagegrid_viewer_context->initialize_grid(grid_setup)) {
-    ERROR("Failed to load images!");
+  if (!imagegrid_viewer_context->successful) {
+    ERROR("Failed to find images!");
     if (grid_setup != nullptr) {
       delete grid_setup;
     }
@@ -304,19 +376,17 @@ int main(int argc, char *argv[]) {
   // top of this file, I would like to get rid of the run input once
 
   // get input once before starting thread
-  DEBUG("input() initial");
-  continue_flag=imagegrid_viewer_context->viewport.do_input(
-    &imagegrid_viewer_context->sdl_app);
-  DEBUG("input() done");
-  // update the current textures once before starting the thread
-  DEBUG("find_current_textures() initial");
-  imagegrid_viewer_context->texture_update.find_current_textures(
-    imagegrid_viewer_context->grid,
-    imagegrid_viewer_context->texture_grid);
-  DEBUG("find_current_textures() initial done");
-  // start the thread that updates textures
+  // start the thead that loads the imagegrid
+  // initialize files
+  // return 0;
+  DEBUG("UpdateImageGridThread start()");
+  auto update_imagegrid_thread_class = std::make_unique<UpdateImageGridThread>(
+    grid_setup,
+    imagegrid_viewer_context->grid);
+  auto update_imagegrid_thread=update_imagegrid_thread_class->start();
+  update_imagegrid_thread_class->wait_till_load();
   auto update_texture_thread_class = std::make_unique<UpdateTextureThread>(
-    &imagegrid_viewer_context->texture_update,
+    imagegrid_viewer_context->texture_update,
     imagegrid_viewer_context->grid,
     imagegrid_viewer_context->texture_grid);
   auto update_texture_thread = update_texture_thread_class->start();
@@ -325,21 +395,29 @@ int main(int argc, char *argv[]) {
     DEBUG("++ Main loop begin");
     // read input, this also adjusts the coordinates of the viewport
     DEBUG("input()");
-    continue_flag=imagegrid_viewer_context->viewport.do_input(&imagegrid_viewer_context->sdl_app);
+    continue_flag=imagegrid_viewer_context->viewport->do_input(imagegrid_viewer_context->sdl_app);
     DEBUG("input() done");
     // find the textures that need to be blit to the viewport
     // if the textures haven't been loaded, a smaller zoomed version is used
     DEBUG("find_viewport_blit()");
-    imagegrid_viewer_context->viewport.find_viewport_blit(
+    imagegrid_viewer_context->viewport->find_viewport_blit(
       imagegrid_viewer_context->texture_grid,
-      &imagegrid_viewer_context->sdl_app);
+      imagegrid_viewer_context->sdl_app);
     DEBUG("find_viewport_blit() done");
+    // testing code
+    std::this_thread::sleep_for (std::chrono::milliseconds(10));
     // update the screen and delay before starting the loop again
     imagegrid_viewer_context->delay();
 #ifdef DEBUG_MESSAGES
     DEBUG("Loop count: " << loop_count);
     loop_count++;
 #endif
+  }
+  update_imagegrid_thread_class->terminate();
+  if (update_imagegrid_thread.joinable()) {
+    MSG("Joining update_imagegrid_thread.");
+    update_imagegrid_thread.join();
+    MSG("Finished joining update_imagegrid_thread.");
   }
   // allow update_texture_thread to cleanly terminate
   update_texture_thread_class->terminate();

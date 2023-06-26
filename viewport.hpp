@@ -121,7 +121,7 @@ private:
   /** the current y speed of movement per SDL frame */
   FLOAT_T current_speed_y = INITIAL_X_Y_SPEED;
   /** the current speed of zoom per SDL frame */
-  FLOAT_T current_speed_zoom = INITIAL_ZOOM_SPEED;
+  FLOAT_T current_speed_zoom = INITIAL_CURRENT_ZOOM_SPEED;
   /** object for transfering the state of the viewport in a threadsafe manner */
   ViewPortCurrentState *viewport_current_state=nullptr;
   /** Stores the next items to be blit to the viewport. */

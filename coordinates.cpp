@@ -9,6 +9,7 @@
 #include "coordinates.hpp"
 // C++ headers
 #include <cmath>
+#include <memory>
 
 GridImageSize::GridImageSize(GridImageSize *grid_image_size) {
   this->_wimage=grid_image_size->_wimage;

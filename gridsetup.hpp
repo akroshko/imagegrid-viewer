@@ -12,6 +12,7 @@
 #include "coordinates.hpp"
 
 #include <vector>
+#include <memory>
 
 /**
  * Contains the data required to setup the grid.
@@ -19,11 +20,13 @@
 class GridSetup {
 public:
   GridSetup()=default;
-  ~GridSetup();
+  GridSetup(const GridSetup&)=delete;
+  GridSetup& operator=(const GridSetup&)=delete;
+  ~GridSetup() = default;
   /** Indicate whether setup was successful. */
   bool successful();
   /** The size of the grid loaded. */
-  GridImageSize* grid_image_size=nullptr;
+  GridImageSize *grid_image_size=nullptr;
   /** Stores a path of images to load. */
   std::vector<std::string> filenames;
   // TODO move internally to constructor
@@ -41,7 +44,10 @@ protected:
 class GridSetupFromCommandLine : public GridSetup {
 public:
   GridSetupFromCommandLine(int argc, char* const* argv);
+  GridSetupFromCommandLine(const GridSetupFromCommandLine&) = delete;
+  GridSetupFromCommandLine& operator=(const GridSetupFromCommandLine&) = delete;
   ~GridSetupFromCommandLine() = default;
+
 };
 
 #endif

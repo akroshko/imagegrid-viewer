@@ -12,10 +12,11 @@
 #include "coordinates.hpp"
 #include "gridsetup.hpp"
 // C++ headers
-#include <vector>
 #include <iostream>
-#include <string>
+#include <vector>
+#include <memory>
 #include <mutex>
+#include <string>
 
 // library headers
 #include <SDL2/SDL.h>
@@ -83,7 +84,7 @@ public:
  */
 class TextureGridSquareZoomLevel {
 public:
-  TextureGridSquareZoomLevel();
+  TextureGridSquareZoomLevel()=default;
   ~TextureGridSquareZoomLevel();
   // lock when the display_area is being worked on
   std::mutex display_mutex;
@@ -131,9 +132,11 @@ public:
    *
    * @param zoom_level
    */
-  bool load_texture(TextureGridSquare &dest_square,
-                    ImageGridSquare &source_square,
-                    INT_T zoom_level);
+  bool load_texture(TextureGridSquareZoomLevel *dest_square,
+                    ImageGridSquareZoomLevel *source_square,
+                    INT_T zoom_level,
+                    INT_T wpixel,
+                    INT_T hpixel);
   /**
    * Update the textures based on the current coordinates and zoom
    * level.
