@@ -116,7 +116,8 @@ void SDLApp::blank_viewport(ViewportPixelSize *viewport_pixel_size) {
 }
 
 void SDLApp::delay () {
-  SDL_Delay(SDL_DELAY);
+  // SDL_Delay(SDL_DELAY);
+  SDL_Delay(64);
 }
 
 bool SDLApp::successful() {

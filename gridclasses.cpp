@@ -11,6 +11,7 @@
 #include "gridsetup.hpp"
 #include "gridclasses.hpp"
 // C++ headers
+#include <atomic>
 #include <cmath>
 #include <iostream>
 #include <string>
@@ -67,9 +68,8 @@ void ImageGridSquare::read_file (std::string filename) {
 }
 
 void ImageGridSquare::load_file (std::string filename) {
-  // std::unique_lock<std::mutex> lock(this->image_array[IMAGE_GRID_INDEX]->load_mutex);
   // block until things load
-  this->image_array[IMAGE_GRID_INDEX]->load_mutex.lock();
+  std::lock_guard<std::mutex> guard(this->image_array[IMAGE_GRID_INDEX]->load_mutex);
   if (check_tiff(filename)) {
     DEBUG("Loading TIFF: " << filename);
     // TODO: check success
@@ -77,6 +77,7 @@ void ImageGridSquare::load_file (std::string filename) {
                      this->image_array[IMAGE_GRID_INDEX]->rgb_wpixel,
                      this->image_array[IMAGE_GRID_INDEX]->rgb_hpixel,
                      &this->image_array[IMAGE_GRID_INDEX]->rgb_data);
+    // printing pointer here
     DEBUG("++++++++++++++++++++ PTR: " << (void *)this->image_array[IMAGE_GRID_INDEX]->rgb_data);
     DEBUG("Done TIFF: " << filename);
   } else if (check_png(filename)) {
@@ -90,7 +91,8 @@ void ImageGridSquare::load_file (std::string filename) {
   } else {
     ERROR("ImageGridSquare::load_file can't load: " << filename);
   }
-  this->image_array[IMAGE_GRID_INDEX]->load_mutex.unlock();
+  this->image_array[IMAGE_GRID_INDEX]->is_loaded=true;
+
 }
 
 ImageGrid::ImageGrid(GridSetup *grid_setup) {
@@ -158,17 +160,19 @@ bool ImageGrid::read_grid_info(GridSetup* grid_setup) {
   return successful;
 }
 
-bool ImageGrid::load_grid(GridSetup *grid_setup) {
+bool ImageGrid::load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running) {
   auto successful=true;
   // TODO: sort out this when refactoring file loading
   for (INT_T i = 0; i < this->grid_image_size->wimage(); i++) {
     if (!successful) {
-      squares[i]=nullptr;
       continue;
     }
     for (INT_T j = 0; j < this->grid_image_size->himage(); j++) {
       if (!successful) {
         continue;
+      }
+      if (!keep_running) {
+        successful=false;
       }
       auto ij=j*this->grid_image_size->wimage()+i;
       MSG("Loading: " << grid_setup->filenames[ij]);
@@ -187,7 +191,6 @@ TextureGridSquareZoomLevel::~TextureGridSquareZoomLevel () {
 }
 
 TextureGridSquare::TextureGridSquare () {
-  DEBUG("TextureGridSquare Constructor");
   this->texture_array=new TextureGridSquareZoomLevel*[MAX_ZOOM_LEVELS]();
   for (auto i = 0; i < MAX_ZOOM_LEVELS; i++) {
     this->texture_array[i]=new TextureGridSquareZoomLevel();
@@ -266,7 +269,6 @@ bool TextureGrid::load_texture (TextureGridSquareZoomLevel *dest_square,
   auto dest_wpixel=wpixel/zoom_reduction;
   auto dest_hpixel=hpixel/zoom_reduction;
   dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
-  // DEBUG("SDL_CreateRGBSurfaceWithFormat: " << dest_wpixel << " " << dest_hpixel << "\n");
   dest_square->display_texture = SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
   // skip if can't load texture
   if (dest_square->display_texture) {
@@ -328,39 +330,45 @@ void TextureGrid::update_textures (ImageGrid *grid,
     MSGNONEWLINE("| ");
     // TODO: this will eventually be a switch statement to load in different things
     for (INT_T i = 0; i < this->grid_image_size->wimage(); i++) {
-      std::unique_lock<std::mutex> display_lock(this->squares[i][j].texture_array[zoom_level]->display_mutex, std::defer_lock);
+      auto dest_square=this->squares[i][j].texture_array[zoom_level];
+      std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
       // skip everything if locked
       if (display_lock.try_lock()) {
         // try and get the source square mutex
-          if (!load_all &&
-              ((i < next_smallest(grid_coordinate->xgrid())) ||
-               (i > next_largest(grid_coordinate->xgrid())) ||
-               (j < next_smallest(grid_coordinate->ygrid())) ||
-               (j > next_largest(grid_coordinate->ygrid())))) {
-            MSGNONEWLINE("0 ");
-            if (this->squares[i][j].texture_array[zoom_level]->display_texture != nullptr) {
-              SDL_FreeSurface(this->squares[i][j].texture_array[zoom_level]->display_texture);
-              this->squares[i][j].texture_array[zoom_level]->display_texture = nullptr;
-            }
-          } else {
-            // std::unique_lock<std::mutex> load_lock(grid->squares[i][j].image_array[IMAGE_GRID_INDEX]->load_mutex, std::defer_lock);
-            // if (load_lock.try_lock()) {
-            if(grid->squares[i][j].image_array[IMAGE_GRID_INDEX]->load_mutex.try_lock()) {
+        if (!load_all &&
+            ((i < next_smallest(grid_coordinate->xgrid())) ||
+             (i > next_largest(grid_coordinate->xgrid())) ||
+             (j < next_smallest(grid_coordinate->ygrid())) ||
+             (j > next_largest(grid_coordinate->ygrid())))) {
+          MSGNONEWLINE("0 ");
+          if (dest_square->display_texture != nullptr) {
+            SDL_FreeSurface(dest_square->display_texture);
+            dest_square->display_texture = nullptr;
+          }
+        } else {
+          auto image_square=grid->squares[i][j].image_array[IMAGE_GRID_INDEX];
+          if(image_square->is_loaded) {
+            std::unique_lock<std::mutex> load_lock(image_square->load_mutex, std::defer_lock);
+            if(load_lock.try_lock()) {
               MSGNONEWLINE("L ");
               this->squares[i][j].texture_pixel_size=new GridPixelSize(this->max_pixel_size);
-              if (this->squares[i][j].texture_array[zoom_level]->display_texture == nullptr) {
-                this->load_texture(this->squares[i][j].texture_array[zoom_level],
-                                   grid->squares[i][j].image_array[IMAGE_GRID_INDEX],
+              if (dest_square->display_texture == nullptr) {
+                this->load_texture(dest_square,
+                                   image_square,
                                    zoom_level,
                                    this->squares[i][j].texture_pixel_size->wpixel(),
                                    this->squares[i][j].texture_pixel_size->hpixel());
               } else {
-                DEBUG("Unable to aquire load_mutex in TextureGrid::update_textures");
+                DEBUG("Display texture is nullptr in TextureGrid::update_textures");
               }
-              grid->squares[i][j].image_array[IMAGE_GRID_INDEX]->load_mutex.unlock();
+            } else {
+              DEBUG("Unable to aquire load_mutex in TextureGrid::update_textures corresponding to: " << i << " " << j);
             }
+          } else {
+            DEBUG("File not loaded according to is_loaded in TextureGrid::update_textures: " << i << " " << j);
           }
-          display_lock.unlock();
+        }
+        display_lock.unlock();
       } else {
         DEBUG("Unable to aquire display_mutex in TextureGrid::update_textures");
       }

@@ -21,6 +21,7 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
   FLOAT_T zoom;
   GridCoordinate *viewport_grid=nullptr;
   auto view_changed=this->viewport_current_state->GetGridValues(zoom,viewport_grid);
+  DEBUG("TextureUpdate::find_current_textures()");
   // if (view_changed) {
   // don't do anything here if viewport_curret_state hasn't been initialized
   if (viewport_grid != nullptr) {
@@ -28,8 +29,6 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
     auto max_hpixel=texture_grid->max_pixel_size->hpixel();
     auto max_zoom=texture_grid->textures_max_zoom_index;
     auto max_zoom_index=max_zoom-1;
-    DEBUG("max_grid_width: " << max_wpixel);
-    DEBUG("max_grid_height: " << max_hpixel);
     auto zoom_index=this->find_zoom_index(zoom);
     DEBUG("zoom: " << zoom << " zoom index 1: " << zoom_index << " max: " << texture_grid->textures_max_zoom_index);
     if (zoom_index > max_zoom_index) {
@@ -74,6 +73,9 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
       }
     }
     delete viewport_grid;
+  } else {
+    DEBUG("Skipping find_current_textures due to invalid viewport.");
   }
+  DEBUG("TextureUpdate::find_current_textures() end");
   // }
 }

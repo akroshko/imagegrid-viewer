@@ -232,7 +232,7 @@ public:
   }
   void wait_till_load() {
     while (!this->_all_loaded) {
-      std::this_thread::sleep_for (std::chrono::milliseconds(10));
+      std::this_thread::sleep_for(THREAD_SLEEP);
     }
   }
 private:
@@ -242,12 +242,13 @@ private:
    */
   void run () {
     MSG("Beginning thread in UpdateImageGridThread.");
-    auto load_images_successful=this->_grid->load_grid(this->_grid_setup);
+    auto load_images_successful=this->_grid->load_grid(this->_grid_setup,this->_keep_running);
     MSG("Finished loading images in UpdateImageGridThread.");
     this->_all_loaded=true;
     while (this->_keep_running) {
       // should be fine for update interval
-      std::this_thread::sleep_for (std::chrono::milliseconds(10));
+      std::this_thread::yield();
+      std::this_thread::sleep_for(THREAD_SLEEP);
     }
     MSG("Ending execution in UpdateImageGridThread.");
   }
@@ -309,9 +310,8 @@ private:
     while (this->_keep_running) {
       this->_texture_update->find_current_textures(this->_grid,
                                                    this->_texture_grid);
-      // since we are lazily responding to user input, 10 milliseconds
-      // should be fine for update interval
-      std::this_thread::sleep_for (std::chrono::milliseconds(100));
+      std::this_thread::yield();
+      std::this_thread::sleep_for (THREAD_SLEEP);
     }
     MSG("Ending execution in UpdateTextureThread.");
   }
@@ -344,10 +344,6 @@ int main(int argc, char *argv[]) {
     }
     return 1;
   }
-  // initialize application context
-  // for (auto & f :grid_setup->filenames) {
-  //   DEBUG("+++++ " << f);
-  // }
   auto imagegrid_viewer_context = new ImageGridViewerContext(grid_setup);
   // initialize SDL
   if (!imagegrid_viewer_context->sdl_app->successful()) {
@@ -384,28 +380,28 @@ int main(int argc, char *argv[]) {
     grid_setup,
     imagegrid_viewer_context->grid);
   auto update_imagegrid_thread=update_imagegrid_thread_class->start();
-  update_imagegrid_thread_class->wait_till_load();
+  // update_imagegrid_thread_class->wait_till_load();
   auto update_texture_thread_class = std::make_unique<UpdateTextureThread>(
     imagegrid_viewer_context->texture_update,
     imagegrid_viewer_context->grid,
     imagegrid_viewer_context->texture_grid);
   auto update_texture_thread = update_texture_thread_class->start();
   while (continue_flag) {
-    DEBUG("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-    DEBUG("++ Main loop begin");
+    DEBUG("================================================================================");
+    DEBUG("== Main loop begin");
     // read input, this also adjusts the coordinates of the viewport
     DEBUG("input()");
     continue_flag=imagegrid_viewer_context->viewport->do_input(imagegrid_viewer_context->sdl_app);
-    DEBUG("input() done");
+    DEBUG("input() end");
     // find the textures that need to be blit to the viewport
     // if the textures haven't been loaded, a smaller zoomed version is used
     DEBUG("find_viewport_blit()");
     imagegrid_viewer_context->viewport->find_viewport_blit(
       imagegrid_viewer_context->texture_grid,
       imagegrid_viewer_context->sdl_app);
-    DEBUG("find_viewport_blit() done");
+    DEBUG("find_viewport_blit() end");
     // testing code
-    std::this_thread::sleep_for (std::chrono::milliseconds(10));
+    // std::this_thread::sleep_for (THREAD_SLEEP);
     // update the screen and delay before starting the loop again
     imagegrid_viewer_context->delay();
 #ifdef DEBUG_MESSAGES

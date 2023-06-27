@@ -30,7 +30,7 @@ BlitItem::~BlitItem () {
 }
 
 void BlitItem::blit_this(SDLApp* sdl_app) {
-  DEBUG("blit index: " << blit_index);
+  DEBUG("BlitItem::blit_this() blit index: " << blit_index);
   DEBUG("Viewport x: " << this->viewport_pixel_coordinate->xpixel() << " Blit y: " << this->viewport_pixel_coordinate->ypixel()
         << " Viewport x size: " << this->image_pixel_size_viewport->wpixel() << " Viewport y size: "  << this->image_pixel_size_viewport->hpixel());
   SDL_Rect scaled_rect;
@@ -38,9 +38,8 @@ void BlitItem::blit_this(SDLApp* sdl_app) {
   scaled_rect.y=this->viewport_pixel_coordinate->ypixel();
   scaled_rect.w=this->image_pixel_size_viewport->wpixel();
   scaled_rect.h=this->image_pixel_size_viewport->hpixel();
-  DEBUG("SDL_BlitScaled()");
   SDL_BlitScaled(blit_square->display_texture, NULL, sdl_app->screen_surface, &scaled_rect);
-  DEBUG("SDL_BlitScaled() done");
+  DEBUG("BlitItem::blit_this() done");
 }
 
 ViewPortCurrentState::ViewPortCurrentState () {
@@ -116,6 +115,7 @@ void ViewPort::set_image_max_size(GridPixelSize * image_max_size) {
 }
 
 void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
+  DEBUG("ViewPort::find_viewport_blit()");
   INT_T blit_count=0;
   // locking the textures
   std::vector<std::unique_lock<std::mutex>> mutex_vector{};
@@ -136,7 +136,7 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
   for (INT_T i = 0; i < texture_grid->grid_image_size->wimage(); i++) {
     for (INT_T j = 0; j < texture_grid->grid_image_size->himage(); j++) {
       auto gi=j*texture_grid->grid_image_size->wimage()+i;
-      DEBUG("++ Adding Blittable " << blit_count << " at index " << gi << " ++++++++++++++++++++");
+      DEBUG("== Adding Blittable " << blit_count << " at index " << gi << " ==========");
       auto upperleft_gridsquare=new GridCoordinate(i,j);
       auto viewport_pixel_0_grid=new GridCoordinate(viewport_left_grid,viewport_top_grid);
       auto new_viewport_pixel_size=new ViewportPixelSize(this->_image_max_size->wpixel(),this->_image_max_size->hpixel());
@@ -157,12 +157,14 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
       bool texture_loaded=false;
       do {
         lock_succeeded=false;
+        texture_loaded=false;
         mutex_vector.emplace_back(std::unique_lock<std::mutex>{texture_grid->squares[i][j].texture_array[actual_zoom]->display_mutex,std::defer_lock});
         if (mutex_vector.back().try_lock()) {
           lock_succeeded=true;
           if ( texture_grid->squares[i][j].texture_array[actual_zoom]->display_texture != nullptr) {
             texture_loaded=true;
-            auto grid_image_size_zoomed=new ViewportPixelSize((int)round(this->_image_max_size->wpixel()*zoom),(int)round(this->_image_max_size->hpixel()*zoom));
+            auto grid_image_size_zoomed=new ViewportPixelSize((int)round(this->_image_max_size->wpixel()*zoom),
+                                                              (int)round(this->_image_max_size->hpixel()*zoom));
             auto new_blit_item=BlitItem(texture_grid->squares[i][j].texture_array[actual_zoom],
                                         gi,
                                         viewport_pixel_coordinate,
@@ -195,15 +197,16 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
     }
   }
   // blit blitables
+  DEBUG("ViewPort::find_viewport_blit() blitting");
   this->blank_viewport(sdl_app);
   for (INT_T i = 0; i < this->blititems.size(); i++) {
-    DEBUG("blit loop:" << i);
     this->blititems[i].blit_this(sdl_app);
   }
   SDL_UpdateWindowSurface(sdl_app->window);
   for (auto & m : mutex_vector) {
     m.unlock();
   }
+  DEBUG("ViewPort::find_viewport_blit() end");
 }
 
 bool ViewPort::do_input(SDLApp* sdl_app) {

@@ -5,6 +5,7 @@
 #ifndef DEFAULTS_HPP
 #define DEFAULTS_HPP
 #include "types.hpp"
+#include <chrono>
 
 // screen width
 // TODO: make dynamic and configurable
@@ -42,5 +43,7 @@ const INT_T MAX_ZOOM_LEVELS=10;
 
 // a placeholder index that will be changed in the future
 const INT_T IMAGE_GRID_INDEX=0;
+
+const auto THREAD_SLEEP = std::chrono::milliseconds(50);
 
 #endif

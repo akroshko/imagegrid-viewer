@@ -12,11 +12,12 @@
 #include "coordinates.hpp"
 #include "gridsetup.hpp"
 // C++ headers
+#include <atomic>
 #include <iostream>
-#include <vector>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 // library headers
 #include <SDL2/SDL.h>
@@ -32,6 +33,7 @@ public:
   ImageGridSquareZoomLevel()=default;
   ~ImageGridSquareZoomLevel();
   std::mutex load_mutex;
+  std::atomic<bool> is_loaded{false};
   // TODO: these don't use an object from coordinates.hpp since they
   // are raw memory
   /** */
@@ -69,7 +71,7 @@ public:
   ImageGrid(GridSetup *grid_setup);
   ~ImageGrid();
   bool read_grid_info(GridSetup *grid_setup);
-  bool load_grid(GridSetup *grid_setup);
+  bool load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running);
   /** Store the coordinates */
   GridImageSize* grid_image_size=nullptr;
   /** Maximum size of images loaded into the grid. */
