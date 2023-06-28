@@ -14,4 +14,6 @@ FLOAT_T next_largest(FLOAT_T x);
 
 FLOAT_T half(FLOAT_T x);
 
+#define DELETE_IF_NOT_NULLPTR(A) if(A != nullptr) {delete A; A=nullptr;}
+#define DELETE_ARRAY_IF_NOT_NULLPTR(A) if(A != nullptr) {delete[] A; A=nullptr;}
 #endif

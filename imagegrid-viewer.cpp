@@ -32,6 +32,7 @@
 #include "error.hpp"
 #include "types.hpp"
 #include "defaults.hpp"
+#include "utility.hpp"
 #include "gridsetup.hpp"
 #include "sdl.hpp"
 #include "gridclasses.hpp"
@@ -65,8 +66,13 @@ public:
    *                   as map coorindates, configuration files, or the
    *                   input from GUI could be considered.
    */
+  ImageGridViewerContext()=delete;
   ImageGridViewerContext(GridSetup *grid_setup);
   ~ImageGridViewerContext();
+  ImageGridViewerContext(const ImageGridViewerContext&)=delete;
+  ImageGridViewerContext(const ImageGridViewerContext&&)=delete;
+  ImageGridViewerContext& operator=(const ImageGridViewerContext&)=delete;
+  ImageGridViewerContext& operator=(const ImageGridViewerContext&&)=delete;
   /** A backend neutral delay that occurs at the end of the main loop */
   void delay();
   /**
@@ -168,30 +174,12 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup *grid_setup) {
 };
 
 ImageGridViewerContext::~ImageGridViewerContext() {
-  if (this->texture_grid != nullptr) {
-    delete this->texture_grid;
-    this->texture_grid=nullptr;
-  }
-  if (this->grid != nullptr) {
-    delete this->grid;
-    this->grid=nullptr;
-  }
-  if (this->texture_update != nullptr) {
-    delete this->texture_update;
-    this->texture_update=nullptr;
-  }
-  if (this->viewport != nullptr) {
-    delete this->viewport;
-    this->viewport=nullptr;
-  }
-  if (this->viewport_current_state != nullptr) {
-    delete this->viewport_current_state;
-    this->viewport_current_state=nullptr;
-  }
-  if (this->sdl_app != nullptr) {
-    delete this->sdl_app;
-    this->sdl_app=nullptr;
-  }
+  DELETE_IF_NOT_NULLPTR(this->texture_grid);
+  DELETE_IF_NOT_NULLPTR(this->grid);
+  DELETE_IF_NOT_NULLPTR(this->texture_update);
+  DELETE_IF_NOT_NULLPTR(this->viewport);
+  DELETE_IF_NOT_NULLPTR(this->viewport_current_state);
+  DELETE_IF_NOT_NULLPTR(this->sdl_app);
 }
 
 /**
@@ -213,12 +201,15 @@ void ImageGridViewerContext::delay () {
  */
 class UpdateImageGridThread {
 public:
+  UpdateImageGridThread()=delete;
   UpdateImageGridThread(GridSetup *grid_setup, ImageGrid *grid) {
     this->_grid=grid;
     this->_grid_setup=grid_setup;
   }
-  UpdateImageGridThread(const UpdateImageGridThread&) = delete;
-  UpdateImageGridThread & operator=(const UpdateImageGridThread&) = delete;
+  UpdateImageGridThread(const UpdateImageGridThread&)=delete;
+  UpdateImageGridThread(const UpdateImageGridThread&&)=delete;
+  UpdateImageGridThread& operator=(const UpdateImageGridThread&)=delete;
+  UpdateImageGridThread& operator=(const UpdateImageGridThread&&)=delete;
   /**
    * Start the thread itself.
    */
@@ -227,13 +218,27 @@ public:
     std::thread _worker_thread(&UpdateImageGridThread::run, this);
     return _worker_thread;
   }
+  /**
+   * Terminate the thread.
+   */
   void terminate() {
     this->_keep_running=false;
   }
+  /**
+   * Wait until images are loaded before proceeding.  Generally used
+   * for testing concurrency bugs.
+   */
   void wait_till_load() {
     while (!this->_all_loaded) {
+      std::this_thread::yield();
       std::this_thread::sleep_for(THREAD_SLEEP);
     }
+  }
+  /**
+   * Unload all files.  Generally used for testing.
+   */
+  void unload_files() {
+
   }
 private:
   /**
@@ -284,8 +289,10 @@ public:
     this->_texture_grid=texture_grid;
 
   }
-  UpdateTextureThread(const UpdateTextureThread&) = delete;
-  UpdateTextureThread & operator=(const UpdateTextureThread&) = delete;
+  UpdateTextureThread(const UpdateTextureThread&)=delete;
+  UpdateTextureThread(const UpdateTextureThread&&)=delete;
+  UpdateTextureThread& operator=(const UpdateTextureThread&)=delete;
+  UpdateTextureThread& operator=(const UpdateTextureThread&&)=delete;
   /**
    * Start the thread itself.
    */
@@ -311,7 +318,7 @@ private:
       this->_texture_update->find_current_textures(this->_grid,
                                                    this->_texture_grid);
       std::this_thread::yield();
-      std::this_thread::sleep_for (THREAD_SLEEP);
+      std::this_thread::sleep_for(THREAD_SLEEP);
     }
     MSG("Ending execution in UpdateTextureThread.");
   }
@@ -339,33 +346,23 @@ int main(int argc, char *argv[]) {
   // like and where the images come from
   auto grid_setup=new GridSetupFromCommandLine(argc,argv);
   if (!grid_setup->successful()) {
-    if (grid_setup != nullptr) {
-      delete grid_setup;
-    }
+    DELETE_IF_NOT_NULLPTR(grid_setup);
     return 1;
   }
   auto imagegrid_viewer_context = new ImageGridViewerContext(grid_setup);
   // initialize SDL
   if (!imagegrid_viewer_context->sdl_app->successful()) {
     ERROR("Failed to SDL app initialize properly");
-    if (grid_setup != nullptr) {
-      delete grid_setup;
-    }
-    if (imagegrid_viewer_context != nullptr) {
-      delete imagegrid_viewer_context;
-    }
+    DELETE_IF_NOT_NULLPTR(grid_setup);
+    DELETE_IF_NOT_NULLPTR(imagegrid_viewer_context);
     return 1;
   }
   // initialialize the main data structures in the program, described
   // at the top of this file
   if (!imagegrid_viewer_context->successful) {
     ERROR("Failed to find images!");
-    if (grid_setup != nullptr) {
-      delete grid_setup;
-    }
-    if (imagegrid_viewer_context != nullptr) {
-      delete imagegrid_viewer_context;
-    }
+    DELETE_IF_NOT_NULLPTR(grid_setup);
+    DELETE_IF_NOT_NULLPTR(imagegrid_viewer_context);
     return 1;
   }
   // TODO once the current development is done, see description at the
@@ -422,11 +419,7 @@ int main(int argc, char *argv[]) {
     update_texture_thread.join();
     MSG("Finished joining update_texture_thread.");
   }
-  if (grid_setup != nullptr) {
-    delete grid_setup;
-  }
-  if (imagegrid_viewer_context != nullptr) {
-    delete imagegrid_viewer_context;
-  }
+  DELETE_IF_NOT_NULLPTR(grid_setup);
+  DELETE_IF_NOT_NULLPTR(imagegrid_viewer_context);
   return 0;
 }

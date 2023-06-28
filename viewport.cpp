@@ -11,7 +11,7 @@
 #include <iostream>
 #include <string>
 
-BlitItem::BlitItem(TextureGridSquareZoomLevel* square, INT_T count, ViewportPixelCoordinate viewport_pixel_coordinate, ViewportPixelSize grid_image_size_zoomed) {
+BlitItem::BlitItem(TextureGridSquareZoomLevel* square, INT_T count, ViewportPixelCoordinate *viewport_pixel_coordinate, ViewportPixelSize *grid_image_size_zoomed) {
   blit_index=count;
   blit_square=square;
   this->viewport_pixel_coordinate=new ViewportPixelCoordinate(viewport_pixel_coordinate);
@@ -51,14 +51,8 @@ ViewPortCurrentState::ViewPortCurrentState () {
 }
 
 ViewPortCurrentState::~ViewPortCurrentState () {
-  if (this->grid != nullptr) {
-    delete this->grid;
-    this->grid=nullptr;
-  }
-  if (this->grid_last != nullptr) {
-    delete this->grid_last;
-    this->grid_last=nullptr;
-  }
+  DELETE_IF_NOT_NULLPTR(this->grid);
+  DELETE_IF_NOT_NULLPTR(this->grid_last);
 }
 
 void ViewPortCurrentState::UpdateGridValues(FLOAT_T zoom, GridCoordinate *gridarg) {
@@ -76,6 +70,7 @@ bool ViewPortCurrentState::GetGridValues(FLOAT_T &zoom, GridCoordinate *&gridarg
   std::lock_guard<std::mutex> guard(this->using_mutex);
   if (this->been_updated) {
     zoom=this->zoom;
+    DELETE_IF_NOT_NULLPTR(gridarg);
     gridarg=new GridCoordinate(this->grid);
     this->been_updated=false;
     return true;
@@ -92,18 +87,9 @@ ViewPort::ViewPort(ViewPortCurrentState *viewport_current_state) {
 }
 
 ViewPort::~ViewPort() {
-  if (this->viewport_pixel_size != nullptr) {
-    delete this->viewport_pixel_size;
-    this->viewport_pixel_size=nullptr;
-  }
-  if (this->viewport_grid != nullptr) {
-    delete this->viewport_grid;
-    this->viewport_grid=nullptr;
-  }
-  if (this->_image_max_size != nullptr) {
-    delete this->_image_max_size;
-    this->_image_max_size=nullptr;
-  }
+  DELETE_IF_NOT_NULLPTR(this->viewport_pixel_size);
+  DELETE_IF_NOT_NULLPTR(this->viewport_grid);
+  DELETE_IF_NOT_NULLPTR(this->_image_max_size);
 }
 
 INT_T ViewPort::find_zoom_index(FLOAT_T zoom) {

@@ -22,8 +22,14 @@
  /** Class that stores an item that ready to be blit to the screen. */
 class BlitItem {
 public:
-  BlitItem(TextureGridSquareZoomLevel* square, INT_T count, ViewportPixelCoordinate viewport_pixel_coordinate, ViewportPixelSize grid_image_size_zoomed);
+  BlitItem()=delete;
+  BlitItem(TextureGridSquareZoomLevel* square, INT_T count, ViewportPixelCoordinate *viewport_pixel_coordinate, ViewportPixelSize *grid_image_size_zoomed);
   ~BlitItem();
+  // BlitItem(const BlitItem&)=delete;
+  BlitItem(const BlitItem&)=default;
+  BlitItem(const BlitItem&&)=delete;
+  BlitItem& operator=(const BlitItem&)=delete;
+  BlitItem& operator=(const BlitItem&&)=delete;
   /**
    * Method called to do the actual blitting.
    */
@@ -61,8 +67,10 @@ class ViewPortCurrentState {
 public:
   ViewPortCurrentState();
   ~ViewPortCurrentState();
-  ViewPortCurrentState(const ViewPortCurrentState&) = delete;
-  ViewPortCurrentState & operator=(const ViewPortCurrentState&) = delete;
+  ViewPortCurrentState(const ViewPortCurrentState&)=delete;
+  ViewPortCurrentState(const ViewPortCurrentState&&)=delete;
+  ViewPortCurrentState& operator=(const ViewPortCurrentState&)=delete;
+  ViewPortCurrentState& operator=(const ViewPortCurrentState&&)=delete;
   void UpdateGridValues(FLOAT_T zoom, GridCoordinate *grid);
   bool GetGridValues(FLOAT_T &zoom, GridCoordinate *&grid);
 private:
@@ -79,8 +87,13 @@ private:
  */
 class ViewPort {
 public:
+  ViewPort()=delete;
   ViewPort(ViewPortCurrentState *viewport_current_state);
   ~ViewPort();
+  ViewPort(const ViewPort&)=delete;
+  ViewPort(const ViewPort&&)=delete;
+  ViewPort& operator=(const ViewPort&)=delete;
+  ViewPort& operator=(const ViewPort&&)=delete;
   void find_viewport_blit(TextureGrid* texture_grid,  SDLApp* sdl_app);
   /** update the values in this class with current keyboard/joystick/etc. input */
   bool do_input(SDLApp* sdl_app);

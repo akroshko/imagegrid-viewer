@@ -42,8 +42,12 @@ const double INITIAL_Y = 1.0;
 const INT_T MAX_ZOOM_LEVELS=10;
 
 // a placeholder index that will be changed in the future
-const INT_T IMAGE_GRID_INDEX=0;
+const INT_T IMAGE_GRID_BASE_INDEX=0;
+const INT_T IMAGE_GRID_SECOND_INDEX=1;
+const INT_T IMAGE_GRID_THUMB_INDEX=2;
+const INT_T IMAGE_GRID_LENGTH=3;
 
-const auto THREAD_SLEEP = std::chrono::milliseconds(50);
+// 60 FPS?
+const auto THREAD_SLEEP = std::chrono::milliseconds(16);
 
 #endif

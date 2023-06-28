@@ -14,17 +14,17 @@ SDLApp::SDLApp() {
   auto rendererFlags = SDL_RENDERER_ACCELERATED;
   int windowFlags = 0;
   format = SDL_AllocFormat(SDL_PIXELFORMAT_RGB24);
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
+  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
     ERROR("Couldn't initialize SDL:" << SDL_GetError());
     this->_successful=false;
   } else {
     window = SDL_CreateWindow("Image Grid Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, windowFlags);
-    if (!window) {
+    if(!window) {
       ERROR("Failed to open %d " << SCREEN_WIDTH << "x" << SCREEN_HEIGHT << " window: " << SDL_GetError());
       this->_successful=false;
     } else {
       screen_surface = SDL_GetWindowSurface(window);
-      if (SDL_NumJoysticks() < 1) {
+      if(SDL_NumJoysticks() < 1) {
         joystick_enabled=false;
       } else {
         joystick_enabled=true;
@@ -44,23 +44,23 @@ SDLApp::~SDLApp() {
 bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y, FLOAT_T &current_speed_zoom, FLOAT_T &zoom, FLOAT_T &zoom_speed, GridPixelSize *image_max_size, FLOAT_T &xgrid, FLOAT_T &ygrid) {
   SDL_Event e;
   auto keep_going=true;
-  while (SDL_PollEvent(&e)) {
+  while(SDL_PollEvent(&e)) {
     auto pixel_size=(100.0/image_max_size->wpixel()/zoom);
-    if (e.type == SDL_QUIT) {
+    if(e.type == SDL_QUIT) {
       return false;
-    } else if (e.type == SDL_JOYAXISMOTION) {
+    } else if(e.type == SDL_JOYAXISMOTION) {
       // TODO: deal with dead zones
-      if (e.jaxis.which == 0) {
+      if(e.jaxis.which == 0) {
         DEBUGIO("jaxis 0: " << e.jaxis.axis << " ++ " << e.jaxis.value);
-        if (e.jaxis.axis == 0) {
+        if(e.jaxis.axis == 0) {
           current_speed_x=(e.jaxis.value/JOY_MAX)*(JOY_BASE_MOVE*pixel_size);
-        } else if (e.jaxis.axis == 1) {
+        } else if(e.jaxis.axis == 1) {
           current_speed_y=(e.jaxis.value/JOY_MAX)*(JOY_BASE_MOVE*pixel_size);
-        } else if (e.jaxis.axis == 4) {
+        } else if(e.jaxis.axis == 4) {
           current_speed_zoom=0.05*(e.jaxis.value/JOY_MAX);
         }
       }
-    } else if (e.type == SDL_KEYDOWN) {
+    } else if(e.type == SDL_KEYDOWN) {
       switch(e.key.keysym.sym) {
       case SDLK_LEFT:
         // move 5% of a screen left
@@ -115,7 +115,7 @@ void SDLApp::blank_viewport(ViewportPixelSize *viewport_pixel_size) {
   SDL_FillRect(this->screen_surface, &screen_rect, SDL_MapRGB(this->format,0,0,0));
 }
 
-void SDLApp::delay () {
+void SDLApp::delay() {
   // SDL_Delay(SDL_DELAY);
   SDL_Delay(64);
 }

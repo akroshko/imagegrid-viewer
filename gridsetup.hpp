@@ -20,9 +20,11 @@
 class GridSetup {
 public:
   GridSetup()=default;
-  GridSetup(const GridSetup&)=delete;
-  GridSetup& operator=(const GridSetup&)=delete;
   ~GridSetup() = default;
+  GridSetup(const GridSetup&)=delete;
+  GridSetup(const GridSetup&&)=delete;
+  GridSetup& operator=(const GridSetup&)=delete;
+  GridSetup& operator=(const GridSetup&&)=delete;
   /** Indicate whether setup was successful. */
   bool successful();
   /** The size of the grid loaded. */
@@ -43,11 +45,13 @@ protected:
  */
 class GridSetupFromCommandLine : public GridSetup {
 public:
+  GridSetupFromCommandLine()=delete;
   GridSetupFromCommandLine(int argc, char* const* argv);
-  GridSetupFromCommandLine(const GridSetupFromCommandLine&) = delete;
-  GridSetupFromCommandLine& operator=(const GridSetupFromCommandLine&) = delete;
   ~GridSetupFromCommandLine() = default;
-
+  GridSetupFromCommandLine(const GridSetupFromCommandLine&)=delete;
+  GridSetupFromCommandLine(const GridSetupFromCommandLine&&)=delete;
+  GridSetupFromCommandLine& operator=(const GridSetupFromCommandLine&)=delete;
+  GridSetupFromCommandLine& operator=(const GridSetupFromCommandLine&&)=delete;
 };
 
 #endif
