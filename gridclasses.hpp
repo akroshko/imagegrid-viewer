@@ -86,13 +86,13 @@ public:
   bool read_grid_info(GridSetup *grid_setup);
   bool load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running);
   /** Store the coordinates */
-  GridImageSize* grid_image_size=nullptr;
+  GridImageSize grid_image_size;
   /** Maximum size of images loaded into the grid. */
-  GridPixelSize *image_max_size=nullptr;
+  GridPixelSize image_max_size;
   /** Maximum size of secondary images loaded into the grid. */
-  GridPixelSize *image_second_max_size=nullptr;
+  GridPixelSize image_second_max_size;
   /** Maximum size of thumbnail images loaded into the grid. */
-  GridPixelSize *image_thumbnail_max_size=nullptr;
+  GridPixelSize image_thumbnail_max_size;
   /** The individual squares in the image grid. */
   ImageGridSquare** squares=nullptr;
 };
@@ -135,7 +135,7 @@ public:
   //       this can be improved
   // std::array<TextureGridSquareZoomLevel*, 10> texture_array;
   /** the size of the texture with no zoom */
-  GridPixelSize* texture_pixel_size=nullptr;
+  GridPixelSize texture_pixel_size;
 };
 
 /**
@@ -158,9 +158,9 @@ public:
   /** the indidivual squares */
   TextureGridSquare** squares=nullptr;
   /** this size of this grid in number of textures */
-  GridImageSize *grid_image_size=nullptr;
+  GridImageSize grid_image_size;
   /** maximum size of the individual textures in pixels */
-  GridPixelSize* max_pixel_size=nullptr;
+  GridPixelSize max_pixel_size;
   /** the maximum zoom (maximum number of reductions by a factor of 2) */
   INT_T textures_max_zoom_index;
 };

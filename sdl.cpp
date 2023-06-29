@@ -41,11 +41,11 @@ SDLApp::~SDLApp() {
   SDL_Quit();
 }
 
-bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y, FLOAT_T &current_speed_zoom, FLOAT_T &zoom, FLOAT_T &zoom_speed, GridPixelSize *image_max_size, FLOAT_T &xgrid, FLOAT_T &ygrid) {
+bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y, FLOAT_T &current_speed_zoom, FLOAT_T &zoom, FLOAT_T &zoom_speed, const GridPixelSize &image_max_size, FLOAT_T &xgrid, FLOAT_T &ygrid) {
   SDL_Event e;
   auto keep_going=true;
   while(SDL_PollEvent(&e)) {
-    auto pixel_size=(100.0/image_max_size->wpixel()/zoom);
+    auto pixel_size=(100.0/image_max_size.wpixel()/zoom);
     if(e.type == SDL_QUIT) {
       return false;
     } else if(e.type == SDL_JOYAXISMOTION) {
@@ -106,12 +106,12 @@ bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y, FLOAT_
   return keep_going;
 }
 
-void SDLApp::blank_viewport(ViewportPixelSize *viewport_pixel_size) {
+void SDLApp::blank_viewport(const ViewportPixelSize &viewport_pixel_size) {
   SDL_Rect screen_rect;
   screen_rect.x=0;
   screen_rect.y=0;
-  screen_rect.w=viewport_pixel_size->wpixel();
-  screen_rect.h=viewport_pixel_size->hpixel();
+  screen_rect.w=viewport_pixel_size.wpixel();
+  screen_rect.h=viewport_pixel_size.hpixel();
   SDL_FillRect(this->screen_surface, &screen_rect, SDL_MapRGB(this->format,0,0,0));
 }
 

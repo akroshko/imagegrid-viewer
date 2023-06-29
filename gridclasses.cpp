@@ -95,20 +95,19 @@ void ImageGridSquare::load_file(std::string filename) {
 }
 
 ImageGrid::ImageGrid(GridSetup *grid_setup) {
-  this->grid_image_size =new GridImageSize(grid_setup->grid_image_size);
-  this->squares = new ImageGridSquare*[grid_setup->grid_image_size->wimage()];
-  for (INT_T i = 0; i < grid_setup->grid_image_size->wimage(); i++) {
-    this->squares[i] = new ImageGridSquare[grid_setup->grid_image_size->himage()];
+  this->grid_image_size=GridImageSize(grid_setup->grid_image_size);
+  this->squares = new ImageGridSquare*[grid_setup->grid_image_size.wimage()];
+  for (INT_T i = 0; i < grid_setup->grid_image_size.wimage(); i++) {
+    this->squares[i] = new ImageGridSquare[grid_setup->grid_image_size.himage()];
   }
-  this->image_max_size=new GridPixelSize(0,0);
+  this->image_max_size=GridPixelSize(0,0);
 }
 
 ImageGrid::~ImageGrid() {
-  for (INT_T i = 0; i < this->grid_image_size->wimage(); i++) {
+  for (INT_T i = 0; i < this->grid_image_size.wimage(); i++) {
     DELETE_ARRAY_IF_NOT_NULLPTR(this->squares[i]);
   }
   DELETE_ARRAY_IF_NOT_NULLPTR(this->squares);
-  DELETE_IF_NOT_NULLPTR(image_max_size);
 }
 
 bool ImageGrid::read_grid_info(GridSetup* grid_setup) {
@@ -116,23 +115,23 @@ bool ImageGrid::read_grid_info(GridSetup* grid_setup) {
   if (grid_setup->path_value[0] != 0) {
     grid_setup->filenames=load_numbered_images(std::string(grid_setup->path_value));
   }
-  for (INT_T i = 0; i < this->grid_image_size->wimage(); i++) {
+  for (INT_T i = 0; i < this->grid_image_size.wimage(); i++) {
     if (!successful) {
       squares[i]=nullptr;
       continue;
     }
-    for (INT_T j = 0; j < this->grid_image_size->himage(); j++) {
+    for (INT_T j = 0; j < this->grid_image_size.himage(); j++) {
       if (!successful) {
         continue;
       }
-      auto ij=j*this->grid_image_size->wimage()+i;
+      auto ij=j*this->grid_image_size.wimage()+i;
       MSG("Reading: " << grid_setup->filenames[ij]);
       squares[i][j].read_file(grid_setup->filenames[ij]);
       // set the RGB of the surface
       auto rgb_wpixel=squares[i][j].image_array[IMAGE_GRID_BASE_INDEX]->rgb_wpixel;
       auto rgb_hpixel=squares[i][j].image_array[IMAGE_GRID_BASE_INDEX]->rgb_hpixel;
-      auto max_wpixel=this->image_max_size->wpixel();
-      auto max_hpixel=this->image_max_size->hpixel();
+      auto max_wpixel=this->image_max_size.wpixel();
+      auto max_hpixel=this->image_max_size.hpixel();
       // TODO: encapsulate calculation of max pixels
       INT_T new_wpixel, new_hpixel;
       if ((INT_T)rgb_wpixel > max_wpixel) {
@@ -145,7 +144,7 @@ bool ImageGrid::read_grid_info(GridSetup* grid_setup) {
       } else {
         new_hpixel=max_hpixel;
       }
-      this->image_max_size = new GridPixelSize(new_wpixel,new_hpixel);;
+      this->image_max_size=GridPixelSize(new_wpixel,new_hpixel);;
       // calculate the second and thumbnail images
 
     }
@@ -156,18 +155,18 @@ bool ImageGrid::read_grid_info(GridSetup* grid_setup) {
 bool ImageGrid::load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running) {
   auto successful=true;
   // TODO: sort out this when refactoring file loading
-  for (INT_T i = 0; i < this->grid_image_size->wimage(); i++) {
+  for (INT_T i = 0; i < this->grid_image_size.wimage(); i++) {
     if (!successful) {
       continue;
     }
-    for (INT_T j = 0; j < this->grid_image_size->himage(); j++) {
+    for (INT_T j = 0; j < this->grid_image_size.himage(); j++) {
       if (!successful) {
         continue;
       }
       if (!keep_running) {
         successful=false;
       }
-      auto ij=j*this->grid_image_size->wimage()+i;
+      auto ij=j*this->grid_image_size.wimage()+i;
       MSG("Loading: " << grid_setup->filenames[ij]);
       this->squares[i][j].load_file(grid_setup->filenames[ij]);
     }
@@ -195,37 +194,36 @@ TextureGridSquare::~TextureGridSquare () {
     DELETE_IF_NOT_NULLPTR(this->texture_array[i]);
   }
   DELETE_ARRAY_IF_NOT_NULLPTR(this->texture_array)
-  DELETE_IF_NOT_NULLPTR(this->texture_pixel_size);
 }
 
 TextureGrid::TextureGrid (GridSetup *grid_setup) {
-  this->grid_image_size=new GridImageSize(grid_setup->grid_image_size);
-  this->squares = new TextureGridSquare*[grid_setup->grid_image_size->wimage()];
-  for (INT_T i = 0; i < grid_setup->grid_image_size->wimage(); i++) {
-    this->squares[i] = new TextureGridSquare[grid_setup->grid_image_size->himage()];
+  this->grid_image_size=GridImageSize(grid_setup->grid_image_size);
+  this->squares = new TextureGridSquare*[grid_setup->grid_image_size.wimage()];
+  for (INT_T i = 0; i < grid_setup->grid_image_size.wimage(); i++) {
+    this->squares[i] = new TextureGridSquare[grid_setup->grid_image_size.himage()];
   }
 }
 
 TextureGrid::~TextureGrid() {
-  for (auto i=0; i < this->grid_image_size->wimage(); i++) {
+  for (auto i=0; i < this->grid_image_size.wimage(); i++) {
     DELETE_ARRAY_IF_NOT_NULLPTR(this->squares[i]);
   }
   DELETE_ARRAY_IF_NOT_NULLPTR(this->squares);
-  DELETE_IF_NOT_NULLPTR(this->grid_image_size);
+  // DELETE_IF_NOT_NULLPTR(this->grid_image_size);
 }
 
 void TextureGrid::init_max_zoom_index(ImageGrid *grid) {
   INT_T zoom_length = 0;
   FLOAT_T current_zoom=1.0;
-  auto max_wpixel=grid->image_max_size->wpixel();
-  auto max_hpixel=grid->image_max_size->hpixel();
+  auto max_wpixel=grid->image_max_size.wpixel();
+  auto max_hpixel=grid->image_max_size.hpixel();
   // swap out and reallocate
-  this->max_pixel_size = new GridPixelSize(grid->image_max_size);
+  this->max_pixel_size=GridPixelSize(grid->image_max_size);
   zoom_length += 1;
   current_zoom /= 2.0;
   // TODO: inefficient, do without a while loop
-  while (!(((this->grid_image_size->wimage()*max_wpixel*current_zoom) < MAX_SCREEN_WIDTH) &&
-           ((this->grid_image_size->himage()*max_hpixel*current_zoom) < MAX_SCREEN_HEIGHT))) {
+  while (!(((this->grid_image_size.wimage()*max_wpixel*current_zoom) < MAX_SCREEN_WIDTH) &&
+           ((this->grid_image_size.himage()*max_hpixel*current_zoom) < MAX_SCREEN_HEIGHT))) {
     zoom_length += 1;
     current_zoom /= 2.0;
   }

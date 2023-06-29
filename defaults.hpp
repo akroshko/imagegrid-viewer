@@ -6,6 +6,7 @@
 #define DEFAULTS_HPP
 #include "types.hpp"
 #include <chrono>
+#include <climits>
 
 // screen width
 // TODO: make dynamic and configurable
@@ -49,5 +50,11 @@ const INT_T IMAGE_GRID_LENGTH=3;
 
 // 60 FPS?
 const auto THREAD_SLEEP = std::chrono::milliseconds(16);
+
+// some placeholder values
+
+// rather than zero, this should make sure that any use of initialized class members becomes obvious
+// TODO: will replace with assert or an exception
+const INT_T INVALID_PIXEL_VALUE=INT_MIN;
 
 #endif

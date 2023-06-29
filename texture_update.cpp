@@ -23,9 +23,9 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
   DEBUG("TextureUpdate::find_current_textures()");
   // if (view_changed) {
   // don't do anything here if viewport_current_state hasn't been initialized
-  if (this->viewport_grid != nullptr) {
-    auto max_wpixel=texture_grid->max_pixel_size->wpixel();
-    auto max_hpixel=texture_grid->max_pixel_size->hpixel();
+  if (!this->viewport_grid.invalid()) {
+    auto max_wpixel=texture_grid->max_pixel_size.wpixel();
+    auto max_hpixel=texture_grid->max_pixel_size.hpixel();
     auto max_zoom=texture_grid->textures_max_zoom_index;
     auto max_zoom_index=max_zoom-1;
     auto zoom_index=this->find_zoom_index(zoom);
@@ -48,20 +48,20 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
       auto max_zoom_this_level=1.0/(2.0+z);
       auto half_width=(MAX_SCREEN_WIDTH/2);
       auto half_height=(MAX_SCREEN_HEIGHT/2);
-      auto max_zoom_left=(this->viewport_grid->xgrid())-(half_width/max_wpixel/max_zoom_this_level);
+      auto max_zoom_left=(this->viewport_grid.xgrid())-(half_width/max_wpixel/max_zoom_this_level);
       // auto max_zoom_right=(viewport_grid->xgrid())+(half_width/max_wpixel/max_zoom_this_level);
-      auto max_zoom_top=(this->viewport_grid->ygrid())-(half_height/max_hpixel/max_zoom_this_level);
+      auto max_zoom_top=(this->viewport_grid.ygrid())-(half_height/max_hpixel/max_zoom_this_level);
       // auto max_zoom_bottom=(viewport_grid->ygrid())+(half_height/max_hpixel/max_zoom_this_level);
       auto threshold=2.0;
       // find out if this is 3x3 or full
       // edge is less than 0.5*threshold away from center
-      DEBUG("zoom level: " << z << " viewport_xgrid: " << this->viewport_grid->xgrid() << " viewport_ygrid: " << this->viewport_grid->ygrid()
+      DEBUG("zoom level: " << z << " viewport_xgrid: " << this->viewport_grid.xgrid() << " viewport_ygrid: " << this->viewport_grid.ygrid()
             << " max_zoom_this_level: " << max_zoom_this_level << " max_zoom_left: "
             << max_zoom_left // << " max_zoom_right: " << max_zoom_right
             << " max_zoom_top: " << max_zoom_top // << " max_zoom_bottom: " << max_zoom_bottom
         );
       auto load_all=false;
-      if (!(z == max_zoom_index) && (abs(max_zoom_left - this->viewport_grid->xgrid()) <= 0.5*threshold) && (abs(max_zoom_top - this->viewport_grid->ygrid()) <= 0.5*threshold)) {
+      if (!(z == max_zoom_index) && (abs(max_zoom_left - this->viewport_grid.xgrid()) <= 0.5*threshold) && (abs(max_zoom_top - this->viewport_grid.ygrid()) <= 0.5*threshold)) {
         // can load a 3x3 grid
         load_all=false;
         DEBUG("Updating textures to 3x3 at zoom level: " << z);
@@ -89,19 +89,19 @@ void TextureUpdate::update_textures(ImageGrid *grid,
                                     TextureGrid *texture_grid,
                                     INT_T zoom_level,
                                     bool load_all) {
-  DEBUG("update_textures() " << zoom_level << " | " << this->viewport_grid->xgrid() << " | " << this->viewport_grid->ygrid());
+  DEBUG("update_textures() " << zoom_level << " | " << this->viewport_grid.xgrid() << " | " << this->viewport_grid.ygrid());
   // j,i is better for plotting a grid
-  for (INT_T j = 0; j < texture_grid->grid_image_size->himage(); j++) {
+  for (INT_T j = 0; j < texture_grid->grid_image_size.himage(); j++) {
     MSGNONEWLINE("| ");
     // TODO: this will eventually be a switch statement to load in different things
-    for (INT_T i = 0; i < texture_grid->grid_image_size->wimage(); i++) {
+    for (INT_T i = 0; i < texture_grid->grid_image_size.wimage(); i++) {
       auto dest_square=texture_grid->squares[i][j].texture_array[zoom_level];
       // try and get the source square mutex
       if (!load_all &&
-          ((i < next_smallest(this->viewport_grid->xgrid())) ||
-           (i > next_largest(this->viewport_grid->xgrid())) ||
-           (j < next_smallest(this->viewport_grid->ygrid())) ||
-           (j > next_largest(this->viewport_grid->ygrid())))) {
+          ((i < next_smallest(this->viewport_grid.xgrid())) ||
+           (i > next_largest(this->viewport_grid.xgrid())) ||
+           (j < next_smallest(this->viewport_grid.ygrid())) ||
+           (j > next_largest(this->viewport_grid.ygrid())))) {
         MSGNONEWLINE("0 ");
         // skip everything if locked
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
@@ -122,13 +122,13 @@ void TextureUpdate::update_textures(ImageGrid *grid,
             MSGNONEWLINE("L ");
             std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
             if (display_lock.try_lock()) {
-              texture_grid->squares[i][j].texture_pixel_size=new GridPixelSize(texture_grid->max_pixel_size);
+              texture_grid->squares[i][j].texture_pixel_size=GridPixelSize(texture_grid->max_pixel_size);
               if (dest_square->display_texture == nullptr) {
                 this->load_texture(dest_square,
                                    image_square,
                                    zoom_level,
-                                   texture_grid->squares[i][j].texture_pixel_size->wpixel(),
-                                   texture_grid->squares[i][j].texture_pixel_size->hpixel());
+                                   texture_grid->squares[i][j].texture_pixel_size.wpixel(),
+                                   texture_grid->squares[i][j].texture_pixel_size.hpixel());
 
               } else {
                 DEBUG("Display texture is nullptr in TextureGrid::update_textures");

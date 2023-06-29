@@ -22,19 +22,17 @@ class ViewportPixelSize;
  */
 class GridImageSize {
 public:
-  /**
-   * Copy constructor.
-   */
-  GridImageSize(GridImageSize *grid_image_size);
+  GridImageSize();
+  GridImageSize(const GridImageSize &grid_image_size);
   /**
    * @param wimage
    * @param himage
    */
-  GridImageSize(INT_T wimage, INT_T himage);
+  GridImageSize(const INT_T wimage, const INT_T himage);
   /** Accessor for the width */
-  INT_T wimage();
+  INT_T wimage() const;
   /** Accessor for the height */
-  INT_T himage();
+  INT_T himage() const;
 private:
   INT_T _wimage;
   INT_T _himage;
@@ -49,12 +47,13 @@ private:
  */
 class GridCoordinateSize {
 public:
-  GridCoordinateSize(GridCoordinateSize *grid_coordinate_size);
-  GridCoordinateSize(FLOAT_T wgrid, FLOAT_T hgrid);
+  GridCoordinateSize();
+  GridCoordinateSize(const GridCoordinateSize &grid_coordinate_size);
+  GridCoordinateSize(const FLOAT_T wgrid, const FLOAT_T hgrid);
   /** Accessor for the width */
-  FLOAT_T wgrid();
+  FLOAT_T wgrid() const;
   /** Accessor for the height */
-  FLOAT_T hgrid();
+  FLOAT_T hgrid() const;
 private:
   FLOAT_T _wgrid;
   FLOAT_T _hgrid;
@@ -69,12 +68,15 @@ private:
  */
 class GridCoordinate {
 public:
-  GridCoordinate(GridCoordinate *grid_coordinate_size);
-  GridCoordinate(FLOAT_T xgrid, FLOAT_T ygrid);
+  GridCoordinate();
+  GridCoordinate(const GridCoordinate &grid_coordinate_size);
+  GridCoordinate(const FLOAT_T xgrid, FLOAT_T ygrid);
   /** Accessor for the x coordinate */
-  FLOAT_T xgrid();
+  FLOAT_T xgrid() const;
   /** Accessor for the y coordinate */
-  FLOAT_T ygrid();
+  FLOAT_T ygrid() const;
+  /** Check if values are valid */
+  bool invalid() const;
 private:
   FLOAT_T _xgrid;
   FLOAT_T _ygrid;
@@ -87,12 +89,13 @@ private:
  */
 class GridPixelSize {
 public:
-  GridPixelSize(GridPixelSize *grid_pixel_size);
+  GridPixelSize();
+  GridPixelSize(const GridPixelSize &grid_pixel_size);
   GridPixelSize(INT_T wpixel, INT_T hpixel);
   /** Accessor for the width */
-  INT_T wpixel();
+  INT_T wpixel() const;
   /** Accessor for the height */
-  INT_T hpixel();
+  INT_T hpixel() const;
 private:
   INT_T _wpixel;
   INT_T _hpixel;
@@ -105,12 +108,12 @@ private:
  */
 class GridPixelCoordinate {
 public:
-  GridPixelCoordinate(GridPixelCoordinate *grid_pixel_coordinate);
+  GridPixelCoordinate(const GridPixelCoordinate &grid_pixel_coordinate);
   GridPixelCoordinate(INT_T xpixel, INT_T ypixel);
   /** Accessor for the x coordinate */
-  INT_T xpixel();
+  INT_T xpixel() const;
   /** Accessor for the y coordinate */
-  INT_T ypixel();
+  INT_T ypixel() const;
 private:
   INT_T _xpixel;
   INT_T _ypixel;
@@ -122,12 +125,13 @@ private:
  */
 class ViewportPixelSize {
 public:
-  ViewportPixelSize(ViewportPixelSize *viewport_pixel_size);
+  ViewportPixelSize();
+  ViewportPixelSize(const ViewportPixelSize &viewport_pixel_size);
   ViewportPixelSize(INT_T wpixel, INT_T xpixel);
   /** Accessor for the width */
-  INT_T wpixel();
+  INT_T wpixel() const;
   /** Accessor for the height */
-  INT_T hpixel();
+  INT_T hpixel() const;
 private:
   INT_T _wpixel;
   INT_T _hpixel;
@@ -139,9 +143,10 @@ private:
  */
 class ViewportPixelCoordinate {
 public:
-  ViewportPixelCoordinate(ViewportPixelCoordinate *viewport_pixel_coordinate);
+  ViewportPixelCoordinate();
+  ViewportPixelCoordinate(const ViewportPixelCoordinate &viewport_pixel_coordinate);
   ViewportPixelCoordinate(INT_T xpixel, INT_T ypixel);
-  ViewportPixelCoordinate(GridPixelCoordinate grid_pixel_coordinate);
+  ViewportPixelCoordinate(const GridPixelCoordinate &grid_pixel_coordinate);
   /**
    * Convert a grid coordinate to a viewport pixel coordinate.
    *
@@ -155,12 +160,12 @@ public:
    *
    * @param viewport_pixel_size The size of the viewport in pixels.
    */
-  ViewportPixelCoordinate(GridCoordinate *grid_coordinate, FLOAT_T zoom, GridCoordinate *grid_coordinate_pixel_0, ViewportPixelSize *viewport_pixel_size);
+  ViewportPixelCoordinate(GridCoordinate &grid_coordinate, FLOAT_T zoom, GridCoordinate &grid_coordinate_pixel_0, const ViewportPixelSize &viewport_pixel_size);
 
   /** Accessor for the x coordinate */
-  INT_T xpixel();
+  INT_T xpixel() const;
   /** Accessor for the y coordinate */
-  INT_T ypixel();
+  INT_T ypixel() const;
 private:
   INT_T _xpixel;
   INT_T _ypixel;

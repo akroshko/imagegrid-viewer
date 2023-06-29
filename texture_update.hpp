@@ -60,7 +60,7 @@ public:
                     INT_T zoom_level,
                     INT_T wpixel,
                     INT_T hpixel);
-  GridCoordinate *viewport_grid=nullptr;
+  GridCoordinate viewport_grid;
 };
 
 #endif

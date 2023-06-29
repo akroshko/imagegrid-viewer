@@ -23,7 +23,7 @@
 class BlitItem {
 public:
   BlitItem()=delete;
-  BlitItem(TextureGridSquareZoomLevel* square, INT_T count, ViewportPixelCoordinate *viewport_pixel_coordinate, ViewportPixelSize *grid_image_size_zoomed);
+  BlitItem(TextureGridSquareZoomLevel* square, INT_T count, const ViewportPixelCoordinate &viewport_pixel_coordinate, const ViewportPixelSize &grid_image_size_zoomed);
   ~BlitItem();
   // BlitItem(const BlitItem&)=delete;
   BlitItem(const BlitItem&)=default;
@@ -42,11 +42,11 @@ public:
    * The pixel location on the viewport that this texture is being
    * blit to.
    */
-  ViewportPixelCoordinate* viewport_pixel_coordinate=nullptr;
+  ViewportPixelCoordinate viewport_pixel_coordinate;
   /**
    * The width on the viewport of this texture.
    */
-  ViewportPixelSize* image_pixel_size_viewport=nullptr;
+  ViewportPixelSize image_pixel_size_viewport;
 private:
   /**
    * Just counting the number of items to be blit, mostly for
@@ -66,18 +66,17 @@ class ViewPortCurrentState {
 // TODO: make sure this class is not moveable or copyable
 public:
   ViewPortCurrentState();
-  ~ViewPortCurrentState();
   ViewPortCurrentState(const ViewPortCurrentState&)=delete;
   ViewPortCurrentState(const ViewPortCurrentState&&)=delete;
   ViewPortCurrentState& operator=(const ViewPortCurrentState&)=delete;
   ViewPortCurrentState& operator=(const ViewPortCurrentState&&)=delete;
-  void UpdateGridValues(FLOAT_T zoom, GridCoordinate *grid);
-  bool GetGridValues(FLOAT_T &zoom, GridCoordinate *&grid);
+  void UpdateGridValues(FLOAT_T zoom, const GridCoordinate &grid);
+  bool GetGridValues(FLOAT_T &zoom, GridCoordinate &grid);
 private:
   FLOAT_T zoom=NAN;
-  GridCoordinate* grid=nullptr;
+  GridCoordinate grid;
   FLOAT_T zoom_last=NAN;
-  GridCoordinate* grid_last=nullptr;
+  GridCoordinate grid_last;
   bool been_updated=false;
   std::mutex using_mutex;
 };
@@ -89,7 +88,6 @@ class ViewPort {
 public:
   ViewPort()=delete;
   ViewPort(ViewPortCurrentState *viewport_current_state);
-  ~ViewPort();
   ViewPort(const ViewPort&)=delete;
   ViewPort(const ViewPort&&)=delete;
   ViewPort& operator=(const ViewPort&)=delete;
@@ -118,13 +116,13 @@ public:
   /**
    * Max size of images.
    */
-  void set_image_max_size(GridPixelSize * image_max_size);
+  void set_image_max_size(const GridPixelSize &image_max_size);
 private:
-  GridPixelSize *_image_max_size=nullptr;
+  GridPixelSize _image_max_size;
   /** The current size of the window in pixels. */
-  ViewportPixelSize *viewport_pixel_size=nullptr;
+  ViewportPixelSize viewport_pixel_size;
   /** the grid coordinates of the center of the viewport */
-  GridCoordinate *viewport_grid=nullptr;
+  GridCoordinate viewport_grid;
   /** the zoom level, 1.0 indicates all pixels are 1:1, 0.5 indicates zoomed out by a factor of 2 */
   FLOAT_T zoom=INITIAL_ZOOM;
   /** a zoom speed per SDL frame */

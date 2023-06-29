@@ -42,13 +42,13 @@ public:
    */
   bool do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
                 FLOAT_T &current_speed_zoom, FLOAT_T &zoom_speed, FLOAT_T &zoom,
-                GridPixelSize *image_max_size, FLOAT_T &xgrid, FLOAT_T &ygrid);
+                const GridPixelSize &image_max_size, FLOAT_T &xgrid, FLOAT_T &ygrid);
   /**
    * Blank out any textures on the viewport.
    *
    * @param viewport_pixel_size The size of the viewport.
    */
-  void blank_viewport(ViewportPixelSize *viewport_pixel_size);
+  void blank_viewport(const ViewportPixelSize &viewport_pixel_size);
   /**
    * Check whether app was successful
    */

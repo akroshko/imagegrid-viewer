@@ -45,7 +45,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       return;
     }
   }
-  this->grid_image_size=new GridImageSize(wimage,himage);
+  this->grid_image_size=GridImageSize(wimage,himage);
 
   // get any files on the end
   if(optind != argc) {
