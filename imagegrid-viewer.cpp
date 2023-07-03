@@ -135,7 +135,8 @@ public:
    * description of ImageGrid above) I will evaluate whether this is
    * the best technique.
    */
-  ViewPortCurrentState *viewport_current_state = nullptr;
+  ViewPortCurrentState *viewport_current_state_texturegrid_update = nullptr;
+  ViewPortCurrentState *viewport_current_state_imagegrid_update = nullptr;
   bool successful;
 };
 
@@ -151,9 +152,11 @@ public:
  */
 ImageGridViewerContext::ImageGridViewerContext(GridSetup *grid_setup) {
   this->sdl_app=new SDLApp();
-  this->viewport_current_state=new ViewPortCurrentState();
-  this->viewport=new ViewPort(this->viewport_current_state);
-  this->texture_update=new TextureUpdate(this->viewport_current_state);
+  this->viewport_current_state_texturegrid_update=new ViewPortCurrentState();
+  this->viewport_current_state_imagegrid_update=new ViewPortCurrentState();
+  this->viewport=new ViewPort(this->viewport_current_state_texturegrid_update,
+                              this->viewport_current_state_imagegrid_update);
+  this->texture_update=new TextureUpdate(this->viewport_current_state_texturegrid_update);
   this->grid=new ImageGrid(grid_setup);
   // this is where the images are loaded and can fail since it involves file I/O
   // TODO: work is in progress to load in a seperate thread
@@ -164,8 +167,8 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup *grid_setup) {
     this->texture_grid=new TextureGrid(grid_setup);
     // find the maximum index to reference zoomed out textures
     // generally a heuristic based on image size and screen size
-    this->texture_grid->init_max_zoom_index(this->grid);
-    this->viewport->set_image_max_size(this->grid->image_max_size);
+    this->texture_grid->init_max_zoom_index(this->grid->get_image_max_pixel_size());
+    this->viewport->set_image_max_size(this->grid->get_image_max_pixel_size());
     // adjust initial position to a sensible default depending on how
     // many images are loaded
     this->viewport->adjust_initial_location(grid_setup);
@@ -178,7 +181,8 @@ ImageGridViewerContext::~ImageGridViewerContext() {
   DELETE_IF_NOT_NULLPTR(this->grid);
   DELETE_IF_NOT_NULLPTR(this->texture_update);
   DELETE_IF_NOT_NULLPTR(this->viewport);
-  DELETE_IF_NOT_NULLPTR(this->viewport_current_state);
+  DELETE_IF_NOT_NULLPTR(this->viewport_current_state_texturegrid_update);
+  DELETE_IF_NOT_NULLPTR(this->viewport_current_state_imagegrid_update);
   DELETE_IF_NOT_NULLPTR(this->sdl_app);
 }
 

@@ -85,6 +85,10 @@ public:
   ImageGrid& operator=(const ImageGrid&&)=delete;
   bool read_grid_info(GridSetup *grid_setup);
   bool load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running);
+  GridPixelSize get_image_max_pixel_size();
+  /** The individual squares in the image grid. */
+  ImageGridSquare** squares=nullptr;
+private:
   /** Store the coordinates */
   GridImageSize grid_image_size;
   /** Maximum size of images loaded into the grid. */
@@ -93,8 +97,6 @@ public:
   GridPixelSize image_second_max_size;
   /** Maximum size of thumbnail images loaded into the grid. */
   GridPixelSize image_thumbnail_max_size;
-  /** The individual squares in the image grid. */
-  ImageGridSquare** squares=nullptr;
 };
 
 /**
@@ -154,7 +156,7 @@ public:
    * Initialize the maximum size of each texture and the maximum zoom,
    * generally has to be done after all imagesare loaded.
    */
-  void init_max_zoom_index(ImageGrid *grid);
+  void init_max_zoom_index(const GridPixelSize &image_max_pixel_size);
   /** the indidivual squares */
   TextureGridSquare** squares=nullptr;
   /** this size of this grid in number of textures */

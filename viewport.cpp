@@ -74,11 +74,14 @@ bool ViewPortCurrentState::GetGridValues(FLOAT_T &zoom, GridCoordinate &gridarg)
   }
 }
 
-ViewPort::ViewPort(ViewPortCurrentState *viewport_current_state) {
-  this->viewport_current_state=viewport_current_state;
+ViewPort::ViewPort(ViewPortCurrentState *viewport_current_state_texturegrid_update,
+                   ViewPortCurrentState *viewport_current_state_imagegrid_update) {
+  this->viewport_current_state_texturegrid_update=viewport_current_state_texturegrid_update;
+  this->viewport_current_state_imagegrid_update=viewport_current_state_imagegrid_update;
   this->viewport_pixel_size=ViewportPixelSize(SCREEN_WIDTH,SCREEN_HEIGHT);
   this->viewport_grid=GridCoordinate(INITIAL_X,INITIAL_Y);
-  this->viewport_current_state->UpdateGridValues(this->zoom,this->viewport_grid);
+  this->viewport_current_state_texturegrid_update->UpdateGridValues(this->zoom,this->viewport_grid);
+  this->viewport_current_state_imagegrid_update->UpdateGridValues(this->zoom,this->viewport_grid);
 }
 
 INT_T ViewPort::find_zoom_index(FLOAT_T zoom) {
@@ -169,7 +172,7 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
   // blit blitables
   DEBUG("ViewPort::find_viewport_blit() blitting");
   this->blank_viewport(sdl_app);
-  for (INT_T i = 0; i < this->blititems.size(); i++) {
+  for (size_t i = 0; i < this->blititems.size(); i++) {
     this->blititems[i].blit_this(sdl_app);
   }
   SDL_UpdateWindowSurface(sdl_app->window);
@@ -185,7 +188,8 @@ bool ViewPort::do_input(SDLApp* sdl_app) {
   auto keep_going = sdl_app->do_input(this->current_speed_x, this->current_speed_y, this->current_speed_zoom,this->zoom, this->zoom_speed, this->_image_max_size, xgrid, ygrid);
   this->viewport_grid=GridCoordinate(xgrid,ygrid);
   // update the viewport
-  this->viewport_current_state->UpdateGridValues(this->zoom,this->viewport_grid);
+  this->viewport_current_state_texturegrid_update->UpdateGridValues(this->zoom,this->viewport_grid);
+  this->viewport_current_state_imagegrid_update->UpdateGridValues(this->zoom,this->viewport_grid);
   return keep_going;
 }
 
@@ -207,5 +211,6 @@ void ViewPort::adjust_initial_location(GridSetup *grid_setup) {
     new_ygrid=this->viewport_grid.ygrid();
   }
   this->viewport_grid=GridCoordinate(new_xgrid,new_ygrid);
-  this->viewport_current_state->UpdateGridValues(this->zoom,this->viewport_grid);
+  this->viewport_current_state_texturegrid_update->UpdateGridValues(this->zoom,this->viewport_grid);
+  this->viewport_current_state_imagegrid_update->UpdateGridValues(this->zoom,this->viewport_grid);
 }

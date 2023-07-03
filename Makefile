@@ -8,6 +8,10 @@ CXXFLAGS = -std=c++17 -Wall -O0
 
 all: imagegrid-viewer
 
+.PHONY: etags
+etags:
+	find . -type f \( -iname "*.[ch]pp" -o -iname "*.py" -o -iname "Makefile" \) -print | etags -
+
 .PHONY: debug
 debug: CXXFLAGS += -DDEBUG_MESSAGES -DDEBUG_IO -g
 debug: imagegrid-viewer

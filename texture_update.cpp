@@ -9,8 +9,8 @@
 #include "gridclasses.hpp"
 #include "texture_update.hpp"
 
-TextureUpdate::TextureUpdate(ViewPortCurrentState *viewport_current_state) {
-  this->viewport_current_state = viewport_current_state;
+TextureUpdate::TextureUpdate(ViewPortCurrentState *viewport_current_state_texturegrid_update) {
+  this->viewport_current_state_texturegrid_update = viewport_current_state_texturegrid_update;
 }
 
 int TextureUpdate::find_zoom_index(FLOAT_T zoom) {
@@ -19,7 +19,7 @@ int TextureUpdate::find_zoom_index(FLOAT_T zoom) {
 
 void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture_grid) {
   FLOAT_T zoom;
-  auto view_changed=this->viewport_current_state->GetGridValues(zoom,this->viewport_grid);
+  auto view_changed=this->viewport_current_state_texturegrid_update->GetGridValues(zoom,this->viewport_grid);
   DEBUG("TextureUpdate::find_current_textures()");
   // if (view_changed) {
   // don't do anything here if viewport_current_state hasn't been initialized

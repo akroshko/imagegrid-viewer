@@ -16,7 +16,6 @@
 #include <iostream>
 #include <string>
 
-
 ImageGridSquareZoomLevel::~ImageGridSquareZoomLevel() {
   if(this->rgb_data != nullptr) {
     // this is problematic code, hence the debugging statements here
@@ -174,6 +173,11 @@ bool ImageGrid::load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running
   return successful;
 }
 
+GridPixelSize ImageGrid::get_image_max_pixel_size() {
+  return this->image_max_size;
+
+}
+
 TextureGridSquareZoomLevel::~TextureGridSquareZoomLevel () {
   // not freeing SDL... causes a crash when exiting
   // if (this->display_texture != nullptr) {
@@ -212,18 +216,18 @@ TextureGrid::~TextureGrid() {
   // DELETE_IF_NOT_NULLPTR(this->grid_image_size);
 }
 
-void TextureGrid::init_max_zoom_index(ImageGrid *grid) {
+void TextureGrid::init_max_zoom_index(const GridPixelSize &image_max_pixel_size) {
   INT_T zoom_length = 0;
   FLOAT_T current_zoom=1.0;
-  auto max_wpixel=grid->image_max_size.wpixel();
-  auto max_hpixel=grid->image_max_size.hpixel();
+  // auto max_wpixel=grid->image_max_size.wpixel();
+  // auto max_hpixel=grid->image_max_size.hpixel();
   // swap out and reallocate
-  this->max_pixel_size=GridPixelSize(grid->image_max_size);
+  this->max_pixel_size=GridPixelSize(image_max_pixel_size);
   zoom_length += 1;
   current_zoom /= 2.0;
   // TODO: inefficient, do without a while loop
-  while (!(((this->grid_image_size.wimage()*max_wpixel*current_zoom) < MAX_SCREEN_WIDTH) &&
-           ((this->grid_image_size.himage()*max_hpixel*current_zoom) < MAX_SCREEN_HEIGHT))) {
+  while (!(((this->grid_image_size.wimage()*this->max_pixel_size.wpixel()*current_zoom) < MAX_SCREEN_WIDTH) &&
+           ((this->grid_image_size.himage()*this->max_pixel_size.hpixel()*current_zoom) < MAX_SCREEN_HEIGHT))) {
     zoom_length += 1;
     current_zoom /= 2.0;
   }

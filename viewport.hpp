@@ -87,7 +87,8 @@ private:
 class ViewPort {
 public:
   ViewPort()=delete;
-  ViewPort(ViewPortCurrentState *viewport_current_state);
+  ViewPort(ViewPortCurrentState *viewport_current_state_texturegrid_update,
+           ViewPortCurrentState *viewport_current_state_imagegrid_update);
   ViewPort(const ViewPort&)=delete;
   ViewPort(const ViewPort&&)=delete;
   ViewPort& operator=(const ViewPort&)=delete;
@@ -134,7 +135,8 @@ private:
   /** the current speed of zoom per SDL frame */
   FLOAT_T current_speed_zoom = INITIAL_CURRENT_ZOOM_SPEED;
   /** object for transfering the state of the viewport in a threadsafe manner */
-  ViewPortCurrentState *viewport_current_state=nullptr;
+  ViewPortCurrentState *viewport_current_state_texturegrid_update=nullptr;
+  ViewPortCurrentState *viewport_current_state_imagegrid_update=nullptr;
   /** Stores the next items to be blit to the viewport. */
   std::vector<BlitItem> blititems;
 };
