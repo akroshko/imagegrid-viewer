@@ -38,7 +38,7 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
     }
     DEBUG("zoom index 2: " << zoom_index);
     DEBUG("max_zoom: " << max_zoom);
-    for (INT_T z = 0; z < max_zoom; z++) {
+    for (INT_T z = 0ul; z < max_zoom; z++) {
       // only load/update current zoom, current zoom+-1 and max_zoom
       // this keeps things smoother
       if (z != max_zoom_index && z != zoom_index-1 && z !=zoom_index && z != zoom_index+1 ) {
@@ -91,10 +91,10 @@ void TextureUpdate::update_textures(ImageGrid *grid,
                                     bool load_all) {
   DEBUG("update_textures() " << zoom_level << " | " << this->viewport_grid.xgrid() << " | " << this->viewport_grid.ygrid());
   // j,i is better for plotting a grid
-  for (INT_T j = 0; j < texture_grid->grid_image_size.himage(); j++) {
+  for (INT_T j = 0ul; j < texture_grid->grid_image_size.himage(); j++) {
     MSGNONEWLINE("| ");
     // TODO: this will eventually be a switch statement to load in different things
-    for (INT_T i = 0; i < texture_grid->grid_image_size.wimage(); i++) {
+    for (INT_T i = 0ul; i < texture_grid->grid_image_size.wimage(); i++) {
       auto dest_square=texture_grid->squares[i][j].texture_array[zoom_level];
       // try and get the source square mutex
       if (!load_all &&
@@ -115,7 +115,9 @@ void TextureUpdate::update_textures(ImageGrid *grid,
           DEBUG("Unable to aquire display_mutex for deletion in TextureGrid::update_textures");
         }
       } else {
-        auto image_square=grid->squares[i][j].image_array[IMAGE_GRID_BASE_INDEX];
+        auto load_index=IMAGE_GRID_BASE_INDEX;
+        // auto load_index=1;
+        auto image_square=grid->squares[i][j].image_array[load_index];
         if(image_square->is_loaded) {
           std::unique_lock<std::mutex> load_lock(image_square->load_mutex, std::defer_lock);
           if(load_lock.try_lock()) {
@@ -163,6 +165,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel *dest_square,
   auto dest_wpixel=wpixel/zoom_reduction;
   auto dest_hpixel=hpixel/zoom_reduction;
   dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
+  // dest_wpixel=pad(dest_wpixel,TEXTURE_ALIGNMENT);
   dest_square->display_texture = SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
   // skip if can't load texture
   if (dest_square->display_texture) {
@@ -173,29 +176,47 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel *dest_square,
         auto source_data=source_square->rgb_data;
         auto dest_array=dest_square->display_texture->pixels;
         if (dest_array != nullptr && source_data != nullptr) {
-          if (zoom_level == 0) {
-            // use memcpy to hopefully take advantage of standard library when zoom index is zero
-            for (INT_T l = 0; l < source_hpixel; l+=skip) {
-              auto dest_index = (l*dest_wpixel)*3;
-              auto source_index = (l*source_wpixel)*3;
-              memcpy(((unsigned char *)dest_array)+dest_index,
-                     ((unsigned char *)source_data)+source_index,
-                     sizeof(unsigned char)*source_wpixel*3);
-            }
-          } else {
-            INT_T ld=0;
-            for (INT_T l = 0; l < source_hpixel; l+=skip) {
-              INT_T kd=0;
-              for (INT_T k = 0; k < source_wpixel; k+=skip) {
-                auto dest_index = (ld*dest_wpixel+kd)*3;
-                auto source_index = (l*source_wpixel+k)*3;
-                ((unsigned char *)dest_array)[dest_index]=source_data[source_index];
-                ((unsigned char *)dest_array)[dest_index+1]=source_data[source_index+1];
-                ((unsigned char *)dest_array)[dest_index+2]=source_data[source_index+2];
-                kd++;
+          // if (zoom_level == 0) {
+          //   // use memcpy to hopefully take advantage of standard library when zoom index is zero
+          //   for (INT_T l = 0ul; l < source_hpixel; l+=skip) {
+          //     auto dest_index = (l*dest_wpixel)*3;
+          //     auto source_index = (l*source_wpixel)*3;
+          //     memcpy(((unsigned char *)dest_array)+dest_index,
+          //            ((unsigned char *)source_data)+source_index,
+          //            sizeof(unsigned char)*source_wpixel*3);
+          //   }
+          // } else {
+          INT_T ld=0;
+          for (INT_T l = 0ul; l < source_hpixel; l+=skip) {
+            INT_T kd=0;
+            for (INT_T k = 0ul; k < source_wpixel; k+=skip) {
+              // auto source_index = (l*source_wpixel+k)*3;
+              auto dest_index = (ld*dest_wpixel+kd)*3;
+              INT_T sum_0=0;
+              INT_T sum_1=0;
+              INT_T sum_2=0;
+              INT_T number_sum=0;
+              // TODO: need proper memory alignment for this!!!
+              for (auto ls = l; ls < l+skip; ls++) {
+                for (auto ks = k; ks < k+skip; ks++) {
+                  if (ls < source_hpixel && ks < source_wpixel) {
+                    auto source_index = (ls*source_wpixel+ks)*3;
+                    sum_0+=source_data[source_index];
+                    sum_1+=source_data[source_index+1];
+                    sum_2+=source_data[source_index+2];
+                    number_sum+=1;
+                  }
+                }
               }
-              ld++;
+              ((unsigned char *)dest_array)[dest_index]=(unsigned char)round((FLOAT_T)sum_0/(FLOAT_T)number_sum);
+              ((unsigned char *)dest_array)[dest_index+1]=(unsigned char)round((FLOAT_T)sum_1/(FLOAT_T)number_sum);
+              ((unsigned char *)dest_array)[dest_index+2]=(unsigned char)round((FLOAT_T)sum_2/(FLOAT_T)number_sum);
+              // ((unsigned char *)dest_array)[dest_index]=source_data[source_index];
+              // ((unsigned char *)dest_array)[dest_index+1]=source_data[source_index+1];
+              // ((unsigned char *)dest_array)[dest_index+2]=source_data[source_index+2];
+              kd++;
             }
+            ld++;
           }
         } else {
           DEBUG("Source or dest data is null in TextureGrid::load_texture");

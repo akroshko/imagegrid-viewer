@@ -14,6 +14,12 @@ FLOAT_T next_largest(FLOAT_T x);
 
 FLOAT_T half(FLOAT_T x);
 
+INT_T round_down_power_of_2(FLOAT_T x);
+
+INT_T reduce_and_pad(INT_T x, INT_T reduction_factor);
+
+INT_T pad (INT_T x, INT_T pad_size);
+
 #define DELETE_IF_NOT_NULLPTR(A) if(A != nullptr) {delete A; A=nullptr;}
 #define DELETE_ARRAY_IF_NOT_NULLPTR(A) if(A != nullptr) {delete[] A; A=nullptr;}
 #endif

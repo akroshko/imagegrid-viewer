@@ -49,7 +49,7 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
  *
  * @param height set as the height of the image in pixels
  */
-bool read_tiff_data(std::string filename, size_t &width, size_t &height);
+bool read_tiff_data(std::string filename, INT_T &width, INT_T &height);
 
 /**
  * Load a tiff file using libtiff,based off of
@@ -64,10 +64,13 @@ bool read_tiff_data(std::string filename, size_t &width, size_t &height);
  * check discrepencies
  *
  * @param rgb_data set as the rgb data from the image
+ *
+ * @param zoom_level a reduction factor for the image
  */
 bool load_tiff_as_rgb(std::string filename,
-                      size_t width, size_t height,
-                      unsigned char** rgb_data);
+                      size_t &width, size_t &height,
+                      unsigned char** rgb_data,
+                      INT_T zoom_level);
 
 
 /**
@@ -78,8 +81,10 @@ bool load_tiff_as_rgb(std::string filename,
  * @param width set as the width of the image in pixels
  *
  * @param height set as the height of the image in pixels
+ *
+ * @param zoom_level a reduction factor for the image
  */
-bool read_png_data(std::string filename, size_t &width, size_t &height);
+bool read_png_data(std::string filename, INT_T &width, INT_T &height);
 
 /**
  * Load a png file using libpng.
@@ -96,8 +101,9 @@ bool read_png_data(std::string filename, size_t &width, size_t &height);
  * @param rgb_data set as the rgb data from the image
  */
 bool load_png_as_rgb(std::string filename,
-                     size_t width, size_t height,
-                     unsigned char** rgb_data);
+                     size_t &width, size_t &height,
+                     unsigned char** rgb_data,
+                     INT_T zoom_level);
 
 /**
  * Check if a file is a tiff file.

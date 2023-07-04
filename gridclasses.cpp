@@ -26,15 +26,47 @@ ImageGridSquareZoomLevel::~ImageGridSquareZoomLevel() {
   }
 }
 
+void ImageGridSquareZoomLevel::load_file(std::string filename) {
+  // block until things load
+  // only block things actually being loaded
+  DEBUG("Trying: " << filename);
+  std::lock_guard<std::mutex> guard(this->load_mutex);
+  if(check_tiff(filename)) {
+    DEBUG("Loading TIFF: " << filename);
+    // TODO: check success
+    load_tiff_as_rgb(filename,
+                     this->rgb_wpixel,
+                     this->rgb_hpixel,
+                     &this->rgb_data,
+                     this->zoom_level);
+    // printing pointer here
+    DEBUG("++++++++++++++++++++ PTR: " << (void *)this->rgb_data);
+    DEBUG("Done TIFF: " << filename);
+  } else if(check_png(filename)) {
+    DEBUG("Loading PNG: " << filename);
+    // TODO: check success
+    load_png_as_rgb(filename,
+                    this->rgb_wpixel,
+                    this->rgb_hpixel,
+                    &this->rgb_data,
+                     this->zoom_level);
+    DEBUG("Done PNG: " << filename);
+  } else {
+    ERROR("ImageGridSquare::load_file can't load: " << filename);
+  }
+  this->is_loaded=true;
+
+}
+
 ImageGridSquare::ImageGridSquare() {
   this->image_array=new ImageGridSquareZoomLevel*[IMAGE_GRID_LENGTH];
-  for(auto i = 0; i < IMAGE_GRID_LENGTH; i++) {
+  for(auto i = 0ul; i < IMAGE_GRID_LENGTH; i++) {
     this->image_array[i]=new ImageGridSquareZoomLevel();
   }
 }
 
 ImageGridSquare::~ImageGridSquare() {
-  for(auto i = 0; i < IMAGE_GRID_LENGTH; i++) {
+  for(auto i = 0ul; i < IMAGE_GRID_LENGTH; i++) {
     DELETE_IF_NOT_NULLPTR(this->image_array[i]);
   }
   DELETE_ARRAY_IF_NOT_NULLPTR(this->image_array);
@@ -45,65 +77,34 @@ void ImageGridSquare::read_file(std::string filename) {
     // TODO: check success
     DEBUG("Constructing TIFF: " << filename);
     read_tiff_data(filename,
-                   this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_wpixel,
-                   this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_hpixel);
-    DEBUG("Done constructing TIff: " << filename << " " << this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_wpixel
-                                                 << " " << this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_hpixel);
+                   this->image_wpixel,
+                   this->image_hpixel);
+    DEBUG("Done constructing TIff: " << filename << " " << this->image_wpixel
+                                                 << " " << this->image_hpixel);
   } else if(check_png(filename)) {
     DEBUG("Constructing PNG: " << filename);
     // TODO: check success
     read_png_data(filename,
-                  this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_wpixel,
-                  this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_hpixel);
-    DEBUG("Done constructing PNG: " << filename << " " << this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_wpixel
-                                                << " " << this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_hpixel);
+                  this->image_wpixel,
+                  this->image_hpixel);
+    DEBUG("Done constructing PNG: " << filename << " " << this->image_wpixel
+                                                << " " << this->image_hpixel);
   } else {
-    ERROR("ImageGridSquare::load_file can't load: " << filename);
+    ERROR("ImageGridSquare::read_file can't read: " << filename);
   }
-}
-
-void ImageGridSquare::load_file(std::string filename) {
-  // block until things load
-  // only block things actually being loaded
-  std::lock_guard<std::mutex> guard(this->image_array[IMAGE_GRID_BASE_INDEX]->load_mutex);
-  std::lock_guard<std::mutex> guard_second(this->image_array[IMAGE_GRID_SECOND_INDEX]->load_mutex);
-  std::lock_guard<std::mutex> guard_thumb(this->image_array[IMAGE_GRID_THUMB_INDEX]->load_mutex);
-  if(check_tiff(filename)) {
-    DEBUG("Loading TIFF: " << filename);
-    // TODO: check success
-    load_tiff_as_rgb(filename,
-                     this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_wpixel,
-                     this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_hpixel,
-                     &this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_data);
-    // printing pointer here
-    DEBUG("++++++++++++++++++++ PTR: " << (void *)this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_data);
-    DEBUG("Done TIFF: " << filename);
-  } else if(check_png(filename)) {
-    DEBUG("Loading PNG: " << filename);
-    // TODO: check success
-    load_png_as_rgb(filename,
-                    this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_wpixel,
-                    this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_hpixel,
-                    &this->image_array[IMAGE_GRID_BASE_INDEX]->rgb_data);
-    DEBUG("Done PNG: " << filename);
-  } else {
-    ERROR("ImageGridSquare::load_file can't load: " << filename);
-  }
-  this->image_array[IMAGE_GRID_BASE_INDEX]->is_loaded=true;
-
 }
 
 ImageGrid::ImageGrid(GridSetup *grid_setup) {
   this->grid_image_size=GridImageSize(grid_setup->grid_image_size);
   this->squares = new ImageGridSquare*[grid_setup->grid_image_size.wimage()];
-  for (INT_T i = 0; i < grid_setup->grid_image_size.wimage(); i++) {
+  for (INT_T i = 0ul; i < grid_setup->grid_image_size.wimage(); i++) {
     this->squares[i] = new ImageGridSquare[grid_setup->grid_image_size.himage()];
   }
   this->image_max_size=GridPixelSize(0,0);
 }
 
 ImageGrid::~ImageGrid() {
-  for (INT_T i = 0; i < this->grid_image_size.wimage(); i++) {
+  for (INT_T i = 0ul; i < this->grid_image_size.wimage(); i++) {
     DELETE_ARRAY_IF_NOT_NULLPTR(this->squares[i]);
   }
   DELETE_ARRAY_IF_NOT_NULLPTR(this->squares);
@@ -114,21 +115,21 @@ bool ImageGrid::read_grid_info(GridSetup* grid_setup) {
   if (grid_setup->path_value[0] != 0) {
     grid_setup->filenames=load_numbered_images(std::string(grid_setup->path_value));
   }
-  for (INT_T i = 0; i < this->grid_image_size.wimage(); i++) {
+  for (INT_T i = 0ul; i < this->grid_image_size.wimage(); i++) {
     if (!successful) {
-      squares[i]=nullptr;
+      this->squares[i]=nullptr;
       continue;
     }
-    for (INT_T j = 0; j < this->grid_image_size.himage(); j++) {
+    for (INT_T j = 0ul; j < this->grid_image_size.himage(); j++) {
       if (!successful) {
         continue;
       }
       auto ij=j*this->grid_image_size.wimage()+i;
       MSG("Reading: " << grid_setup->filenames[ij]);
-      squares[i][j].read_file(grid_setup->filenames[ij]);
+      this->squares[i][j].read_file(grid_setup->filenames[ij]);
       // set the RGB of the surface
-      auto rgb_wpixel=squares[i][j].image_array[IMAGE_GRID_BASE_INDEX]->rgb_wpixel;
-      auto rgb_hpixel=squares[i][j].image_array[IMAGE_GRID_BASE_INDEX]->rgb_hpixel;
+      auto rgb_wpixel=this->squares[i][j].image_wpixel;
+      auto rgb_hpixel=this->squares[i][j].image_hpixel;
       auto max_wpixel=this->image_max_size.wpixel();
       auto max_hpixel=this->image_max_size.hpixel();
       // TODO: encapsulate calculation of max pixels
@@ -145,7 +146,35 @@ bool ImageGrid::read_grid_info(GridSetup* grid_setup) {
       }
       this->image_max_size=GridPixelSize(new_wpixel,new_hpixel);;
       // calculate the second and thumbnail images
-
+    }
+  }
+  // find max zoom for each level
+  // TODO: need a "viewport_setup" instead of defines this instead of global const
+  auto image_max_size_wpixel=this->image_max_size.wpixel();
+  auto image_max_size_hpixel=this->image_max_size.hpixel();
+  // find the zoom level where screen fills grid square
+  auto zoom_limit_w=(FLOAT_T)image_max_size_wpixel/(FLOAT_T)MAX_SCREEN_WIDTH;
+  auto zoom_limit_h=(FLOAT_T)image_max_size_hpixel/(FLOAT_T)MAX_SCREEN_HEIGHT;
+  // find zoom limit as rounded down power of 2
+  DEBUG("====================");
+  DEBUG(zoom_limit_w);
+  DEBUG(zoom_limit_h);
+  DEBUG(round_down_power_of_2(zoom_limit_w));
+  DEBUG(round_down_power_of_2(zoom_limit_h));
+  auto zoom_limit=fmin(round_down_power_of_2(zoom_limit_w),
+                       round_down_power_of_2(zoom_limit_h));
+  // add this info to the various data structure
+  this->zoom_step=zoom_limit;
+  for (INT_T i = 0ul; i < this->grid_image_size.wimage(); i++) {
+    for (INT_T j = 0ul; j < this->grid_image_size.himage(); j++) {
+      INT_T local_zoom_level=1;
+      for(auto k = 0ul; k < IMAGE_GRID_LENGTH; k++) {
+        this->squares[i][j].image_array[k]->zoom_level=local_zoom_level;
+        this->squares[i][j].image_array[k]->max_zoom_level=local_zoom_level*zoom_limit;
+        DEBUG("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        DEBUG("LOAD: " << " " << i << " " << " " << j << " " << k << " " << " " << zoom_limit << " " << local_zoom_level << " " << local_zoom_level*zoom_limit);
+        local_zoom_level*=zoom_limit;
+      }
     }
   }
   return successful;
@@ -154,11 +183,11 @@ bool ImageGrid::read_grid_info(GridSetup* grid_setup) {
 bool ImageGrid::load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running) {
   auto successful=true;
   // TODO: sort out this when refactoring file loading
-  for (INT_T i = 0; i < this->grid_image_size.wimage(); i++) {
+  for (INT_T i = 0ul; i < this->grid_image_size.wimage(); i++) {
     if (!successful) {
       continue;
     }
-    for (INT_T j = 0; j < this->grid_image_size.himage(); j++) {
+    for (INT_T j = 0ul; j < this->grid_image_size.himage(); j++) {
       if (!successful) {
         continue;
       }
@@ -167,7 +196,10 @@ bool ImageGrid::load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running
       }
       auto ij=j*this->grid_image_size.wimage()+i;
       MSG("Loading: " << grid_setup->filenames[ij]);
-      this->squares[i][j].load_file(grid_setup->filenames[ij]);
+      for (auto k = 0ul; k < IMAGE_GRID_LENGTH; k++) {
+        this->squares[i][j].image_array[k]->load_file(grid_setup->filenames[ij]);
+      }
+      MSG("Done loading: " << grid_setup->filenames[ij]);
     }
   }
   return successful;
@@ -187,14 +219,14 @@ TextureGridSquareZoomLevel::~TextureGridSquareZoomLevel () {
 }
 
 TextureGridSquare::TextureGridSquare () {
-  this->texture_array=new TextureGridSquareZoomLevel*[MAX_ZOOM_LEVELS]();
-  for (auto i = 0; i < MAX_ZOOM_LEVELS; i++) {
+  this->texture_array=new TextureGridSquareZoomLevel*[MAX_TEXTURE_ZOOM_LEVELS]();
+  for (auto i = 0ul; i < MAX_TEXTURE_ZOOM_LEVELS; i++) {
     this->texture_array[i]=new TextureGridSquareZoomLevel();
   }
 }
 
 TextureGridSquare::~TextureGridSquare () {
-  for (auto i = 0; i < MAX_ZOOM_LEVELS; i++) {
+  for (auto i = 0ul; i < MAX_TEXTURE_ZOOM_LEVELS; i++) {
     DELETE_IF_NOT_NULLPTR(this->texture_array[i]);
   }
   DELETE_ARRAY_IF_NOT_NULLPTR(this->texture_array)
@@ -203,13 +235,13 @@ TextureGridSquare::~TextureGridSquare () {
 TextureGrid::TextureGrid (GridSetup *grid_setup) {
   this->grid_image_size=GridImageSize(grid_setup->grid_image_size);
   this->squares = new TextureGridSquare*[grid_setup->grid_image_size.wimage()];
-  for (INT_T i = 0; i < grid_setup->grid_image_size.wimage(); i++) {
+  for (INT_T i = 0ul; i < grid_setup->grid_image_size.wimage(); i++) {
     this->squares[i] = new TextureGridSquare[grid_setup->grid_image_size.himage()];
   }
 }
 
 TextureGrid::~TextureGrid() {
-  for (auto i=0; i < this->grid_image_size.wimage(); i++) {
+  for (auto i=0ul; i < this->grid_image_size.wimage(); i++) {
     DELETE_ARRAY_IF_NOT_NULLPTR(this->squares[i]);
   }
   DELETE_ARRAY_IF_NOT_NULLPTR(this->squares);

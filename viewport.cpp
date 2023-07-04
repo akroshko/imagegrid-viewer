@@ -13,7 +13,6 @@
 #include <vector>
 
 
-
 BlitItem::BlitItem(TextureGridSquareZoomLevel* square, INT_T count, const ViewportPixelCoordinate &viewport_pixel_coordinate, const ViewportPixelSize &grid_image_size_zoomed) {
   blit_index=count;
   blit_square=square;
@@ -111,8 +110,8 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
   ////////////////////////////////////////////////////////////////////////////////
   // now loop over grid squares
   this->blititems.clear();
-  for (INT_T i = 0; i < texture_grid->grid_image_size.wimage(); i++) {
-    for (INT_T j = 0; j < texture_grid->grid_image_size.himage(); j++) {
+  for (INT_T i = 0ul; i < texture_grid->grid_image_size.wimage(); i++) {
+    for (INT_T j = 0ul; j < texture_grid->grid_image_size.himage(); j++) {
       auto gi=j*texture_grid->grid_image_size.wimage()+i;
       DEBUG("== Adding Blittable " << blit_count << " at index " << gi << " ==========");
       auto upperleft_gridsquare=GridCoordinate(i,j);

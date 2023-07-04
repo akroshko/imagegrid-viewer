@@ -38,6 +38,12 @@ public:
   ImageGridSquareZoomLevel& operator=(const ImageGridSquareZoomLevel&&) = delete;
   std::mutex load_mutex;
   std::atomic<bool> is_loaded{false};
+  /**
+   * Load a file into this square.
+   *
+   * @param The filename to load.
+   */
+  void load_file(std::string filename);
   // TODO: these don't use an object from coordinates.hpp since they
   // are raw memory
   /** */
@@ -46,6 +52,8 @@ public:
   size_t rgb_hpixel;
   // the actual RGB data
   unsigned char* rgb_data=nullptr;
+  INT_T zoom_level;
+  INT_T max_zoom_level;
 };
 
 
@@ -60,14 +68,10 @@ public:
   ImageGridSquare(const ImageGridSquare&&) = delete;
   ImageGridSquare& operator=(const ImageGridSquare&) = delete;
   ImageGridSquare& operator=(const ImageGridSquare&&) = delete;
-  /**
-   * Load a file into this square.
-   *
-   * @param The filename to load.
-   */
   void read_file(std::string filename);
-  void load_file(std::string filename);
   ImageGridSquareZoomLevel** image_array=nullptr;
+  INT_T image_wpixel;
+  INT_T image_hpixel;
 };
 
 /**
@@ -93,10 +97,11 @@ private:
   GridImageSize grid_image_size;
   /** Maximum size of images loaded into the grid. */
   GridPixelSize image_max_size;
-  /** Maximum size of secondary images loaded into the grid. */
-  GridPixelSize image_second_max_size;
-  /** Maximum size of thumbnail images loaded into the grid. */
-  GridPixelSize image_thumbnail_max_size;
+  // /** Maximum size of secondary images loaded into the grid. */
+  // GridPixelSize image_second_max_size;
+  // /** Maximum size of thumbnail images loaded into the grid. */
+  // GridPixelSize image_thumbnail_max_size;
+  INT_T zoom_step;
 };
 
 /**

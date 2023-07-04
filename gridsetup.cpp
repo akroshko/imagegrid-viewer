@@ -45,6 +45,8 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       return;
     }
   }
+  // TODO: fix a warning about initilized values here
+  //       and/or argparse better
   this->grid_image_size=GridImageSize(wimage,himage);
 
   // get any files on the end

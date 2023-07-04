@@ -40,13 +40,13 @@ const double INITIAL_Y = 1.0;
 
 // this is set higher than any images I'm working with
 // when data structure improve it could be dynamic
-const INT_T MAX_ZOOM_LEVELS=10;
+// TODO: this is bad, VERY VERY BAD!
+const INT_T MAX_TEXTURE_ZOOM_LEVELS=10;
 
 // a placeholder index that will be changed in the future
 const INT_T IMAGE_GRID_BASE_INDEX=0;
-const INT_T IMAGE_GRID_SECOND_INDEX=1;
-const INT_T IMAGE_GRID_THUMB_INDEX=2;
-const INT_T IMAGE_GRID_LENGTH=3;
+// const INT_T IMAGE_GRID_LENGTH=3;
+const INT_T IMAGE_GRID_LENGTH=1;
 
 // 60 FPS?
 const auto THREAD_SLEEP = std::chrono::milliseconds(16);

@@ -13,22 +13,22 @@
 SDLApp::SDLApp() {
   auto rendererFlags = SDL_RENDERER_ACCELERATED;
   int windowFlags = 0;
-  format = SDL_AllocFormat(SDL_PIXELFORMAT_RGB24);
+  this->format = SDL_AllocFormat(SDL_PIXELFORMAT_RGB24);
   if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
     ERROR("Couldn't initialize SDL:" << SDL_GetError());
     this->_successful=false;
   } else {
-    window = SDL_CreateWindow("Image Grid Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, windowFlags);
-    if(!window) {
+    this->window = SDL_CreateWindow("Image Grid Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, windowFlags);
+    if(!this->window) {
       ERROR("Failed to open %d " << SCREEN_WIDTH << "x" << SCREEN_HEIGHT << " window: " << SDL_GetError());
       this->_successful=false;
     } else {
-      screen_surface = SDL_GetWindowSurface(window);
+      this->screen_surface = SDL_GetWindowSurface(window);
       if(SDL_NumJoysticks() < 1) {
-        joystick_enabled=false;
+        this->joystick_enabled=false;
       } else {
-        joystick_enabled=true;
-        game_controller = SDL_JoystickOpen(0);
+        this->joystick_enabled=true;
+        this->game_controller = SDL_JoystickOpen(0);
       }
     }
   }
