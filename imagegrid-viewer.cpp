@@ -83,7 +83,7 @@ public:
    * graphics backend.  This nicely encapsulates the C++ -> C library
    * interface away from the rest of the program.
    */
-  SDLApp *sdl_app=nullptr;
+  std::unique_ptr<SDLApp> sdl_app=nullptr;
   /**
    * Represents the loaded images as a grid.
    *
@@ -94,7 +94,7 @@ public:
    * work is done this program should be able to view substantially
    * larger maps than it does now.
    */
-  ImageGrid* grid = nullptr;
+  std::unique_ptr<ImageGrid> grid=nullptr;
   /** Class representing the view the user has of the image grid.
    *
    * The ViewPort class contains the state of the viewing window and
@@ -103,7 +103,7 @@ public:
    * the zoom level, any move/zoom speed data, and any information on
    * user input.
    */
-  ViewPort *viewport = nullptr;
+  std::unique_ptr<ViewPort> viewport=nullptr;
   /**
    * Stores textures at various zoom levels reflecting the needs of the viewport.
    *
@@ -113,7 +113,7 @@ public:
    * TextureGridSquareZoomLevel, contains a mutex so that textures are
    * not being updated and displayed at the same time.
    */
-  TextureGrid* texture_grid = nullptr;
+  std::unique_ptr<TextureGrid> texture_grid=nullptr;
   /**
    * Class to the textures based on the current state of the viewport.
    *
@@ -123,7 +123,7 @@ public:
    * objects.  The least-zoomed textures are always available so
    * something can always be rendered.
    */
-  TextureUpdate *texture_update = nullptr;
+  std::unique_ptr<TextureUpdate> texture_update=nullptr;
   /**
    * Class used to transfer the current state of the viewport in a
    * threadsafe way.
@@ -135,8 +135,8 @@ public:
    * description of ImageGrid above) I will evaluate whether this is
    * the best technique.
    */
-  ViewPortCurrentState *viewport_current_state_texturegrid_update = nullptr;
-  ViewPortCurrentState *viewport_current_state_imagegrid_update = nullptr;
+  std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update=nullptr;
+  std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update=nullptr;
   bool successful;
 };
 
@@ -151,20 +151,20 @@ public:
  *                   arguments.
  */
 ImageGridViewerContext::ImageGridViewerContext(GridSetup *grid_setup) {
-  this->sdl_app=new SDLApp();
-  this->viewport_current_state_texturegrid_update=new ViewPortCurrentState();
-  this->viewport_current_state_imagegrid_update=new ViewPortCurrentState();
-  this->viewport=new ViewPort(this->viewport_current_state_texturegrid_update,
-                              this->viewport_current_state_imagegrid_update);
-  this->texture_update=new TextureUpdate(this->viewport_current_state_texturegrid_update);
-  this->grid=new ImageGrid(grid_setup,this->viewport_current_state_imagegrid_update);
+  this->sdl_app=std::make_unique<SDLApp>();
+  this->viewport_current_state_texturegrid_update=std::make_shared<ViewPortCurrentState>();
+  this->viewport_current_state_imagegrid_update=std::make_shared<ViewPortCurrentState>();
+  this->viewport=std::make_unique<ViewPort>(this->viewport_current_state_texturegrid_update,
+                                            this->viewport_current_state_imagegrid_update);
+  this->texture_update=std::make_unique<TextureUpdate>(this->viewport_current_state_texturegrid_update);
+  this->grid=std::make_unique<ImageGrid>(grid_setup,this->viewport_current_state_imagegrid_update);
   // this is where the images are loaded and can fail since it involves file I/O
   // TODO: work is in progress to load in a seperate thread
   auto read_images_successful=this->grid->read_grid_info(grid_setup);
-  if(read_images_successful) {
+  if (read_images_successful) {
     // these depend on the images being loaded successfully but none
     // of these should not fail except in the case of OOM errors
-    this->texture_grid=new TextureGrid(grid_setup);
+    this->texture_grid=std::make_unique<TextureGrid>(grid_setup);
     // find the maximum index to reference zoomed out textures
     // generally a heuristic based on image size and screen size
     this->texture_grid->init_max_zoom_index(this->grid->get_image_max_pixel_size());
@@ -177,13 +177,6 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup *grid_setup) {
 };
 
 ImageGridViewerContext::~ImageGridViewerContext() {
-  DELETE_IF_NOT_NULLPTR(this->texture_grid);
-  DELETE_IF_NOT_NULLPTR(this->grid);
-  DELETE_IF_NOT_NULLPTR(this->texture_update);
-  DELETE_IF_NOT_NULLPTR(this->viewport);
-  DELETE_IF_NOT_NULLPTR(this->viewport_current_state_texturegrid_update);
-  DELETE_IF_NOT_NULLPTR(this->viewport_current_state_imagegrid_update);
-  DELETE_IF_NOT_NULLPTR(this->sdl_app);
 }
 
 /**
@@ -331,31 +324,26 @@ private:
  */
 int main(int argc, char *argv[]) {
   // The main loop continues as long as this is true.
-  auto continue_flag = true;
+  auto continue_flag=true;
 #ifdef DEBUG_MESSAGES
   int loop_count=0;
 #endif
   // read the command line arguments to fine out what our grid looks
   // like and where the images come from
-  auto grid_setup=new GridSetupFromCommandLine(argc,argv);
+  auto grid_setup=std::make_unique<GridSetupFromCommandLine>(argc,argv);
   if (!grid_setup->successful()) {
-    DELETE_IF_NOT_NULLPTR(grid_setup);
     return 1;
   }
-  auto imagegrid_viewer_context = new ImageGridViewerContext(grid_setup);
+  auto imagegrid_viewer_context=std::make_unique<ImageGridViewerContext>(grid_setup.get());
   // initialize SDL
   if (!imagegrid_viewer_context->sdl_app->successful()) {
     ERROR("Failed to SDL app initialize properly");
-    DELETE_IF_NOT_NULLPTR(grid_setup);
-    DELETE_IF_NOT_NULLPTR(imagegrid_viewer_context);
     return 1;
   }
   // initialialize the main data structures in the program, described
   // at the top of this file
   if (!imagegrid_viewer_context->successful) {
     ERROR("Failed to find images!");
-    DELETE_IF_NOT_NULLPTR(grid_setup);
-    DELETE_IF_NOT_NULLPTR(imagegrid_viewer_context);
     return 1;
   }
   // TODO once the current development is done, see description at the
@@ -366,27 +354,27 @@ int main(int argc, char *argv[]) {
   // initialize files
   // return 0;
   DEBUG("UpdateImageGridThread start()");
-  auto update_imagegrid_thread_class = std::make_unique<UpdateImageGridThread>(
-    grid_setup,
-    imagegrid_viewer_context->grid);
+  auto update_imagegrid_thread_class=std::make_unique<UpdateImageGridThread>(
+    grid_setup.get(),
+    imagegrid_viewer_context->grid.get());
   auto update_imagegrid_thread=update_imagegrid_thread_class->start();
-  auto update_texture_thread_class = std::make_unique<UpdateTextureThread>(
-    imagegrid_viewer_context->texture_update,
-    imagegrid_viewer_context->grid,
-    imagegrid_viewer_context->texture_grid);
-  auto update_texture_thread = update_texture_thread_class->start();
+  auto update_texture_thread_class=std::make_unique<UpdateTextureThread>(
+    imagegrid_viewer_context->texture_update.get(),
+    imagegrid_viewer_context->grid.get(),
+    imagegrid_viewer_context->texture_grid.get());
+  auto update_texture_thread=update_texture_thread_class->start();
   while (continue_flag) {
     DEBUG("================================================================================");
     DEBUG("== Main loop begin");
     // read input, this also adjusts the coordinates of the viewport
     DEBUG("input()");
-    continue_flag=imagegrid_viewer_context->viewport->do_input(imagegrid_viewer_context->sdl_app);
+    continue_flag=imagegrid_viewer_context->viewport->do_input(imagegrid_viewer_context->sdl_app.get());
     DEBUG("input() end");
     // find the textures that need to be blit to the viewport
     // if the textures haven't been loaded, a smaller zoomed version is used
     imagegrid_viewer_context->viewport->find_viewport_blit(
-      imagegrid_viewer_context->texture_grid,
-      imagegrid_viewer_context->sdl_app);
+      imagegrid_viewer_context->texture_grid.get(),
+      imagegrid_viewer_context->sdl_app.get());
     // testing code
     // std::this_thread::sleep_for (THREAD_SLEEP);
     // update the screen and delay before starting the loop again
@@ -409,7 +397,5 @@ int main(int argc, char *argv[]) {
     update_texture_thread.join();
     MSG("Finished joining update_texture_thread.");
   }
-  DELETE_IF_NOT_NULLPTR(grid_setup);
-  DELETE_IF_NOT_NULLPTR(imagegrid_viewer_context);
   return 0;
 }

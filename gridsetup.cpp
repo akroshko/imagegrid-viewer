@@ -21,7 +21,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
   INT_T wimage, himage;
 
   // get options
-  while((opt = getopt(argc ,argv, "w:h:p:")) != -1) {
+  while((opt=getopt(argc ,argv, "w:h:p:")) != -1) {
     switch(opt) {
     case 'w':
       wimage=atoi(optarg);
@@ -33,7 +33,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       strcpy(this->path_value,optarg);
       break;
     case '?':
-      if(optopt == 'w' || optopt == 'h' || optopt == 'p') {
+      if (optopt == 'w' || optopt == 'h' || optopt == 'p') {
         std::cerr << "Option " << optopt << " requires an argument.";
       } else {
         std::cerr << "Unknown option: " << (char)optopt << std::endl;
@@ -50,11 +50,11 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
   this->grid_image_size=GridImageSize(wimage,himage);
 
   // get any files on the end
-  if(optind != argc) {
-    if(this->path_value[0] != 0) {
+  if (optind != argc) {
+    if (this->path_value[0] != 0) {
       ERROR("Cannot specify both a path and individual files.");
     } else {
-      for(auto i = optind; i < argc; i++) {
+      for (auto i=optind; i < argc; i++) {
         this->filenames.push_back(std::string(argv[i]));
       }
     }

@@ -18,14 +18,14 @@
 class TextureUpdate {
 public:
   TextureUpdate()=delete;
-  TextureUpdate(ViewPortCurrentState *viewport_current_state_texturegrid_update);
+  TextureUpdate(std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update);
   ~TextureUpdate()=default;
   TextureUpdate(const TextureUpdate&)=delete;
   TextureUpdate(const TextureUpdate&&)=delete;
   TextureUpdate& operator=(const TextureUpdate&)=delete;
   TextureUpdate& operator=(const TextureUpdate&&)=delete;
   /** Threadsafe class for getting the state of the viewport */
-  ViewPortCurrentState *viewport_current_state_texturegrid_update;
+  std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update;
   /** Find zoom index (for indexing textures) based on actual zoom. */
   int find_zoom_index(FLOAT_T zoom);
   /** Find the textures needed to render the current viewport */

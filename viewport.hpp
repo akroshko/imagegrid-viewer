@@ -61,8 +61,8 @@ private:
 class ViewPort {
 public:
   ViewPort()=delete;
-  ViewPort(ViewPortCurrentState *viewport_current_state_texturegrid_update,
-           ViewPortCurrentState *viewport_current_state_imagegrid_update);
+  ViewPort(std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update,
+           std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update);
   ViewPort(const ViewPort&)=delete;
   ViewPort(const ViewPort&&)=delete;
   ViewPort& operator=(const ViewPort&)=delete;
@@ -107,16 +107,14 @@ private:
   /** a zoom speed per SDL frame */
   FLOAT_T zoom_speed=INITIAL_ZOOM_SPEED;
   /** the current x speed of movement per SDL frame */
-  FLOAT_T current_speed_x = INITIAL_X_Y_SPEED;
+  FLOAT_T current_speed_x=INITIAL_X_Y_SPEED;
   /** the current y speed of movement per SDL frame */
-  FLOAT_T current_speed_y = INITIAL_X_Y_SPEED;
+  FLOAT_T current_speed_y=INITIAL_X_Y_SPEED;
   /** the current speed of zoom per SDL frame */
-  FLOAT_T current_speed_zoom = INITIAL_CURRENT_ZOOM_SPEED;
+  FLOAT_T current_speed_zoom=INITIAL_CURRENT_ZOOM_SPEED;
   /** object for transfering the state of the viewport in a threadsafe manner */
-  ViewPortCurrentState *viewport_current_state_texturegrid_update=nullptr;
-  ViewPortCurrentState *viewport_current_state_imagegrid_update=nullptr;
-  /** Stores the next items to be blit to the viewport. */
-  std::vector<BlitItem *> blititems;
+  std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update=nullptr;
+  std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update=nullptr;
 };
 
 #endif

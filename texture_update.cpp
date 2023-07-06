@@ -10,8 +10,8 @@
 #include "texture_update.hpp"
 #include <thread>
 
-TextureUpdate::TextureUpdate(ViewPortCurrentState *viewport_current_state_texturegrid_update) {
-  this->viewport_current_state_texturegrid_update = viewport_current_state_texturegrid_update;
+TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update) {
+  this->viewport_current_state_texturegrid_update=viewport_current_state_texturegrid_update;
 }
 
 int TextureUpdate::find_zoom_index(FLOAT_T zoom) {
@@ -39,7 +39,7 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
     }
     DEBUG("zoom index 2: " << zoom_index);
     DEBUG("max_zoom: " << max_zoom);
-    for (INT_T z = 0l; z < max_zoom; z++) {
+    for (INT_T z=0l; z < max_zoom; z++) {
       // only load/update current zoom, current zoom+-1 and max_zoom
       // this keeps things smoother
       if (z != max_zoom_index && z != zoom_index-1 && z !=zoom_index && z != zoom_index+1 ) {
@@ -92,10 +92,10 @@ void TextureUpdate::update_textures(ImageGrid *grid,
                                     bool load_all) {
   DEBUG("update_textures() " << zoom_level << " | " << this->viewport_grid.xgrid() << " | " << this->viewport_grid.ygrid());
   // j,i is better for plotting a grid
-  for (INT_T j = 0l; j < texture_grid->grid_image_size.himage(); j++) {
+  for (INT_T j=0l; j < texture_grid->grid_image_size.himage(); j++) {
     // MSGNONEWLINE("| ");
     // TODO: this will eventually be a switch statement to load in different things
-    for (INT_T i = 0l; i < texture_grid->grid_image_size.wimage(); i++) {
+    for (INT_T i=0l; i < texture_grid->grid_image_size.wimage(); i++) {
       auto dest_square=texture_grid->squares[i][j].texture_array[zoom_level];
       // try and get the source square mutex
       if (!load_all &&
@@ -118,9 +118,9 @@ void TextureUpdate::update_textures(ImageGrid *grid,
         bool texture_copy_sucessful=false;
         do {
           auto image_square=grid->squares[i][j].image_array[load_index];
-          if(image_square->is_loaded) {
+          if (image_square->is_loaded) {
             std::unique_lock<std::mutex> load_lock(image_square->load_mutex, std::defer_lock);
-            if(load_lock.try_lock()) {
+            if (load_lock.try_lock()) {
               // MSGNONEWLINE("L ");
               std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
               if (display_lock.try_lock()) {
@@ -170,7 +170,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel *dest_square,
   auto dest_hpixel=hpixel/texture_zoom_reduction;
   dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
   // dest_wpixel=pad(dest_wpixel,TEXTURE_ALIGNMENT);
-  dest_square->display_texture = SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
+  dest_square->display_texture=SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
   // skip if can't load texture
   if (dest_square->display_texture) {
     auto lock_surface_return=SDL_LockSurface(dest_square->display_texture);
@@ -181,9 +181,9 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel *dest_square,
       if (dest_array != nullptr && source_data != nullptr) {
         // if (zoom_level == 0) {
         //   // use memcpy to hopefully take advantage of standard library when zoom index is zero
-        //   for (INT_T l = 0l; l < source_hpixel; l+=skip) {
-        //     auto dest_index = (l*dest_wpixel)*3;
-        //     auto source_index = (l*source_wpixel)*3;
+        //   for (INT_T l=0l; l < source_hpixel; l+=skip) {
+        //     auto dest_index=(l*dest_wpixel)*3;
+        //     auto source_index=(l*source_wpixel)*3;
         //     memcpy(((unsigned char *)dest_array)+dest_index,
         //            ((unsigned char *)source_data)+source_index,
         //            sizeof(unsigned char)*source_wpixel*3);
@@ -193,25 +193,25 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel *dest_square,
         auto source_zoom_level=source_square->zoom_level;
         auto dest_zoom_level=texture_zoom_reduction;
         if (source_zoom_level <= dest_zoom_level) {
-          auto skip = dest_zoom_level/source_zoom_level;
+          auto skip=dest_zoom_level/source_zoom_level;
           // we are reducing the surface
           INT_T ld=0;
           // loop over dest since we are reducing the source to match the dest
-          for (INT_T l = 0l; l < source_hpixel; l+=skip) {
+          for (INT_T l=0l; l < source_hpixel; l+=skip) {
             INT_T kd=0;
-            for (INT_T k = 0l; k < source_wpixel; k+=skip) {
-              // auto source_index = (l*source_wpixel+k)*3;
+            for (INT_T k=0l; k < source_wpixel; k+=skip) {
+              // auto source_index=(l*source_wpixel+k)*3;
               if (kd < dest_wpixel && ld < dest_hpixel)  {
-                auto dest_index = (ld*dest_wpixel+kd)*3;
+                auto dest_index=(ld*dest_wpixel+kd)*3;
                 INT_T sum_0=0;
                 INT_T sum_1=0;
                 INT_T sum_2=0;
                 INT_T number_sum=0;
                 // TODO: need proper memory alignment for this!!!
-                for (auto ls = l; ls < l+skip; ls++) {
-                  for (auto ks = k; ks < k+skip; ks++) {
+                for (auto ls=l; ls < l+skip; ls++) {
+                  for (auto ks=k; ks < k+skip; ks++) {
                     if (ls < source_hpixel && ks < source_wpixel) {
-                      auto source_index = (ls*source_wpixel+ks)*3;
+                      auto source_index=(ls*source_wpixel+ks)*3;
                       sum_0+=source_data[source_index];
                       sum_1+=source_data[source_index+1];
                       sum_2+=source_data[source_index+2];
@@ -232,15 +232,15 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel *dest_square,
           }
         } else {
           // we are expanding the surface
-          auto skip = source_zoom_level/dest_zoom_level;
+          auto skip=source_zoom_level/dest_zoom_level;
           // loop over dest since we are expanding the source to match the dest
-          for (INT_T l = 0l; l < dest_hpixel; l++) {
-            for (INT_T k = 0l; k < dest_wpixel; k++) {
+          for (INT_T l=0l; l < dest_hpixel; l++) {
+            for (INT_T k=0l; k < dest_wpixel; k++) {
               // find appropriate source pixel
               auto ls=l / skip;
               auto ks=k / skip;
-              auto dest_index = (l*dest_wpixel+k)*3;
-              auto source_index = (ls*source_wpixel+ks)*3;
+              auto dest_index=(l*dest_wpixel+k)*3;
+              auto source_index=(ls*source_wpixel+ks)*3;
               if (ks < source_wpixel && ls < source_hpixel) {
                 ((unsigned char *)dest_array)[dest_index]=source_data[source_index];
                 ((unsigned char *)dest_array)[dest_index+1]=source_data[source_index+1];

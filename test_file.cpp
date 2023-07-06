@@ -15,21 +15,21 @@ int main(int argc, char *argv[]) {
   SDLApp *sdl_app=new SDLApp();
   // create an imagegridzoom level
   auto square=new ImageGridSquareZoomLevel();
-  auto file_to_load = std::string{"/opt/imagegrid-viewer/082e01_02.tif"};
-  // auto file_to_load = std::string{"./test_vert.tif"};
-  // auto file_to_load = std::string{"./gradient.tif"};
-  // auto file_to_load = std::string{"./color_grid.tif"};
-  // auto file_to_load = std::string{"test_map_4.tif"};
+  auto file_to_load=std::string{"/opt/imagegrid-viewer/082e01_02.tif"};
+  // auto file_to_load=std::string{"./test_vert.tif"};
+  // auto file_to_load=std::string{"./gradient.tif"};
+  // auto file_to_load=std::string{"./color_grid.tif"};
+  // auto file_to_load=std::string{"test_map_4.tif"};
   square->zoom_level=2;
   // load in a file
   square->load_file(file_to_load);
   // make a cool texture
   // now transfer the RGB data to texture and blit it
   SDL_Surface* display_texture=nullptr;
-  display_texture = SDL_CreateRGBSurfaceWithFormat(0,texture_wpixel,texture_hpixel,24,SDL_PIXELFORMAT_RGB24);
+  display_texture=SDL_CreateRGBSurfaceWithFormat(0,texture_wpixel,texture_hpixel,24,SDL_PIXELFORMAT_RGB24);
   SDL_LockSurface(display_texture);
-  for (auto i = 0ul; i < square->rgb_wpixel; i++) {
-      for (auto j = 0ul; j < square->rgb_wpixel; j++) {
+  for (auto i=0ul; i < square->rgb_wpixel; i++) {
+      for (auto j=0ul; j < square->rgb_wpixel; j++) {
         auto rgb_index=(i*square->rgb_wpixel+j)*3;
         auto texture_index=(i*texture_hpixel+j)*3;
         if (i < texture_wpixel && j < texture_hpixel) {

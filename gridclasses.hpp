@@ -13,10 +13,12 @@
 #include "gridsetup.hpp"
 #include "viewport_current_state.hpp"
 // C++ headers
+#include <array>
 #include <atomic>
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <queue>
 #include <string>
 #include <vector>
 
@@ -33,10 +35,10 @@ class ImageGridSquareZoomLevel {
 public:
   ImageGridSquareZoomLevel()=default;
   ~ImageGridSquareZoomLevel();
-  ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&) = delete;
-  ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&&) = delete;
-  ImageGridSquareZoomLevel& operator=(const ImageGridSquareZoomLevel&) = delete;
-  ImageGridSquareZoomLevel& operator=(const ImageGridSquareZoomLevel&&) = delete;
+  ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&)=delete;
+  ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&&)=delete;
+  ImageGridSquareZoomLevel& operator=(const ImageGridSquareZoomLevel&)=delete;
+  ImageGridSquareZoomLevel& operator=(const ImageGridSquareZoomLevel&&)=delete;
   std::mutex load_mutex;
   std::atomic<bool> is_loaded{false};
   /**
@@ -66,14 +68,33 @@ class ImageGridSquare {
 public:
   ImageGridSquare();
   ~ImageGridSquare();
-  ImageGridSquare(const ImageGridSquare&) = delete;
-  ImageGridSquare(const ImageGridSquare&&) = delete;
-  ImageGridSquare& operator=(const ImageGridSquare&) = delete;
-  ImageGridSquare& operator=(const ImageGridSquare&&) = delete;
+  ImageGridSquare(const ImageGridSquare&)=delete;
+  ImageGridSquare(const ImageGridSquare&&)=delete;
+  ImageGridSquare& operator=(const ImageGridSquare&)=delete;
+  ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
   void read_file(std::string filename);
-  ImageGridSquareZoomLevel** image_array=nullptr;
+  std::unique_ptr<ImageGridSquareZoomLevel*[]> image_array=nullptr;
+  // std::unique_ptr<std::array<ImageGridSquareZoomLevel,<unsigned>>> image_array;
+  // std::unique_ptr<std::array<std::unique_ptr<ImageGridSquareZoomLevel>>> image_array=nullptr;
   INT_T image_wpixel;
   INT_T image_hpixel;
+};
+
+/**
+ * Iterate over an ImageGrid.  Generally in an optimal pattern
+ */
+class ImageGridIterator {
+public:
+  ImageGridIterator()=delete;
+  ImageGridIterator(INT_T w, INT_T h, INT_T current_grid_x, INT_T current_grid_y);
+  ~ImageGridIterator()=default;
+  bool get_next(INT_T &k, INT_T &i, INT_T &j);
+private:
+  INT_T _w;
+  INT_T _h;
+  INT_T _x_current;
+  INT_T _y_current;
+  std::queue<std::array<INT_T,3>> _index_values;
 };
 
 /**
@@ -83,7 +104,7 @@ public:
 class ImageGrid {
 public:
   ImageGrid()=delete;
-  ImageGrid(GridSetup *grid_setup, ViewPortCurrentState *viewport_current_state_imagegrid_update);
+  ImageGrid(GridSetup *grid_setup, std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update);
   ~ImageGrid();
   ImageGrid(const ImageGrid&)=delete;
   ImageGrid(const ImageGrid&&)=delete;
@@ -93,7 +114,7 @@ public:
   void load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running);
   GridPixelSize get_image_max_pixel_size();
   /** The individual squares in the image grid. */
-  ImageGridSquare** squares=nullptr;
+  std::unique_ptr<ImageGridSquare*[]> squares=nullptr;
 private:
   /**
    * Check bounds on the grid.
@@ -117,7 +138,7 @@ private:
   // GridPixelSize image_thumbnail_max_size;
   INT_T zoom_step;
   /** Threadsafe class for getting the state of the viewport */
-  ViewPortCurrentState *_viewport_current_state_imagegrid_update=nullptr;
+  std::shared_ptr<ViewPortCurrentState> _viewport_current_state_imagegrid_update=nullptr;
   /** The locaton of the grid coordinate. */
   GridCoordinate _viewport_grid;
 };
@@ -157,7 +178,7 @@ public:
    * full-size texture the subsequent elements are zoomed textures
    * each reduced by a factor of 2.
    */
-  TextureGridSquareZoomLevel** texture_array=nullptr;
+  std::unique_ptr<TextureGridSquareZoomLevel*[]> texture_array=nullptr;
   // TODO: does not work for now because elements of texture_array contain a mutex
   //       this can be improved
   // std::array<TextureGridSquareZoomLevel*, 10> texture_array;
@@ -183,7 +204,7 @@ public:
    */
   void init_max_zoom_index(const GridPixelSize &image_max_pixel_size);
   /** the indidivual squares */
-  TextureGridSquare** squares=nullptr;
+  std::unique_ptr<TextureGridSquare*[]> squares=nullptr;
   /** this size of this grid in number of textures */
   GridImageSize grid_image_size;
   /** maximum size of the individual textures in pixels */

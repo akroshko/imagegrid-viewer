@@ -20,7 +20,7 @@
 class GridSetup {
 public:
   GridSetup()=default;
-  ~GridSetup() = default;
+  ~GridSetup()=default;
   GridSetup(const GridSetup&)=delete;
   GridSetup(const GridSetup&&)=delete;
   GridSetup& operator=(const GridSetup&)=delete;
@@ -37,7 +37,7 @@ public:
    *  This type of program will naturally have a lot of huge path
    *  names, especially for testing.  Max value on Linux.
    */
-  char path_value[4096] = { 0 };
+  char path_value[4096]={ 0 };
 protected:
   /** Flag to indicate if setup was successful */
   bool _successful=false;
@@ -51,7 +51,7 @@ class GridSetupFromCommandLine : public GridSetup {
 public:
   GridSetupFromCommandLine()=delete;
   GridSetupFromCommandLine(int argc, char* const* argv);
-  ~GridSetupFromCommandLine() = default;
+  ~GridSetupFromCommandLine()=default;
   GridSetupFromCommandLine(const GridSetupFromCommandLine&)=delete;
   GridSetupFromCommandLine(const GridSetupFromCommandLine&&)=delete;
   GridSetupFromCommandLine& operator=(const GridSetupFromCommandLine&)=delete;

@@ -45,9 +45,9 @@ std::vector<std::string> load_numbered_images(std::string images_path
 };
 
 std::vector<std::string> find_sequential_images(std::vector<std::string> image_files) {
-  auto found_png = false;
-  auto found_jpeg = false;
-  auto found_tiff = false;
+  auto found_png=false;
+  auto found_jpeg=false;
+  auto found_tiff=false;
   std::vector<std::string> png_files;
   std::vector<std::string> jpeg_files;
   std::vector<std::string> tiff_files;
@@ -63,16 +63,16 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
   // find which types of image files are availible
   for (const std::string &image_file:image_files) {
     if (regex_search(image_file,png_search)) {
-      found_png = true;
+      found_png=true;
       // if actually an extension
       png_files.push_back(image_file);
     } else if (regex_search(image_file,jpeg_search)) {
-      found_jpeg = true;
+      found_jpeg=true;
       // if actually an extension
       jpeg_files.push_back(image_file);
       // jpeg_files=;
     } else if (regex_search(image_file,tiff_search)) {
-      found_tiff = true;
+      found_tiff=true;
       // if actually an extension
       tiff_files.push_back(image_file);
     }
@@ -138,7 +138,7 @@ bool read_tiff_data(std::string filename,
                     INT_T &width, INT_T &height) {
   auto success=true;
 
-  TIFF* tif = TIFFOpen(filename.c_str(), "r");
+  TIFF* tif=TIFFOpen(filename.c_str(), "r");
 
   DEBUG("load_tiff_as_rgb() begin: " << filename);
   if (!tif) {
@@ -162,7 +162,7 @@ bool load_tiff_as_rgb(std::string filename,
                       INT_T zoom_level) {
   auto success=true;
 
-  TIFF* tif = TIFFOpen(filename.c_str(), "r");
+  TIFF* tif=TIFFOpen(filename.c_str(), "r");
 
   DEBUG("load_tiff_as_rgb() begin: " << filename);
   if (!tif) {
@@ -194,7 +194,7 @@ bool load_tiff_as_rgb(std::string filename,
     size_t npixels_reduced=w_reduced*h_reduced;
     width=w_reduced;
     height=h_reduced;
-    raster = (uint32*) _TIFFmalloc(npixels * sizeof (uint32));
+    raster=(uint32*) _TIFFmalloc(npixels * sizeof (uint32));
     DEBUG(w_reduced);
     DEBUG(h_reduced);
     if (raster == NULL) {
@@ -208,7 +208,7 @@ bool load_tiff_as_rgb(std::string filename,
         // convert raster
         // width=(size_t)w;
         // height=(size_t)h;
-        *rgb_data = new unsigned char[npixels_reduced*3];
+        *rgb_data=new unsigned char[npixels_reduced*3];
         // naive copy
         // for (size_t i=0; i < npixels; i++) {
         //   (*rgb_data)[i*3]=(unsigned char)TIFFGetR(raster[i]);
@@ -268,7 +268,7 @@ bool read_png_data(std::string filename,
   DEBUG("read_png_data() begin");
 
   memset(&image, 0, (sizeof image));
-  image.version = PNG_IMAGE_VERSION;
+  image.version=PNG_IMAGE_VERSION;
   if (png_image_begin_read_from_file(&image, filename.c_str()) == 0) {
     ERROR("read_png_data() failed to read from file: " << filename);
     success=false;
@@ -291,14 +291,14 @@ bool load_png_as_rgb(std::string filename,
   DEBUG("load_png_as_rgb() begin");
 
   memset(&image, 0, (sizeof image));
-  image.version = PNG_IMAGE_VERSION;
+  image.version=PNG_IMAGE_VERSION;
   if (png_image_begin_read_from_file(&image, filename.c_str()) == 0) {
     ERROR("load_png_as_rgb() failed to read from file: " << filename);
     success=false;
   } else {
     png_bytep buffer;
-    image.format = PNG_FORMAT_RGB;
-    buffer = new unsigned char[PNG_IMAGE_SIZE(image)];
+    image.format=PNG_FORMAT_RGB;
+    buffer=new unsigned char[PNG_IMAGE_SIZE(image)];
     if (buffer == NULL) {
       ERROR("load_png_as_rgb() failed to allocate buffer!");
       success=false;
