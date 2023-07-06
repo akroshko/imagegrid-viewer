@@ -11,6 +11,7 @@
 #include "defaults.hpp"
 #include "coordinates.hpp"
 #include "gridsetup.hpp"
+#include "viewport_current_state.hpp"
 // C++ headers
 #include <atomic>
 #include <iostream>
@@ -43,10 +44,11 @@ public:
    *
    * @param The filename to load.
    */
-  void load_file(std::string filename);
+  bool load_file(std::string filename);
   // TODO: these don't use an object from coordinates.hpp since they
   // are raw memory
   /** */
+  void unload_file();
   size_t rgb_wpixel;
   /** */
   size_t rgb_hpixel;
@@ -81,18 +83,30 @@ public:
 class ImageGrid {
 public:
   ImageGrid()=delete;
-  ImageGrid(GridSetup *grid_setup);
+  ImageGrid(GridSetup *grid_setup, ViewPortCurrentState *viewport_current_state_imagegrid_update);
   ~ImageGrid();
   ImageGrid(const ImageGrid&)=delete;
   ImageGrid(const ImageGrid&&)=delete;
   ImageGrid& operator=(const ImageGrid&)=delete;
   ImageGrid& operator=(const ImageGrid&&)=delete;
   bool read_grid_info(GridSetup *grid_setup);
-  bool load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running);
+  void load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running);
   GridPixelSize get_image_max_pixel_size();
   /** The individual squares in the image grid. */
   ImageGridSquare** squares=nullptr;
 private:
+  /**
+   * Check bounds on the grid.
+   */
+  bool _check_bounds(INT_T k, INT_T i, INT_T j);
+  /**
+   * Figure out whether to load.
+   */
+  bool _check_load(INT_T k, INT_T i, INT_T j, INT_T current_load_zoom, INT_T current_grid_x, INT_T current_grid_y, INT_T load_all);
+  /**
+   * Actually load the file.
+   */
+  bool _load_file(INT_T k, INT_T i, INT_T j, INT_T current_grid_x, INT_T current_grid_y, INT_T load_all, GridSetup *grid_setup);
   /** Store the coordinates */
   GridImageSize grid_image_size;
   /** Maximum size of images loaded into the grid. */
@@ -102,6 +116,10 @@ private:
   // /** Maximum size of thumbnail images loaded into the grid. */
   // GridPixelSize image_thumbnail_max_size;
   INT_T zoom_step;
+  /** Threadsafe class for getting the state of the viewport */
+  ViewPortCurrentState *_viewport_current_state_imagegrid_update=nullptr;
+  /** The locaton of the grid coordinate. */
+  GridCoordinate _viewport_grid;
 };
 
 /**
@@ -116,9 +134,11 @@ public:
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&&)=delete;
   TextureGridSquareZoomLevel& operator=(const TextureGridSquareZoomLevel&)=delete;
   TextureGridSquareZoomLevel& operator=(const TextureGridSquareZoomLevel&&)=delete;
+  void unload_texture();
   // lock when the display_area is being worked on
   std::mutex display_mutex;
   SDL_Surface* display_texture=nullptr;
+  INT_T last_load_index=INT_MAX;
 };
 
 /**

@@ -20,6 +20,10 @@ INT_T reduce_and_pad(INT_T x, INT_T reduction_factor);
 
 INT_T pad (INT_T x, INT_T pad_size);
 
+void sleep_thread();
+
+void sleep_mini();
+
 #define DELETE_IF_NOT_NULLPTR(A) if(A != nullptr) {delete A; A=nullptr;}
 #define DELETE_ARRAY_IF_NOT_NULLPTR(A) if(A != nullptr) {delete[] A; A=nullptr;}
 #endif

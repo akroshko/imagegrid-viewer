@@ -14,10 +14,10 @@
 #include "gridclasses.hpp"
 #include "coordinates.hpp"
 // C++ headers
-#include <vector>
 #include <iostream>
-#include <string>
 #include <mutex>
+#include <string>
+#include <vector>
 
  /** Class that stores an item that ready to be blit to the screen. */
 class BlitItem {
@@ -55,32 +55,6 @@ private:
   int blit_index;
 };
 
-
-/**
- * Class for transfering the current state of the viewport between
- * threads. Updated every single time the viewport changes.  Should be
- * a singleton class that is only meant to be produced in one place
- * and consumed in another.
- */
-class ViewPortCurrentState {
-// TODO: make sure this class is not moveable or copyable
-public:
-  ViewPortCurrentState();
-  ViewPortCurrentState(const ViewPortCurrentState&)=delete;
-  ViewPortCurrentState(const ViewPortCurrentState&&)=delete;
-  ViewPortCurrentState& operator=(const ViewPortCurrentState&)=delete;
-  ViewPortCurrentState& operator=(const ViewPortCurrentState&&)=delete;
-  void UpdateGridValues(FLOAT_T zoom, const GridCoordinate &grid);
-  bool GetGridValues(FLOAT_T &zoom, GridCoordinate &grid);
-private:
-  FLOAT_T zoom=NAN;
-  GridCoordinate grid;
-  FLOAT_T zoom_last=NAN;
-  GridCoordinate grid_last;
-  bool been_updated=false;
-  std::mutex using_mutex;
-};
-
 /**
  * Class that represents a viewport.
  */
@@ -96,6 +70,10 @@ public:
   void find_viewport_blit(TextureGrid* texture_grid,  SDLApp* sdl_app);
   /** update the values in this class with current keyboard/joystick/etc. input */
   bool do_input(SDLApp* sdl_app);
+  /**
+   * Update the information and observors for the current state of the viewport.
+   */
+  void update_viewport_info(FLOAT_T xgrid, FLOAT_T ygrid);
   /**
    * Clear old textures from the viewport.
    *
@@ -138,7 +116,7 @@ private:
   ViewPortCurrentState *viewport_current_state_texturegrid_update=nullptr;
   ViewPortCurrentState *viewport_current_state_imagegrid_update=nullptr;
   /** Stores the next items to be blit to the viewport. */
-  std::vector<BlitItem> blititems;
+  std::vector<BlitItem *> blititems;
 };
 
 #endif

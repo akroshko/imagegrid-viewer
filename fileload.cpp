@@ -209,7 +209,6 @@ bool load_tiff_as_rgb(std::string filename,
         // width=(size_t)w;
         // height=(size_t)h;
         *rgb_data = new unsigned char[npixels_reduced*3];
-        // DEBUG("Width: " << width << " Height: " << height);
         // naive copy
         // for (size_t i=0; i < npixels; i++) {
         //   (*rgb_data)[i*3]=(unsigned char)TIFFGetR(raster[i]);
@@ -217,8 +216,8 @@ bool load_tiff_as_rgb(std::string filename,
         //   (*rgb_data)[i*3+2]=(unsigned char)TIFFGetB(raster[i]);
         // }
         // TODO: THIS WILL HAVE TO BE OPTIMIZED!!!! PROBABLY VERY BAD!!!!
-        for (size_t j=0; j < h_reduced; j+=1) {
-          for (size_t i=0; i < w_reduced; i+=1) {
+        for (size_t j=0; j < h_reduced; j++) {
+          for (size_t i=0; i < w_reduced; i++) {
             auto rgb_pixel=j*w_reduced+i;
             INT_T tiff_sum_0=0;
             INT_T tiff_sum_1=0;
@@ -231,7 +230,7 @@ bool load_tiff_as_rgb(std::string filename,
                   tiff_sum_0+=TIFFGetR(raster[tiff_pixel]);
                   tiff_sum_1+=TIFFGetG(raster[tiff_pixel]);
                   tiff_sum_2+=TIFFGetB(raster[tiff_pixel]);
-                  number_sum+=1;
+                  number_sum++;
                 }
 
                 // if ((ti < w) && (tj < h)) {
@@ -311,7 +310,6 @@ bool load_png_as_rgb(std::string filename,
         width=(size_t)image.width;
         height=(size_t)image.height;
         *rgb_data=new unsigned char[PNG_IMAGE_SIZE(image)];
-        // DEBUG("Width: " << width << " Height: " << height);
         memcpy(*rgb_data,buffer,PNG_IMAGE_SIZE(image));
       }
       delete[] buffer;

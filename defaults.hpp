@@ -35,8 +35,10 @@ const double INITIAL_CURRENT_ZOOM_SPEED=0.0;
 
 const double INITIAL_X_Y_SPEED = 0.0;
 
-const double INITIAL_X = 1.0;
-const double INITIAL_Y = 1.0;
+// const double INITIAL_X = 1.0;
+// const double INITIAL_Y = 1.0;
+const double INITIAL_X = 5.0;
+const double INITIAL_Y = 5.0;
 
 // this is set higher than any images I'm working with
 // when data structure improve it could be dynamic
@@ -45,16 +47,19 @@ const INT_T MAX_TEXTURE_ZOOM_LEVELS=10;
 
 // a placeholder index that will be changed in the future
 const INT_T IMAGE_GRID_BASE_INDEX=0;
-// const INT_T IMAGE_GRID_LENGTH=3;
-const INT_T IMAGE_GRID_LENGTH=1;
+const INT_T IMAGE_GRID_LENGTH=3;
+// const INT_T IMAGE_GRID_LENGTH=1;
 
 // 60 FPS?
-const auto THREAD_SLEEP = std::chrono::milliseconds(16);
+const auto THREAD_SLEEP = std::chrono::milliseconds(4);
+const auto MINI_SLEEP = std::chrono::milliseconds(1);
 
 // some placeholder values
 
 // rather than zero, this should make sure that any use of initialized class members becomes obvious
 // TODO: will replace with assert or an exception
 const INT_T INVALID_PIXEL_VALUE=INT_MIN;
+
+const INT_T LOAD_FILES_BATCH=1;
 
 #endif

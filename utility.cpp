@@ -1,10 +1,12 @@
 /**
  * Some utility functions.
  */
+#include "defaults.hpp"
 #include "types.hpp"
 #include "utility.hpp"
 // C++ headers
 #include <cmath>
+#include <thread>
 
 INT_T find_zoom_index(FLOAT_T zoom) {
   return floor(log2(1.0/zoom));
@@ -48,4 +50,16 @@ INT_T pad (INT_T x, INT_T pad_size) {
     auto pad_x=x + (pad_size - (x % pad_size));
     return pad_x;
   }
+}
+
+void sleep_thread () {
+  // do a minisleep after each file is unloaded to make sure other things can happen
+  std::this_thread::yield();
+  std::this_thread::sleep_for(THREAD_SLEEP);
+}
+
+void sleep_mini () {
+  // do a minisleep after each file is unloaded to make sure other things can happen
+  std::this_thread::yield();
+  std::this_thread::sleep_for(MINI_SLEEP);
 }
