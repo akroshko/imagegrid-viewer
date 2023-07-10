@@ -18,43 +18,60 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <utility>
+#include <vector>
 
 ImageGridSquareZoomLevel::~ImageGridSquareZoomLevel() {
   this->unload_file();
 }
 
-bool ImageGridSquareZoomLevel::load_file(std::string filename) {
+bool ImageGridSquareZoomLevel::load_file(std::string filename, std::vector<ImageGridSquareZoomLevel*> dest_squares) {
   // block until things load
   // only block things actually being loaded
   auto load_successful=false;
-  if (!this->is_loaded) {
-    DEBUG("Trying to load: " << filename);
-    std::lock_guard<std::mutex> guard(this->load_mutex);
-    if (check_tiff(filename)) {
-      DEBUG("Loading TIFF: " << filename);
-      // TODO: check success
-      load_tiff_as_rgb(filename,
-                       this->rgb_wpixel,
-                       this->rgb_hpixel,
-                       &this->rgb_data,
-                       this->zoom_level);
-      // printing pointer here
-      DEBUG("Done TIFF: " << filename);
-      this->is_loaded=true;
-      load_successful=true;
-    } else if (check_png(filename)) {
-      DEBUG("Loading PNG: " << filename);
-      // TODO: check success
-      load_png_as_rgb(filename,
-                      this->rgb_wpixel,
-                      this->rgb_hpixel,
-                      &this->rgb_data,
-                       this->zoom_level);
-      DEBUG("Done PNG: " << filename);
-      this->is_loaded=true;
-      load_successful=true;
-    } else {
-      ERROR("ImageGridSquare::load_file can't load: " << filename);
+  std::vector<std::pair<ImageGridSquareZoomLevel*,LoadFileData*>> data_pairs;
+  for (auto & dest_square : dest_squares) {
+    data_pairs.emplace_back(std::pair<ImageGridSquareZoomLevel*,LoadFileData*>(dest_square,new LoadFileData()));
+    if (!dest_square->is_loaded) {
+      DEBUG("Trying to load: " << loaded_file_data.filename);
+      data_pairs.back().second->filename=filename;
+      data_pairs.back().second->zoom_level=dest_square->zoom_level;
+      if (check_tiff(data_pairs.back().second->filename)) {
+        DEBUG("Loading TIFF: " << loaded_file_data.filename);
+        // TODO: check success
+        load_tiff_as_rgb(data_pairs.back().second->filename,
+                         data_pairs.back().second->rgb_wpixel,
+                         data_pairs.back().second->rgb_hpixel,
+                         &data_pairs.back().second->rgb_data,
+                         data_pairs.back().second->zoom_level);
+        // printing pointer here
+        DEBUG("Done TIFF: " << loaded_file_data.filename);
+        load_successful=true;
+      } else if (check_png(data_pairs.back().second->filename)) {
+        DEBUG("Loading PNG: " << loaded_file_data.filename);
+        // TODO: check success
+        load_png_as_rgb(filename,
+                        data_pairs.back().second->rgb_wpixel,
+                        data_pairs.back().second->rgb_hpixel,
+                        &data_pairs.back().second->rgb_data,
+                        data_pairs.back().second->zoom_level);
+        DEBUG("Done PNG: " << loaded_file_data.filename);
+        load_successful=true;
+      } else {
+        ERROR("ImageGridSquare::load_file can't load: " << filename);
+      }
+    }
+  }
+  // preparation making dest_square a factory function
+  if (load_successful) {
+    for (auto & data_pair : data_pairs) {
+      std::lock_guard<std::mutex> guard(data_pair.first->load_mutex);
+      data_pair.first->rgb_wpixel=data_pairs.back().second->rgb_wpixel;
+      data_pair.first->rgb_hpixel=data_pairs.back().second->rgb_hpixel;
+      data_pair.first->rgb_data=data_pairs.back().second->rgb_data;
+      data_pair.first->is_loaded=true;
+      // TODO: need better management
+      delete data_pair.second;
     }
   }
   return load_successful;
@@ -220,7 +237,8 @@ bool ImageGrid::_load_file(INT_T k, INT_T i, INT_T j, INT_T current_grid_x, INT_
     auto current_load_zoom=this->squares[i][j].image_array[k]->zoom_level;
     if (this->_check_load(k, i, j, current_load_zoom, current_grid_x, current_grid_y, load_all)) {
       auto ij=j*this->grid_image_size.wimage()+i;
-      load_successful=this->squares[i][j].image_array[k]->load_file(grid_setup->filenames[ij]);
+      auto dest_squares=std::vector<ImageGridSquareZoomLevel*>{this->squares[i][j].image_array[k]};
+      load_successful=ImageGridSquareZoomLevel::load_file(grid_setup->filenames[ij],dest_squares);
     }
   }
   return load_successful;

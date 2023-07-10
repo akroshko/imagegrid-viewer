@@ -26,6 +26,19 @@
 #include <SDL2/SDL.h>
 
 /**
+ * Contains loaded file data in preparation to be transferred to ImageGridSquareZoomLevel.
+ *
+ * May not be permanent, members coorrespond to those in ImageGridSquareZoomLevel.
+ */
+struct LoadFileData {
+  std::string filename;
+  unsigned char* rgb_data=nullptr;
+  size_t rgb_wpixel=INT_MIN;
+  size_t rgb_hpixel=INT_MIN;
+  INT_T zoom_level=INT_MIN;
+};
+
+/**
  * An individual square on the grid at a particular zoom level.
  *
  * TODO: Currently only stores one zoom level.  However code is in the
@@ -42,11 +55,13 @@ public:
   std::mutex load_mutex;
   std::atomic<bool> is_loaded{false};
   /**
-   * Load a file into this square.
+   * Load a file into a square.
    *
-   * @param The filename to load.
+   * @param filename The filename to load.
+   *
+   * @param dest_square The square to be loaded.
    */
-  bool load_file(std::string filename);
+  static bool load_file(std::string filename, std::vector<ImageGridSquareZoomLevel*> dest_square);
   // TODO: these don't use an object from coordinates.hpp since they
   // are raw memory
   /** */
