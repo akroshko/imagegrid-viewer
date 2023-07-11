@@ -50,16 +50,15 @@ const INT_T IMAGE_GRID_BASE_INDEX=0;
 const INT_T IMAGE_GRID_LENGTH=3;
 // const INT_T IMAGE_GRID_LENGTH=1;
 
-// 60 FPS?
-const auto THREAD_SLEEP=std::chrono::milliseconds(4);
-const auto MINI_SLEEP=std::chrono::milliseconds(1);
+const auto THREAD_SLEEP=std::chrono::milliseconds(1);
 
 // some placeholder values
-
 // rather than zero, this should make sure that any use of initialized class members becomes obvious
 // TODO: will replace with assert or an exception
 const INT_T INVALID_PIXEL_VALUE=INT_MIN;
 
+// these are things that should probably be done more smartly later
 const INT_T LOAD_FILES_BATCH=1;
+const INT_T LOAD_TEXTURES_BATCH=8;
 
 #endif

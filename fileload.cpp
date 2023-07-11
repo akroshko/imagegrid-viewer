@@ -7,8 +7,9 @@
 #include "debug.hpp"
 #include "error.hpp"
 #include "types.hpp"
-#include "fileload.hpp"
 #include "utility.hpp"
+#include "fileload.hpp"
+#include "buffer_manip.hpp"
 // C++ headers
 #include <cmath>
 #include <filesystem>
@@ -156,10 +157,8 @@ bool read_tiff_data(std::string filename,
   return success;
 }
 
-bool load_tiff_as_rgb(std::string filename,
-                      size_t &width, size_t &height,
-                      unsigned char** rgb_data,
-                      INT_T zoom_level) {
+bool load_tiff_as_rgb(const std::string filename,
+                      const std::vector<std::shared_ptr<LoadFileData>> load_file_data) {
   auto success=true;
 
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
@@ -172,31 +171,10 @@ bool load_tiff_as_rgb(std::string filename,
     uint32 w,h;
     size_t npixels;
     uint32* raster;
-
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
-
-    // if (width != w) {
-    //   ERROR("Mismatched size of tiff width!");
-    //   return false;
-    // }
-    // if (height != h) {
-    //   ERROR("Mismatched size of tiff height!");
-    //   return false;
-    // }
-
-    // size_t w_pad=pad(w,zoom_level);
-    // size_t h_pad=pad(h,zoom_level);
-    size_t w_reduced=reduce_and_pad(w,zoom_level);
-    size_t h_reduced=reduce_and_pad(h,zoom_level);
     npixels=w*h;
-    // size_t npixels_pad=w_pad*h_pad;
-    size_t npixels_reduced=w_reduced*h_reduced;
-    width=w_reduced;
-    height=h_reduced;
     raster=(uint32*) _TIFFmalloc(npixels * sizeof (uint32));
-    DEBUG(w_reduced);
-    DEBUG(h_reduced);
     if (raster == NULL) {
       ERROR("Failed to allocate raster for: " << filename);
       success=false;
@@ -206,51 +184,17 @@ bool load_tiff_as_rgb(std::string filename,
         success=false;
       } else {
         // convert raster
-        // width=(size_t)w;
-        // height=(size_t)h;
-        *rgb_data=new unsigned char[npixels_reduced*3];
-        // naive copy
-        // for (size_t i=0; i < npixels; i++) {
-        //   (*rgb_data)[i*3]=(unsigned char)TIFFGetR(raster[i]);
-        //   (*rgb_data)[i*3+1]=(unsigned char)TIFFGetG(raster[i]);
-        //   (*rgb_data)[i*3+2]=(unsigned char)TIFFGetB(raster[i]);
-        // }
-        // TODO: THIS WILL HAVE TO BE OPTIMIZED!!!! PROBABLY VERY BAD!!!!
-        for (size_t j=0; j < h_reduced; j++) {
-          for (size_t i=0; i < w_reduced; i++) {
-            auto rgb_pixel=j*w_reduced+i;
-            INT_T tiff_sum_0=0;
-            INT_T tiff_sum_1=0;
-            INT_T tiff_sum_2=0;
-            INT_T number_sum=0;
-            for (size_t tj=j*zoom_level; tj < (j+1)*zoom_level; tj++) {
-              for (size_t ti=i*zoom_level; ti < (i+1)*zoom_level; ti++) {
-                auto tiff_pixel=tj*w+ti;
-                if ((ti < w) && (tj < h)) {
-                  tiff_sum_0+=TIFFGetR(raster[tiff_pixel]);
-                  tiff_sum_1+=TIFFGetG(raster[tiff_pixel]);
-                  tiff_sum_2+=TIFFGetB(raster[tiff_pixel]);
-                  number_sum++;
-                }
-
-                // if ((ti < w) && (tj < h)) {
-                //   // auto tiff_pixel=((i*zoom_level)*h)+(j*zoom_level);
-                //   (*rgb_data)[rgb_pixel*3]=(unsigned char)TIFFGetR(raster[tiff_pixel]);
-                //   (*rgb_data)[rgb_pixel*3+1]=(unsigned char)TIFFGetG(raster[tiff_pixel]);
-                //   (*rgb_data)[rgb_pixel*3+2]=(unsigned char)TIFFGetB(raster[tiff_pixel]);
-                //
-                // } else {
-                //   // TODO double check if this has to be zeroed
-                //   (*rgb_data)[rgb_pixel*3]=(unsigned char)0;
-                //   (*rgb_data)[rgb_pixel*3+1]=(unsigned char)0;
-                //   (*rgb_data)[rgb_pixel*3+2]=(unsigned char)0;
-                // }
-              }
-            }
-            (*rgb_data)[rgb_pixel*3]=(unsigned char)round((FLOAT_T)tiff_sum_0/(FLOAT_T)number_sum);
-            (*rgb_data)[rgb_pixel*3+1]=(unsigned char)round((FLOAT_T)tiff_sum_1/(FLOAT_T)number_sum);
-            (*rgb_data)[rgb_pixel*3+2]=(unsigned char)round((FLOAT_T)tiff_sum_2/(FLOAT_T)number_sum);
-          }
+        for (auto & file_data : load_file_data) {
+          auto zoom_level=file_data->zoom_level;
+          size_t w_reduced=reduce_and_pad(w,zoom_level);
+          size_t h_reduced=reduce_and_pad(h,zoom_level);
+          file_data->rgb_wpixel=w_reduced;
+          file_data->rgb_hpixel=h_reduced;
+          auto npixels_reduced=w_reduced*h_reduced;
+          file_data->rgb_data=new unsigned char[npixels_reduced*3];
+          buffer_copy_reduce_tiff(raster,w,h,
+                                  file_data->rgb_data,w_reduced,h_reduced,
+                                  zoom_level);
         }
       }
       _TIFFfree(raster);
@@ -282,11 +226,10 @@ bool read_png_data(std::string filename,
 }
 
 bool load_png_as_rgb(std::string filename,
-                     size_t &width, size_t &height,
-                     unsigned char** rgb_data,
-                     INT_T zoom_level) {
+                     const std::vector<std::shared_ptr<LoadFileData>> load_file_data) {
   bool success;
   png_image image;
+  unsigned char* buffer;
 
   DEBUG("load_png_as_rgb() begin");
 
@@ -296,23 +239,33 @@ bool load_png_as_rgb(std::string filename,
     ERROR("load_png_as_rgb() failed to read from file: " << filename);
     success=false;
   } else {
-    png_bytep buffer;
+    png_bytep raster;
     image.format=PNG_FORMAT_RGB;
-    buffer=new unsigned char[PNG_IMAGE_SIZE(image)];
-    if (buffer == NULL) {
+    raster=new unsigned char[PNG_IMAGE_SIZE(image)];
+    if (raster == NULL) {
       ERROR("load_png_as_rgb() failed to allocate buffer!");
       success=false;
     } else {
-      if (png_image_finish_read(&image, NULL, buffer, 0, NULL) == 0) {
+      if (png_image_finish_read(&image, NULL, raster, 0, NULL) == 0) {
         ERROR("load_png_as_rgb() failed to read full image!");
       } else {
         // TODO: test for mismatched size
-        width=(size_t)image.width;
-        height=(size_t)image.height;
-        *rgb_data=new unsigned char[PNG_IMAGE_SIZE(image)];
-        memcpy(*rgb_data,buffer,PNG_IMAGE_SIZE(image));
+        auto width=(size_t)image.width;
+        auto height=(size_t)image.height;
+        for (auto & file_data : load_file_data) {
+          auto zoom_level=file_data->zoom_level;
+          size_t w_reduced=reduce_and_pad(width,zoom_level);
+          size_t h_reduced=reduce_and_pad(height,zoom_level);
+          file_data->rgb_wpixel=w_reduced;
+          file_data->rgb_hpixel=h_reduced;
+          size_t npixel_reduced=w_reduced*h_reduced;
+          file_data->rgb_data=new unsigned char[npixel_reduced*3];
+          buffer_copy_reduce_generic((unsigned char *)raster,width,height,
+                                     file_data->rgb_data,w_reduced,h_reduced,
+                                     zoom_level);
+        }
       }
-      delete[] buffer;
+      delete[] raster;
       buffer=nullptr;
     }
     png_image_free(&image);

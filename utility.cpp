@@ -57,9 +57,3 @@ void sleep_thread () {
   std::this_thread::yield();
   std::this_thread::sleep_for(THREAD_SLEEP);
 }
-
-void sleep_mini () {
-  // do a minisleep after each file is unloaded to make sure other things can happen
-  std::this_thread::yield();
-  std::this_thread::sleep_for(MINI_SLEEP);
-}

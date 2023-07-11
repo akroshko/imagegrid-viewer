@@ -26,19 +26,6 @@
 #include <SDL2/SDL.h>
 
 /**
- * Contains loaded file data in preparation to be transferred to ImageGridSquareZoomLevel.
- *
- * May not be permanent, members coorrespond to those in ImageGridSquareZoomLevel.
- */
-struct LoadFileData {
-  std::string filename;
-  unsigned char* rgb_data=nullptr;
-  size_t rgb_wpixel=INT_MIN;
-  size_t rgb_hpixel=INT_MIN;
-  INT_T zoom_level=INT_MIN;
-};
-
-/**
  * An individual square on the grid at a particular zoom level.
  *
  * TODO: Currently only stores one zoom level.  However code is in the
@@ -96,23 +83,6 @@ public:
 };
 
 /**
- * Iterate over an ImageGrid.  Generally in an optimal pattern
- */
-class ImageGridIterator {
-public:
-  ImageGridIterator()=delete;
-  ImageGridIterator(INT_T w, INT_T h, INT_T current_grid_x, INT_T current_grid_y);
-  ~ImageGridIterator()=default;
-  bool get_next(INT_T &k, INT_T &i, INT_T &j);
-private:
-  INT_T _w;
-  INT_T _h;
-  INT_T _x_current;
-  INT_T _y_current;
-  std::queue<std::array<INT_T,3>> _index_values;
-};
-
-/**
  * The grid of images.  In the future these will be lazily loaded from
  * disk/cache.
  */
@@ -134,7 +104,7 @@ private:
   /**
    * Check bounds on the grid.
    */
-  bool _check_bounds(INT_T k, INT_T i, INT_T j);
+  bool _check_bounds(INT_T i, INT_T j);
   /**
    * Figure out whether to load.
    */
@@ -142,15 +112,11 @@ private:
   /**
    * Actually load the file.
    */
-  bool _load_file(INT_T k, INT_T i, INT_T j, INT_T current_grid_x, INT_T current_grid_y, INT_T load_all, GridSetup *grid_setup);
+  bool _load_file(INT_T i, INT_T j, INT_T current_grid_x, INT_T current_grid_y, INT_T load_all, GridSetup *grid_setup);
   /** Store the coordinates */
   GridImageSize grid_image_size;
   /** Maximum size of images loaded into the grid. */
   GridPixelSize image_max_size;
-  // /** Maximum size of secondary images loaded into the grid. */
-  // GridPixelSize image_second_max_size;
-  // /** Maximum size of thumbnail images loaded into the grid. */
-  // GridPixelSize image_thumbnail_max_size;
   INT_T zoom_step;
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortCurrentState> _viewport_current_state_imagegrid_update=nullptr;

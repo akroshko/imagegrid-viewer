@@ -303,7 +303,8 @@ private:
     MSG("Beginning thread in UpdateTextureThread.");
     while (this->_keep_running) {
       this->_texture_update->find_current_textures(this->_grid,
-                                                   this->_texture_grid);
+                                                   this->_texture_grid,
+                                                   this->_keep_running);
       sleep_thread();
     }
     MSG("Ending execution in UpdateTextureThread.");

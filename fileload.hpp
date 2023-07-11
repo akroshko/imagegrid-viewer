@@ -11,10 +11,11 @@
 #include "error.hpp"
 #include "types.hpp"
 // C++ headers
-#include <utility>
-#include <vector>
+#include <climits>
 #include <string>
 #include <regex>
+#include <vector>
+#include <utility>
 
 enum IMAGEDIRECTION {tl_horiz_reset,tl_horiz_follow};
 
@@ -40,6 +41,21 @@ std::vector<std::string> load_numbered_images(std::string images_path// , IMAGED
 std::vector<std::string> find_sequential_images(std::vector<std::string> image_files);
 
 /**
+ * Contains loaded file data in preparation to be transferred to
+ * ImageGridSquareZoomLevel.
+ *
+ * May not be permanent, members correspond to those in
+ * ImageGridSquareZoomLevel.
+ */
+struct LoadFileData {
+  std::string filename;
+  unsigned char* rgb_data=nullptr;
+  size_t rgb_wpixel=INT_MIN;
+  size_t rgb_hpixel=INT_MIN;
+  INT_T zoom_level=INT_MIN;
+};
+
+/**
  * Read data about a tiff file using libtiff,based off of
  * http://www.libtiff.org/libtiff.html
  *
@@ -57,21 +73,12 @@ bool read_tiff_data(std::string filename, INT_T &width, INT_T &height);
  *
  * @param filename the filename to load
  *
- * @param width width of the image in pixels, generally used to check
- * discrepencies
+ * @param load_file_data a vector structs to be updated with data as
+ * it is loaded
  *
- * @param height height of the image in pixels, generally used to
- * check discrepencies
- *
- * @param rgb_data set as the rgb data from the image
- *
- * @param zoom_level a reduction factor for the image
  */
-bool load_tiff_as_rgb(std::string filename,
-                      size_t &width, size_t &height,
-                      unsigned char** rgb_data,
-                      INT_T zoom_level);
-
+bool load_tiff_as_rgb(const std::string filename,
+                      const std::vector<std::shared_ptr<LoadFileData>> load_file_data);
 
 /**
  * Read data about a png file using libpng.
@@ -81,8 +88,6 @@ bool load_tiff_as_rgb(std::string filename,
  * @param width set as the width of the image in pixels
  *
  * @param height set as the height of the image in pixels
- *
- * @param zoom_level a reduction factor for the image
  */
 bool read_png_data(std::string filename, INT_T &width, INT_T &height);
 
@@ -91,19 +96,12 @@ bool read_png_data(std::string filename, INT_T &width, INT_T &height);
  *
  * @param filename the filename to load
  *
- * @param width width of the image in pixels, generally used to check
- * discrepencies
+ * @param load_file_data a vector structs to be updated with data as
+ * it is loaded
  *
- *
- @param height height of the image in pixels, generally used to
- * check discrepencies
- *
- * @param rgb_data set as the rgb data from the image
  */
 bool load_png_as_rgb(std::string filename,
-                     size_t &width, size_t &height,
-                     unsigned char** rgb_data,
-                     INT_T zoom_level);
+                     const std::vector<std::shared_ptr<LoadFileData>> load_file_data);
 
 /**
  * Check if a file is a tiff file.
