@@ -113,8 +113,8 @@ private:
   /** the current speed of zoom per SDL frame */
   FLOAT_T current_speed_zoom=INITIAL_CURRENT_ZOOM_SPEED;
   /** object for transfering the state of the viewport in a threadsafe manner */
-  std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update=nullptr;
-  std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update=nullptr;
+  std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update;
+  std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update;
 };
 
 #endif

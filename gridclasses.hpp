@@ -75,9 +75,9 @@ public:
   ImageGridSquare& operator=(const ImageGridSquare&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
   void read_file(std::string filename);
-  std::unique_ptr<ImageGridSquareZoomLevel*[]> image_array=nullptr;
+  std::unique_ptr<ImageGridSquareZoomLevel*[]> image_array;
   // std::unique_ptr<std::array<ImageGridSquareZoomLevel,<unsigned>>> image_array;
-  // std::unique_ptr<std::array<std::unique_ptr<ImageGridSquareZoomLevel>>> image_array=nullptr;
+  // std::unique_ptr<std::array<std::unique_ptr<ImageGridSquareZoomLevel>>> image_array;
   INT_T image_wpixel;
   INT_T image_hpixel;
 };
@@ -99,7 +99,7 @@ public:
   void load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running);
   GridPixelSize get_image_max_pixel_size();
   /** The individual squares in the image grid. */
-  std::unique_ptr<ImageGridSquare*[]> squares=nullptr;
+  std::unique_ptr<ImageGridSquare*[]> squares;
 private:
   /**
    * Check bounds on the grid.
@@ -119,7 +119,7 @@ private:
   GridPixelSize image_max_size;
   INT_T zoom_step;
   /** Threadsafe class for getting the state of the viewport */
-  std::shared_ptr<ViewPortCurrentState> _viewport_current_state_imagegrid_update=nullptr;
+  std::shared_ptr<ViewPortCurrentState> _viewport_current_state_imagegrid_update;
   /** The locaton of the grid coordinate. */
   GridCoordinate _viewport_grid;
 };
@@ -159,7 +159,7 @@ public:
    * full-size texture the subsequent elements are zoomed textures
    * each reduced by a factor of 2.
    */
-  std::unique_ptr<TextureGridSquareZoomLevel*[]> texture_array=nullptr;
+  std::unique_ptr<TextureGridSquareZoomLevel*[]> texture_array;
   // TODO: does not work for now because elements of texture_array contain a mutex
   //       this can be improved
   // std::array<TextureGridSquareZoomLevel*, 10> texture_array;
@@ -185,7 +185,7 @@ public:
    */
   void init_max_zoom_index(const GridPixelSize &image_max_pixel_size);
   /** the indidivual squares */
-  std::unique_ptr<TextureGridSquare*[]> squares=nullptr;
+  std::unique_ptr<TextureGridSquare*[]> squares;
   /** this size of this grid in number of textures */
   GridImageSize grid_image_size;
   /** maximum size of the individual textures in pixels */

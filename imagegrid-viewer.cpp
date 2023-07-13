@@ -7,20 +7,20 @@
  * extremely large images that can be laid out in a grid.  It began
  * from wanting to have a software equivalent to "laying out maps on a
  * huge table or the floor", given the fact that the Government of
- * Canada topo maps can be found for free.  The government of Canada
- * topo maps are at
+ * Canada topographic maps can be found for free.  The government of
+ * Canada topo maps are at
  * https://ftp.maps.canada.ca/pub/nrcan_rncan/raster/canmatrix2/
  * Digital maps and other large images are of course available from
  * other sources.
  *
- * I found it difficult to view these maps from the government in the
- * way I want (in a similar manner to laying out paper maps on a table
- * or floor in a grid) in the PDF viewers, image viewers, GIS
- * programs, and open source large image viewers I could find.
- * Especially compared to the ease of scrolling around in a program
- * like Google Earth, where the content is chosen by Google and not
- * guaranteed to remain static.  This program is an attempt to solve
- * these problems for local image data.
+ * I found it difficult to view these maps in the way I want (in a
+ * similar manner to laying out paper maps on a table or floor in a
+ * grid) in the PDF viewers, image viewers, GIS programs, and open
+ * source large image viewers I could find.  Especially compared to
+ * the ease of scrolling around in a program like Google Earth, where
+ * the content is chosen by Google and not guaranteed to remain
+ * static.  This program is an attempt to solve these problems for
+ * local image data.
  *
  * An overview of the main data structures and program flow is given
  * in the docstrings for the ImageGridViewerContext below.  As as well
@@ -48,9 +48,9 @@
 /**
  * The ImageGridViewerContext class stores the data structures
  * representing the state of the program.  This allows for a future
- * consideration where this program becomes a library.  This could
- * also useful for if a feature is added to render two seperate
- * locations at once.
+ * consideration where this program becomes a library or a component
+ * of a larger program.  This could also useful for if a feature is
+ * added to render two seperate locations at once.
  */
 class ImageGridViewerContext {
 public:
@@ -68,12 +68,15 @@ public:
    */
   ImageGridViewerContext()=delete;
   ImageGridViewerContext(GridSetup *grid_setup);
-  ~ImageGridViewerContext();
   ImageGridViewerContext(const ImageGridViewerContext&)=delete;
   ImageGridViewerContext(const ImageGridViewerContext&&)=delete;
   ImageGridViewerContext& operator=(const ImageGridViewerContext&)=delete;
   ImageGridViewerContext& operator=(const ImageGridViewerContext&&)=delete;
-  /** A backend neutral delay that occurs at the end of the main loop */
+  /** A backend neutral delay that occurs at the end of the main loop.
+   *
+   * This allows encapsulating the C interface to SDL away from the
+   * main C++ program.
+   */
   void delay();
   /**
    * Object to store the state of SDL.
@@ -83,18 +86,15 @@ public:
    * graphics backend.  This nicely encapsulates the C++ -> C library
    * interface away from the rest of the program.
    */
-  std::unique_ptr<SDLApp> sdl_app=nullptr;
+  std::unique_ptr<SDLApp> sdl_app;
   /**
    * Represents the loaded images as a grid.
    *
    * The ImageGrid class stores the raw RGB data of images loaded from
-   * disk.  Currently all specified images are loaded into memory at
-   * once.  I currently have a git branch where work is underway to
-   * load/unload/cache image data in a seperate thread.  When this
-   * work is done this program should be able to view substantially
-   * larger maps than it does now.
+   * disk.  These images are sparsely loaded so they are not
+   * guaranteed to exist.
    */
-  std::unique_ptr<ImageGrid> grid=nullptr;
+  std::unique_ptr<ImageGrid> grid;
   /** Class representing the view the user has of the image grid.
    *
    * The ViewPort class contains the state of the viewing window and
@@ -103,7 +103,7 @@ public:
    * the zoom level, any move/zoom speed data, and any information on
    * user input.
    */
-  std::unique_ptr<ViewPort> viewport=nullptr;
+  std::unique_ptr<ViewPort> viewport;
   /**
    * Stores textures at various zoom levels reflecting the needs of the viewport.
    *
@@ -113,7 +113,7 @@ public:
    * TextureGridSquareZoomLevel, contains a mutex so that textures are
    * not being updated and displayed at the same time.
    */
-  std::unique_ptr<TextureGrid> texture_grid=nullptr;
+  std::unique_ptr<TextureGrid> texture_grid;
   /**
    * Class to the textures based on the current state of the viewport.
    *
@@ -123,20 +123,20 @@ public:
    * objects.  The least-zoomed textures are always available so
    * something can always be rendered.
    */
-  std::unique_ptr<TextureUpdate> texture_update=nullptr;
+  std::unique_ptr<TextureUpdate> texture_update;
   /**
    * Class used to transfer the current state of the viewport in a
    * threadsafe way.
    *
-   * Data must be transferred between ViewPort and TextureUpdate
-   * objects, which run in different threads.  The
+   * Data must be transferred from ViewPort to the TextureUpdate, and
+   * ImageGrid objects, which run in different threads.  The
    * ViewPortCurrentState class contains a mutex to help with this.
    * Once I have all the multithreaded components I want done (see
    * description of ImageGrid above) I will evaluate whether this is
    * the best technique.
    */
-  std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update=nullptr;
-  std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update=nullptr;
+  std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update;
+  std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update;
   bool successful;
 };
 
@@ -158,12 +158,10 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup *grid_setup) {
                                             this->viewport_current_state_imagegrid_update);
   this->texture_update=std::make_unique<TextureUpdate>(this->viewport_current_state_texturegrid_update);
   this->grid=std::make_unique<ImageGrid>(grid_setup,this->viewport_current_state_imagegrid_update);
-  // this is where the images are loaded and can fail since it involves file I/O
-  // TODO: work is in progress to load in a seperate thread
+  // this is where the the info on the grid is loaded
+  // the actual image data is loaded seperately in it's own thread
   auto read_images_successful=this->grid->read_grid_info(grid_setup);
   if (read_images_successful) {
-    // these depend on the images being loaded successfully but none
-    // of these should not fail except in the case of OOM errors
     this->texture_grid=std::make_unique<TextureGrid>(grid_setup);
     // find the maximum index to reference zoomed out textures
     // generally a heuristic based on image size and screen size
@@ -175,9 +173,6 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup *grid_setup) {
   }
   this->successful=read_images_successful;
 };
-
-ImageGridViewerContext::~ImageGridViewerContext() {
-}
 
 /**
  * The delay function for the main loop will be backend-specific and
@@ -199,6 +194,15 @@ void ImageGridViewerContext::delay () {
 class UpdateImageGridThread {
 public:
   UpdateImageGridThread()=delete;
+  /**
+   * Constructor to set up the class holding the thread.
+   *
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   *
+   * @param grid       The object holding the loaded image data.
+   */
   UpdateImageGridThread(GridSetup *grid_setup, ImageGrid *grid) {
     this->_grid=grid;
     this->_grid_setup=grid_setup;
@@ -210,7 +214,6 @@ public:
   /**
    * Start the thread itself.
    */
-  // std::thread
   std::thread start() {
     std::thread _worker_thread(&UpdateImageGridThread::run, this);
     return _worker_thread;
@@ -225,7 +228,6 @@ public:
    * Unload all files.  Generally used for testing.
    */
   void unload_files() {
-
   }
 private:
   /**
@@ -236,10 +238,7 @@ private:
     // TODO fix this up so I can do a load_all
     // this->_all_loaded=true;
     while (this->_keep_running) {
-      // MSG("Beginning thread in UpdateImageGridThread.");
       this->_grid->load_grid(this->_grid_setup,this->_keep_running);
-      // MSG("Finished loading images in UpdateImageGridThread.");
-      // should be fine for update interval
       sleep_thread();
     }
     MSG("Ending execution in UpdateImageGridThread.");
@@ -347,18 +346,13 @@ int main(int argc, char *argv[]) {
     ERROR("Failed to find images!");
     return 1;
   }
-  // TODO once the current development is done, see description at the
-  // top of this file, I would like to get rid of the run input once
-
-  // get input once before starting thread
   // start the thead that loads the imagegrid
-  // initialize files
-  // return 0;
   DEBUG("UpdateImageGridThread start()");
   auto update_imagegrid_thread_class=std::make_unique<UpdateImageGridThread>(
     grid_setup.get(),
     imagegrid_viewer_context->grid.get());
   auto update_imagegrid_thread=update_imagegrid_thread_class->start();
+  // start the thread that updates textures
   auto update_texture_thread_class=std::make_unique<UpdateTextureThread>(
     imagegrid_viewer_context->texture_update.get(),
     imagegrid_viewer_context->grid.get(),
@@ -372,12 +366,10 @@ int main(int argc, char *argv[]) {
     continue_flag=imagegrid_viewer_context->viewport->do_input(imagegrid_viewer_context->sdl_app.get());
     DEBUG("input() end");
     // find the textures that need to be blit to the viewport
-    // if the textures haven't been loaded, a smaller zoomed version is used
+    // if the textures haven't been loaded, a smaller unzoomed version is used
     imagegrid_viewer_context->viewport->find_viewport_blit(
       imagegrid_viewer_context->texture_grid.get(),
       imagegrid_viewer_context->sdl_app.get());
-    // testing code
-    // std::this_thread::sleep_for (THREAD_SLEEP);
     // update the screen and delay before starting the loop again
     imagegrid_viewer_context->delay();
 #ifdef DEBUG_MESSAGES
@@ -385,14 +377,16 @@ int main(int argc, char *argv[]) {
     loop_count++;
 #endif
   }
+  // send termination signal to both threads
   update_imagegrid_thread_class->terminate();
+  update_texture_thread_class->terminate();
+  // wait for update_imagegrid_thread to cleanly terminate
   if (update_imagegrid_thread.joinable()) {
     MSG("Joining update_imagegrid_thread.");
     update_imagegrid_thread.join();
     MSG("Finished joining update_imagegrid_thread.");
   }
-  // allow update_texture_thread to cleanly terminate
-  update_texture_thread_class->terminate();
+  // wait for update_texture_thread to cleanly terminate
   if (update_texture_thread.joinable()) {
     MSG("Joining update_texture_thread.");
     update_texture_thread.join();
