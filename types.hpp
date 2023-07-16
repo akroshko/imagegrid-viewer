@@ -4,7 +4,7 @@
  * long/short/signed/unsigned.
  */
 #ifndef TYPES_HPP
-#define TYPE_HPP
+#define TYPES_HPP
 
 typedef double FLOAT_T;
 typedef long unsigned int UINT_T;

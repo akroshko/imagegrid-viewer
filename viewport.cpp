@@ -5,7 +5,8 @@
 #include "gridsetup.hpp"
 #include "coordinates.hpp"
 #include "viewport.hpp"
-#include "sdl.hpp"
+// C compatible headers
+#include "c_compatible/sdl.hpp"
 // C++ headers
 #include <cmath>
 #include <iostream>

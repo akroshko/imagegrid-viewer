@@ -9,10 +9,11 @@
 #include "error.hpp"
 #include "types.hpp"
 #include "defaults.hpp"
-#include "sdl.hpp"
 #include "gridsetup.hpp"
 #include "gridclasses.hpp"
 #include "coordinates.hpp"
+// C compatible headers
+#include "c_compatible/sdl.hpp"
 // C++ headers
 #include <iostream>
 #include <mutex>

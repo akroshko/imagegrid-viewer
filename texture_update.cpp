@@ -5,10 +5,13 @@
 #include "error.hpp"
 #include "types.hpp"
 #include "utility.hpp"
-#include "buffer_manip.hpp"
+
 #include "coordinates.hpp"
 #include "gridclasses.hpp"
 #include "texture_update.hpp"
+// C compatible headers
+#include "c_compatible/buffer_manip.hpp"
+// C++ headers
 #include <thread>
 
 TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update) {
@@ -22,7 +25,7 @@ int TextureUpdate::find_zoom_index(FLOAT_T zoom) {
 void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture_grid, std::atomic<bool> &keep_running) {
   FLOAT_T zoom;
   INT_T texture_copy_count=0;
-  auto view_changed=this->viewport_current_state_texturegrid_update->GetGridValues(zoom,this->viewport_grid);
+  this->viewport_current_state_texturegrid_update->GetGridValues(zoom,this->viewport_grid);
   DEBUG("TextureUpdate::find_current_textures()");
   // if (view_changed) {
   // don't do anything here if viewport_current_state hasn't been initialized

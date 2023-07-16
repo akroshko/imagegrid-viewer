@@ -7,11 +7,12 @@
 #include "error.hpp"
 #include "types.hpp"
 #include "utility.hpp"
-#include "fileload.hpp"
 #include "gridsetup.hpp"
 #include "gridclasses.hpp"
 #include "iterators.hpp"
 #include "viewport_current_state.hpp"
+// C compatible headers
+#include "c_compatible/fileload.hpp"
 // C++ headers
 #include <array>
 #include <atomic>
@@ -251,7 +252,7 @@ void ImageGrid::load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running
   auto keep_trying=true;
   // get location of viewport
   FLOAT_T zoom;
-  auto view_changed=this->_viewport_current_state_imagegrid_update->GetGridValues(zoom,this->_viewport_grid);
+  this->_viewport_current_state_imagegrid_update->GetGridValues(zoom,this->_viewport_grid);
   // find the grid extents and choose things that should be loaded/unloaded
   // different things for what should be loaded/unloaded
   // load in reverse order of size

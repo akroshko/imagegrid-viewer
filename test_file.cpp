@@ -5,16 +5,17 @@
 #include "error.hpp"
 #include "defaults.hpp"
 #include "utility.hpp"
-#include "sdl.hpp"
 #include "gridclasses.hpp"
+// C compatible headers
+#include "c_compatible/sdl.hpp"
 
 int main(int argc, char *argv[]) {
   auto texture_wpixel=512ul;
   auto texture_hpixel=512ul;
   // create the SDL app
-  SDLApp *sdl_app=new SDLApp();
+  auto sdl_app=std::make_unique<SDLApp>();
   // create an imagegridzoom level
-  auto square=new ImageGridSquareZoomLevel();
+  auto square=std::make_unique<ImageGridSquareZoomLevel>();
   auto file_to_load=std::string{"/opt/imagegrid-viewer/082e01_02.tif"};
   // auto file_to_load=std::string{"./test_vert.tif"};
   // auto file_to_load=std::string{"./gradient.tif"};
@@ -22,7 +23,9 @@ int main(int argc, char *argv[]) {
   // auto file_to_load=std::string{"test_map_4.tif"};
   square->zoom_level=2;
   // load in a file
-  square->load_file(file_to_load);
+  std::vector<ImageGridSquareZoomLevel*> squares;
+  squares.emplace_back(square.get());
+  ImageGridSquareZoomLevel::load_file(file_to_load,squares);
   // make a cool texture
   // now transfer the RGB data to texture and blit it
   SDL_Surface* display_texture=nullptr;
@@ -49,6 +52,4 @@ int main(int argc, char *argv[]) {
   SDL_BlitScaled(display_texture, NULL, sdl_app->screen_surface, &scaled_rect);
   SDL_UpdateWindowSurface(sdl_app->window);
   SDL_Delay(8192);
-  DELETE_IF_NOT_NULLPTR(square);
-  DELETE_IF_NOT_NULLPTR(sdl_app);
 }

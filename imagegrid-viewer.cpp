@@ -34,11 +34,12 @@
 #include "defaults.hpp"
 #include "utility.hpp"
 #include "gridsetup.hpp"
-#include "sdl.hpp"
 #include "gridclasses.hpp"
 #include "texture_update.hpp"
 #include "viewport.hpp"
-#include "fileload.hpp"
+// C compatible headers
+#include "c_compatible/sdl.hpp"
+#include "c_compatible/fileload.hpp"
 // C++ headers
 #include <atomic>
 #include <iostream>
