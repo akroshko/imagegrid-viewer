@@ -26,8 +26,11 @@ rtags:
 	rc -J
 
 .PHONY: debug
-debug: CXXFLAGS += -DDEBUG_MESSAGES -DDEBUG_IO -g -O0
-debug: imagegrid-viewer
+debug: imagegrid-viewer-debug
+
+imagegrid-viewer-debug: CXXFLAGS += -DDEBUG_MESSAGES -DDEBUG_IO -g -O0
+imagegrid-viewer-debug: $(OBJ_MAIN) imagegrid-viewer.o
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 imagegrid-viewer: CXXFLAGS += -O2
 imagegrid-viewer: $(OBJ_MAIN) imagegrid-viewer.o

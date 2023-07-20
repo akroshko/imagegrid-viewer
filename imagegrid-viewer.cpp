@@ -158,10 +158,11 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup *grid_setup) {
   this->viewport=std::make_unique<ViewPort>(this->viewport_current_state_texturegrid_update,
                                             this->viewport_current_state_imagegrid_update);
   this->texture_update=std::make_unique<TextureUpdate>(this->viewport_current_state_texturegrid_update);
-  this->grid=std::make_unique<ImageGrid>(grid_setup,this->viewport_current_state_imagegrid_update);
+  this->grid=std::make_unique<ImageGrid>();
   // this is where the the info on the grid is loaded
   // the actual image data is loaded seperately in it's own thread
-  auto read_images_successful=this->grid->read_grid_info(grid_setup);
+  this->grid->read_grid_info(grid_setup, this->viewport_current_state_imagegrid_update);
+  auto read_images_successful=this->grid->read_grid_info_successful();
   if (read_images_successful) {
     this->texture_grid=std::make_unique<TextureGrid>(grid_setup);
     // find the maximum index to reference zoomed out textures

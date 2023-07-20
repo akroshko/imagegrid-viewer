@@ -137,7 +137,7 @@ void TextureUpdate::update_textures(ImageGrid *grid,
         auto load_index=0;
         bool texture_copy_successful=false;
         do {
-          auto image_square=grid->squares[i][j].image_array[load_index];
+          auto image_square=grid->squares[i][j]->image_array[load_index];
           if (image_square->is_loaded) {
             std::unique_lock<std::mutex> load_lock(image_square->load_mutex, std::defer_lock);
             if (load_lock.try_lock()) {
@@ -161,7 +161,7 @@ void TextureUpdate::update_textures(ImageGrid *grid,
             }
           }
           load_index++;
-        } while (!texture_copy_successful && load_index < IMAGE_GRID_LENGTH);
+        } while (!texture_copy_successful && load_index < grid->zoom_step_number);
       }
     }
   }
@@ -173,8 +173,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel *dest_square,
                                   INT_T wpixel,
                                   INT_T hpixel) {
   auto successful=true;
-  auto source_wpixel=(INT_T)source_square->rgb_wpixel;
-  auto source_hpixel=(INT_T)source_square->rgb_hpixel;
+  auto source_wpixel=(INT_T)source_square->rgb_wpixel();
+  auto source_hpixel=(INT_T)source_square->rgb_hpixel();
   auto texture_zoom_reduction=((INT_T)pow(2,zoom_level));
   auto dest_wpixel=wpixel/texture_zoom_reduction;
   auto dest_hpixel=hpixel/texture_zoom_reduction;
@@ -190,7 +190,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel *dest_square,
       // do the things we are copying exist?
       if (dest_array != nullptr && source_data != nullptr) {
         // these should only be powers of 2, add an assert
-        auto source_zoom_level=source_square->zoom_level;
+        auto source_zoom_level=source_square->zoom_level();
         auto dest_zoom_level=texture_zoom_reduction;
         if (source_zoom_level <= dest_zoom_level) {
           auto skip=dest_zoom_level/source_zoom_level;

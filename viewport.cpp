@@ -86,10 +86,14 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
       auto actual_zoom=zoom_index;
       auto max_zoom=texture_grid->textures_max_zoom_index;
       auto max_zoom_index=max_zoom-1;
+      if (actual_zoom < 0) {
+        actual_zoom=0;
+      }
+      if (max_zoom_index < 0) {
+        max_zoom_index=0;
+      }
       if (actual_zoom > max_zoom_index) {
         actual_zoom=max_zoom_index;
-      } else if (actual_zoom < 0) {
-        actual_zoom=0;
       }
       // for testing max zoom
       // int actual_zoom=texture_grid->textures_max_zoom_index-1;

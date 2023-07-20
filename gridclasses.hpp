@@ -33,7 +33,8 @@
  */
 class ImageGridSquareZoomLevel {
 public:
-  ImageGridSquareZoomLevel()=default;
+  ImageGridSquareZoomLevel()=delete;
+  ImageGridSquareZoomLevel(INT_T zoom_level, INT_T max_zoom_level);
   ~ImageGridSquareZoomLevel();
   ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&)=delete;
   ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&&)=delete;
@@ -49,17 +50,25 @@ public:
    * @param dest_square The square to be loaded.
    */
   static bool load_file(std::string filename, std::vector<ImageGridSquareZoomLevel*> dest_square);
+  /** */
+  void unload_file();
+  INT_T zoom_level();
+  INT_T max_zoom_level();
+  /** */
+  size_t rgb_wpixel();
+  /** */
+  size_t rgb_hpixel();
+  /** the actual RGB data for this square and zoom level */
+  unsigned char* rgb_data=nullptr;
+private:
   // TODO: these don't use an object from coordinates.hpp since they
   // are raw memory
   /** */
-  void unload_file();
-  size_t rgb_wpixel;
+  size_t _rgb_wpixel;
   /** */
-  size_t rgb_hpixel;
-  // the actual RGB data
-  unsigned char* rgb_data=nullptr;
-  INT_T zoom_level;
-  INT_T max_zoom_level;
+  size_t _rgb_hpixel;
+  INT_T _zoom_level;
+  INT_T _max_zoom_level;
 };
 
 
@@ -68,18 +77,21 @@ public:
  */
 class ImageGridSquare {
 public:
-  ImageGridSquare();
+  ImageGridSquare()=delete;
+  ImageGridSquare(std::string filename);
   ~ImageGridSquare();
   ImageGridSquare(const ImageGridSquare&)=delete;
   ImageGridSquare(const ImageGridSquare&&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
-  void read_file(std::string filename);
   std::unique_ptr<ImageGridSquareZoomLevel*[]> image_array;
-  // std::unique_ptr<std::array<ImageGridSquareZoomLevel,<unsigned>>> image_array;
-  // std::unique_ptr<std::array<std::unique_ptr<ImageGridSquareZoomLevel>>> image_array;
-  INT_T image_wpixel;
-  INT_T image_hpixel;
+  INT_T image_wpixel();
+  INT_T image_hpixel();
+  INT_T zoom_step_number;
+private:
+  INT_T _image_wpixel;
+  INT_T _image_hpixel;
+  void _read_file(std::string filename);
 };
 
 /**
@@ -88,18 +100,23 @@ public:
  */
 class ImageGrid {
 public:
-  ImageGrid()=delete;
-  ImageGrid(GridSetup *grid_setup, std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update);
+  ImageGrid()=default;
   ~ImageGrid();
   ImageGrid(const ImageGrid&)=delete;
   ImageGrid(const ImageGrid&&)=delete;
   ImageGrid& operator=(const ImageGrid&)=delete;
   ImageGrid& operator=(const ImageGrid&&)=delete;
-  bool read_grid_info(GridSetup *grid_setup);
+  void read_grid_info(GridSetup *grid_setup, std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update);
   void load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running);
   GridPixelSize get_image_max_pixel_size();
   /** The individual squares in the image grid. */
-  std::unique_ptr<ImageGridSquare*[]> squares;
+  std::unique_ptr<ImageGridSquare**[]> squares;
+  /**
+   * Return whether read_grid_info was successful.
+   */
+  bool read_grid_info_successful();
+  // TODO: make private once testing done
+  INT_T zoom_step_number;
 private:
   /**
    * Check bounds on the grid.
@@ -122,6 +139,10 @@ private:
   std::shared_ptr<ViewPortCurrentState> _viewport_current_state_imagegrid_update;
   /** The locaton of the grid coordinate. */
   GridCoordinate _viewport_grid;
+  /**
+   * Indicate whether grid info was read properly.
+   */
+  bool _read_grid_info_successful=false;
 };
 
 /**

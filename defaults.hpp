@@ -47,8 +47,6 @@ const INT_T MAX_TEXTURE_ZOOM_LEVELS=10;
 
 // a placeholder index that will be changed in the future
 const INT_T IMAGE_GRID_BASE_INDEX=0;
-const INT_T IMAGE_GRID_LENGTH=3;
-// const INT_T IMAGE_GRID_LENGTH=1;
 
 const auto THREAD_SLEEP=std::chrono::milliseconds(1);
 

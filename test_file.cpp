@@ -15,13 +15,12 @@ int main(int argc, char *argv[]) {
   // create the SDL app
   auto sdl_app=std::make_unique<SDLApp>();
   // create an imagegridzoom level
-  auto square=std::make_unique<ImageGridSquareZoomLevel>();
+  auto square=std::make_unique<ImageGridSquareZoomLevel>(2,2);
   auto file_to_load=std::string{"/opt/imagegrid-viewer/082e01_02.tif"};
   // auto file_to_load=std::string{"./test_vert.tif"};
   // auto file_to_load=std::string{"./gradient.tif"};
   // auto file_to_load=std::string{"./color_grid.tif"};
   // auto file_to_load=std::string{"test_map_4.tif"};
-  square->zoom_level=2;
   // load in a file
   std::vector<ImageGridSquareZoomLevel*> squares;
   squares.emplace_back(square.get());
@@ -31,16 +30,16 @@ int main(int argc, char *argv[]) {
   SDL_Surface* display_texture=nullptr;
   display_texture=SDL_CreateRGBSurfaceWithFormat(0,texture_wpixel,texture_hpixel,24,SDL_PIXELFORMAT_RGB24);
   SDL_LockSurface(display_texture);
-  for (auto i=0ul; i < square->rgb_wpixel; i++) {
-      for (auto j=0ul; j < square->rgb_wpixel; j++) {
-        auto rgb_index=(i*square->rgb_wpixel+j)*3;
-        auto texture_index=(i*texture_hpixel+j)*3;
-        if (i < texture_wpixel && j < texture_hpixel) {
-          ((unsigned char *)display_texture->pixels)[texture_index]=square->rgb_data[rgb_index];
-          ((unsigned char *)display_texture->pixels)[texture_index+1]=square->rgb_data[rgb_index+1];
-          ((unsigned char *)display_texture->pixels)[texture_index+2]=square->rgb_data[rgb_index+2];
-        }
+  for (auto i=0ul; i < square->rgb_wpixel(); i++) {
+    for (auto j=0ul; j < square->rgb_wpixel(); j++) {
+      auto rgb_index=(i*square->rgb_wpixel()+j)*3;
+      auto texture_index=(i*texture_hpixel+j)*3;
+      if (i < texture_wpixel && j < texture_hpixel) {
+        ((unsigned char *)display_texture->pixels)[texture_index]=square->rgb_data[rgb_index];
+        ((unsigned char *)display_texture->pixels)[texture_index+1]=square->rgb_data[rgb_index+1];
+        ((unsigned char *)display_texture->pixels)[texture_index+2]=square->rgb_data[rgb_index+2];
       }
+    }
   }
   SDL_UnlockSurface(display_texture);
   // now blit this

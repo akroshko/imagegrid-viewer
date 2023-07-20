@@ -29,22 +29,33 @@ FLOAT_T half(FLOAT_T x) {
   return x;
 }
 
-// round down to the nearest power of 2
-INT_T round_down_power_of_2(FLOAT_T x) {
+// round down to the nearest nonnegative power of 2
+INT_T round_down_positive_power_of_2(FLOAT_T x) {
   auto log_2=log2(x);
   auto log_2_floor=floor(log_2);
-  return (INT_T)pow(2.0,log_2_floor);
-
+  auto power_of_2=(INT_T)pow(2.0,log_2_floor);
+  if (power_of_2 < 1) {
+      return 1;
+  } else {
+    return power_of_2;
+  }
 }
 
 INT_T reduce_and_pad(INT_T x, INT_T reduction_factor) {
   auto padded_x=pad(x, reduction_factor);
-  auto reduced_x=padded_x/reduction_factor;
+  // TODO: figure out where these zeros are coming from
+  //       but generally I want no change
+  INT_T reduced_x;
+  if (reduction_factor == 0) {
+    reduced_x=padded_x;
+  } else {
+    reduced_x=padded_x/reduction_factor;
+  }
   return reduced_x;
 }
 
 INT_T pad (INT_T x, INT_T pad_size) {
-  if (x % pad_size == 0) {
+  if (pad_size == 0 || x % pad_size == 0) {
     return x;
   } else {
     auto pad_x=x + (pad_size - (x % pad_size));
