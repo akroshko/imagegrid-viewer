@@ -34,7 +34,8 @@
 #include "defaults.hpp"
 #include "utility.hpp"
 #include "gridsetup.hpp"
-#include "gridclasses.hpp"
+#include "imagegrid.hpp"
+#include "texturegrid.hpp"
 #include "texture_update.hpp"
 #include "viewport.hpp"
 // C compatible headers

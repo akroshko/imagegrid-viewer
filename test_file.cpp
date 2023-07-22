@@ -5,7 +5,7 @@
 #include "error.hpp"
 #include "defaults.hpp"
 #include "utility.hpp"
-#include "gridclasses.hpp"
+#include "imagegrid.hpp"
 // C compatible headers
 #include "c_compatible/sdl.hpp"
 

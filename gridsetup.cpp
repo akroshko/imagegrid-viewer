@@ -5,6 +5,7 @@
 #include "error.hpp"
 #include "types.hpp"
 #include "gridsetup.hpp"
+#include "c_compatible/fileload.hpp"
 // C++ headers
 #include <string>
 #include <vector>
@@ -14,6 +15,14 @@
 
 bool GridSetup::successful() {
   return this->_successful;
+}
+
+GridImageSize GridSetup::grid_image_size() {
+  return this->_grid_image_size;
+}
+
+std::vector<std::string> GridSetup::filenames() {
+  return this->_filenames;
 }
 
 GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) {
@@ -30,7 +39,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       himage=atoi(optarg);
       break;
     case 'p':
-      strcpy(this->path_value,optarg);
+      strcpy(this->_path_value,optarg);
       break;
     case '?':
       if (optopt == 'w' || optopt == 'h' || optopt == 'p') {
@@ -47,17 +56,22 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
   }
   // TODO: fix a warning about initilized values here
   //       and/or argparse better
-  this->grid_image_size=GridImageSize(wimage,himage);
+  this->_grid_image_size=GridImageSize(wimage,himage);
 
   // get any files on the end
   if (optind != argc) {
-    if (this->path_value[0] != 0) {
+    if (this->_path_value[0] != 0) {
       ERROR("Cannot specify both a path and individual files.");
     } else {
       for (auto i=optind; i < argc; i++) {
-        this->filenames.push_back(std::string(argv[i]));
+        this->_filenames.push_back(std::string(argv[i]));
       }
     }
   }
+  // load number images if this is appropriate
+  if (this->_path_value[0] != 0) {
+    this->_filenames=load_numbered_images(std::string(this->_path_value));
+  }
+  //
   this->_successful=true;
 };

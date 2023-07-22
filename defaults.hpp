@@ -35,18 +35,18 @@ const double INITIAL_CURRENT_ZOOM_SPEED=0.0;
 
 const double INITIAL_X_Y_SPEED=0.0;
 
-// const double INITIAL_X=1.0;
-// const double INITIAL_Y=1.0;
-const double INITIAL_X=5.0;
-const double INITIAL_Y=5.0;
+const double INITIAL_X=1.0;
+const double INITIAL_Y=1.0;
+// const double INITIAL_X=5.0;
+// const double INITIAL_Y=5.0;
 
 // this is set higher than any images I'm working with
 // when data structure improve it could be dynamic
 // TODO: this is bad, VERY VERY BAD!
 const INT_T MAX_TEXTURE_ZOOM_LEVELS=10;
 
-// a placeholder index that will be changed in the future
-const INT_T IMAGE_GRID_BASE_INDEX=0;
+// maximum minimum size of scaled images
+const INT_T MAX_MIN_SCALED_IMAGE_SIZE=32;
 
 const auto THREAD_SLEEP=std::chrono::milliseconds(1);
 

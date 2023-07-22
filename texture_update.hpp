@@ -9,7 +9,8 @@
 #include "types.hpp"
 #include "viewport.hpp"
 #include "coordinates.hpp"
-#include "gridclasses.hpp"
+#include "imagegrid.hpp"
+#include "texturegrid.hpp"
 // C++ headers
 #include <atomic>
 
@@ -25,8 +26,6 @@ public:
   TextureUpdate(const TextureUpdate&&)=delete;
   TextureUpdate& operator=(const TextureUpdate&)=delete;
   TextureUpdate& operator=(const TextureUpdate&&)=delete;
-  /** Threadsafe class for getting the state of the viewport */
-  std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update;
   /** Find zoom index (for indexing textures) based on actual zoom. */
   int find_zoom_index(FLOAT_T zoom);
   /**
@@ -75,7 +74,10 @@ public:
                     INT_T zoom_level,
                     INT_T wpixel,
                     INT_T hpixel);
-  GridCoordinate viewport_grid;
+private:
+  /** Threadsafe class for getting the state of the viewport */
+  std::shared_ptr<ViewPortCurrentState> _viewport_current_state_texturegrid_update;
+  GridCoordinate _viewport_grid;
 };
 
 #endif

@@ -27,21 +27,20 @@ public:
   GridSetup& operator=(const GridSetup&&)=delete;
   /** Indicate whether setup was successful. */
   bool successful();
+  /** Returns a path of images to load. */
+  std::vector<std::string> filenames();
   /** The size of the grid loaded. */
-  GridImageSize grid_image_size;
-  /** Stores a path of images to load. */
-  std::vector<std::string> filenames;
-  // TODO move internally to constructor
+  GridImageSize grid_image_size();
+protected:
+  bool _successful=false;
+  GridImageSize _grid_image_size;
+  std::vector<std::string> _filenames;
   /** Stores a path of images to load.
    *
    *  This type of program will naturally have a lot of huge path
-   *  names, especially for testing.  Max value on Linux.
+   *  names, especially for testing.  Max value on Linux?
    */
-  char path_value[4096]={ 0 };
-protected:
-  /** Flag to indicate if setup was successful */
-  bool _successful=false;
-
+  char _path_value[4096]={ 0 };
 };
 
 /**

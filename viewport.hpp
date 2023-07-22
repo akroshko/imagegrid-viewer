@@ -10,7 +10,8 @@
 #include "types.hpp"
 #include "defaults.hpp"
 #include "gridsetup.hpp"
-#include "gridclasses.hpp"
+#include "imagegrid.hpp"
+#include "texturegrid.hpp"
 #include "coordinates.hpp"
 // C compatible headers
 #include "c_compatible/sdl.hpp"
@@ -100,22 +101,22 @@ public:
 private:
   GridPixelSize _image_max_size;
   /** The current size of the window in pixels. */
-  ViewportPixelSize viewport_pixel_size;
+  ViewportPixelSize _viewport_pixel_size;
   /** the grid coordinates of the center of the viewport */
-  GridCoordinate viewport_grid;
+  GridCoordinate _viewport_grid;
   /** the zoom level, 1.0 indicates all pixels are 1:1, 0.5 indicates zoomed out by a factor of 2 */
-  FLOAT_T zoom=INITIAL_ZOOM;
+  FLOAT_T _zoom=INITIAL_ZOOM;
   /** a zoom speed per SDL frame */
-  FLOAT_T zoom_speed=INITIAL_ZOOM_SPEED;
+  FLOAT_T _zoom_speed=INITIAL_ZOOM_SPEED;
   /** the current x speed of movement per SDL frame */
-  FLOAT_T current_speed_x=INITIAL_X_Y_SPEED;
+  FLOAT_T _current_speed_x=INITIAL_X_Y_SPEED;
   /** the current y speed of movement per SDL frame */
-  FLOAT_T current_speed_y=INITIAL_X_Y_SPEED;
+  FLOAT_T _current_speed_y=INITIAL_X_Y_SPEED;
   /** the current speed of zoom per SDL frame */
-  FLOAT_T current_speed_zoom=INITIAL_CURRENT_ZOOM_SPEED;
+  FLOAT_T _current_speed_zoom=INITIAL_CURRENT_ZOOM_SPEED;
   /** object for transfering the state of the viewport in a threadsafe manner */
-  std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update;
-  std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update;
+  std::shared_ptr<ViewPortCurrentState> _viewport_current_state_texturegrid_update;
+  std::shared_ptr<ViewPortCurrentState> _viewport_current_state_imagegrid_update;
 };
 
 #endif
