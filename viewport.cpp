@@ -49,7 +49,7 @@ ViewPort::ViewPort(std::shared_ptr<ViewPortCurrentState> viewport_current_state_
 }
 
 INT_T ViewPort::find_zoom_index(FLOAT_T zoom) {
-  return ::find_zoom_index(zoom);
+  return ViewPortCurrentState::find_zoom_index(zoom);
 }
 
 void ViewPort::set_image_max_size(const GridPixelSize& image_max_size) {
@@ -85,16 +85,9 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
       // TODO: this is where I chose zoom
       auto actual_zoom=zoom_index;
       auto max_zoom=texture_grid->textures_max_zoom_index();
-      auto max_zoom_index=max_zoom-1;
-      if (actual_zoom < 0) {
-        actual_zoom=0;
-      }
-      if (max_zoom_index < 0) {
-        max_zoom_index=0;
-      }
-      if (actual_zoom > max_zoom_index) {
-        actual_zoom=max_zoom_index;
-      }
+      if (actual_zoom < 0) { actual_zoom=0; }
+      if (max_zoom-1 < 0) { max_zoom=1; }
+      if (actual_zoom > max_zoom-1) { actual_zoom=max_zoom-1; }
       // for testing max zoom
       // int actual_zoom=texture_grid->textures_max_zoom_index-1;
       auto lock_succeeded=false;
@@ -102,31 +95,32 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
       do {
         lock_succeeded=false;
         texture_loaded=false;
-        mutex_vector.emplace_back(std::unique_lock<std::mutex>{texture_grid->squares[i][j].texture_array[actual_zoom]->display_mutex,std::defer_lock});
-        if (mutex_vector.back().try_lock()) {
-          lock_succeeded=true;
-          if ( texture_grid->squares[i][j].texture_array[actual_zoom]->display_texture != nullptr) {
-            texture_loaded=true;
-            auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.wpixel()*_zoom),
-                                                          (int)round(this->_image_max_size.hpixel()*_zoom));
-            auto new_blit_item=std::make_unique<BlitItem>(texture_grid->squares[i][j].texture_array[actual_zoom],
-                                                          gi,
-                                                          viewport_pixel_coordinate,
-                                                          grid_image_size_zoomed);
-            blititems.push_back(std::move(new_blit_item));
-          } else {
-            texture_loaded=false;
-            mutex_vector.back().unlock();
+        if (texture_grid->squares[i][j].texture_array[actual_zoom]->is_loaded) {
+          mutex_vector.emplace_back(std::unique_lock<std::mutex>{texture_grid->squares[i][j].texture_array[actual_zoom]->display_mutex,std::defer_lock});
+          if (mutex_vector.back().try_lock()) {
+            lock_succeeded=true;
+            if ( texture_grid->squares[i][j].texture_array[actual_zoom]->display_texture != nullptr) {
+              texture_loaded=true;
+              auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.wpixel()*_zoom),
+                                                            (int)round(this->_image_max_size.hpixel()*_zoom));
+              auto new_blit_item=std::make_unique<BlitItem>(texture_grid->squares[i][j].texture_array[actual_zoom],
+                                                            gi,
+                                                            viewport_pixel_coordinate,
+                                                            grid_image_size_zoomed);
+              blititems.push_back(std::move(new_blit_item));
+            } else {
+              texture_loaded=false;
+              mutex_vector.back().unlock();
+              mutex_vector.pop_back();
+            }
+          }
+          if (!lock_succeeded) {
             mutex_vector.pop_back();
           }
         }
-        if (!lock_succeeded) {
-          mutex_vector.pop_back();
-        }
         // TODO: else raise error if things are terrible
         actual_zoom++;
-
-      } while ( (actual_zoom <= max_zoom_index) && (!lock_succeeded || !texture_loaded)  );
+      } while ( (actual_zoom <= max_zoom-1) && (!lock_succeeded || !texture_loaded)  );
       blit_count++;
     }
   }

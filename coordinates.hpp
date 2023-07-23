@@ -119,7 +119,6 @@ private:
   INT_T _ypixel;
 };
 
-
 /**
  * Represents a size on the viewport in pixels.
  */

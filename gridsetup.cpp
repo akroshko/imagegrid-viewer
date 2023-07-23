@@ -13,15 +13,15 @@
 #include <getopt.h>
 #include <string.h>
 
-bool GridSetup::successful() {
+bool GridSetup::successful() const {
   return this->_successful;
 }
 
-GridImageSize GridSetup::grid_image_size() {
+GridImageSize GridSetup::grid_image_size() const {
   return this->_grid_image_size;
 }
 
-std::vector<std::string> GridSetup::filenames() {
+std::vector<std::string> GridSetup::filenames() const {
   return this->_filenames;
 }
 

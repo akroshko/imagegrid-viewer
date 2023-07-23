@@ -18,11 +18,9 @@ TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortCurrentState> viewport_curr
   this->_viewport_current_state_texturegrid_update=viewport_current_state_texturegrid_update;
 }
 
-int TextureUpdate::find_zoom_index(FLOAT_T zoom) {
-  return ::find_zoom_index(zoom);
-}
-
-void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture_grid, std::atomic<bool> &keep_running) {
+void TextureUpdate::find_current_textures (ImageGrid *grid,
+                                           TextureGrid *texture_grid,
+                                           std::atomic<bool> &keep_running) {
   FLOAT_T zoom;
   INT_T texture_copy_count=0;
   this->_viewport_current_state_texturegrid_update->GetGridValues(zoom,this->_viewport_grid);
@@ -30,57 +28,25 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
   // if (view_changed) {
   // don't do anything here if viewport_current_state hasn't been initialized
   if (!this->_viewport_grid.invalid()) {
-    auto max_wpixel=texture_grid->max_pixel_size().wpixel();
-    auto max_hpixel=texture_grid->max_pixel_size().hpixel();
     auto max_zoom=texture_grid->textures_max_zoom_index();
-    auto max_zoom_index=max_zoom-1;
-    auto zoom_index=this->find_zoom_index(zoom);
-    DEBUG("zoom: " << zoom << " zoom index 1: " << zoom_index << " max: " << texture_grid->textures_max_zoom_index());
-    if (zoom_index > max_zoom_index) {
-      zoom_index=max_zoom_index;
+    auto zoom_index=ViewPortCurrentState::find_zoom_index(zoom);
+    if (zoom_index >= max_zoom) {
+      zoom_index=max_zoom-1;
     }
     if (zoom_index < 0) {
       zoom_index=0;
     }
-    DEBUG("zoom index 2: " << zoom_index);
-    DEBUG("max_zoom: " << max_zoom);
-    for (INT_T z=0l; z < max_zoom; z++) {
-      if (texture_copy_count > LOAD_TEXTURES_BATCH) { continue; }
-      if (!keep_running) { continue; }
-      // only load/update current zoom, current zoom+-1 and max_zoom
-      // this keeps things smoother
-      if (z != max_zoom_index && z != zoom_index-1 && z !=zoom_index && z != zoom_index+1 ) {
+    // TODO get rid of this for loop, unload seperately
+    for (INT_T z=max_zoom-1; z >= 0l; z--) {
+      if (!keep_running || texture_copy_count >= LOAD_TEXTURES_BATCH) { break; }
+      // only load/update current zoom and max_zoom
+      // TODO: this doesn't help with unloading
+      if (z != max_zoom-1 && z !=zoom_index) {
         continue;
       }
       // calculate these with max resolution, rather than actual viewport
-      auto max_zoom_this_level=1.0/(2.0+z);
-      auto half_width=(MAX_SCREEN_WIDTH/2);
-      auto half_height=(MAX_SCREEN_HEIGHT/2);
-      auto max_zoom_left=(this->_viewport_grid.xgrid())-(half_width/max_wpixel/max_zoom_this_level);
-      // auto max_zoom_right=(viewport_grid->xgrid())+(half_width/max_wpixel/max_zoom_this_level);
-      auto max_zoom_top=(this->_viewport_grid.ygrid())-(half_height/max_hpixel/max_zoom_this_level);
-      // auto max_zoom_bottom=(viewport_grid->ygrid())+(half_height/max_hpixel/max_zoom_this_level);
-      auto threshold=2.0;
-      // find out if this is 3x3 or full
-      // edge is less than 0.5*threshold away from center
-      DEBUG("zoom level: " << z << " viewport_xgrid: " << this->viewport_grid.xgrid() << " viewport_ygrid: " << this->viewport_grid.ygrid()
-            << " max_zoom_this_level: " << max_zoom_this_level << " max_zoom_left: "
-            << max_zoom_left // << " max_zoom_right: " << max_zoom_right
-            << " max_zoom_top: " << max_zoom_top // << " max_zoom_bottom: " << max_zoom_bottom
-        );
-      auto load_all=false;
-      if (!(z == max_zoom_index) &&
-          (abs(max_zoom_left - this->_viewport_grid.xgrid()) <= 0.5*threshold) &&
-          (abs(max_zoom_top - this->_viewport_grid.ygrid()) <= 0.5*threshold)) {
-        // can load a 3x3 grid
-        load_all=false;
-        DEBUG("Updating textures to 3x3 at zoom level: " << z);
-      } else {
-        // always load everthing for last zoom level
-        // just make sure everything is loaded for this zoom level
-        load_all=true;
-        DEBUG("Updating textures to full at zoom level: " << z);
-      }
+      // always load everything for last zoom level
+      auto load_all=(z == max_zoom-1);
       this->update_textures(grid,
                             texture_grid,
                             z,
@@ -94,50 +60,68 @@ void TextureUpdate::find_current_textures (ImageGrid *grid, TextureGrid *texture
   DEBUG("TextureUpdate::find_current_textures() end");
 }
 
-// TODO: the grid showing what's going on doesn't work in cases right now
-// TextureGrid::
+bool TextureUpdate::_grid_square_visible(INT_T i, INT_T j, TextureGrid *texture_grid, INT_T zoom_index) {
+  auto max_wpixel=(FLOAT_T)texture_grid->max_pixel_size().wpixel();
+  auto max_hpixel=(FLOAT_T)texture_grid->max_pixel_size().hpixel();
+  auto xgrid=this->_viewport_grid.xgrid();
+  auto ygrid=this->_viewport_grid.ygrid();
+  FLOAT_T xgrid_left_max_zoom_index=ViewPortCurrentState::find_leftmost_visible(
+    xgrid,ygrid,max_wpixel,max_hpixel,zoom_index);
+  FLOAT_T xgrid_right_max_zoom_index=ViewPortCurrentState::find_rightmost_visible(
+    xgrid,ygrid,max_wpixel,max_hpixel,zoom_index);
+  FLOAT_T ygrid_top_max_zoom_index=ViewPortCurrentState::find_topmost_visible(
+    xgrid,ygrid,max_wpixel,max_hpixel,zoom_index);
+  FLOAT_T ygrid_bottom_max_zoom_index=ViewPortCurrentState::find_bottommost_visible(
+    xgrid,ygrid,max_wpixel,max_hpixel,zoom_index);
+  return !((i < floor(xgrid_left_max_zoom_index)) ||
+           (i > floor(xgrid_right_max_zoom_index)) ||
+           (j < floor(ygrid_top_max_zoom_index)) ||
+           (j > floor(ygrid_bottom_max_zoom_index)));
+}
+
 void TextureUpdate::update_textures(ImageGrid *grid,
                                     TextureGrid *texture_grid,
-                                    INT_T zoom_level,
+                                    INT_T zoom_index,
                                     bool load_all,
                                     INT_T &texture_copy_count,
                                     std::atomic<bool> &keep_running) {
-  bool keep_going=true;
+  // separated out deleting to make sure it always happens
+  // TODO: make sure the one above is always available before deleting
   for (INT_T j=0l; j < texture_grid->grid_image_size().himage(); j++) {
-    if (!keep_going ||
-        !keep_running ||
-        (texture_copy_count > LOAD_TEXTURES_BATCH)) {
-      keep_going=false;
-      continue;
-    }
     for (INT_T i=0l; i < texture_grid->grid_image_size().wimage(); i++) {
-      if (!keep_going ||
-          !keep_running ||
-          (texture_copy_count > LOAD_TEXTURES_BATCH)) {
-        keep_going=false;
-        continue;
-      }
-      auto dest_square=texture_grid->squares[i][j].texture_array[zoom_level];
-      // try and get the source square mutex
+      if (!keep_running) {break;}
+      auto dest_square=texture_grid->squares[i][j].texture_array[zoom_index];
       if (!load_all &&
-          ((i < next_smallest(this->_viewport_grid.xgrid())) ||
-           (i > next_largest(this->_viewport_grid.xgrid())) ||
-           (j < next_smallest(this->_viewport_grid.ygrid())) ||
-           (j > next_largest(this->_viewport_grid.ygrid())))) {
-        // skip everything if locked
-        std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
-        if (display_lock.try_lock()) {
-          dest_square->unload_texture();
-          display_lock.unlock();
-        } else {
-          DEBUG("Unable to aquire display_mutex for deletion in TextureGrid::update_textures");
+          !_grid_square_visible(i,j,texture_grid,zoom_index)) {
+        if (dest_square->is_loaded) {
+          // skip everything if locked
+          std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
+          if (display_lock.try_lock()) {
+            dest_square->unload_texture();
+            dest_square->is_loaded=false;
+            dest_square->last_load_index=INT_MAX;
+            display_lock.unlock();
+          } else {
+            DEBUG("Unable to aquire display_mutex for deletion in TextureGrid::update_textures");
+          }
         }
-      } else {
+      }
+    }
+  }
+  for (INT_T j=0l; j < texture_grid->grid_image_size().himage(); j++) {
+    for (INT_T i=0l; i < texture_grid->grid_image_size().wimage(); i++) {
+      if (!keep_running ||
+          (texture_copy_count >= LOAD_TEXTURES_BATCH)) {
+        break;
+      }
+      auto dest_square=texture_grid->squares[i][j].texture_array[zoom_index];
+      // try and get the source square mutex
+      if (load_all || _grid_square_visible(i,j,texture_grid,zoom_index)) {
         auto load_index=0;
         bool texture_copy_successful=false;
         do {
           auto image_square=grid->squares[i][j]->image_array[load_index];
-          if (image_square->is_loaded) {
+          if (image_square->is_loaded || !dest_square->is_loaded) {
             std::unique_lock<std::mutex> load_lock(image_square->load_mutex, std::defer_lock);
             if (load_lock.try_lock()) {
               std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
@@ -146,11 +130,11 @@ void TextureUpdate::update_textures(ImageGrid *grid,
                 if (dest_square->display_texture == nullptr || dest_square->last_load_index>load_index) {
                   texture_copy_successful=this->load_texture(dest_square,
                                                              image_square,
-                                                             zoom_level,
-                                                             texture_grid->squares[i][j].texture_pixel_size.wpixel(),
-                                                             texture_grid->squares[i][j].texture_pixel_size.hpixel());
+                                                             zoom_index,
+                                                             texture_grid->squares[i][j].texture_pixel_size);
                   if (texture_copy_successful) {
                     dest_square->last_load_index=load_index;
+                    dest_square->is_loaded=true;
                     texture_copy_count+=1;
                   }
                 }
@@ -168,15 +152,14 @@ void TextureUpdate::update_textures(ImageGrid *grid,
 
 bool TextureUpdate::load_texture (TextureGridSquareZoomLevel *dest_square,
                                   ImageGridSquareZoomLevel *source_square,
-                                  INT_T zoom_level,
-                                  INT_T wpixel,
-                                  INT_T hpixel) {
+                                  INT_T zoom_index,
+                                  GridPixelSize texture_pixel_size) {
   auto successful=true;
   auto source_wpixel=(INT_T)source_square->rgb_wpixel();
   auto source_hpixel=(INT_T)source_square->rgb_hpixel();
-  auto texture_zoom_reduction=((INT_T)pow(2,zoom_level));
-  auto dest_wpixel=wpixel/texture_zoom_reduction;
-  auto dest_hpixel=hpixel/texture_zoom_reduction;
+  auto texture_zoom_reduction=((INT_T)pow(2,zoom_index));
+  auto dest_wpixel=texture_pixel_size.wpixel()/texture_zoom_reduction;
+  auto dest_hpixel=texture_pixel_size.hpixel()/texture_zoom_reduction;
   dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
   dest_square->display_texture=SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
   // skip if can't load texture
@@ -188,22 +171,22 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel *dest_square,
       // do the things we are copying exist?
       if (dest_array != nullptr && source_data != nullptr) {
         // these should only be powers of 2, add an assert
-        auto source_zoom_level=source_square->zoom_level();
-        auto dest_zoom_level=texture_zoom_reduction;
-        if (source_zoom_level <= dest_zoom_level) {
-          auto skip=dest_zoom_level/source_zoom_level;
+        auto source_zoom_index=source_square->zoom_index();
+        auto dest_zoom_index=texture_zoom_reduction;
+        if (source_zoom_index <= dest_zoom_index) {
+          auto skip=dest_zoom_index/source_zoom_index;
           buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
                                      (unsigned char*)dest_array,dest_wpixel,dest_hpixel,
                                      skip);
         } else {
           // we are expanding the surface
-          auto skip=source_zoom_level/dest_zoom_level;
+          auto skip=source_zoom_index/dest_zoom_index;
           // loop over dest since we are expanding the source to match the dest
           for (INT_T l=0l; l < dest_hpixel; l++) {
             for (INT_T k=0l; k < dest_wpixel; k++) {
               // find appropriate source pixel
-              auto ls=l / skip;
-              auto ks=k / skip;
+              auto ls=l/skip;
+              auto ks=k/skip;
               auto dest_index=(l*dest_wpixel+k)*3;
               auto source_index=(ls*source_wpixel+ks)*3;
               if (ks < source_wpixel && ls < source_hpixel) {

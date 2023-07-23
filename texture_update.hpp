@@ -44,17 +44,17 @@ public:
    *
    * @param ygrid the y coordinate on the grid
    *
-   * @param loadall load all textures at this zoom level, otherwise a 3x3 is loaded
+   * @param zoom_index The index of the current zoom.
+   *
+   * @param loadall load all textures at this zoom index, otherwise a 3x3 is loaded
    *
    * @param texture_copy_count keep track of the number of textures copied
    *
    * @param keeping_running flag to stop what's happening, generally to indicate program exit
-   *
-   * @return number of textures actually copied
    */
   void update_textures(ImageGrid *grid,
                        TextureGrid* texture_grid,
-                       INT_T zoom_level,
+                       INT_T zoom_index,
                        bool load_all,
                        INT_T &texture_copy_count,
                        std::atomic<bool> &keep_running);
@@ -65,19 +65,19 @@ public:
    *
    * @param dest_square the destination square to load the texture into
    *
-   * @param zoom_level
+   * @param zoom_index the zoom index of the texture being loaded
    *
    * @return if texture was actually copied
    */
   bool load_texture(TextureGridSquareZoomLevel *dest_square,
                     ImageGridSquareZoomLevel *source_square,
-                    INT_T zoom_level,
-                    INT_T wpixel,
-                    INT_T hpixel);
+                    INT_T zoom_index,
+                    GridPixelSize texture_pixel_size);
 private:
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortCurrentState> _viewport_current_state_texturegrid_update;
   GridCoordinate _viewport_grid;
+  bool _grid_square_visible(INT_T i, INT_T j, TextureGrid *texture_grid, INT_T zoom_index);
 };
 
 #endif

@@ -52,7 +52,7 @@ struct LoadFileData {
   unsigned char* rgb_data=nullptr;
   size_t rgb_wpixel=INT_MIN;
   size_t rgb_hpixel=INT_MIN;
-  INT_T zoom_level=INT_MIN;
+  INT_T zoom_index=INT_MIN;
 };
 
 /**

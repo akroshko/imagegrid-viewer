@@ -23,9 +23,8 @@
 #include <utility>
 #include <vector>
 
-ImageGridSquareZoomLevel::ImageGridSquareZoomLevel(INT_T zoom_level, INT_T max_zoom_level) {
-  this->_zoom_level=zoom_level;
-  this->_max_zoom_level=max_zoom_level;
+ImageGridSquareZoomLevel::ImageGridSquareZoomLevel(INT_T zoom_index) {
+  this->_zoom_index=zoom_index;
 }
 
 ImageGridSquareZoomLevel::~ImageGridSquareZoomLevel() {
@@ -40,7 +39,7 @@ bool ImageGridSquareZoomLevel::load_file(std::string filename, std::vector<Image
   std::vector<std::shared_ptr<LoadFileData>> data_read;
   for (auto & dest_square : dest_squares) {
     data_pairs.emplace_back(std::pair<ImageGridSquareZoomLevel*,std::shared_ptr<LoadFileData>>(dest_square,std::make_shared<LoadFileData>()));
-    data_pairs.back().second->zoom_level=dest_square->zoom_level();
+    data_pairs.back().second->zoom_index=dest_square->zoom_index();
     data_read.emplace_back(data_pairs.back().second);
   }
   DEBUG("Trying to load: " << filename);
@@ -86,19 +85,15 @@ void ImageGridSquareZoomLevel::unload_file() {
   }
 }
 
-INT_T ImageGridSquareZoomLevel::zoom_level(){
-  return this->_zoom_level;
+INT_T ImageGridSquareZoomLevel::zoom_index() const {
+  return this->_zoom_index;
 }
 
-INT_T ImageGridSquareZoomLevel::max_zoom_level() {
-  return this->_max_zoom_level;
-}
-
-size_t ImageGridSquareZoomLevel::rgb_wpixel() {
+size_t ImageGridSquareZoomLevel::rgb_wpixel() const {
   return this->_rgb_wpixel;
 }
 
-size_t ImageGridSquareZoomLevel::rgb_hpixel() {
+size_t ImageGridSquareZoomLevel::rgb_hpixel() const {
   return this->_rgb_hpixel;
 }
 
@@ -111,7 +106,7 @@ ImageGridSquare::ImageGridSquare(std::string filename) {
 
 ImageGridSquare::~ImageGridSquare() {
   // TODO: want better way to do this
-  for (auto i=0ul; i < this->_zoom_step_number; i++) {
+  for (auto i=0l; i < this->_zoom_step_number; i++) {
     DELETE_IF_NOT_NULLPTR(this->image_array[i]);
   }
 }
@@ -123,7 +118,7 @@ void ImageGridSquare::_read_file(std::string filename) {
     read_tiff_data(filename,
                    this->_image_wpixel,
                    this->_image_hpixel);
-    DEBUG("Done constructing TIff: " << filename << " " << this->image_wpixel()
+    DEBUG("Done constructing Tiff: " << filename << " " << this->image_wpixel()
                                                  << " " << this->image_hpixel());
   } else if (check_png(filename)) {
     DEBUG("Constructing PNG: " << filename);
@@ -138,11 +133,11 @@ void ImageGridSquare::_read_file(std::string filename) {
   }
 }
 
-INT_T ImageGridSquare::image_wpixel() {
+INT_T ImageGridSquare::image_wpixel() const {
   return this->_image_wpixel;
 }
 
-INT_T ImageGridSquare::image_hpixel() {
+INT_T ImageGridSquare::image_hpixel() const {
   return this->_image_hpixel;
 }
 
@@ -209,11 +204,11 @@ void ImageGrid::read_grid_info(GridSetup* grid_setup, std::shared_ptr<ViewPortCu
   for (INT_T i=0l; i < this->_grid_image_size.wimage(); i++) {
     for (INT_T j=0l; j < this->_grid_image_size.himage(); j++) {
       this->squares[i][j]->image_array=std::make_unique<ImageGridSquareZoomLevel*[]>(this->_zoom_step_number);
-      INT_T local_zoom_level=1;
+      INT_T local_zoom_index=1;
       this->squares[i][j]->_zoom_step_number=this->_zoom_step_number;
-      for (auto k=0ul; k < this->_zoom_step_number; k++) {
-        this->squares[i][j]->image_array[k]=new ImageGridSquareZoomLevel(local_zoom_level,local_zoom_level*zoom_step);
-        local_zoom_level*=zoom_step;
+      for (auto k=0l; k < this->_zoom_step_number; k++) {
+        this->squares[i][j]->image_array[k]=new ImageGridSquareZoomLevel(local_zoom_index);
+        local_zoom_index*=zoom_step;
       }
     }
   }
@@ -221,11 +216,11 @@ void ImageGrid::read_grid_info(GridSetup* grid_setup, std::shared_ptr<ViewPortCu
   this->_read_grid_info_successful=true;
 }
 
-bool ImageGrid::read_grid_info_successful() {
+bool ImageGrid::read_grid_info_successful() const {
   return this->_read_grid_info_successful;
 }
 
-INT_T ImageGrid::zoom_step_number() {
+INT_T ImageGrid::zoom_step_number() const {
   return this->_zoom_step_number;
 }
 
@@ -248,7 +243,10 @@ bool ImageGrid::_check_load(INT_T k, INT_T i, INT_T j, INT_T current_load_zoom, 
   }
 }
 
-bool ImageGrid::_load_file(INT_T i, INT_T j, INT_T current_grid_x, INT_T current_grid_y, INT_T load_all, GridSetup *grid_setup) {
+bool ImageGrid::_load_file(INT_T i, INT_T j,
+                           INT_T current_grid_x, INT_T current_grid_y,
+                           INT_T zoom_index_lower_limit,
+                           INT_T load_all, GridSetup *grid_setup) {
   // decide whether to load
   // always load if top level
   bool load_successful=false;
@@ -256,7 +254,11 @@ bool ImageGrid::_load_file(INT_T i, INT_T j, INT_T current_grid_x, INT_T current
     std::vector<INT_T> zoom_load_list;
     // build up zoom
     for (INT_T k=this->_zoom_step_number-1; k >= 0l; k--) {
-      auto current_load_zoom=this->squares[i][j]->image_array[k]->zoom_level();
+      // don't load anything if nothing loaded above lower limit
+      if (k < zoom_index_lower_limit && zoom_load_list.size() == 0) {
+        continue;
+      }
+      auto current_load_zoom=this->squares[i][j]->image_array[k]->zoom_index();
       if (this->_check_load(k, i, j, current_load_zoom, current_grid_x, current_grid_y, load_all)) {
         if (!this->squares[i][j]->image_array[k]->is_loaded) {
           zoom_load_list.push_back(k);
@@ -288,8 +290,6 @@ void ImageGrid::load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running
   auto grid_w=this->_grid_image_size.wimage();
   auto grid_h=this->_grid_image_size.himage();
   auto load_all=false;
-  // files actually loaded
-  INT_T load_count=0;
   // unload first
   for (auto k=this->_zoom_step_number-1; k >= 0l; k--) {
     for (INT_T i=0l; i < grid_w; i++) {
@@ -297,22 +297,51 @@ void ImageGrid::load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running
         if (!keep_running) {
           keep_trying=false;
         }
-        auto current_load_zoom=this->squares[i][j]->image_array[k]->zoom_level();
+        auto current_load_zoom=this->squares[i][j]->image_array[k]->zoom_index();
         if (!this->_check_load(k, i, j, current_load_zoom, current_grid_x, current_grid_y, load_all)) {
           this->squares[i][j]->image_array[k]->unload_file();
         }
       }
     }
   }
-  auto iterator=ImageGridIterator(this->_grid_image_size.wimage(), this->_grid_image_size.himage(), current_grid_x, current_grid_y);
+  INT_T i,j;
+  // files actually loaded
+  INT_T load_count=0;
+  auto current_zoom_index=ViewPortCurrentState::find_zoom_index(zoom);
+  auto iterator_visible=ImageGridIteratorVisible(this->_grid_image_size.wimage(),this->_grid_image_size.himage(),
+                                                 this->_image_max_size.wpixel(),this->_image_max_size.hpixel(),
+                                                 current_grid_x,current_grid_y,zoom);
+
+  // TODO need a good iterator class for this type of work load what
+  // we are looking at if things are not loaded
+  while (keep_trying) {
+    keep_trying=iterator_visible.get_next(i,j);
+    if (!keep_running) { keep_trying=false; break; }
+    if (keep_trying) {
+      auto load_successful=this->_load_file(i, j, current_grid_x, current_grid_y,
+                                            current_zoom_index,
+                                            load_all, grid_setup);
+      if (load_successful) { load_count++; }
+      if (load_count >= LOAD_FILES_BATCH) { keep_trying=false; }
+    }
+  }
+  auto iterator_normal=ImageGridIteratorFull(this->_grid_image_size.wimage(),this->_grid_image_size.himage(),
+                                         this->_image_max_size.wpixel(),this->_image_max_size.hpixel(),
+                                         current_grid_x,current_grid_y,zoom);
   // TODO need a good iterator class for this type of work
   // load the one we are looking at
-  INT_T i,j;
+  if (load_count >= LOAD_FILES_BATCH) {
+    keep_trying=false;
+  } else {
+    keep_trying=true;
+  }
   while (keep_trying) {
-    keep_trying=iterator.get_next(i,j);
-    if (!keep_running) { keep_trying=false; }
+    keep_trying=iterator_normal.get_next(i,j);
+    if (!keep_running) { keep_trying=false; break; }
     if (keep_trying) {
-      auto load_successful=this->_load_file(i, j, current_grid_x, current_grid_y, load_all, grid_setup);
+      auto load_successful=this->_load_file(i, j, current_grid_x, current_grid_y,
+                                            0l,
+                                            load_all, grid_setup);
       if (load_successful) { load_count++; }
       if (load_count >= LOAD_FILES_BATCH) { keep_trying=false; }
     }

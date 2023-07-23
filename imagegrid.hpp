@@ -36,7 +36,7 @@ class ImageGrid;
 class ImageGridSquareZoomLevel {
 public:
   ImageGridSquareZoomLevel()=delete;
-  ImageGridSquareZoomLevel(INT_T zoom_level, INT_T max_zoom_level);
+  ImageGridSquareZoomLevel(INT_T zoom_level);
   ~ImageGridSquareZoomLevel();
   ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&)=delete;
   ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&&)=delete;
@@ -45,32 +45,29 @@ public:
   std::mutex load_mutex;
   std::atomic<bool> is_loaded{false};
   /**
-   * Load a file into a square.
+   * Load a file and fill out squares.
    *
    * @param filename The filename to load.
    *
-   * @param dest_square The square to be loaded.
+   * @param dest_square A vector of this class to be loaded.
    */
   static bool load_file(std::string filename, std::vector<ImageGridSquareZoomLevel*> dest_square);
-  /** */
+  /** Unload and free memory from a loaded file */
   void unload_file();
-  INT_T zoom_level();
-  INT_T max_zoom_level();
-  /** */
-  size_t rgb_wpixel();
-  /** */
-  size_t rgb_hpixel();
+  /** Accessor for the zoom level this class represents. */
+  INT_T zoom_index() const;
+  /** Accessor for the width in pixels. */
+  size_t rgb_wpixel() const;
+  /** Accessor for the height in pixels. */
+  size_t rgb_hpixel() const;
   /** the actual RGB data for this square and zoom level */
   unsigned char* rgb_data=nullptr;
 private:
-  // TODO: these don't use an object from coordinates.hpp since they
-  // are raw memory
-  /** */
+  // these don't use an object from coordinates.hpp since they are
+  // managing raw manually allocated memory
   size_t _rgb_wpixel;
-  /** */
   size_t _rgb_hpixel;
-  INT_T _zoom_level;
-  INT_T _max_zoom_level;
+  INT_T _zoom_index;
 };
 
 
@@ -87,8 +84,10 @@ public:
   ImageGridSquare& operator=(const ImageGridSquare&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
   std::unique_ptr<ImageGridSquareZoomLevel*[]> image_array;
-  INT_T image_wpixel();
-  INT_T image_hpixel();
+  /** Accessor for the width in pixels. */
+  INT_T image_wpixel() const;
+  /** Accessor for the height in pixels. */
+  INT_T image_hpixel() const;
 private:
   friend class ImageGrid;
   /**
@@ -97,6 +96,11 @@ private:
   INT_T _zoom_step_number;
   INT_T _image_wpixel;
   INT_T _image_hpixel;
+  /**
+   * Read in a the file cooresponing to this square.
+   *
+   * @param filename
+   */
   void _read_file(std::string filename);
 };
 
@@ -120,22 +124,59 @@ public:
   /**
    * Return whether read_grid_info was successful.
    */
-  bool read_grid_info_successful();
-  INT_T zoom_step_number();
+  bool read_grid_info_successful() const;
+  INT_T zoom_step_number() const;
 private:
   /**
-   * Check bounds on the grid.
+   * Check that particular indices are valid.
+   *
+   * @param i the index along the width of the grid.
+   *
+   * @param j the index along the height of the grid.
    */
   bool _check_bounds(INT_T i, INT_T j);
   /**
-   * Figure out whether to load.
+   * Check whether it is appropriate to load a file given current
+   * viewport corrdinates and zoom level.
+   *
+   * @param k the zoom index to check
+   *
+   * @param i the index along the width of the grid.
+   *
+   * @param j the index along the height of the grid.
+   *
+   * @param current_load_zoom Specifies the current zoom level of the viewport
+   *
+   * @param current_grid_x the current viewport x coordinate
+   *
+   * @param current_grid_y the current viewport y coordinate
+   *
+   * @param load_all specify if all valid fils are to be loaded
    */
-  bool _check_load(INT_T k, INT_T i, INT_T j, INT_T current_load_zoom, INT_T current_grid_x, INT_T current_grid_y, INT_T load_all);
+  bool _check_load(INT_T k, INT_T i, INT_T j,
+                   INT_T current_load_zoom,
+                   INT_T current_grid_x, INT_T current_grid_y,
+                   INT_T load_all);
   /**
    * Actually load the file.
+   *
+   * @param i the index along the width of the grid.
+   *
+   * @param j the index along the height of the grid.
+   *
+   * @param zoom_index_lower_limit don't load if only things that need
+   * to be loaded are below this limit
+   *
+   * @param current_grid_x the current viewport x coordinate
+   *
+   * @param current_grid_y the current viewport y coordinate
    */
-  bool _load_file(INT_T i, INT_T j, INT_T current_grid_x, INT_T current_grid_y, INT_T load_all, GridSetup *grid_setup);
-  /** Store the coordinates */
+  bool _load_file(INT_T i, INT_T j,
+                  INT_T current_grid_x, INT_T current_grid_y,
+                  INT_T zoom_index_lower_limit,
+                  INT_T load_all,
+                  GridSetup *grid_setup);
+  /** Store the size of the images */
   GridImageSize _grid_image_size;
   /** Maximum size of images loaded into the grid. */
   GridPixelSize _image_max_size;

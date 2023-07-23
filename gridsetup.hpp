@@ -10,7 +10,7 @@
 #include "error.hpp"
 #include "types.hpp"
 #include "coordinates.hpp"
-
+// C++ headers
 #include <vector>
 #include <memory>
 
@@ -18,27 +18,27 @@
  * Contains the data required to setup the grid.
  */
 class GridSetup {
-public:
+protected:
   GridSetup()=default;
+public:
   ~GridSetup()=default;
   GridSetup(const GridSetup&)=delete;
   GridSetup(const GridSetup&&)=delete;
   GridSetup& operator=(const GridSetup&)=delete;
   GridSetup& operator=(const GridSetup&&)=delete;
   /** Indicate whether setup was successful. */
-  bool successful();
+  bool successful() const;
   /** Returns a path of images to load. */
-  std::vector<std::string> filenames();
+  std::vector<std::string> filenames() const;
   /** The size of the grid loaded. */
-  GridImageSize grid_image_size();
+  GridImageSize grid_image_size() const;
 protected:
   bool _successful=false;
   GridImageSize _grid_image_size;
   std::vector<std::string> _filenames;
   /** Stores a path of images to load.
    *
-   *  This type of program will naturally have a lot of huge path
-   *  names, especially for testing.  Max value on Linux?
+   * TODO: change away from a raw string array
    */
   char _path_value[4096]={ 0 };
 };

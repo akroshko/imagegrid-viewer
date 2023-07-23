@@ -63,6 +63,4 @@ private:
   SDL_Joystick* game_controller;
 };
 
-
-
 # endif

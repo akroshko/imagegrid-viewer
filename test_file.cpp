@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
   // create the SDL app
   auto sdl_app=std::make_unique<SDLApp>();
   // create an imagegridzoom level
-  auto square=std::make_unique<ImageGridSquareZoomLevel>(2,2);
+  auto square=std::make_unique<ImageGridSquareZoomLevel>(2);
   auto file_to_load=std::string{"/opt/imagegrid-viewer/082e01_02.tif"};
   // auto file_to_load=std::string{"./test_vert.tif"};
   // auto file_to_load=std::string{"./gradient.tif"};

@@ -40,6 +40,7 @@ public:
   void unload_texture();
   // lock when the display_area is being worked on
   std::mutex display_mutex;
+  std::atomic<bool> is_loaded{false};
   SDL_Surface* display_texture=nullptr;
   // TODO: this one needs help being private and investigation whether
   // there's a better way
@@ -87,9 +88,9 @@ public:
   void init_max_zoom_index(const GridPixelSize &image_max_pixel_size);
   /** the indidivual squares */
   std::unique_ptr<TextureGridSquare*[]> squares;
-  GridImageSize grid_image_size();
-  GridPixelSize max_pixel_size();
-  INT_T textures_max_zoom_index();
+  GridImageSize grid_image_size() const;
+  GridPixelSize max_pixel_size() const;
+  INT_T textures_max_zoom_index() const;
 private:
   /** this size of this grid in number of textures */
   GridImageSize _grid_image_size;

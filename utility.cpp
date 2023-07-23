@@ -8,39 +8,14 @@
 #include <cmath>
 #include <thread>
 
-INT_T find_zoom_index(FLOAT_T zoom) {
-  return floor(log2(1.0/zoom));
-}
-
-// these functions are specific to how coordinates that are integers are
-FLOAT_T next_smallest(FLOAT_T x) {
-  return floor(x) - 1.0;
-}
-
-FLOAT_T next_largest(FLOAT_T x) {
-  if (x == ceil(x)) {
-    return x + 1.0;
-  } else {
-    return ceil(x);
-  }
-}
-
-FLOAT_T half(FLOAT_T x) {
-  return x;
-}
-
-// round down to the nearest nonnegative power of 2
-INT_T round_down_positive_power_of_2(FLOAT_T x) {
-  auto log_2=log2(x);
-  auto log_2_floor=floor(log_2);
-  auto power_of_2=(INT_T)pow(2.0,log_2_floor);
-  if (power_of_2 < 1) {
-      return 1;
-  } else {
-    return power_of_2;
-  }
-}
-
+/**
+ * Pad a number and then reduce by a factor.
+ *
+ * @param x the number to pad and reduce
+ *
+ * @param reduction_factor the factor to reduce the number by
+ *
+ */
 INT_T reduce_and_pad(INT_T x, INT_T reduction_factor) {
   auto padded_x=pad(x, reduction_factor);
   // TODO: figure out where these zeros are coming from
@@ -54,6 +29,14 @@ INT_T reduce_and_pad(INT_T x, INT_T reduction_factor) {
   return reduced_x;
 }
 
+/**
+ * Pad a number.
+ *
+ * @param x the number to pad
+ *
+ * @param pad_size the amount of padding to add to make it a multiple
+ *                 of this
+ */
 INT_T pad (INT_T x, INT_T pad_size) {
   if (pad_size == 0 || x % pad_size == 0) {
     return x;
@@ -63,8 +46,12 @@ INT_T pad (INT_T x, INT_T pad_size) {
   }
 }
 
+/**
+ * Sleep and yield current thread.
+ */
 void sleep_thread () {
-  // do a minisleep after each file is unloaded to make sure other things can happen
+  // do a minisleep after each file is unloaded to make sure other
+  // things can happen
   std::this_thread::yield();
   std::this_thread::sleep_for(THREAD_SLEEP);
 }

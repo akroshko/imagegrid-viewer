@@ -3,6 +3,7 @@
 #include "error.hpp"
 #include "types.hpp"
 #include "defaults.hpp"
+#include "utility.hpp"
 #include "coordinates.hpp"
 #include "viewport_current_state.hpp"
 #include <cmath>
@@ -35,4 +36,93 @@ bool ViewPortCurrentState::GetGridValues(FLOAT_T &zoom, GridCoordinate &gridarg)
   } else {
     return false;
   }
+}
+
+INT_T ViewPortCurrentState::find_zoom_index(FLOAT_T zoom) {
+  return floor(log2(1.0/zoom));
+}
+
+FLOAT_T ViewPortCurrentState::find_zoom(INT_T zoom_index) {
+  return 1.0/(pow(2.0,zoom_index));
+}
+
+FLOAT_T ViewPortCurrentState::_find_max_zoom(INT_T zoom_index) {
+  return ViewPortCurrentState::find_zoom(zoom_index+1);
+}
+
+FLOAT_T ViewPortCurrentState::_find_max_zoom(FLOAT_T zoom) {
+  auto zoom_index=ViewPortCurrentState::find_zoom_index(zoom);
+  return ViewPortCurrentState::find_zoom(zoom_index+1);
+}
+
+FLOAT_T ViewPortCurrentState::find_leftmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                                    INT_T max_wpixel, INT_T max_hpixel,
+                                                    INT_T zoom_index) {
+  auto max_zoom_this_level=_find_max_zoom(zoom_index);
+  // calculate these with max reasonable resolution, rather than actual viewport
+  auto half_pixel_width=((FLOAT_T)MAX_SCREEN_WIDTH/2.0);
+  return xgrid-(half_pixel_width/max_wpixel/max_zoom_this_level);
+}
+
+FLOAT_T ViewPortCurrentState::find_leftmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                                    INT_T max_wpixel, INT_T max_hpixel,
+                                                    FLOAT_T zoom) {
+  auto max_zoom_this_level=_find_max_zoom(zoom);
+  // calculate these with max reasonable resolution, rather than actual viewport
+  auto half_pixel_width=((FLOAT_T)MAX_SCREEN_WIDTH/2.0);
+  return xgrid-(half_pixel_width/max_wpixel/max_zoom_this_level);
+}
+
+FLOAT_T ViewPortCurrentState::find_rightmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                                     INT_T max_wpixel, INT_T max_hpixel,
+                                                     INT_T zoom_index) {
+  auto max_zoom_this_level=_find_max_zoom(zoom_index);
+  // calculate these with max reasonable resolution, rather than actual viewport
+  auto half_pixel_width=((FLOAT_T)MAX_SCREEN_WIDTH/2.0);
+  return xgrid+(half_pixel_width/max_wpixel/max_zoom_this_level);
+}
+
+FLOAT_T ViewPortCurrentState::find_rightmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                                     INT_T max_wpixel, INT_T max_hpixel,
+                                                     FLOAT_T zoom) {
+  auto max_zoom_this_level=_find_max_zoom(zoom);
+  // calculate these with max reasonable resolution, rather than actual viewport
+  auto half_pixel_width=((FLOAT_T)MAX_SCREEN_WIDTH/2.0);
+  return xgrid+(half_pixel_width/max_wpixel/max_zoom_this_level);
+}
+
+FLOAT_T ViewPortCurrentState::find_topmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                                   INT_T max_wpixel, INT_T max_hpixel,
+                                                   INT_T zoom_index) {
+  auto max_zoom_this_level=_find_max_zoom(zoom_index);
+  // calculate these with max reasonable resolution, rather than actual viewport
+  auto half_pixel_height=((FLOAT_T)MAX_SCREEN_HEIGHT/2.0);
+  return ygrid-(half_pixel_height/max_hpixel/max_zoom_this_level);
+}
+
+FLOAT_T ViewPortCurrentState::find_topmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                                   INT_T max_wpixel, INT_T max_hpixel,
+                                                   FLOAT_T zoom) {
+  auto max_zoom_this_level=_find_max_zoom(zoom);
+  // calculate these with max reasonable resolution, rather than actual viewport
+  auto half_pixel_height=((FLOAT_T)MAX_SCREEN_HEIGHT/2.0);
+  return ygrid-(half_pixel_height/max_hpixel/max_zoom_this_level);
+}
+
+FLOAT_T ViewPortCurrentState::find_bottommost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                                      INT_T max_wpixel, INT_T max_hpixel,
+                                                      INT_T zoom_index) {
+  auto max_zoom_this_level=_find_max_zoom(zoom_index);
+  // calculate these with max reasonable resolution, rather than actual viewport
+  auto half_pixel_height=((FLOAT_T)MAX_SCREEN_HEIGHT/2.0);
+  return ygrid+(half_pixel_height/max_hpixel/max_zoom_this_level);
+}
+
+FLOAT_T ViewPortCurrentState::find_bottommost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                                      INT_T max_wpixel, INT_T max_hpixel,
+                                                      FLOAT_T zoom) {
+  auto max_zoom_this_level=_find_max_zoom(zoom);
+  // calculate these with max reasonable resolution, rather than actual viewport
+  auto half_pixel_height=((FLOAT_T)MAX_SCREEN_HEIGHT/2.0);
+  return ygrid+(half_pixel_height/max_hpixel/max_zoom_this_level);
 }

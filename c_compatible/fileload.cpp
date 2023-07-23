@@ -184,16 +184,16 @@ bool load_tiff_as_rgb(const std::string filename,
       } else {
         // convert raster
         for (auto & file_data : load_file_data) {
-          auto zoom_level=file_data->zoom_level;
-          size_t w_reduced=reduce_and_pad(w,zoom_level);
-          size_t h_reduced=reduce_and_pad(h,zoom_level);
+          auto zoom_index=file_data->zoom_index;
+          size_t w_reduced=reduce_and_pad(w,zoom_index);
+          size_t h_reduced=reduce_and_pad(h,zoom_index);
           file_data->rgb_wpixel=w_reduced;
           file_data->rgb_hpixel=h_reduced;
           auto npixels_reduced=w_reduced*h_reduced;
           file_data->rgb_data=new unsigned char[npixels_reduced*3];
           buffer_copy_reduce_tiff(raster,w,h,
                                   file_data->rgb_data,w_reduced,h_reduced,
-                                  zoom_level);
+                                  zoom_index);
         }
       }
       _TIFFfree(raster);
@@ -251,16 +251,16 @@ bool load_png_as_rgb(std::string filename,
         auto width=(size_t)image.width;
         auto height=(size_t)image.height;
         for (auto & file_data : load_file_data) {
-          auto zoom_level=file_data->zoom_level;
-          size_t w_reduced=reduce_and_pad(width,zoom_level);
-          size_t h_reduced=reduce_and_pad(height,zoom_level);
+          auto zoom_index=file_data->zoom_index;
+          size_t w_reduced=reduce_and_pad(width,zoom_index);
+          size_t h_reduced=reduce_and_pad(height,zoom_index);
           file_data->rgb_wpixel=w_reduced;
           file_data->rgb_hpixel=h_reduced;
           size_t npixel_reduced=w_reduced*h_reduced;
           file_data->rgb_data=new unsigned char[npixel_reduced*3];
           buffer_copy_reduce_generic((unsigned char *)raster,width,height,
                                      file_data->rgb_data,w_reduced,h_reduced,
-                                     zoom_level);
+                                     zoom_index);
         }
       }
       delete[] raster;

@@ -57,7 +57,7 @@ bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y, FLOAT_
         } else if (e.jaxis.axis == 1) {
           current_speed_y=(e.jaxis.value/JOY_MAX)*(JOY_BASE_MOVE*pixel_size);
         } else if (e.jaxis.axis == 4) {
-          current_speed_zoom=0.05*(e.jaxis.value/JOY_MAX);
+          current_speed_zoom=JOY_BASE_ZOOM*(e.jaxis.value/JOY_MAX);
         }
       }
     } else if (e.type == SDL_KEYDOWN) {

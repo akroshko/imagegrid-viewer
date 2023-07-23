@@ -24,7 +24,6 @@
 #include <utility>
 #include <vector>
 
-
 TextureGridSquareZoomLevel::~TextureGridSquareZoomLevel () {
   // crashes for some reason, need to work this out, probably some other SDL deinitialization happening
   // this->unload_texture();
@@ -38,16 +37,15 @@ void TextureGridSquareZoomLevel::unload_texture () {
   }
 }
 
-
 TextureGridSquare::TextureGridSquare () {
-  this->texture_array=std::make_unique<TextureGridSquareZoomLevel*[]>(MAX_TEXTURE_ZOOM_LEVELS);
-  for (auto i=0ul; i < MAX_TEXTURE_ZOOM_LEVELS; i++) {
+  this->texture_array=std::make_unique<TextureGridSquareZoomLevel*[]>(MAX_TEXTURE_ZOOM_INDEX);
+  for (auto i=0ul; i < MAX_TEXTURE_ZOOM_INDEX; i++) {
     this->texture_array[i]=new TextureGridSquareZoomLevel();
   }
 }
 
 TextureGridSquare::~TextureGridSquare () {
-  for (auto i=0ul; i < MAX_TEXTURE_ZOOM_LEVELS; i++) {
+  for (auto i=0ul; i < MAX_TEXTURE_ZOOM_INDEX; i++) {
     DELETE_IF_NOT_NULLPTR(this->texture_array[i]);
   }
 }
@@ -84,14 +82,14 @@ void TextureGrid::init_max_zoom_index(const GridPixelSize &image_max_pixel_size)
   this->_textures_max_zoom_index=zoom_length-1;
 }
 
-INT_T TextureGrid::textures_max_zoom_index() {
+INT_T TextureGrid::textures_max_zoom_index() const {
   return this->_textures_max_zoom_index;
 }
 
-GridPixelSize TextureGrid::max_pixel_size() {
+GridPixelSize TextureGrid::max_pixel_size() const {
   return this->_max_pixel_size;
 }
 
-GridImageSize TextureGrid::grid_image_size() {
+GridImageSize TextureGrid::grid_image_size() const {
   return this->_grid_image_size;
 }

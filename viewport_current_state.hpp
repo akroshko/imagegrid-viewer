@@ -29,7 +29,38 @@ public:
   ViewPortCurrentState& operator=(const ViewPortCurrentState&&)=delete;
   void UpdateGridValues(FLOAT_T zoom, const GridCoordinate &grid);
   bool GetGridValues(FLOAT_T &zoom, GridCoordinate &grid);
+  // TODO: some utility functions to implement
+  static INT_T find_zoom_index(FLOAT_T zoom);
+  static FLOAT_T find_zoom(INT_T zoom_index);
+  // I have both INT_T zoom_index and FLOAT_T zoom because I want to
+  // avoid unnecessary int->float->int conversins
+  static FLOAT_T find_leftmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                       INT_T max_wpixel, INT_T max_hpixel,
+                                       INT_T zoom_index);
+  static FLOAT_T find_leftmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                       INT_T max_wpixel, INT_T max_hpixel,
+                                       FLOAT_T zoom);
+  static FLOAT_T find_rightmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                        INT_T max_wpixel, INT_T max_hpixel,
+                                        INT_T zoom_index);
+  static FLOAT_T find_rightmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                        INT_T max_wpixel, INT_T max_hpixel,
+                                        FLOAT_T zoom);
+  static FLOAT_T find_topmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                      INT_T max_wpixel, INT_T max_hpixel,
+                                      INT_T zoom_index);
+  static FLOAT_T find_topmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                      INT_T max_wpixel, INT_T max_hpixel,
+                                      FLOAT_T zoom);
+  static FLOAT_T find_bottommost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                         INT_T max_wpixel, INT_T max_hpixel,
+                                         INT_T zoom_index);
+  static FLOAT_T find_bottommost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
+                                         INT_T max_wpixel, INT_T max_hpixel,
+                                         FLOAT_T zoom);
 private:
+  static FLOAT_T _find_max_zoom(INT_T zoom_index);
+  static FLOAT_T _find_max_zoom(FLOAT_T zoom_index);
   FLOAT_T zoom=NAN;
   GridCoordinate grid;
   FLOAT_T zoom_last=NAN;
