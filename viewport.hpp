@@ -25,7 +25,9 @@
 class BlitItem {
 public:
   BlitItem()=delete;
-  BlitItem(TextureGridSquareZoomLevel* square, INT_T count, const ViewportPixelCoordinate &viewport_pixel_coordinate, const ViewportPixelSize &grid_image_size_zoomed);
+  BlitItem(TextureGridSquareZoomLevel* square, INT_T count,
+           const ViewportPixelCoordinate &viewport_pixel_coordinate,
+           const ViewportPixelSize &grid_image_size_zoomed);
   ~BlitItem();
   // BlitItem(const BlitItem&)=delete;
   BlitItem(const BlitItem&)=default;
@@ -69,7 +71,7 @@ public:
   ViewPort(const ViewPort&&)=delete;
   ViewPort& operator=(const ViewPort&)=delete;
   ViewPort& operator=(const ViewPort&&)=delete;
-  void find_viewport_blit(TextureGrid* texture_grid,  SDLApp* sdl_app);
+  void find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app);
   /** update the values in this class with current keyboard/joystick/etc. input */
   bool do_input(SDLApp* sdl_app);
   /**
@@ -93,7 +95,7 @@ public:
    *
    * @param grid_setup
    */
-  void adjust_initial_location(GridSetup *grid_setup);
+  void adjust_initial_location(const GridSetup* grid_setup);
   /**
    * Max size of images.
    */

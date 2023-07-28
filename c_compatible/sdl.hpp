@@ -53,13 +53,13 @@ public:
    * Check whether app was successful
    */
   bool successful();
-  SDL_Window *window;
-  SDL_PixelFormat *format;
+  SDL_Window* window;
+  SDL_PixelFormat* format;
   SDL_Surface* screen_surface;
 private:
   bool _successful=true;
   bool joystick_enabled;
-  SDL_Renderer *renderer;
+  SDL_Renderer* renderer;
   SDL_Joystick* game_controller;
 };
 

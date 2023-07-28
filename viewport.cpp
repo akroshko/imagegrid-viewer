@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-BlitItem::BlitItem(TextureGridSquareZoomLevel* square, INT_T count, const ViewportPixelCoordinate &viewport_pixel_coordinate, const ViewportPixelSize &grid_image_size_zoomed) {
+BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT_T count, const ViewportPixelCoordinate &viewport_pixel_coordinate, const ViewportPixelSize &grid_image_size_zoomed) {
   blit_index=count;
   blit_square=square;
   this->viewport_pixel_coordinate=ViewportPixelCoordinate(viewport_pixel_coordinate);
@@ -31,7 +31,7 @@ BlitItem::~BlitItem () {
   // }
 }
 
-void BlitItem::blit_this(SDLApp* sdl_app) {
+void BlitItem::blit_this(SDLApp* const sdl_app) {
   SDL_Rect scaled_rect;
   scaled_rect.x=this->viewport_pixel_coordinate.xpixel();
   scaled_rect.y=this->viewport_pixel_coordinate.ypixel();
@@ -56,7 +56,7 @@ void ViewPort::set_image_max_size(const GridPixelSize& image_max_size) {
   this->_image_max_size=GridPixelSize(image_max_size);
 }
 
-void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
+void ViewPort::find_viewport_blit(TextureGrid* const texture_grid, SDLApp* const sdl_app) {
   INT_T blit_count=0;
   // locking the textures
   std::vector<std::unique_lock<std::mutex>> mutex_vector{};
@@ -136,7 +136,7 @@ void ViewPort::find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app) {
   }
 }
 
-bool ViewPort::do_input(SDLApp* sdl_app) {
+bool ViewPort::do_input(SDLApp* const sdl_app) {
   auto xgrid=this->_viewport_grid.xgrid();
   auto ygrid=this->_viewport_grid.ygrid();
   auto keep_going=sdl_app->do_input(this->_current_speed_x, this->_current_speed_y, this->_current_speed_zoom,this->_zoom, this->_zoom_speed, this->_image_max_size, xgrid, ygrid);
@@ -151,11 +151,11 @@ void ViewPort::update_viewport_info(FLOAT_T xgrid, FLOAT_T ygrid) {
   this->_viewport_current_state_imagegrid_update->UpdateGridValues(this->_zoom,this->_viewport_grid);
 }
 
-void ViewPort::blank_viewport(SDLApp* sdl_app) {
+void ViewPort::blank_viewport(SDLApp* const sdl_app) {
   sdl_app->blank_viewport(_viewport_pixel_size);
 }
 
-void ViewPort::adjust_initial_location(GridSetup *grid_setup) {
+void ViewPort::adjust_initial_location(const GridSetup* const grid_setup) {
   // adjust initial position for small grids
   FLOAT_T new_xgrid,new_ygrid;
   if (grid_setup->grid_image_size().wimage() == 1) {

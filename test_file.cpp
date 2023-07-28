@@ -9,7 +9,7 @@
 // C compatible headers
 #include "c_compatible/sdl.hpp"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   auto texture_wpixel=512ul;
   auto texture_hpixel=512ul;
   // create the SDL app

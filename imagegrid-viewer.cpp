@@ -69,7 +69,7 @@ public:
    *                   input from GUI could be considered.
    */
   ImageGridViewerContext()=delete;
-  ImageGridViewerContext(GridSetup *grid_setup);
+  ImageGridViewerContext(const GridSetup* const grid_setup);
   ImageGridViewerContext(const ImageGridViewerContext&)=delete;
   ImageGridViewerContext(const ImageGridViewerContext&&)=delete;
   ImageGridViewerContext& operator=(const ImageGridViewerContext&)=delete;
@@ -152,7 +152,7 @@ public:
  *                   could be used to setup the command line
  *                   arguments.
  */
-ImageGridViewerContext::ImageGridViewerContext(GridSetup *grid_setup) {
+ImageGridViewerContext::ImageGridViewerContext(const GridSetup* const grid_setup) {
   this->sdl_app=std::make_unique<SDLApp>();
   this->viewport_current_state_texturegrid_update=std::make_shared<ViewPortCurrentState>();
   this->viewport_current_state_imagegrid_update=std::make_shared<ViewPortCurrentState>();
@@ -206,9 +206,9 @@ public:
    *
    * @param grid       The object holding the loaded image data.
    */
-  UpdateImageGridThread(GridSetup *grid_setup, ImageGrid *grid) {
-    this->_grid=grid;
+  UpdateImageGridThread(GridSetup* const grid_setup, ImageGrid* const grid) {
     this->_grid_setup=grid_setup;
+    this->_grid=grid;
   }
   UpdateImageGridThread(const UpdateImageGridThread&)=delete;
   UpdateImageGridThread(const UpdateImageGridThread&&)=delete;
@@ -246,8 +246,8 @@ private:
     }
     MSG("Ending execution in UpdateImageGridThread.");
   }
-  ImageGrid *_grid;
-  GridSetup *_grid_setup;
+  ImageGrid* _grid;
+  GridSetup* _grid_setup;
   std::atomic<bool> _keep_running{true};
   std::atomic<bool> _all_loaded{false};
   std::thread _worker_thread;
@@ -270,9 +270,9 @@ public:
    * @param texture_grid The TextureGrid class that will hold the
    *                     scaled texture.
    */
-  UpdateTextureThread(TextureUpdate *texture_update,
-                      ImageGrid *grid,
-                      TextureGrid *texture_grid) {
+  UpdateTextureThread(TextureUpdate* const texture_update,
+                      ImageGrid* const grid,
+                      TextureGrid* const texture_grid) {
     this->_texture_update=texture_update;
     this->_grid=grid;
     this->_texture_grid=texture_grid;
@@ -314,9 +314,9 @@ private:
   /** Flag to indicate whether the thread should keep running. */
   std::atomic<bool> _keep_running{true};
   std::thread _worker_thread;
-  TextureUpdate *_texture_update;
-  ImageGrid *_grid;
-  TextureGrid *_texture_grid;
+  TextureUpdate* _texture_update;
+  ImageGrid* _grid;
+  TextureGrid* _texture_grid;
 };
 
 /**
@@ -325,7 +325,7 @@ private:
  * Contains the initialization and main loop.
  *
  */
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   // The main loop continues as long as this is true.
   auto continue_flag=true;
 #ifdef DEBUG_MESSAGES

@@ -33,7 +33,9 @@ public:
    *
    * @param keeping_running flag to stop what's happening, generally to indicate program exit
    */
-  void find_current_textures(ImageGrid *grid, TextureGrid* texture_grid, std::atomic<bool> &keep_running);
+  void find_current_textures(const ImageGrid* grid,
+                             TextureGrid* texture_grid,
+                             std::atomic<bool> &keep_running);
   /**
    * Update the textures based on the current coordinates and zoom
    * level.
@@ -52,7 +54,7 @@ public:
    *
    * @param keeping_running flag to stop what's happening, generally to indicate program exit
    */
-  void update_textures(ImageGrid *grid,
+  void update_textures(const ImageGrid* grid,
                        TextureGrid* texture_grid,
                        INT_T zoom_index,
                        bool load_all,
@@ -69,15 +71,17 @@ public:
    *
    * @return if texture was actually copied
    */
-  bool load_texture(TextureGridSquareZoomLevel *dest_square,
-                    ImageGridSquareZoomLevel *source_square,
+  bool load_texture(TextureGridSquareZoomLevel* dest_square,
+                    const ImageGridSquareZoomLevel* source_square,
                     INT_T zoom_index,
                     GridPixelSize texture_pixel_size);
 private:
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortCurrentState> _viewport_current_state_texturegrid_update;
   GridCoordinate _viewport_grid;
-  bool _grid_square_visible(INT_T i, INT_T j, TextureGrid *texture_grid, INT_T zoom_index);
+  bool _grid_square_visible(INT_T i, INT_T j,
+                            const TextureGrid* texture_grid,
+                            INT_T zoom_index);
 };
 
 #endif

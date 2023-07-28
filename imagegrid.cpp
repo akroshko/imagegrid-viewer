@@ -35,10 +35,10 @@ bool ImageGridSquareZoomLevel::load_file(std::string filename, std::vector<Image
   // block until things load
   // only block things actually being loaded
   auto load_successful=false;
-  std::vector<std::pair<ImageGridSquareZoomLevel*,std::shared_ptr<LoadFileData>>> data_pairs;
+  std::vector<std::pair<ImageGridSquareZoomLevel* const,std::shared_ptr<LoadFileData>>> data_pairs;
   std::vector<std::shared_ptr<LoadFileData>> data_read;
   for (auto & dest_square : dest_squares) {
-    data_pairs.emplace_back(std::pair<ImageGridSquareZoomLevel*,std::shared_ptr<LoadFileData>>(dest_square,std::make_shared<LoadFileData>()));
+    data_pairs.emplace_back(std::pair<ImageGridSquareZoomLevel* const,std::shared_ptr<LoadFileData>>(dest_square,std::make_shared<LoadFileData>()));
     data_pairs.back().second->zoom_index=dest_square->zoom_index();
     data_read.emplace_back(data_pairs.back().second);
   }
@@ -150,7 +150,7 @@ ImageGrid::~ImageGrid() {
   }
 }
 
-void ImageGrid::read_grid_info(GridSetup* grid_setup, std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update) {
+void ImageGrid::read_grid_info(const GridSetup* const grid_setup, std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update) {
   this->_grid_image_size=GridImageSize(grid_setup->grid_image_size());
   this->squares=std::make_unique<ImageGridSquare**[]>(grid_setup->grid_image_size().wimage());
   this->_viewport_current_state_imagegrid_update=viewport_current_state_imagegrid_update;
@@ -246,7 +246,7 @@ bool ImageGrid::_check_load(INT_T k, INT_T i, INT_T j, INT_T current_load_zoom, 
 bool ImageGrid::_load_file(INT_T i, INT_T j,
                            INT_T current_grid_x, INT_T current_grid_y,
                            INT_T zoom_index_lower_limit,
-                           INT_T load_all, GridSetup *grid_setup) {
+                           INT_T load_all, const GridSetup* const grid_setup) {
   // decide whether to load
   // always load if top level
   bool load_successful=false;
@@ -277,7 +277,7 @@ bool ImageGrid::_load_file(INT_T i, INT_T j,
   return load_successful;
 }
 
-void ImageGrid::load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running) {
+void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &keep_running) {
   auto keep_trying=true;
   // get location of viewport
   FLOAT_T zoom;

@@ -18,8 +18,8 @@ TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortCurrentState> viewport_curr
   this->_viewport_current_state_texturegrid_update=viewport_current_state_texturegrid_update;
 }
 
-void TextureUpdate::find_current_textures (ImageGrid *grid,
-                                           TextureGrid *texture_grid,
+void TextureUpdate::find_current_textures (const ImageGrid* const grid,
+                                           TextureGrid* const texture_grid,
                                            std::atomic<bool> &keep_running) {
   FLOAT_T zoom;
   INT_T texture_copy_count=0;
@@ -60,7 +60,9 @@ void TextureUpdate::find_current_textures (ImageGrid *grid,
   DEBUG("TextureUpdate::find_current_textures() end");
 }
 
-bool TextureUpdate::_grid_square_visible(INT_T i, INT_T j, TextureGrid *texture_grid, INT_T zoom_index) {
+bool TextureUpdate::_grid_square_visible(INT_T i, INT_T j,
+                                         const TextureGrid* const texture_grid,
+                                         INT_T zoom_index) {
   auto max_wpixel=(FLOAT_T)texture_grid->max_pixel_size().wpixel();
   auto max_hpixel=(FLOAT_T)texture_grid->max_pixel_size().hpixel();
   auto xgrid=this->_viewport_grid.xgrid();
@@ -79,8 +81,8 @@ bool TextureUpdate::_grid_square_visible(INT_T i, INT_T j, TextureGrid *texture_
            (j > floor(ygrid_bottom_max_zoom_index)));
 }
 
-void TextureUpdate::update_textures(ImageGrid *grid,
-                                    TextureGrid *texture_grid,
+void TextureUpdate::update_textures(const ImageGrid* const grid,
+                                    TextureGrid* const texture_grid,
                                     INT_T zoom_index,
                                     bool load_all,
                                     INT_T &texture_copy_count,
@@ -150,8 +152,8 @@ void TextureUpdate::update_textures(ImageGrid *grid,
   }
 }
 
-bool TextureUpdate::load_texture (TextureGridSquareZoomLevel *dest_square,
-                                  ImageGridSquareZoomLevel *source_square,
+bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
+                                  const ImageGridSquareZoomLevel* const source_square,
                                   INT_T zoom_index,
                                   GridPixelSize texture_pixel_size) {
   auto successful=true;

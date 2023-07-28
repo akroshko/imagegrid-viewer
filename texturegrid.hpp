@@ -75,7 +75,7 @@ public:
 class TextureGrid {
 public:
   TextureGrid()=delete;
-  TextureGrid(GridSetup *grid_setup);
+  TextureGrid(const GridSetup* grid_setup);
   ~TextureGrid();
   TextureGrid(const TextureGrid&)=delete;
   TextureGrid(const TextureGrid&&)=delete;

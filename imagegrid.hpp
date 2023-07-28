@@ -116,8 +116,8 @@ public:
   ImageGrid(const ImageGrid&&)=delete;
   ImageGrid& operator=(const ImageGrid&)=delete;
   ImageGrid& operator=(const ImageGrid&&)=delete;
-  void read_grid_info(GridSetup *grid_setup, std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update);
-  void load_grid(GridSetup *grid_setup, std::atomic<bool> &keep_running);
+  void read_grid_info(const GridSetup* grid_setup, std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update);
+  void load_grid(const GridSetup* grid_setup, std::atomic<bool> &keep_running);
   GridPixelSize get_image_max_pixel_size();
   /** The individual squares in the image grid. */
   std::unique_ptr<ImageGridSquare**[]> squares;
@@ -175,7 +175,7 @@ private:
                   INT_T current_grid_x, INT_T current_grid_y,
                   INT_T zoom_index_lower_limit,
                   INT_T load_all,
-                  GridSetup *grid_setup);
+                  const GridSetup* grid_setup);
   /** Store the size of the images */
   GridImageSize _grid_image_size;
   /** Maximum size of images loaded into the grid. */
