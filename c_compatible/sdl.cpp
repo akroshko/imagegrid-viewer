@@ -120,6 +120,6 @@ void SDLApp::delay() {
   SDL_Delay(64);
 }
 
-bool SDLApp::successful() {
+bool SDLApp::successful() const {
   return this->_successful;
 }

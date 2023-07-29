@@ -52,7 +52,7 @@ public:
   /**
    * Check whether app was successful
    */
-  bool successful();
+  bool successful() const;
   SDL_Window* window;
   SDL_PixelFormat* format;
   SDL_Surface* screen_surface;

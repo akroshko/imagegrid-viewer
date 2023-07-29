@@ -24,7 +24,6 @@ void TextureUpdate::find_current_textures (const ImageGrid* const grid,
   FLOAT_T zoom;
   INT_T texture_copy_count=0;
   this->_viewport_current_state_texturegrid_update->GetGridValues(zoom,this->_viewport_grid);
-  DEBUG("TextureUpdate::find_current_textures()");
   // if (view_changed) {
   // don't do anything here if viewport_current_state hasn't been initialized
   if (!this->_viewport_grid.invalid()) {
@@ -36,17 +35,21 @@ void TextureUpdate::find_current_textures (const ImageGrid* const grid,
     if (zoom_index < 0) {
       zoom_index=0;
     }
+    auto max_zoom_index=max_zoom-1;
+    if (max_zoom_index < 0) {
+      max_zoom_index=0;
+    }
     // TODO get rid of this for loop, unload seperately
-    for (INT_T z=max_zoom-1; z >= 0l; z--) {
+    for (INT_T z=max_zoom_index; z >= 0l; z--) {
       if (!keep_running || texture_copy_count >= LOAD_TEXTURES_BATCH) { break; }
       // only load/update current zoom and max_zoom
       // TODO: this doesn't help with unloading
-      if (z != max_zoom-1 && z !=zoom_index) {
+      if (z != max_zoom_index && z != zoom_index) {
         continue;
       }
       // calculate these with max resolution, rather than actual viewport
       // always load everything for last zoom level
-      auto load_all=(z == max_zoom-1);
+      auto load_all=(z == max_zoom_index);
       this->update_textures(grid,
                             texture_grid,
                             z,
@@ -57,7 +60,6 @@ void TextureUpdate::find_current_textures (const ImageGrid* const grid,
   } else {
     DEBUG("Skipping find_current_textures due to invalid viewport.");
   }
-  DEBUG("TextureUpdate::find_current_textures() end");
 }
 
 bool TextureUpdate::_grid_square_visible(INT_T i, INT_T j,
@@ -75,10 +77,11 @@ bool TextureUpdate::_grid_square_visible(INT_T i, INT_T j,
     xgrid,ygrid,max_wpixel,max_hpixel,zoom_index);
   FLOAT_T ygrid_bottom_max_zoom_index=ViewPortCurrentState::find_bottommost_visible(
     xgrid,ygrid,max_wpixel,max_hpixel,zoom_index);
-  return !((i < floor(xgrid_left_max_zoom_index)) ||
-           (i > floor(xgrid_right_max_zoom_index)) ||
-           (j < floor(ygrid_top_max_zoom_index)) ||
-           (j > floor(ygrid_bottom_max_zoom_index)));
+  auto return_value=!((i < floor(xgrid_left_max_zoom_index)) ||
+                      (i > floor(xgrid_right_max_zoom_index)) ||
+                      (j < floor(ygrid_top_max_zoom_index)) ||
+                      (j > floor(ygrid_bottom_max_zoom_index)));
+  return return_value;
 }
 
 void TextureUpdate::update_textures(const ImageGrid* const grid,

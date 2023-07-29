@@ -348,7 +348,7 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &
   }
 }
 
-GridPixelSize ImageGrid::get_image_max_pixel_size() {
+GridPixelSize ImageGrid::get_image_max_pixel_size() const {
   return this->_image_max_size;
 
 }
