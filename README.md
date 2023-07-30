@@ -104,8 +104,8 @@ mainland example](./nts-example.png)
 A screenshot of viewing the 1:50K NTS topographic maps from Vancouver
 to Jasper in British Columbia Canada is given by: ![South BC
 example](south_bc_screenshot.png) These maps take up 5GB as compressed
-TIFF files, would take up over 50GB in memory, but are viewable
-comfortably using half the memory of 16GB machine.
+TIFF files, would take up over 50GB uncompressed, but are viewable
+comfortably using half the memory of a 16GB machine.
 
 # Features to be added
 
