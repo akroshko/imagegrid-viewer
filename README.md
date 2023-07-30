@@ -7,12 +7,12 @@ topographic system) maps, but one that has a similar feel as to when I
 used to pull maps out of the university map cabinet and lay them
 side-by-side.
 
-The initial release does not have a lot of features and hogs resources
-such as memory and CPU.  However, I have plans to add additional
-features and fixes, see [features to be added](#features-to-be-added)
-for a preliminary list.  I would like *imagegrid-viewer* to end up
-being a fairly useable application for viewing large sets of large
-images that are not just limited to maps but could include:
+This application is still very much in it's prototyping stage.
+However, I have plans to add additional features and fixes, see
+[features to be added](#features-to-be-added) for a preliminary list.
+I would like *imagegrid-viewer* to end up being a fairly useable
+application for viewing large sets of large images that are not just
+limited to maps but could include:
 
 - Images such as satellite photos.
 - Medical and scientific images.
@@ -26,7 +26,7 @@ collections of image-like data.
 # Building
 
 Currently *imagegrid-viewer* has only been built on Debian Linux 10
-(buster).  The dependencies are installed by:
+(Buster).  The dependencies are installed by:
 
 > $ sudo apt-get install libsdl2-dev libtiff-dev libpng-dev
 
@@ -94,12 +94,18 @@ $ ./imagegrid-viewer -w 5 -h 5 ./canmatrix/092j06_01.tif ./canmatrix/092j07_02.t
                                ./canmatrix/092g03_05.tif ./canmatrix/092g02_06.tif ./canmatrix/092g01_06.tif ./canmatrix/092h04_09.tif ./canmatrix/092h03_03.tif
 ```
 
-The above file names were tested on March 25th, 2022.  They are
-subject to change due to the versioning of NTS maps.
+The above file names were tested on July 29th, 2023.  They are subject
+to change due to the versioning of NTS maps.
 
 This area of lower mainland British Columbia that will be shown by
 *imagegrid-viewer* is given by the dark black box: ![NTS lower
 mainland example](./nts-example.png)
+
+A screenshot of viewing the 1:50K NTS topographic maps from Vancouver
+to Jasper in British Columbia Canada is given by: ![South BC
+example](south_bc_screenshot.png) These maps take up 5GB as compressed
+TIFF files, would take up over 50GB in memory, but are viewable
+comfortably using half the memory of 16GB machine.
 
 # Features to be added
 
@@ -107,7 +113,6 @@ mainland example](./nts-example.png)
 
 - Variable window sizes and reading the actual screen size rather than
   assuming 1080p.
-- Add more robust error checking.
 - Directly use zip files, pdf files, or other file formats images are
   distributed in.
 - Cache some data to disk and implement limits on memory usage.
@@ -122,8 +127,7 @@ mainland example](./nts-example.png)
   such as NTS topo maps.
 - Add GUI elements to show information or configure while running.
 - Better quality of scaling and zooming of images.
-- A near term goal is to be able to load the whole of southern
-  BC/Alberta at once and fly around like Google Earth.
+- Deal with NTS maps that have been split up into multiple images.
 
 ## Further future
 
