@@ -20,17 +20,6 @@ BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT_T count, const 
   this->image_pixel_size_viewport=ViewportPixelSize(grid_image_size_zoomed);
 }
 
-BlitItem::~BlitItem () {
-  // if (this->viewport_pixel_coordinate != nullptr) {
-  //   delete this->viewport_pixel_coordinate;
-  //   this->viewport_pixel_coordinate=nullptr;
-  // }
-  // if (this->image_pixel_size_viewport != nullptr) {
-  //   delete this->image_pixel_size_viewport;
-  //   this->image_pixel_size_viewport=nullptr;
-  // }
-}
-
 void BlitItem::blit_this(SDLApp* const sdl_app) {
   SDL_Rect scaled_rect;
   scaled_rect.x=this->viewport_pixel_coordinate.xpixel();

@@ -25,6 +25,11 @@ compilation_commands:
 rtags:
 	rc -J
 
+
+.PHONY: tidy
+tidy:
+	clang-tidy -checks=cert-* -header-filter=.* $(SRC_MAIN)
+
 .PHONY: debug
 debug: imagegrid-viewer-debug
 

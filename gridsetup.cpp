@@ -2,6 +2,7 @@
  * Implementation for classes to setup the grid to be viewed.
  */
 #include "debug.hpp"
+#include "defaults.hpp"
 #include "error.hpp"
 #include "types.hpp"
 #include "gridsetup.hpp"
@@ -12,6 +13,7 @@
 // C headers
 #include <getopt.h>
 #include <string.h>
+#include <cstdlib>
 
 bool GridSetup::successful() const {
   return this->_successful;
@@ -39,7 +41,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       himage=atoi(optarg);
       break;
     case 'p':
-      strcpy(this->_path_value,optarg);
+      strncpy(this->_path_value,optarg,PATH_BUFFER_SIZE);
       break;
     case '?':
       if (optopt == 'w' || optopt == 'h' || optopt == 'p') {

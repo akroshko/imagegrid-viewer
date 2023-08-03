@@ -66,31 +66,25 @@ bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y, FLOAT_
         // move 5% of a screen left
         xgrid-=(KEY_PRESS_MOVE*pixel_size);
         break;
-
       case SDLK_RIGHT:
         // move 5% of a screen right
         xgrid+=(KEY_PRESS_MOVE*pixel_size);
         break;
-
       case SDLK_UP:
         // move 5% of a screen up
         ygrid-=(KEY_PRESS_MOVE*pixel_size);
         break;
-
       case SDLK_DOWN:
         // move 5% of a screen down
         ygrid+=(KEY_PRESS_MOVE*pixel_size);
         break;
-
       case SDLK_EQUALS:
       case SDLK_PLUS:
         zoom*=(1.2*zoom_speed);
         break;
-
       case SDLK_MINUS:
         zoom/=(1.2*zoom_speed);
         break;
-
       case SDLK_q:
         keep_going=false;
         break;

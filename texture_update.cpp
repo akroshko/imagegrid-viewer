@@ -57,8 +57,6 @@ void TextureUpdate::find_current_textures (const ImageGrid* const grid,
                             texture_copy_count,
                             keep_running);
     }
-  } else {
-    DEBUG("Skipping find_current_textures due to invalid viewport.");
   }
 }
 
@@ -106,8 +104,6 @@ void TextureUpdate::update_textures(const ImageGrid* const grid,
             dest_square->is_loaded=false;
             dest_square->last_load_index=INT_MAX;
             display_lock.unlock();
-          } else {
-            DEBUG("Unable to aquire display_mutex for deletion in TextureGrid::update_textures");
           }
         }
       }
@@ -203,7 +199,6 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
           }
         }
       } else {
-        DEBUG("Source or dest data is null in TextureGrid::load_texture");
         if (dest_square->display_texture != nullptr) {
           SDL_UnlockSurface(dest_square->display_texture);
         }

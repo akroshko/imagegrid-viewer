@@ -7,6 +7,7 @@
 #define GRIDSETUP_HPP
 
 #include "debug.hpp"
+#include "defaults.hpp"
 #include "error.hpp"
 #include "types.hpp"
 #include "coordinates.hpp"
@@ -40,7 +41,7 @@ protected:
    *
    * TODO: change away from a raw string array
    */
-  char _path_value[4096]={ 0 };
+  char _path_value[PATH_BUFFER_SIZE]={ 0 };
 };
 
 /**

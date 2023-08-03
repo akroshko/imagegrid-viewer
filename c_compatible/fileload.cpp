@@ -136,14 +136,12 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
 
 bool read_tiff_data(std::string filename,
                     INT_T &width, INT_T &height) {
-  auto success=true;
+  auto success=false;
 
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
 
-  DEBUG("load_tiff_as_rgb() begin: " << filename);
   if (!tif) {
     ERROR("load_tiff_as_rgb() Failed to allocate raster for: " << filename);
-    success=false;
   } else {
     uint32 w,h;
 
@@ -152,20 +150,18 @@ bool read_tiff_data(std::string filename,
     width=w;
     height=h;
     TIFFClose(tif);
+    success=true;
   }
   return success;
 }
 
 bool load_tiff_as_rgb(const std::string filename,
                       const std::vector<std::shared_ptr<LoadFileData>> load_file_data) {
-  auto success=true;
+  auto success=false;
 
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
-
-  DEBUG("load_tiff_as_rgb() begin: " << filename);
   if (!tif) {
     ERROR("load_tiff_as_rgb() Failed to allocate raster for: " << filename);
-    success=false;
   } else {
     uint32 w,h;
     size_t npixels;
@@ -176,11 +172,9 @@ bool load_tiff_as_rgb(const std::string filename,
     raster=(uint32*) _TIFFmalloc(npixels * sizeof (uint32));
     if (raster == NULL) {
       ERROR("Failed to allocate raster for: " << filename);
-      success=false;
     } else {
       if (!TIFFReadRGBAImageOriented(tif, w, h, raster, ORIENTATION_TOPLEFT, 0)) {
         ERROR("Failed to read: " << filename);
-        success=false;
       } else {
         // convert raster
         for (auto & file_data : load_file_data) {
@@ -195,41 +189,36 @@ bool load_tiff_as_rgb(const std::string filename,
                                   file_data->rgb_data,w_reduced,h_reduced,
                                   zoom_index);
         }
+        success=true;
       }
       _TIFFfree(raster);
     }
     TIFFClose(tif);
   }
-  DEBUG("load_tiff_as_rgb() end: " << filename);
   return success;
 }
 
 bool read_png_data(std::string filename,
                    INT_T &width, INT_T &height) {
-  bool success;
+  bool success=false;
   png_image image;
-  DEBUG("read_png_data() begin");
-
   memset(&image, 0, (sizeof image));
   image.version=PNG_IMAGE_VERSION;
   if (png_image_begin_read_from_file(&image, filename.c_str()) == 0) {
     ERROR("read_png_data() failed to read from file: " << filename);
-    success=false;
   } else {
     width=(size_t)image.width;
     height=(size_t)image.height;
     png_image_free(&image);
+    success=true;
   }
-  DEBUG("read_png_data() end");
   return success;
 }
 
 bool load_png_as_rgb(std::string filename,
                      const std::vector<std::shared_ptr<LoadFileData>> load_file_data) {
-  bool success;
+  bool success=false;
   png_image image;
-
-  DEBUG("load_png_as_rgb() begin");
 
   memset(&image, 0, (sizeof image));
   image.version=PNG_IMAGE_VERSION;
@@ -242,7 +231,6 @@ bool load_png_as_rgb(std::string filename,
     raster=new unsigned char[PNG_IMAGE_SIZE(image)];
     if (raster == NULL) {
       ERROR("load_png_as_rgb() failed to allocate buffer!");
-      success=false;
     } else {
       if (png_image_finish_read(&image, NULL, raster, 0, NULL) == 0) {
         ERROR("load_png_as_rgb() failed to read full image!");
@@ -261,16 +249,15 @@ bool load_png_as_rgb(std::string filename,
           buffer_copy_reduce_generic((unsigned char *)raster,width,height,
                                      file_data->rgb_data,w_reduced,h_reduced,
                                      zoom_index);
+          success=true;
         }
       }
       delete[] raster;
     }
     png_image_free(&image);
   }
-  DEBUG("load_png_as_rgb() end");
   return success;
 }
-
 
 bool check_tiff(std::string filename) {
   if (regex_search(filename,tiff_search)) {

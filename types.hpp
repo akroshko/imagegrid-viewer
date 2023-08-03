@@ -5,9 +5,10 @@
  */
 #ifndef TYPES_HPP
 #define TYPES_HPP
+#include <cstdint>
 
 typedef double FLOAT_T;
-typedef long unsigned int UINT_T;
-typedef long signed int INT_T;
+typedef uint64_t UINT_T;
+typedef int64_t INT_T;
 
 #endif

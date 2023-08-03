@@ -42,7 +42,6 @@ bool ImageGridSquareZoomLevel::load_file(std::string filename, std::vector<Image
     data_pairs.back().second->zoom_index=dest_square->zoom_index();
     data_read.emplace_back(data_pairs.back().second);
   }
-  DEBUG("Trying to load: " << filename);
   if (check_tiff(filename)) {
     MSG("Loading TIFF: " << filename);
     // TODO: check success
@@ -114,20 +113,14 @@ ImageGridSquare::~ImageGridSquare() {
 void ImageGridSquare::_read_file(std::string filename) {
   if (check_tiff(filename)) {
     // TODO: check success
-    DEBUG("Constructing TIFF: " << filename);
     read_tiff_data(filename,
                    this->_image_wpixel,
                    this->_image_hpixel);
-    DEBUG("Done constructing Tiff: " << filename << " " << this->image_wpixel()
-                                                 << " " << this->image_hpixel());
   } else if (check_png(filename)) {
-    DEBUG("Constructing PNG: " << filename);
     // TODO: check success
     read_png_data(filename,
                   this->_image_wpixel,
                   this->_image_hpixel);
-    DEBUG("Done constructing PNG: " << filename << " " << this->image_wpixel()
-                                                << " " << this->image_hpixel());
   } else {
     ERROR("ImageGridSquare::read_file can't read: " << filename);
   }
@@ -316,7 +309,7 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &
   // we are looking at if things are not loaded
   while (keep_trying) {
     keep_trying=iterator_visible.get_next(i,j);
-    if (!keep_running) { keep_trying=false; break; }
+    if (!keep_running) { break; }
     if (keep_trying) {
       auto load_successful=this->_load_file(i, j, current_grid_x, current_grid_y,
                                             current_zoom_index,
@@ -326,18 +319,18 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &
     }
   }
   auto iterator_normal=ImageGridIteratorFull(this->_grid_image_size.wimage(),this->_grid_image_size.himage(),
-                                         this->_image_max_size.wpixel(),this->_image_max_size.hpixel(),
-                                         current_grid_x,current_grid_y,zoom);
+                                             this->_image_max_size.wpixel(),this->_image_max_size.hpixel(),
+                                             current_grid_x,current_grid_y,zoom);
   // TODO need a good iterator class for this type of work
   // load the one we are looking at
-  if (load_count >= LOAD_FILES_BATCH) {
+  if (load_count >= LOAD_FILES_BATCH || !keep_running) {
     keep_trying=false;
   } else {
     keep_trying=true;
   }
   while (keep_trying) {
     keep_trying=iterator_normal.get_next(i,j);
-    if (!keep_running) { keep_trying=false; break; }
+    if (!keep_running) { break; }
     if (keep_trying) {
       auto load_successful=this->_load_file(i, j, current_grid_x, current_grid_y,
                                             0l,

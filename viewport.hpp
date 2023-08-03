@@ -28,7 +28,7 @@ public:
   BlitItem(TextureGridSquareZoomLevel* square, INT_T count,
            const ViewportPixelCoordinate &viewport_pixel_coordinate,
            const ViewportPixelSize &grid_image_size_zoomed);
-  ~BlitItem();
+  ~BlitItem()=default;
   // BlitItem(const BlitItem&)=delete;
   BlitItem(const BlitItem&)=default;
   BlitItem(const BlitItem&&)=delete;

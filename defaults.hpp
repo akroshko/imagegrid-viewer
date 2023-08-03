@@ -19,6 +19,8 @@ const INT_T SCREEN_HEIGHT=720;
 const INT_T MAX_SCREEN_WIDTH=1920;
 const INT_T MAX_SCREEN_HEIGHT=1080;
 
+const size_t PATH_BUFFER_SIZE=4096;
+
 // some constants for input/ouput configuration
 const FLOAT_T KEY_PRESS_MOVE=0.5;
 const FLOAT_T JOY_BASE_MOVE=2.0;

@@ -1,5 +1,5 @@
 #ifndef BUFFER_MANIP_HPP
-#define BuFFER_MANIP_HPP
+#define BUFFER_MANIP_HPP
 
 #include "../debug.hpp"
 #include "../error.hpp"

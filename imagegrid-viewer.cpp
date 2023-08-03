@@ -350,7 +350,6 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   // start the thead that loads the imagegrid
-  DEBUG("UpdateImageGridThread start()");
   auto update_imagegrid_thread_class=std::make_unique<UpdateImageGridThread>(
     grid_setup.get(),
     imagegrid_viewer_context->grid.get());
@@ -362,12 +361,8 @@ int main(int argc, char* argv[]) {
     imagegrid_viewer_context->texture_grid.get());
   auto update_texture_thread=update_texture_thread_class->start();
   while (continue_flag) {
-    DEBUG("================================================================================");
-    DEBUG("== Main loop begin");
     // read input, this also adjusts the coordinates of the viewport
-    DEBUG("input()");
     continue_flag=imagegrid_viewer_context->viewport->do_input(imagegrid_viewer_context->sdl_app.get());
-    DEBUG("input() end");
     // find the textures that need to be blit to the viewport
     // if the textures haven't been loaded, a smaller unzoomed version is used
     imagegrid_viewer_context->viewport->find_viewport_blit(

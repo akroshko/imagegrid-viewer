@@ -18,7 +18,6 @@ void buffer_copy_reduce_tiff (uint32* source_buffer, uint32 w, uint32 h,
   // TODO: may wish to figure out an appropriate reduced size
   //       since 64 bit integers may be overkill
   auto row_buffer=std::make_unique<INT_T[]>(w_reduced*3);
-
   for (size_t j=0; j < h_reduced; j++) {
     for (size_t i=0; i < w_reduced*3; i++) {
       row_buffer[i]=0;
