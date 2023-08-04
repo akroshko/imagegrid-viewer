@@ -33,8 +33,23 @@ void TextureGridSquareZoomLevel::unload_texture () {
   if (this->display_texture != nullptr) {
     SDL_FreeSurface(this->display_texture);
     this->display_texture=nullptr;
+    this->is_loaded=false;
+    this->is_displayable=false;
     this->last_load_index=INT_MAX;
+
   }
+}
+
+void TextureGridSquareZoomLevel::set_image_loaded (INT_T load_index) {
+  this->last_load_index=load_index;
+  this->is_loaded=true;
+  this->is_displayable=true;
+}
+
+void TextureGridSquareZoomLevel::set_image_filler () {
+  this->is_loaded=false;
+  this->is_displayable=true;
+  this->last_load_index=INT_MAX;
 }
 
 TextureGridSquare::TextureGridSquare () {

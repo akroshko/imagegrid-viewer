@@ -75,6 +75,18 @@ public:
                     const ImageGridSquareZoomLevel* source_square,
                     INT_T zoom_index,
                     GridPixelSize texture_pixel_size);
+  /**
+   * Load a filler texture, such a uniform gray or a checkerboard.
+   *
+   * @param dest_square the destination square to load the texture into
+   *
+   * @param zoom_index the zoom index of the texture being loaded
+   *
+   * @return if texture was actually copied
+   */
+  bool load_filler(TextureGridSquareZoomLevel* const dest_square,
+                   INT_T zoom_index,
+                   GridPixelSize texture_pixel_size);
 private:
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortCurrentState> _viewport_current_state_texturegrid_update;

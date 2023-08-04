@@ -37,10 +37,27 @@ public:
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&&)=delete;
   TextureGridSquareZoomLevel& operator=(const TextureGridSquareZoomLevel&)=delete;
   TextureGridSquareZoomLevel& operator=(const TextureGridSquareZoomLevel&&)=delete;
+  /**
+   * Unload the texture for this square.  Also resets any state.
+   */
   void unload_texture();
+  /**
+   * Set this texture as a loaded image/data.
+   *
+   * @param load_index The last loaded index representing the zoom
+   *                   level of what was loaded.
+   */
+  void set_image_loaded (INT_T load_index);
+  /**
+   * Set this texture as a filler.
+   */
+  void set_image_filler ();
   // lock when the display_area is being worked on
   std::mutex display_mutex;
+  // is a real image/data loaded here
   std::atomic<bool> is_loaded{false};
+  // is something loaded that makes this displayable, can be a filler texture
+  std::atomic<bool> is_displayable{false};
   SDL_Surface* display_texture=nullptr;
   // TODO: this one needs help being private and investigation whether
   // there's a better way

@@ -96,13 +96,11 @@ void TextureUpdate::update_textures(const ImageGrid* const grid,
       auto dest_square=texture_grid->squares[i][j].texture_array[zoom_index];
       if (!load_all &&
           !_grid_square_visible(i,j,texture_grid,zoom_index)) {
-        if (dest_square->is_loaded) {
-          // skip everything if locked
+        // unload anything not visible that is loadable or displayable
+        if (dest_square->is_loaded || dest_square->is_displayable) {
           std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
           if (display_lock.try_lock()) {
             dest_square->unload_texture();
-            dest_square->is_loaded=false;
-            dest_square->last_load_index=INT_MAX;
             display_lock.unlock();
           }
         }
@@ -122,20 +120,22 @@ void TextureUpdate::update_textures(const ImageGrid* const grid,
         bool texture_copy_successful=false;
         do {
           auto image_square=grid->squares[i][j]->image_array[load_index];
-          if (image_square->is_loaded || !dest_square->is_loaded) {
+          if (image_square->is_loaded && !dest_square->is_loaded) {
             std::unique_lock<std::mutex> load_lock(image_square->load_mutex, std::defer_lock);
             if (load_lock.try_lock()) {
               std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
               if (display_lock.try_lock()) {
-                texture_grid->squares[i][j].texture_pixel_size=GridPixelSize(texture_grid->max_pixel_size());
-                if (dest_square->display_texture == nullptr || dest_square->last_load_index>load_index) {
+
+                if ((image_square->is_loaded && !dest_square->is_loaded) &&
+                    (dest_square->last_load_index>load_index)) {
+                  // TODO: this line needs to be changed, I don't like doing this here
+                  texture_grid->squares[i][j].texture_pixel_size=GridPixelSize(texture_grid->max_pixel_size());
                   texture_copy_successful=this->load_texture(dest_square,
                                                              image_square,
                                                              zoom_index,
                                                              texture_grid->squares[i][j].texture_pixel_size);
                   if (texture_copy_successful) {
-                    dest_square->last_load_index=load_index;
-                    dest_square->is_loaded=true;
+                    dest_square->set_image_loaded(load_index);
                     texture_copy_count+=1;
                   }
                 }
@@ -146,6 +146,35 @@ void TextureUpdate::update_textures(const ImageGrid* const grid,
           }
           load_index++;
         } while (!texture_copy_successful && load_index < grid->zoom_step_number());
+
+      }
+    }
+  }
+  for (INT_T j=0l; j < texture_grid->grid_image_size().himage(); j++) {
+    for (INT_T i=0l; i < texture_grid->grid_image_size().wimage(); i++) {
+      if (!keep_running) {
+        break;
+      }
+      auto dest_square=texture_grid->squares[i][j].texture_array[zoom_index];
+      if (load_all || _grid_square_visible(i,j,texture_grid,zoom_index)) {
+        // try to copy over filler if texture not sucessful
+        bool load_filler_successful=false;
+        if (!dest_square->is_displayable) {
+          std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
+          if (display_lock.try_lock()) {
+            if (!dest_square->is_displayable) {
+              // TODO: this line needs to be changed, I don't like doing this here
+              texture_grid->squares[i][j].texture_pixel_size=GridPixelSize(texture_grid->max_pixel_size());
+              load_filler_successful=this->load_filler(dest_square,
+                                                       zoom_index,
+                                                       texture_grid->squares[i][j].texture_pixel_size);
+              if (load_filler_successful) {
+                dest_square->set_image_filler();
+              }
+            }
+            display_lock.unlock();
+          }
+        }
       }
     }
   }
@@ -162,6 +191,9 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
   auto dest_wpixel=texture_pixel_size.wpixel()/texture_zoom_reduction;
   auto dest_hpixel=texture_pixel_size.hpixel()/texture_zoom_reduction;
   dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
+  if (dest_square->display_texture != nullptr) {
+    dest_square->unload_texture();
+  }
   dest_square->display_texture=SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
   // skip if can't load texture
   if (dest_square->display_texture) {
@@ -196,6 +228,53 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                 ((unsigned char *)dest_array)[dest_index+2]=source_data[source_index+2];
               }
             }
+          }
+        }
+      } else {
+        if (dest_square->display_texture != nullptr) {
+          SDL_UnlockSurface(dest_square->display_texture);
+        }
+        dest_square->unload_texture();
+        successful=false;
+      }
+      if (dest_square->display_texture != nullptr) {
+        SDL_UnlockSurface(dest_square->display_texture);
+      }
+    } else {
+      dest_square->unload_texture();
+      successful=false;
+    }
+  } else {
+    successful=false;
+  }
+  return successful;
+}
+
+bool TextureUpdate::load_filler(TextureGridSquareZoomLevel* const dest_square,
+                                INT_T zoom_index,
+                                GridPixelSize texture_pixel_size) {
+  auto successful=true;
+  auto texture_zoom_reduction=((INT_T)pow(2,zoom_index));
+  auto dest_wpixel=texture_pixel_size.wpixel()/texture_zoom_reduction;
+  auto dest_hpixel=texture_pixel_size.hpixel()/texture_zoom_reduction;
+  dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
+  if (dest_square->display_texture != nullptr) {
+    dest_square->unload_texture();
+  }
+  dest_square->display_texture=SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
+  if (dest_square->display_texture) {
+    auto lock_surface_return=SDL_LockSurface(dest_square->display_texture);
+    if (lock_surface_return == 0) {
+      auto dest_array=dest_square->display_texture->pixels;
+      // do the things we are copying exist?
+      if (dest_array != nullptr) {
+        // copy over gray
+        for (INT_T l=0l; l < dest_hpixel; l++) {
+          for (INT_T k=0l; k < dest_wpixel; k++) {
+            auto dest_index=(l*dest_wpixel+k)*3;
+            ((unsigned char *)dest_array)[dest_index]=FILLER_LEVEL;
+            ((unsigned char *)dest_array)[dest_index+1]=FILLER_LEVEL;
+            ((unsigned char *)dest_array)[dest_index+2]=FILLER_LEVEL;
           }
         }
       } else {

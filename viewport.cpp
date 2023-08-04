@@ -84,7 +84,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid, SDLApp* const
       do {
         lock_succeeded=false;
         texture_loaded=false;
-        if (texture_grid->squares[i][j].texture_array[actual_zoom]->is_loaded) {
+        if (texture_grid->squares[i][j].texture_array[actual_zoom]->is_displayable) {
           mutex_vector.emplace_back(std::unique_lock<std::mutex>{texture_grid->squares[i][j].texture_array[actual_zoom]->display_mutex,std::defer_lock});
           if (mutex_vector.back().try_lock()) {
             lock_succeeded=true;
