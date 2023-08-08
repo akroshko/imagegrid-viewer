@@ -33,6 +33,10 @@ public:
   std::vector<std::string> filenames() const;
   /** The size of the grid loaded. */
   GridImageSize grid_image_size() const;
+  /** Indicate whether to cache images. */
+  bool do_cache() const;
+  /** Indicate whether to use cached images. */
+  bool use_cache() const;
 protected:
   bool _successful=false;
   GridImageSize _grid_image_size;
@@ -42,6 +46,10 @@ protected:
    * TODO: change away from a raw string array
    */
   char _path_value[PATH_BUFFER_SIZE]={ 0 };
+  /** For future expansion. */
+  // char _data_set[PATH_BUFFER_SIZE]={ 0 };
+  bool _do_cache=false;
+  bool _use_cache=false;
 };
 
 /**

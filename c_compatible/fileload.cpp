@@ -7,6 +7,7 @@
 #include "../debug.hpp"
 #include "../error.hpp"
 #include "../types.hpp"
+#include "../defaults.hpp"
 #include "../utility.hpp"
 #include "fileload.hpp"
 #include "buffer_manip.hpp"
@@ -156,44 +157,124 @@ bool read_tiff_data(std::string filename,
 }
 
 bool load_tiff_as_rgb(const std::string filename,
+                      const std::string cached_filename,
                       const std::vector<std::shared_ptr<LoadFileData>> load_file_data) {
   auto success=false;
-
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
   if (!tif) {
     ERROR("load_tiff_as_rgb() Failed to allocate raster for: " << filename);
   } else {
-    uint32 w,h;
-    size_t npixels;
-    uint32* raster;
-    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
-    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
-    npixels=w*h;
-    raster=(uint32*) _TIFFmalloc(npixels * sizeof (uint32));
-    if (raster == NULL) {
-      ERROR("Failed to allocate raster for: " << filename);
-    } else {
-      if (!TIFFReadRGBAImageOriented(tif, w, h, raster, ORIENTATION_TOPLEFT, 0)) {
-        ERROR("Failed to read: " << filename);
-      } else {
-        // convert raster
-        for (auto & file_data : load_file_data) {
-          auto zoom_index=file_data->zoom_index;
-          size_t w_reduced=reduce_and_pad(w,zoom_index);
-          size_t h_reduced=reduce_and_pad(h,zoom_index);
-          file_data->rgb_wpixel=w_reduced;
-          file_data->rgb_hpixel=h_reduced;
-          auto npixels_reduced=w_reduced*h_reduced;
-          file_data->rgb_data=new unsigned char[npixels_reduced*3];
-          buffer_copy_reduce_tiff(raster,w,h,
-                                  file_data->rgb_data,w_reduced,h_reduced,
-                                  zoom_index);
-        }
-        success=true;
-      }
-      _TIFFfree(raster);
+    uint32 tiff_width,tiff_height;
+    TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &tiff_width);
+    TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &tiff_height);
+    // cache this data somewhere...
+    // do a trial first to see if we can use the cached file
+    // it is ironic this is in PNG...
+    // auto can_cache=true;
+    auto can_cache=true;
+    if (!std::filesystem::exists(cached_filename)) {
+      can_cache=false;
+      MSG("Cached file does not exist: " << cached_filename);
     }
-    TIFFClose(tif);
+    if (can_cache) {
+      MSG("Cached file exists: " << cached_filename);
+      for (auto & file_data : load_file_data) {
+        auto zoom_out_value=file_data->zoom_out_value;
+        size_t width_reduced=reduce_and_pad(tiff_width,zoom_out_value);
+        size_t height_reduced=reduce_and_pad(tiff_height,zoom_out_value);
+        MSG("Testing cache");
+        MSG("w: " << width_reduced);
+        MSG("h: " << height_reduced);
+        if (width_reduced > CACHE_MAX_PIXEL_SIZE || height_reduced > CACHE_MAX_PIXEL_SIZE) {
+          MSG("cached failed to be useful");
+          can_cache=false;
+        }
+      }
+    }
+    if (can_cache) {
+      MSG("Using cached file: " << cached_filename);
+      INT_T cached_zoom_out_value=1;
+      auto width_test=tiff_width;
+      auto height_test=tiff_height;
+      // this can probably be optimized out of a while loop
+      while (width_test > CACHE_MAX_PIXEL_SIZE || height_test > CACHE_MAX_PIXEL_SIZE) {
+        cached_zoom_out_value*=ZOOM_STEP;
+        width_test=reduce_and_pad(tiff_width,cached_zoom_out_value);
+        height_test=reduce_and_pad(tiff_height,cached_zoom_out_value);
+      }
+      png_image png_image;
+      // TODO: check libpng library, may not want this
+      memset(&png_image, 0, (sizeof png_image));
+      png_image.version=PNG_IMAGE_VERSION;
+      if (png_image_begin_read_from_file(&png_image, cached_filename.c_str()) == 0) {
+        ERROR("load_tiff_as_rgb() failed to read from png file: " << cached_filename);
+        can_cache=false;
+      } else {
+        TIFFClose(tif);
+        png_bytep png_raster;
+        png_image.format=PNG_FORMAT_RGB;
+        png_raster=new unsigned char[PNG_IMAGE_SIZE(png_image)];
+        if (png_raster == NULL) {
+          ERROR("load_tiff_as_rgb() failed to allocate png buffer!");
+          can_cache=false;
+        } else {
+          if (png_image_finish_read(&png_image, NULL, png_raster, 0, NULL) == 0) {
+            ERROR("load_tiff_as_rgb() failed to read full png image!");
+            can_cache=false;
+          } else {
+            // TODO: test for mismatched size
+            auto png_width=(size_t)png_image.width;
+            auto png_height=(size_t)png_image.height;
+            for (auto & file_data : load_file_data) {
+              auto zoom_out_value=file_data->zoom_out_value;
+              auto actual_zoom_out_value=file_data->zoom_out_value/cached_zoom_out_value;
+              // TODO: might want to add an assert here but should be safe due to earlier check
+              size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
+              size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
+              file_data->rgb_wpixel=w_reduced;
+              file_data->rgb_hpixel=h_reduced;
+              size_t npixel_reduced=w_reduced*h_reduced;
+              file_data->rgb_data=new unsigned char[npixel_reduced*3];
+              buffer_copy_reduce_generic((unsigned char *)png_raster,png_width,png_height,
+                                         file_data->rgb_data,w_reduced,h_reduced,
+                                         actual_zoom_out_value);
+            }
+          }
+          delete[] png_raster;
+          return success;
+        }
+      }
+    }
+    if (!can_cache) {
+      size_t npixels;
+      uint32* raster;
+      npixels=tiff_width*tiff_height;
+      raster=(uint32*) _TIFFmalloc(npixels * sizeof (uint32));
+      if (raster == NULL) {
+        ERROR("Failed to allocate raster for: " << filename);
+      } else {
+        if (!TIFFReadRGBAImageOriented(tif, tiff_width, tiff_height, raster, ORIENTATION_TOPLEFT, 0)) {
+          ERROR("Failed to read: " << filename);
+        } else {
+          // convert raster
+          for (auto & file_data : load_file_data) {
+            auto zoom_out_value=file_data->zoom_out_value;
+            size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
+            size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
+            file_data->rgb_wpixel=w_reduced;
+            file_data->rgb_hpixel=h_reduced;
+            auto npixels_reduced=w_reduced*h_reduced;
+            file_data->rgb_data=new unsigned char[npixels_reduced*3];
+            buffer_copy_reduce_tiff(raster,tiff_width,tiff_height,
+                                    file_data->rgb_data,w_reduced,h_reduced,
+                                    zoom_out_value);
+          }
+          success=true;
+        }
+        _TIFFfree(raster);
+      }
+      TIFFClose(tif);
+    }
   }
   return success;
 }
@@ -221,6 +302,7 @@ bool load_png_as_rgb(std::string filename,
   png_image image;
 
   memset(&image, 0, (sizeof image));
+  // TODO: check libpng library, may not want this
   image.version=PNG_IMAGE_VERSION;
   if (png_image_begin_read_from_file(&image, filename.c_str()) == 0) {
     ERROR("load_png_as_rgb() failed to read from file: " << filename);
@@ -239,16 +321,16 @@ bool load_png_as_rgb(std::string filename,
         auto width=(size_t)image.width;
         auto height=(size_t)image.height;
         for (auto & file_data : load_file_data) {
-          auto zoom_index=file_data->zoom_index;
-          size_t w_reduced=reduce_and_pad(width,zoom_index);
-          size_t h_reduced=reduce_and_pad(height,zoom_index);
+          auto zoom_out_value=file_data->zoom_out_value;
+          size_t w_reduced=reduce_and_pad(width,zoom_out_value);
+          size_t h_reduced=reduce_and_pad(height,zoom_out_value);
           file_data->rgb_wpixel=w_reduced;
           file_data->rgb_hpixel=h_reduced;
           size_t npixel_reduced=w_reduced*h_reduced;
           file_data->rgb_data=new unsigned char[npixel_reduced*3];
           buffer_copy_reduce_generic((unsigned char *)raster,width,height,
                                      file_data->rgb_data,w_reduced,h_reduced,
-                                     zoom_index);
+                                     zoom_out_value);
           success=true;
         }
       }

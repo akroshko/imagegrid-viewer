@@ -27,24 +27,45 @@ std::vector<std::string> GridSetup::filenames() const {
   return this->_filenames;
 }
 
+bool GridSetup::do_cache() const {
+  return this->_do_cache;
+}
+
+bool GridSetup::use_cache() const {
+  return this->_use_cache;
+}
+
 GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) {
   int opt;
   INT_T wimage, himage;
-
   // get options
-  while((opt=getopt(argc ,argv, "w:h:p:")) != -1) {
+  while((opt=getopt(argc ,argv, "w:h:p:cd")) != -1) {
     switch(opt) {
     case 'w':
+      // width in images
       wimage=atoi(optarg);
       break;
     case 'h':
+      // height in images in images
       himage=atoi(optarg);
       break;
     case 'p':
+      // get numbered images from path
       strncpy(this->_path_value,optarg,PATH_BUFFER_SIZE);
       break;
+    case 'c':
+      // only cache images
+      this->_do_cache=true;
+      break;
+    case 'd':
+      // use database
+      this->_use_cache=true;
+      // future consideration
+      // dataset identifier ("dataset" identifier is the path where thinga re cached)
+      // strncpy(this->_data_set,optarg,PATH_BUFFER_SIZE);
+      break;
     case '?':
-      if (optopt == 'w' || optopt == 'h' || optopt == 'p') {
+      if (optopt == 'w' || optopt == 'h' || optopt == 'p' || optopt == 'd') {
         std::cerr << "Option " << optopt << " requires an argument.";
       } else {
         std::cerr << "Unknown option: " << (char)optopt << std::endl;
@@ -59,7 +80,6 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
   // TODO: fix a warning about initilized values here
   //       and/or argparse better
   this->_grid_image_size=GridImageSize(wimage,himage);
-
   // get any files on the end
   if (optind != argc) {
     if (this->_path_value[0] != 0) {
@@ -74,6 +94,5 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
   if (this->_path_value[0] != 0) {
     this->_filenames=load_numbered_images(std::string(this->_path_value));
   }
-  //
   this->_successful=true;
 };

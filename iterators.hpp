@@ -20,9 +20,9 @@ public:
   /**
    * Get the next index of i,j.
    *
-   * @param i The next width coordinate.
+   * @param i The next index along a row.
    *
-   * @param j The next height coordinate.
+   * @param j The next index along a column.
    */
   virtual bool get_next(INT_T &i, INT_T &j);
 protected:
@@ -60,7 +60,7 @@ public:
    */
   ImageGridIteratorFull(INT_T w_image_grid, INT_T h_image_grid,
                         INT_T max_wpixel, INT_T max_hpixel,
-                        INT_T current_grid_x, INT_T current_grid_y,
+                        FLOAT_T current_grid_x, FLOAT_T current_grid_y,
                         FLOAT_T zoom);
   ~ImageGridIteratorFull()=default;
 };
@@ -88,7 +88,7 @@ public:
    */
   ImageGridIteratorVisible(INT_T w_image_grid, INT_T h_image_grid,
                            INT_T max_wpixel, INT_T max_hpixel,
-                           INT_T current_grid_x, INT_T current_grid_y,
+                           FLOAT_T current_grid_x, FLOAT_T current_grid_y,
                            FLOAT_T zoom);
   ~ImageGridIteratorVisible()=default;
 };

@@ -24,7 +24,10 @@ int main(int argc, char* argv[]) {
   // load in a file
   std::vector<ImageGridSquareZoomLevel*> squares;
   squares.emplace_back(square.get());
-  ImageGridSquareZoomLevel::load_file(file_to_load,squares);
+  ImageGridSquareZoomLevel::load_file(file_to_load,
+                                      // TODO: replace with cached file
+                                      file_to_load,
+                                      squares);
   // make a cool texture
   // now transfer the RGB data to texture and blit it
   SDL_Surface* display_texture=nullptr;

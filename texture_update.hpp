@@ -37,29 +37,62 @@ public:
                              TextureGrid* texture_grid,
                              std::atomic<bool> &keep_running);
   /**
-   * Update the textures based on the current coordinates and zoom
-   * level.
+   * Load textures based on the current coordinates and zoom level.
+   *
+   * @param i the index along the width of the grid.
+   *
+   * @param j the index along the height of the grid.
+   *
+   * @param zoom current zoom
    *
    * @param grid the image grid
    *
-   * @param xgrid the x coordinate on the grid
+   * @param texture_grid the texture grid
    *
-   * @param ygrid the y coordinate on the grid
+   * @param texture_copy_count keeps track of numbers of textures
+   *                           copied
    *
-   * @param zoom_index The index of the current zoom.
+   * @param keeping_running flag to stop what's happening, generally
+   *                        to indicate program exit
+   */
+  void load_new_textures(INT_T i,
+                         INT_T j,
+                         FLOAT_T zoom,
+                         const ImageGrid* const grid,
+                         TextureGrid* const texture_grid,
+                         INT_T &texture_copy_count,
+                         std::atomic<bool> &keep_running);
+  /**
+   * Clear textures based on the current coordinates.
    *
-   * @param loadall load all textures at this zoom index, otherwise a 3x3 is loaded
+   * @param i the index along the width of the grid.
    *
-   * @param texture_copy_count keep track of the number of textures copied
+   * @param j the index along the height of the grid.
+   *
+   * @param texture_grid the texture grid
    *
    * @param keeping_running flag to stop what's happening, generally to indicate program exit
    */
-  void update_textures(const ImageGrid* grid,
-                       TextureGrid* texture_grid,
-                       INT_T zoom_index,
-                       bool load_all,
-                       INT_T &texture_copy_count,
-                       std::atomic<bool> &keep_running);
+  void clear_textures(INT_T i,
+                      INT_T j,
+                      TextureGrid* const texture_grid,
+                      std::atomic<bool> &keep_running);
+  /**
+   * Add filler textures where nothing can be loaded.
+   *
+   * @param i the index along the width of the grid.
+   *
+   * @param j the index along the height of the grid.
+   *
+   * @param texture_grid the texture grid
+   *
+   * @param keeping_running flag to stop what's happening, generally
+   *                        to indicate program exit
+   */
+  void add_filler_textures(INT_T i,
+                           INT_T j,
+                           TextureGrid* const texture_grid,
+                           std::atomic<bool> &keep_running);
   /**
    * Load a texture.
    *
@@ -69,12 +102,14 @@ public:
    *
    * @param zoom_index the zoom index of the texture being loaded
    *
+   * @param texture_pixel_size the original size of the image to be copied
+   *
    * @return if texture was actually copied
    */
-  bool load_texture(TextureGridSquareZoomLevel* dest_square,
-                    const ImageGridSquareZoomLevel* source_square,
-                    INT_T zoom_index,
-                    GridPixelSize texture_pixel_size);
+  static bool load_texture(TextureGridSquareZoomLevel* dest_square,
+                           const ImageGridSquareZoomLevel* source_square,
+                           INT_T zoom_index,
+                           GridPixelSize texture_pixel_size);
   /**
    * Load a filler texture, such a uniform gray or a checkerboard.
    *
@@ -84,16 +119,16 @@ public:
    *
    * @return if texture was actually copied
    */
-  bool load_filler(TextureGridSquareZoomLevel* const dest_square,
-                   INT_T zoom_index,
-                   GridPixelSize texture_pixel_size);
+  static bool load_filler(TextureGridSquareZoomLevel* const dest_square,
+                          INT_T zoom_index,
+                          GridPixelSize texture_pixel_size);
 private:
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortCurrentState> _viewport_current_state_texturegrid_update;
   GridCoordinate _viewport_grid;
   bool _grid_square_visible(INT_T i, INT_T j,
                             const TextureGrid* texture_grid,
-                            INT_T zoom_index);
+                            FLOAT_T zoom);
 };
 
 #endif

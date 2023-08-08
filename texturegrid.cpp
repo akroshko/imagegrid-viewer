@@ -36,7 +36,6 @@ void TextureGridSquareZoomLevel::unload_texture () {
     this->is_loaded=false;
     this->is_displayable=false;
     this->last_load_index=INT_MAX;
-
   }
 }
 
@@ -52,51 +51,46 @@ void TextureGridSquareZoomLevel::set_image_filler () {
   this->last_load_index=INT_MAX;
 }
 
-TextureGridSquare::TextureGridSquare () {
-  this->texture_array=std::make_unique<TextureGridSquareZoomLevel*[]>(MAX_TEXTURE_ZOOM_INDEX);
-  for (auto i=0ul; i < MAX_TEXTURE_ZOOM_INDEX; i++) {
+TextureGridSquare::TextureGridSquare (INT_T zoom_index_length) {
+  this->_zoom_index_length=zoom_index_length;
+  this->texture_array=std::make_unique<TextureGridSquareZoomLevel*[]>(zoom_index_length);
+  for (auto i=0l; i < zoom_index_length; i++) {
     this->texture_array[i]=new TextureGridSquareZoomLevel();
   }
 }
 
 TextureGridSquare::~TextureGridSquare () {
-  for (auto i=0ul; i < MAX_TEXTURE_ZOOM_INDEX; i++) {
+  for (auto i=0u; i < this->_zoom_index_length; i++) {
     DELETE_IF_NOT_NULLPTR(this->texture_array[i]);
   }
 }
 
-TextureGrid::TextureGrid (const GridSetup* const grid_setup) {
+TextureGrid::TextureGrid (const GridSetup* const grid_setup,
+                          INT_T zoom_index_length,
+                          const GridPixelSize image_max_pixel_size) {
   this->_grid_image_size=GridImageSize(grid_setup->grid_image_size());
-  this->squares=std::make_unique<TextureGridSquare*[]>(grid_setup->grid_image_size().wimage());
+  this->_zoom_index_length=zoom_index_length;
+  this->_max_pixel_size=GridPixelSize(image_max_pixel_size);
+  this->squares=std::make_unique<TextureGridSquare**[]>(grid_setup->grid_image_size().wimage());
   for (INT_T i=0l; i < grid_setup->grid_image_size().wimage(); i++) {
-    this->squares[i]=new TextureGridSquare[grid_setup->grid_image_size().himage()];
+    this->squares[i]=new TextureGridSquare*[grid_setup->grid_image_size().himage()];
+    for (INT_T j=0l; j < grid_setup->grid_image_size().himage(); j++) {
+      this->squares[i][j]=new TextureGridSquare(zoom_index_length);
+    }
   }
 }
 
 TextureGrid::~TextureGrid() {
   for (auto i=0l; i < this->_grid_image_size.wimage(); i++) {
+    for (INT_T j=0l; j < this->grid_image_size().himage(); j++) {
+      DELETE_IF_NOT_NULLPTR(this->squares[i][j]);
+    }
     DELETE_ARRAY_IF_NOT_NULLPTR(this->squares[i]);
   }
 }
 
-void TextureGrid::init_max_zoom_index(const GridPixelSize &image_max_pixel_size) {
-  INT_T zoom_length=0;
-  FLOAT_T current_zoom=1.0;
-  // swap out and reallocate
-  this->_max_pixel_size=GridPixelSize(image_max_pixel_size);
-  zoom_length += 1;
-  current_zoom /= 2.0;
-  // TODO: inefficient, do without a while loop
-  while (!(((this->_grid_image_size.wimage()*this->max_pixel_size().wpixel()*current_zoom) < MAX_SCREEN_WIDTH) &&
-           ((this->_grid_image_size.himage()*this->max_pixel_size().hpixel()*current_zoom) < MAX_SCREEN_HEIGHT))) {
-    zoom_length += 1;
-    current_zoom /= 2.0;
-  }
-  this->_textures_max_zoom_index=zoom_length-1;
-}
-
-INT_T TextureGrid::textures_max_zoom_index() const {
-  return this->_textures_max_zoom_index;
+INT_T TextureGrid::textures_zoom_index_length() const {
+  return this->_zoom_index_length;
 }
 
 GridPixelSize TextureGrid::max_pixel_size() const {

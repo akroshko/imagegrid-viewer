@@ -21,7 +21,7 @@ bool ImageGridIterator::get_next(INT_T &i, INT_T &j) {
 // this is a pretty bad implementation, but encapsulates this looping code at least
 ImageGridIteratorFull::ImageGridIteratorFull(INT_T w_image_grid, INT_T h_image_grid,
                                              INT_T max_wpixel, INT_T max_hpixel,
-                                             INT_T current_grid_x, INT_T current_grid_y,
+                                             FLOAT_T current_grid_x, FLOAT_T current_grid_y,
                                              FLOAT_T zoom) {
   this->_w=w_image_grid;
   this->_h=h_image_grid;
@@ -29,8 +29,8 @@ ImageGridIteratorFull::ImageGridIteratorFull(INT_T w_image_grid, INT_T h_image_g
   // load the one we are looking at
   // do the center
   // pretend we are in the corner of the grid if we are outside the grid
-  auto adjusted_grid_x=current_grid_x;
-  auto adjusted_grid_y=current_grid_y;
+  auto adjusted_grid_x=(INT_T)floor(current_grid_x);
+  auto adjusted_grid_y=(INT_T)floor(current_grid_y);
   if (current_grid_x > this->_w) {
     adjusted_grid_x=this->_w;
   } else if (current_grid_x < 0) {
@@ -79,7 +79,7 @@ ImageGridIteratorFull::ImageGridIteratorFull(INT_T w_image_grid, INT_T h_image_g
 // TODO: will need a default to do if viewport unavailable
 ImageGridIteratorVisible::ImageGridIteratorVisible(INT_T w_image_grid, INT_T h_image_grid,
                                                    INT_T max_wpixel, INT_T max_hpixel,
-                                                   INT_T current_grid_x, INT_T current_grid_y,
+                                                   FLOAT_T current_grid_x, FLOAT_T current_grid_y,
                                                    FLOAT_T zoom) {
   this->_w=w_image_grid;
   this->_h=h_image_grid;

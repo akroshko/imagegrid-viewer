@@ -69,7 +69,7 @@ public:
  */
 class TextureGridSquare {
 public:
-  TextureGridSquare();
+  TextureGridSquare(INT_T zoom_index_length);
   ~TextureGridSquare();
   TextureGridSquare(const TextureGridSquare&)=delete;
   TextureGridSquare(const TextureGridSquare&&)=delete;
@@ -84,6 +84,8 @@ public:
   // TODO: this one needs help being private
   /** the size of the texture with no zoom */
   GridPixelSize texture_pixel_size;
+private:
+  INT_T _zoom_index_length;
 };
 
 /**
@@ -92,7 +94,21 @@ public:
 class TextureGrid {
 public:
   TextureGrid()=delete;
-  TextureGrid(const GridSetup* grid_setup);
+  /**
+   *
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   *
+   * @param zoom_index_length The length of the array holding
+   *                          progressively zoomed out images.
+   *
+   * @param image_max_pixel_size The maximum size in pixels of the
+   *                             images on the grid.
+   */
+  TextureGrid(const GridSetup* grid_setup,
+              INT_T zoom_index_length,
+              const GridPixelSize image_max_pixel_size);
   ~TextureGrid();
   TextureGrid(const TextureGrid&)=delete;
   TextureGrid(const TextureGrid&&)=delete;
@@ -100,21 +116,20 @@ public:
   TextureGrid& operator=(const TextureGrid&&)=delete;
   /**
    * Initialize the maximum size of each texture and the maximum zoom,
-   * generally has to be done after all imagesare loaded.
+   * generally has to be done after all imagesquare loaded.
    */
-  void init_max_zoom_index(const GridPixelSize &image_max_pixel_size);
-  /** the indidivual squares */
-  std::unique_ptr<TextureGridSquare*[]> squares;
+  /** the individual squares */
+  std::unique_ptr<TextureGridSquare**[]> squares;
   GridImageSize grid_image_size() const;
   GridPixelSize max_pixel_size() const;
-  INT_T textures_max_zoom_index() const;
+  INT_T textures_zoom_index_length() const;
 private:
   /** this size of this grid in number of textures */
   GridImageSize _grid_image_size;
   /** maximum size of the individual textures in pixels */
   GridPixelSize _max_pixel_size;
   /** the maximum zoom (maximum number of reductions by a factor of 2) */
-  INT_T _textures_max_zoom_index;
+  INT_T _zoom_index_length;
 };
 
 #endif

@@ -44,11 +44,6 @@ const double INITIAL_Y=1.0;
 // const double INITIAL_X=5.0;
 // const double INITIAL_Y=5.0;
 
-// this is set higher than any images I'm working with
-// when data structure improve it could be dynamic
-// TODO: this is bad, VERY VERY BAD!
-const INT_T MAX_TEXTURE_ZOOM_INDEX=10;
-
 // maximum minimum size of scaled images
 const INT_T MAX_MIN_SCALED_IMAGE_SIZE=32;
 
@@ -61,6 +56,17 @@ const INT_T INVALID_PIXEL_VALUE=INT_MIN;
 
 // these are things that should probably be done more smartly later
 const INT_T LOAD_FILES_BATCH=1;
-const INT_T LOAD_TEXTURES_BATCH=4;
+const INT_T LOAD_TEXTURES_BATCH=8;
+
+// the filler color
+const unsigned char FILLER_LEVEL=64;
+
+// max cache pixel size
+const INT_T CACHE_MAX_PIXEL_SIZE=512;
+
+// zoom step
+// I don't see myself moving away from powers of two, but it's nice to
+// have it visible where I make this assumption
+const INT_T ZOOM_STEP=2;
 
 #endif

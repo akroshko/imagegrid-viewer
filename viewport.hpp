@@ -85,12 +85,6 @@ public:
    */
   void blank_viewport(SDLApp* sdl_app);
   /**
-   *
-   *
-   * @param zoom
-   */
-  INT_T find_zoom_index(FLOAT_T zoom);
-  /**
    * Adjust initial location.
    *
    * @param grid_setup

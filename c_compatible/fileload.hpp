@@ -52,7 +52,7 @@ struct LoadFileData {
   unsigned char* rgb_data=nullptr;
   size_t rgb_wpixel=INT_MIN;
   size_t rgb_hpixel=INT_MIN;
-  INT_T zoom_index=INT_MIN;
+  INT_T zoom_out_value=INT_MIN;
 };
 
 /**
@@ -73,11 +73,14 @@ bool read_tiff_data(std::string filename, INT_T &width, INT_T &height);
  *
  * @param filename the filename to load
  *
+ * @param cached_filename a filename that cached the parts of the image fitting in 512x512
+ *
  * @param load_file_data a vector structs to be updated with data as
  * it is loaded
  *
  */
 bool load_tiff_as_rgb(const std::string filename,
+                      const std::string cached_filename,
                       const std::vector<std::shared_ptr<LoadFileData>> load_file_data);
 
 /**

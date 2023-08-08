@@ -165,11 +165,10 @@ ImageGridViewerContext::ImageGridViewerContext(const GridSetup* const grid_setup
   this->grid->read_grid_info(grid_setup, this->viewport_current_state_imagegrid_update);
   auto read_images_successful=this->grid->read_grid_info_successful();
   if (read_images_successful) {
-    this->texture_grid=std::make_unique<TextureGrid>(grid_setup);
-    // find the maximum index to reference zoomed out textures
-    // generally a heuristic based on image size and screen size
-    this->texture_grid->init_max_zoom_index(this->grid->get_image_max_pixel_size());
     this->viewport->set_image_max_size(this->grid->get_image_max_pixel_size());
+    this->texture_grid=std::make_unique<TextureGrid>(grid_setup,
+                                                     this->grid->zoom_index_length(),
+                                                     this->grid->get_image_max_pixel_size());
     // adjust initial position to a sensible default depending on how
     // many images are loaded
     this->viewport->adjust_initial_location(grid_setup);
@@ -337,58 +336,69 @@ int main(int argc, char* argv[]) {
   if (!grid_setup->successful()) {
     return 1;
   }
-  auto imagegrid_viewer_context=std::make_unique<ImageGridViewerContext>(grid_setup.get());
-  // initialize SDL
-  if (!imagegrid_viewer_context->sdl_app->successful()) {
-    ERROR("Failed to SDL app initialize properly");
-    return 1;
-  }
-  // initialialize the main data structures in the program, described
-  // at the top of this file
-  if (!imagegrid_viewer_context->successful) {
-    ERROR("Failed to find images!");
-    return 1;
-  }
-  // start the thead that loads the imagegrid
-  auto update_imagegrid_thread_class=std::make_unique<UpdateImageGridThread>(
-    grid_setup.get(),
-    imagegrid_viewer_context->grid.get());
-  auto update_imagegrid_thread=update_imagegrid_thread_class->start();
-  // start the thread that updates textures
-  auto update_texture_thread_class=std::make_unique<UpdateTextureThread>(
-    imagegrid_viewer_context->texture_update.get(),
-    imagegrid_viewer_context->grid.get(),
-    imagegrid_viewer_context->texture_grid.get());
-  auto update_texture_thread=update_texture_thread_class->start();
-  while (continue_flag) {
-    // read input, this also adjusts the coordinates of the viewport
-    continue_flag=imagegrid_viewer_context->viewport->do_input(imagegrid_viewer_context->sdl_app.get());
-    // find the textures that need to be blit to the viewport
-    // if the textures haven't been loaded, a smaller unzoomed version is used
-    imagegrid_viewer_context->viewport->find_viewport_blit(
-      imagegrid_viewer_context->texture_grid.get(),
-      imagegrid_viewer_context->sdl_app.get());
-    // update the screen and delay before starting the loop again
-    imagegrid_viewer_context->delay();
+  // run as a command line if we are just caching images
+  if (grid_setup->do_cache()) {
+    // we just need an ImageGrid object for this
+    auto grid=std::make_unique<ImageGrid>();
+    // now run the cache
+    MSG("Starting cache!");
+    grid->setup_grid_cache(grid_setup.get());
+    return 0;
+  } else {
+    auto imagegrid_viewer_context=std::make_unique<ImageGridViewerContext>(grid_setup.get());
+    // initialize SDL
+    if (!imagegrid_viewer_context->sdl_app->successful()) {
+      ERROR("Failed to SDL app initialize properly");
+      return 1;
+    }
+    // initialialize the main data structures in the program, described
+    // at the top of this file
+    if (!imagegrid_viewer_context->successful) {
+      ERROR("Failed to find images!");
+      return 1;
+    }
+    // start the thead that loads the imagegrid
+    auto update_imagegrid_thread_class=std::make_unique<UpdateImageGridThread>(
+      grid_setup.get(),
+      imagegrid_viewer_context->grid.get());
+    auto update_imagegrid_thread=update_imagegrid_thread_class->start();
+    // start the thread that updates textures
+    auto update_texture_thread_class=std::make_unique<UpdateTextureThread>(
+      imagegrid_viewer_context->texture_update.get(),
+      imagegrid_viewer_context->grid.get(),
+      imagegrid_viewer_context->texture_grid.get());
+    auto update_texture_thread=update_texture_thread_class->start();
+    while (continue_flag) {
+      // read input, this also adjusts the coordinates of the viewport
+      continue_flag=imagegrid_viewer_context->viewport->do_input(imagegrid_viewer_context->sdl_app.get());
+      // find the textures that need to be blit to the viewport
+      // if the textures haven't been loaded, a smaller unzoomed version is used
+      imagegrid_viewer_context->viewport->find_viewport_blit(
+        imagegrid_viewer_context->texture_grid.get(),
+        imagegrid_viewer_context->sdl_app.get());
+      // update the screen and delay before starting the loop again
+      imagegrid_viewer_context->delay();
 #ifdef DEBUG_MESSAGES
     DEBUG("Loop count: " << loop_count);
     loop_count++;
 #endif
+    }
+    // send termination signal to both threads
+    update_imagegrid_thread_class->terminate();
+    update_texture_thread_class->terminate();
+    // wait for update_imagegrid_thread to cleanly terminate
+    if (update_imagegrid_thread.joinable()) {
+      MSG("Joining update_imagegrid_thread.");
+      update_imagegrid_thread.join();
+      MSG("Finished joining update_imagegrid_thread.");
+    }
+    // wait for update_texture_thread to cleanly terminate
+    if (update_texture_thread.joinable()) {
+      MSG("Joining update_texture_thread.");
+      update_texture_thread.join();
+      MSG("Finished joining update_texture_thread.");
+    }
+    return 0;
   }
-  // send termination signal to both threads
-  update_imagegrid_thread_class->terminate();
-  update_texture_thread_class->terminate();
-  // wait for update_imagegrid_thread to cleanly terminate
-  if (update_imagegrid_thread.joinable()) {
-    MSG("Joining update_imagegrid_thread.");
-    update_imagegrid_thread.join();
-    MSG("Finished joining update_imagegrid_thread.");
-  }
-  // wait for update_texture_thread to cleanly terminate
-  if (update_texture_thread.joinable()) {
-    MSG("Joining update_texture_thread.");
-    update_texture_thread.join();
-    MSG("Finished joining update_texture_thread.");
-  }
-  return 0;
+
 }

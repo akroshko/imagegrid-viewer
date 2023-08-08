@@ -49,13 +49,17 @@ public:
    *
    * @param filename The filename to load.
    *
+   * @param cached_filename The cached version of filename to load.
+   *
    * @param dest_square A vector of this class to be loaded.
    */
-  static bool load_file(std::string filename, std::vector<ImageGridSquareZoomLevel*> dest_square);
+  static bool load_file(std::string filename,
+                        std::string cached_filename,
+                        std::vector<ImageGridSquareZoomLevel*> dest_square);
   /** Unload and free memory from a loaded file */
   void unload_file();
-  /** Accessor for the zoom level this class represents. */
-  INT_T zoom_index() const;
+  /** Accessor for the amount zoomed out this class represents. */
+  INT_T zoom_out_value() const;
   /** Accessor for the width in pixels. */
   size_t rgb_wpixel() const;
   /** Accessor for the height in pixels. */
@@ -67,7 +71,7 @@ private:
   // managing raw manually allocated memory
   size_t _rgb_wpixel;
   size_t _rgb_hpixel;
-  INT_T _zoom_index;
+  INT_T _zoom_out_value;
 };
 
 
@@ -119,6 +123,8 @@ public:
   void read_grid_info(const GridSetup* grid_setup,
                       std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update);
   void load_grid(const GridSetup* grid_setup, std::atomic<bool> &keep_running);
+  void setup_grid_cache(const GridSetup* grid_setup);
+  static std::string _create_cache_filename(std::string filename);
   GridPixelSize get_image_max_pixel_size() const;
   /** The individual squares in the image grid. */
   std::unique_ptr<ImageGridSquare**[]> squares;
@@ -126,7 +132,7 @@ public:
    * Return whether read_grid_info was successful.
    */
   bool read_grid_info_successful() const;
-  INT_T zoom_step_number() const;
+  INT_T zoom_index_length() const;
 private:
   /**
    * Check that particular indices are valid.
@@ -140,23 +146,23 @@ private:
    * Check whether it is appropriate to load a file given current
    * viewport corrdinates and zoom level.
    *
-   * @param k the zoom index to check
+   * @param zoom_index the zoom index to check
    *
    * @param i the index along the width of the grid.
    *
    * @param j the index along the height of the grid.
    *
-   * @param current_load_zoom Specifies the current zoom level of the viewport
+   * @param zoom_index_lower_limit The lower limit of the zoom index for things outside adjacent grid squares.
    *
    * @param current_grid_x the current viewport x coordinate
    *
    * @param current_grid_y the current viewport y coordinate
    *
-   * @param load_all specify if all valid fils are to be loaded
+   * @param load_all specify if all valid files are to be loaded
    */
-  bool _check_load(INT_T k, INT_T i, INT_T j,
-                   INT_T current_load_zoom,
-                   INT_T current_grid_x, INT_T current_grid_y,
+  bool _check_load(INT_T zoom_index, INT_T i, INT_T j,
+                   INT_T zoom_index_lower_limit,
+                   FLOAT_T current_grid_x, FLOAT_T current_grid_y,
                    INT_T load_all);
   /**
    * Actually load the file.
@@ -171,12 +177,36 @@ private:
    * @param current_grid_x the current viewport x coordinate
    *
    * @param current_grid_y the current viewport y coordinate
+   *
+   * @param load_all specify if all valid files are to be loaded
+   *
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
    */
   bool _load_file(INT_T i, INT_T j,
-                  INT_T current_grid_x, INT_T current_grid_y,
+                  FLOAT_T current_grid_x, FLOAT_T current_grid_y,
                   INT_T zoom_index_lower_limit,
                   INT_T load_all,
                   const GridSetup* grid_setup);
+  /*
+   * Actually read in the files to setup things.
+   *
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   */
+  void _read_grid_info_setup_squares(const GridSetup* const grid_setup);
+  /*
+   * Write out a cached copy of a file.
+   *
+   * @param i the index along the width of the grid
+   *
+   * @param j the index along the height of the grid
+   *
+   * @param filename The filename to cache
+   */
+  bool _write_cache(INT_T i, INT_T j, std::string filename);
   /** Store the size of the images */
   GridImageSize _grid_image_size;
   /** Maximum size of images loaded into the grid. */
@@ -192,7 +222,7 @@ private:
   /**
    * How many steps each zoom takes, power of 2.
    */
-  INT_T _zoom_step_number;
+  INT_T _zoom_index_length;
 };
 
 #endif
