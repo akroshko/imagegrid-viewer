@@ -10,8 +10,8 @@
 
 // screen width
 // TODO: make dynamic and configurable
-const INT_T SCREEN_WIDTH=1280;
-const INT_T SCREEN_HEIGHT=720;
+const INT_T INITIAL_SCREEN_WIDTH=1280;
+const INT_T INITIAL_SCREEN_HEIGHT=720;
 
 // a max screen height
 // used to decide how big of images should be loaded

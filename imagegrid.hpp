@@ -58,13 +58,13 @@ public:
                         std::vector<ImageGridSquareZoomLevel*> dest_square);
   /** Unload and free memory from a loaded file */
   void unload_file();
-  /** Accessor for the amount zoomed out this class represents. */
+  /** @return The amount zoomed out this class represents. */
   INT_T zoom_out_value() const;
-  /** Accessor for the width in pixels. */
+  /** @return The width in pixels. */
   size_t rgb_wpixel() const;
-  /** Accessor for the height in pixels. */
+  /** @return The height in pixels. */
   size_t rgb_hpixel() const;
-  /** the actual RGB data for this square and zoom level */
+  /** The actual RGB data for this square and zoom level */
   unsigned char* rgb_data=nullptr;
 private:
   // these don't use an object from coordinates.hpp since they are
@@ -88,9 +88,9 @@ public:
   ImageGridSquare& operator=(const ImageGridSquare&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
   std::unique_ptr<ImageGridSquareZoomLevel*[]> image_array;
-  /** Accessor for the width in pixels. */
+  /** @return The width in pixels. */
   INT_T image_wpixel() const;
-  /** Accessor for the height in pixels. */
+  /** @return The height in pixels. */
   INT_T image_hpixel() const;
 private:
   friend class ImageGrid;
@@ -103,7 +103,7 @@ private:
   /**
    * Read in a the file cooresponing to this square.
    *
-   * @param filename
+   * @param filename The filename to load.
    */
   void _read_file(std::string filename);
 };
@@ -121,7 +121,7 @@ public:
   ImageGrid& operator=(const ImageGrid&)=delete;
   ImageGrid& operator=(const ImageGrid&&)=delete;
   void read_grid_info(const GridSetup* grid_setup,
-                      std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update);
+                      std::shared_ptr<ViewPortTransferState> viewport_current_state_imagegrid_update);
   void load_grid(const GridSetup* grid_setup, std::atomic<bool> &keep_running);
   void setup_grid_cache(const GridSetup* grid_setup);
   static std::string _create_cache_filename(std::string filename);
@@ -129,7 +129,7 @@ public:
   /** The individual squares in the image grid. */
   std::unique_ptr<ImageGridSquare**[]> squares;
   /**
-   * Return whether read_grid_info was successful.
+   * @return Whether read_grid_info was successful.
    */
   bool read_grid_info_successful() const;
   INT_T zoom_index_length() const;
@@ -137,46 +137,45 @@ private:
   /**
    * Check that particular indices are valid.
    *
-   * @param i the index along the width of the grid.
+   * @param i The index along the width of the grid.
    *
-   * @param j the index along the height of the grid.
+   * @param j The index along the height of the grid.
    */
   bool _check_bounds(INT_T i, INT_T j);
   /**
    * Check whether it is appropriate to load a file given current
    * viewport corrdinates and zoom level.
    *
-   * @param zoom_index the zoom index to check
+   * @param viewport_current_state The current state of the viewport.
    *
-   * @param i the index along the width of the grid.
+   * @param zoom_index The zoom index to check.
    *
-   * @param j the index along the height of the grid.
+   * @param i The index along the width of the grid.
    *
-   * @param zoom_index_lower_limit The lower limit of the zoom index for things outside adjacent grid squares.
+   * @param j The index along the height of the grid.
    *
-   * @param current_grid_x the current viewport x coordinate
+   * @param zoom_index_lower_limit The lower limit of the zoom index
+   *                               for things outside adjacent grid
+   *                               squares.
    *
-   * @param current_grid_y the current viewport y coordinate
-   *
-   * @param load_all specify if all valid files are to be loaded
+   * @param load_all Specify if all valid files are to be loaded.
    */
-  bool _check_load(INT_T zoom_index, INT_T i, INT_T j,
+  bool _check_load(const ViewPortCurrentState& viewport_current_state,
+                   INT_T zoom_index, INT_T i, INT_T j,
                    INT_T zoom_index_lower_limit,
-                   FLOAT_T current_grid_x, FLOAT_T current_grid_y,
                    INT_T load_all);
   /**
    * Actually load the file.
    *
-   * @param i the index along the width of the grid.
+   * @param viewport_current_state The current state of the viewport.
    *
-   * @param j the index along the height of the grid.
+   * @param i The index along the width of the grid.
    *
-   * @param zoom_index_lower_limit don't load if only things that need
-   * to be loaded are below this limit
+   * @param j The index along the height of the grid.
    *
-   * @param current_grid_x the current viewport x coordinate
-   *
-   * @param current_grid_y the current viewport y coordinate
+   * @param zoom_index_lower_limit Do not load if only things that
+   *                               need to be loaded are below this
+   *                               limit
    *
    * @param load_all specify if all valid files are to be loaded
    *
@@ -184,12 +183,12 @@ private:
    *                   the grid, including the filenames and grid
    *                   size.
    */
-  bool _load_file(INT_T i, INT_T j,
-                  FLOAT_T current_grid_x, FLOAT_T current_grid_y,
+  bool _load_file(const ViewPortCurrentState& viewport_current_state,
+                  INT_T i, INT_T j,
                   INT_T zoom_index_lower_limit,
                   INT_T load_all,
                   const GridSetup* grid_setup);
-  /*
+  /**
    * Actually read in the files to setup things.
    *
    * @param grid_setup The object holding the data on the images in
@@ -197,14 +196,14 @@ private:
    *                   size.
    */
   void _read_grid_info_setup_squares(const GridSetup* const grid_setup);
-  /*
+  /**
    * Write out a cached copy of a file.
    *
-   * @param i the index along the width of the grid
+   * @param i The index along the width of the grid.
    *
-   * @param j the index along the height of the grid
+   * @param j The index along the height of the grid.
    *
-   * @param filename The filename to cache
+   * @param filename The filename to cache.
    */
   bool _write_cache(INT_T i, INT_T j, std::string filename);
   /** Store the size of the images */
@@ -212,9 +211,7 @@ private:
   /** Maximum size of images loaded into the grid. */
   GridPixelSize _image_max_size;
   /** Threadsafe class for getting the state of the viewport */
-  std::shared_ptr<ViewPortCurrentState> _viewport_current_state_imagegrid_update;
-  /** The locaton of the grid coordinate. */
-  GridCoordinate _viewport_grid;
+  std::shared_ptr<ViewPortTransferState> _viewport_current_state_imagegrid_update;
   /**
    * Indicate whether grid info was read properly.
    */

@@ -9,38 +9,73 @@
 #include <cmath>
 #include <mutex>
 
-ViewPortCurrentState::ViewPortCurrentState () {
-  this->zoom=NAN;
-  this->zoom_last=NAN;
-  this->been_updated=false;
+ViewPortCurrentState::ViewPortCurrentState(GridCoordinate current_grid_coordinate,
+                                           GridPixelSize max_image_size,
+                                           FLOAT_T zoom,
+                                           ViewportPixelSize screen_size,
+                                           bool valid_update) {
+  this->_current_grid_coordinate=current_grid_coordinate;
+  this->_max_image_size=max_image_size;
+  this->_zoom=zoom;
+  this->_screen_size=screen_size;
+  this->_valid_update=valid_update;
 }
 
-void ViewPortCurrentState::UpdateGridValues(FLOAT_T zoom, const GridCoordinate &gridarg) {
-  std::lock_guard<std::mutex> guard(this->using_mutex);
-  if (std::isnan(this->zoom_last) || (this->grid_last.invalid()) || (zoom != this->zoom_last) || (gridarg.xgrid() != this->grid_last.xgrid()) || (gridarg.ygrid() != this->grid_last.ygrid())) {
-    this->zoom=zoom;
-    this->grid=GridCoordinate(gridarg);
-    this->zoom_last=zoom;
-    this->grid_last=GridCoordinate(gridarg);
-    this->been_updated=true;
+GridCoordinate ViewPortCurrentState::current_grid_coordinate () const {
+  return this->_current_grid_coordinate;
+}
+
+GridPixelSize ViewPortCurrentState::max_image_size () const {
+  return this->_max_image_size;
+}
+
+FLOAT_T ViewPortCurrentState::zoom () const {
+  return this->_zoom;
+}
+
+ViewportPixelSize ViewPortCurrentState::screen_size () const {
+  return this->_screen_size;
+}
+
+bool ViewPortCurrentState::valid_update () const {
+  return this->_valid_update;
+}
+
+ViewPortTransferState::ViewPortTransferState () {
+  this->_zoom=NAN;
+  this->_zoom_last=NAN;
+  this->_been_updated=false;
+}
+
+void ViewPortTransferState::UpdateGridValues(FLOAT_T zoom,
+                                             const GridCoordinate &gridarg,
+                                             const GridPixelSize &max_image_size,
+                                             const ViewportPixelSize &screen_size) {
+  std::lock_guard<std::mutex> guard(this->_using_mutex);
+  if (std::isnan(this->_zoom_last) || (this->_grid_last.invalid()) || (zoom != this->_zoom_last) || (gridarg.xgrid() != this->_grid_last.xgrid()) || (gridarg.ygrid() != this->_grid_last.ygrid())) {
+    this->_zoom=zoom;
+    this->_grid=GridCoordinate(gridarg);
+    this->_max_image_size=GridPixelSize(max_image_size);
+    this->_zoom_last=zoom;
+    this->_grid_last=GridCoordinate(gridarg);
+    this->_screen_size=ViewportPixelSize(screen_size);
+    this->_been_updated=true;
   }
 }
 
-bool ViewPortCurrentState::GetGridValues(FLOAT_T &zoom, GridCoordinate &gridarg) {
-  std::lock_guard<std::mutex> guard(this->using_mutex);
-  if (this->been_updated) {
-    zoom=this->zoom;
-    gridarg=GridCoordinate(this->grid);
-    this->been_updated=false;
-    return true;
-  } else {
-    return false;
-  }
+ViewPortCurrentState ViewPortTransferState::GetGridValues() {
+  std::lock_guard<std::mutex> guard(this->_using_mutex);
+  auto viewport_current_state=ViewPortCurrentState(GridCoordinate(this->_grid),
+                                                   GridPixelSize(this->_max_image_size),
+                                                   this->_zoom,
+                                                   this->_screen_size=ViewportPixelSize(_screen_size),
+                                                   this->_been_updated);
+  return viewport_current_state;
 }
 
-INT_T ViewPortCurrentState::find_zoom_index_bounded(FLOAT_T zoom,
-                                                    INT_T min_zoom_index,
-                                                    INT_T max_zoom_index) {
+INT_T ViewPortTransferState::find_zoom_index_bounded(FLOAT_T zoom,
+                                                     INT_T min_zoom_index,
+                                                     INT_T max_zoom_index) {
   auto return_value=floor(log2(1.0/zoom));
   if (return_value < min_zoom_index) {
     return_value=min_zoom_index;
@@ -51,14 +86,14 @@ INT_T ViewPortCurrentState::find_zoom_index_bounded(FLOAT_T zoom,
   return return_value;
 }
 
-FLOAT_T ViewPortCurrentState::find_zoom_upper(INT_T zoom_index) {
+FLOAT_T ViewPortTransferState::find_zoom_upper(INT_T zoom_index) {
   if (zoom_index < 0) {
     zoom_index=0;
   }
   return 1.0/(pow(2.0,zoom_index+1));
 }
 
-FLOAT_T ViewPortCurrentState::_find_max_zoom(FLOAT_T zoom) {
+FLOAT_T ViewPortTransferState::_find_max_zoom(FLOAT_T zoom) {
   // round down to a fractional power of 2
   auto return_value=1.0/(pow(2.0,floor(log2(1.0/zoom))+1.0));
   // if (return_value >= 0.5) {
@@ -67,62 +102,44 @@ FLOAT_T ViewPortCurrentState::_find_max_zoom(FLOAT_T zoom) {
   return return_value;
 }
 
-FLOAT_T ViewPortCurrentState::find_leftmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
-                                                    INT_T max_wpixel, INT_T max_hpixel,
-                                                    FLOAT_T zoom) {
-  auto max_zoom_this_level=_find_max_zoom(zoom);
+FLOAT_T ViewPortTransferState::find_leftmost_visible(const ViewPortCurrentState& viewport_current_state) {
+  auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_pixel_width=((FLOAT_T)MAX_SCREEN_WIDTH/2.0);
-  return xgrid-(half_pixel_width/max_wpixel/max_zoom_this_level);
+  return viewport_current_state.current_grid_coordinate().xgrid()-(half_pixel_width/viewport_current_state.max_image_size().wpixel()/max_zoom_this_level);
 }
 
-FLOAT_T ViewPortCurrentState::find_rightmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
-                                                     INT_T max_wpixel, INT_T max_hpixel,
-                                                     FLOAT_T zoom) {
-  auto max_zoom_this_level=_find_max_zoom(zoom);
+FLOAT_T ViewPortTransferState::find_rightmost_visible(const ViewPortCurrentState& viewport_current_state) {
+  auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_pixel_width=((FLOAT_T)MAX_SCREEN_WIDTH/2.0);
-  return xgrid+(half_pixel_width/max_wpixel/max_zoom_this_level);
+  return viewport_current_state.current_grid_coordinate().xgrid()+(half_pixel_width/viewport_current_state.max_image_size().wpixel()/max_zoom_this_level);
 }
 
-FLOAT_T ViewPortCurrentState::find_topmost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
-                                                   INT_T max_wpixel, INT_T max_hpixel,
-                                                   FLOAT_T zoom) {
-  auto max_zoom_this_level=_find_max_zoom(zoom);
+FLOAT_T ViewPortTransferState::find_topmost_visible(const ViewPortCurrentState& viewport_current_state) {
+  auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_pixel_height=((FLOAT_T)MAX_SCREEN_HEIGHT/2.0);
-  return ygrid-(half_pixel_height/max_hpixel/max_zoom_this_level);
+  return viewport_current_state.current_grid_coordinate().ygrid()-(half_pixel_height/viewport_current_state.max_image_size().hpixel()/max_zoom_this_level);
 }
 
-FLOAT_T ViewPortCurrentState::find_bottommost_visible(FLOAT_T xgrid, FLOAT_T ygrid,
-                                                      INT_T max_wpixel, INT_T max_hpixel,
-                                                      FLOAT_T zoom) {
-  auto max_zoom_this_level=_find_max_zoom(zoom);
+FLOAT_T ViewPortTransferState::find_bottommost_visible(const ViewPortCurrentState& viewport_current_state) {
+  auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_pixel_height=((FLOAT_T)MAX_SCREEN_HEIGHT/2.0);
-  return ygrid+(half_pixel_height/max_hpixel/max_zoom_this_level);
+  return viewport_current_state.current_grid_coordinate().ygrid()+(half_pixel_height/viewport_current_state.max_image_size().hpixel()/max_zoom_this_level);
 }
 
-bool ViewPortCurrentState::grid_index_visible(INT_T i, INT_T j,
-                                              FLOAT_T xgrid, FLOAT_T ygrid,
-                                              INT_T max_wpixel, INT_T max_hpixel,
-                                              FLOAT_T zoom) {
-    auto visible_left=ViewPortCurrentState::find_leftmost_visible(
-      xgrid,ygrid,
-      max_wpixel,max_hpixel,
-      zoom);
-    auto visible_right=ViewPortCurrentState::find_rightmost_visible(
-      xgrid,ygrid,
-      max_wpixel,max_hpixel,
-      zoom);
-    auto visible_top=ViewPortCurrentState::find_topmost_visible(
-      xgrid,ygrid,
-      max_wpixel,max_hpixel,
-      zoom);
-    auto visible_bottom=ViewPortCurrentState::find_bottommost_visible(
-      xgrid,ygrid,
-      max_wpixel,max_hpixel,
-      zoom);
+bool ViewPortTransferState::grid_index_visible(INT_T i, INT_T j,
+                                               const ViewPortCurrentState& viewport_current_state) {
+    auto visible_left=ViewPortTransferState::find_leftmost_visible(
+      viewport_current_state);
+    auto visible_right=ViewPortTransferState::find_rightmost_visible(
+      viewport_current_state);
+    auto visible_top=ViewPortTransferState::find_topmost_visible(
+      viewport_current_state);
+    auto visible_bottom=ViewPortTransferState::find_bottommost_visible(
+      viewport_current_state);
     return (i >= floor(visible_left) && i <= floor(visible_right) &&
             j >= floor(visible_top) && j <= floor(visible_bottom));
 }

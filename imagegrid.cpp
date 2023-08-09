@@ -210,7 +210,7 @@ void ImageGrid::_read_grid_info_setup_squares(const GridSetup* const grid_setup)
   }
 }
 
-void ImageGrid::read_grid_info(const GridSetup* const grid_setup, std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update) {
+void ImageGrid::read_grid_info(const GridSetup* const grid_setup, std::shared_ptr<ViewPortTransferState> viewport_current_state_imagegrid_update) {
   this->_grid_image_size=GridImageSize(grid_setup->grid_image_size());
   this->_viewport_current_state_imagegrid_update=viewport_current_state_imagegrid_update;
   this->_read_grid_info_setup_squares(grid_setup);
@@ -231,15 +231,22 @@ bool ImageGrid::_check_bounds(INT_T i, INT_T j) {
   return return_value;
 }
 
-bool ImageGrid::_check_load(INT_T zoom_index, INT_T i, INT_T j, INT_T zoom_index_lower_limit,
-                            FLOAT_T current_grid_x, FLOAT_T current_grid_y, INT_T load_all) {
+bool ImageGrid::_check_load(const ViewPortCurrentState& viewport_current_state,
+                            INT_T zoom_index, INT_T i, INT_T j, INT_T zoom_index_lower_limit,
+                            INT_T load_all) {
+  auto current_grid_x=viewport_current_state.current_grid_coordinate().xgrid();
+  auto current_grid_y=viewport_current_state.current_grid_coordinate().ygrid();
+  auto screen_width=viewport_current_state.screen_size().hpixel();
+  auto screen_height=viewport_current_state.screen_size().wpixel();
+  // TODO: don't like this so need to keep working on transferring calculations
+  auto viewport_current_state_new=ViewPortCurrentState(GridCoordinate(current_grid_x,current_grid_y),
+                                                       GridPixelSize(this->_image_max_size.wpixel(), this->_image_max_size.hpixel()),
+                                                       ViewPortTransferState::find_zoom_upper(zoom_index),
+                                                       ViewportPixelSize(screen_width,screen_height), true);
   auto return_value=((zoom_index == this->_zoom_index_length-1 ||
                       (zoom_index >= zoom_index_lower_limit &&
-                       ViewPortCurrentState::grid_index_visible(i,j,
-                                                                current_grid_x,current_grid_y,
-                                                                this->_image_max_size.wpixel(),
-                                                                this->_image_max_size.hpixel(),
-                                                                ViewPortCurrentState::find_zoom_upper(zoom_index))) ||
+                       ViewPortTransferState::grid_index_visible(i,j,
+                                                                 viewport_current_state_new)) ||
                       // only load adjacent grid below zoom limit
                       (i >= (floor(current_grid_x)-1) && i <= (floor(current_grid_x)+1) &&
                        j >= (floor(current_grid_y)-1) && j <= (floor(current_grid_y)+1)) ||
@@ -247,8 +254,8 @@ bool ImageGrid::_check_load(INT_T zoom_index, INT_T i, INT_T j, INT_T zoom_index
   return return_value;
 }
 
-bool ImageGrid::_load_file(INT_T i, INT_T j,
-                           FLOAT_T current_grid_x, FLOAT_T current_grid_y,
+bool ImageGrid::_load_file(const ViewPortCurrentState& viewport_current_state,
+                           INT_T i, INT_T j,
                            INT_T zoom_index_lower_limit,
                            INT_T load_all, const GridSetup* const grid_setup) {
   // decide whether to load
@@ -256,13 +263,10 @@ bool ImageGrid::_load_file(INT_T i, INT_T j,
   bool load_successful=false;
   if (this->_check_bounds(i, j)) {
     std::vector<INT_T> zoom_index_list;
-    // TODO: this is not quite what I want, but ensures lower zooms are always loaded
-    //       remove once better abstractions are done
-    auto load_rest=false;
     for (INT_T zoom_index=this->_zoom_index_length-1; zoom_index >= 0l; zoom_index--) {
-      if (load_rest ||
-          this->_check_load(zoom_index, i, j, zoom_index_lower_limit,
-                            current_grid_x, current_grid_y, load_all)) {
+      if (this->_check_load(viewport_current_state,
+                            zoom_index, i, j, zoom_index_lower_limit,
+                            load_all)) {
         if (!this->squares[i][j]->image_array[zoom_index]->is_loaded) {
           zoom_index_list.push_back(zoom_index);
         }
@@ -336,15 +340,12 @@ std::string ImageGrid::_create_cache_filename(std::string filename) {
 
 void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &keep_running) {
   auto keep_trying=true;
-  // get location of viewport
-  FLOAT_T zoom;
-  this->_viewport_current_state_imagegrid_update->GetGridValues(zoom,this->_viewport_grid);
+  // get information on viewport
+  auto viewport_current_state=this->_viewport_current_state_imagegrid_update->GetGridValues();
   // find the grid extents and choose things that should be loaded/unloaded
   // different things for what should be loaded/unloaded
   // load in reverse order of size
-  auto current_grid_x=this->_viewport_grid.xgrid();
-  auto current_grid_y=this->_viewport_grid.ygrid();
-  auto current_zoom_index=ViewPortCurrentState::find_zoom_index_bounded(zoom,0.0,this->_zoom_index_length-1);
+  auto current_zoom_index=ViewPortTransferState::find_zoom_index_bounded(viewport_current_state.zoom(),0.0,this->_zoom_index_length-1);
   auto grid_w=this->_grid_image_size.wimage();
   auto grid_h=this->_grid_image_size.himage();
   auto load_all=false;
@@ -356,8 +357,9 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &
         if (!keep_running) {
           keep_trying=false;
         }
-        if (!this->_check_load(zoom_index, i, j, zoom_index_lower_limit,
-                               current_grid_x, current_grid_y, load_all)) {
+        if (!this->_check_load(viewport_current_state,
+                               zoom_index, i, j, zoom_index_lower_limit,
+                               load_all)) {
           this->squares[i][j]->image_array[zoom_index]->unload_file();
           // always try and unload rest, except top level
         }
@@ -368,15 +370,15 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &
   // files actually loaded
   INT_T load_count=0;
   auto iterator_visible=ImageGridIteratorVisible(this->_grid_image_size.wimage(),this->_grid_image_size.himage(),
-                                                 this->_image_max_size.wpixel(),this->_image_max_size.hpixel(),
-                                                 current_grid_x,current_grid_y,zoom);
+                                                 viewport_current_state);
   // TODO need a good iterator class for this type of work load what
   // we are looking at if things are not loaded
   while (keep_trying) {
     keep_trying=iterator_visible.get_next(i,j);
     if (!keep_running) { break; }
     if (keep_trying) {
-      auto load_successful=this->_load_file(i, j, current_grid_x, current_grid_y,
+      auto load_successful=this->_load_file(viewport_current_state,
+                                            i, j,
                                             zoom_index_lower_limit,
                                             load_all, grid_setup);
       if (load_successful) { load_count++; }
@@ -384,8 +386,7 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &
     }
   }
   auto iterator_normal=ImageGridIteratorFull(this->_grid_image_size.wimage(),this->_grid_image_size.himage(),
-                                             this->_image_max_size.wpixel(),this->_image_max_size.hpixel(),
-                                             current_grid_x,current_grid_y,zoom);
+                                             viewport_current_state);
   // TODO need a good iterator class for this type of work
   // load the one we are looking at
   if (load_count >= LOAD_FILES_BATCH || !keep_running) {
@@ -397,7 +398,8 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &
     keep_trying=iterator_normal.get_next(i,j);
     if (!keep_running) { break; }
     if (keep_trying) {
-      auto load_successful=this->_load_file(i, j, current_grid_x, current_grid_y,
+      auto load_successful=this->_load_file(viewport_current_state,
+                                            i, j,
                                             zoom_index_lower_limit,
                                             load_all, grid_setup);
       if (load_successful) { load_count++; }
@@ -414,7 +416,8 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &
   //     }
   //     std::cout << " === ";
   //     for (INT_T i=0l; i < grid_w; i++) {
-  //       std::cout << this->_check_load(zoom_index,i,j,zoom_index_lower_limit,current_grid_x, current_grid_y, load_all);
+  //       std::cout << this->_check_load(viewport_current_state,
+  //                                      zoom_index,i,j,zoom_index_lower_limit,load_all);
   //     }
   //     std::cout << "\n";
   //   }
@@ -437,7 +440,13 @@ void ImageGrid::setup_grid_cache(const GridSetup* grid_setup) {
     for (INT_T j=0l; j < grid_h; j++) {
       // load the file into the data structure
       // current_grid_x and current_grid_y are dummy argument because of load_all being true
-      this->_load_file(i,j,0.0,0.0,
+      // don't like this dummy stuff
+      this->_load_file(ViewPortCurrentState(GridCoordinate(0.0,0.0),
+                                            GridPixelSize(0,0),
+                                            0.0,
+                                            ViewportPixelSize(0,0),
+                                            true),
+                       i,j,
                        0l,true,grid_setup);
       // TODO: eventually cache this out as tiles that fit in 128x128 and 512x512
       auto ij=j*this->_grid_image_size.wimage()+i;

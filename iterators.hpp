@@ -5,6 +5,7 @@
 #include "error.hpp"
 #include "types.hpp"
 #include "defaults.hpp"
+#include "viewport_current_state.hpp"
 // C++ headers
 #include <array>
 #include <queue>
@@ -23,6 +24,8 @@ public:
    * @param i The next index along a row.
    *
    * @param j The next index along a column.
+   *
+   * @return Whether to continue.
    */
   virtual bool get_next(INT_T &i, INT_T &j);
 protected:
@@ -44,24 +47,14 @@ public:
    * visibility.  Finds closest coorindate to center of visibility if
    * center of visibility is not on the grid.
    *
-   * @param w_image_grid width of the image grid in images
+   * @param w_image_grid Width of the image grid in images.
    *
-   * @param h_image_grid height of the image grid in images
+   * @param h_image_grid Height of the image grid in images.
    *
-   * @param max_wpixel max pixel width of images
-   *
-   * @param max_hpixel max pixel height of images
-   *
-   * @param current_grid_x x coordinate of center of viewport
-   *
-   * @param current_grid_y y coordinate of center of viewport
-   *
-   * @param zoom current zoom
+   * @param viewport_current_state The current state of the viewport.
    */
   ImageGridIteratorFull(INT_T w_image_grid, INT_T h_image_grid,
-                        INT_T max_wpixel, INT_T max_hpixel,
-                        FLOAT_T current_grid_x, FLOAT_T current_grid_y,
-                        FLOAT_T zoom);
+                        const ViewPortCurrentState& viewport_current_state);
   ~ImageGridIteratorFull()=default;
 };
 
@@ -72,24 +65,14 @@ public:
    * Iterate over visible image grid squares. Starting at center of
    * visibility.
    *
-   * @param w_image_grid width of the image grid in images
+   * @param w_image_grid Width of the image grid in images.
    *
-   * @param h_image_grid height of the image grid in images
+   * @param h_image_grid Height of the image grid in images.
    *
-   * @param max_wpixel max pixel width of images
-   *
-   * @param max_hpixel max pixel height of images
-   *
-   * @param current_grid_x x coordinate of center of viewport
-   *
-   * @param current_grid_y y coordinate of center of viewport
-   *
-   * @param zoom current zoom
+   * @param viewport_current_state The current state of the viewport.
    */
   ImageGridIteratorVisible(INT_T w_image_grid, INT_T h_image_grid,
-                           INT_T max_wpixel, INT_T max_hpixel,
-                           FLOAT_T current_grid_x, FLOAT_T current_grid_y,
-                           FLOAT_T zoom);
+                           const ViewPortCurrentState& viewport_current_state);
   ~ImageGridIteratorVisible()=default;
 };
 

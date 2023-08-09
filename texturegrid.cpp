@@ -66,11 +66,9 @@ TextureGridSquare::~TextureGridSquare () {
 }
 
 TextureGrid::TextureGrid (const GridSetup* const grid_setup,
-                          INT_T zoom_index_length,
-                          const GridPixelSize image_max_pixel_size) {
+                          INT_T zoom_index_length) {
   this->_grid_image_size=GridImageSize(grid_setup->grid_image_size());
   this->_zoom_index_length=zoom_index_length;
-  this->_max_pixel_size=GridPixelSize(image_max_pixel_size);
   this->squares=std::make_unique<TextureGridSquare**[]>(grid_setup->grid_image_size().wimage());
   for (INT_T i=0l; i < grid_setup->grid_image_size().wimage(); i++) {
     this->squares[i]=new TextureGridSquare*[grid_setup->grid_image_size().himage()];
@@ -91,10 +89,6 @@ TextureGrid::~TextureGrid() {
 
 INT_T TextureGrid::textures_zoom_index_length() const {
   return this->_zoom_index_length;
-}
-
-GridPixelSize TextureGrid::max_pixel_size() const {
-  return this->_max_pixel_size;
 }
 
 GridImageSize TextureGrid::grid_image_size() const {

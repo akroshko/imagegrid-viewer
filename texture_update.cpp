@@ -15,24 +15,23 @@
 // C++ headers
 #include <thread>
 
-TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update) {
+TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update) {
   this->_viewport_current_state_texturegrid_update=viewport_current_state_texturegrid_update;
 }
 
 void TextureUpdate::find_current_textures (const ImageGrid* const grid,
                                            TextureGrid* const texture_grid,
                                            std::atomic<bool> &keep_running) {
-  FLOAT_T zoom;
   INT_T texture_copy_count=0;
-  this->_viewport_current_state_texturegrid_update->GetGridValues(zoom,this->_viewport_grid);
+  auto viewport_current_state=this->_viewport_current_state_texturegrid_update->GetGridValues();
   // if (view_changed) {
   // don't do anything here if viewport_current_state hasn't been initialized
-  if (!this->_viewport_grid.invalid()) {
+  if (!viewport_current_state.current_grid_coordinate().invalid()) {
     for (INT_T j=0l; j < texture_grid->grid_image_size().himage(); j++) {
       for (INT_T i=0l; i < texture_grid->grid_image_size().wimage(); i++) {
-        this->load_new_textures(i,j,zoom,grid,texture_grid,texture_copy_count,keep_running);
-        this->clear_textures(i,j,texture_grid,keep_running);
-        this->add_filler_textures(i,j,texture_grid,keep_running);
+        this->load_new_textures(i,j,viewport_current_state,grid,texture_grid,texture_copy_count,keep_running);
+        this->clear_textures(i,j,viewport_current_state,texture_grid,keep_running);
+        this->add_filler_textures(i,j,viewport_current_state,texture_grid,keep_running);
       }
     }
   }
@@ -40,13 +39,13 @@ void TextureUpdate::find_current_textures (const ImageGrid* const grid,
 
 void TextureUpdate::load_new_textures(INT_T i,
                                       INT_T j,
-                                      FLOAT_T zoom,
+                                      const ViewPortCurrentState& viewport_current_state,
                                       const ImageGrid* const grid,
                                       TextureGrid* const texture_grid,
                                       INT_T &texture_copy_count,
                                       std::atomic<bool> &keep_running) {
   auto max_zoom_index=texture_grid->textures_zoom_index_length()-1;
-  // auto current_zoom_index=ViewPortCurrentState::find_zoom_index_bounded(zoom,0,max_zoom_index);
+  auto current_zoom_index=ViewPortTransferState::find_zoom_index_bounded(viewport_current_state.zoom(),0,max_zoom_index);
   for (INT_T zoom_index=0; zoom_index <= max_zoom_index; zoom_index++) {
     if (!keep_running ||
         (texture_copy_count >= LOAD_TEXTURES_BATCH)) {
@@ -54,13 +53,13 @@ void TextureUpdate::load_new_textures(INT_T i,
     }
     // only load/update current zoom and max_zoom
     // TODO: want this to be initial, but then fill out textures in background
-    // if (zoom_index != max_zoom_index && zoom_index != current_zoom_index) {
-    //   continue;
-    // }
-    auto upper_zoom=ViewPortCurrentState::find_zoom_upper(zoom_index);
+    if (zoom_index != max_zoom_index && zoom_index != current_zoom_index) {
+      continue;
+    }
+    auto upper_zoom=ViewPortTransferState::find_zoom_upper(zoom_index);
     auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index];
     auto load_all=(zoom_index == max_zoom_index);
-    if (load_all || _grid_square_visible(i,j,texture_grid,upper_zoom)) {
+    if (load_all || _grid_square_visible(i,j,texture_grid,viewport_current_state,upper_zoom)) {
       auto load_index=zoom_index;
       bool texture_copy_successful=false;
       do {
@@ -77,7 +76,7 @@ void TextureUpdate::load_new_textures(INT_T i,
                   (!dest_square->is_loaded ||
                    dest_square->last_load_index>load_index)) {
                 // TODO: this line needs to be changed, I don't like doing this here
-                texture_grid->squares[i][j]->texture_pixel_size=GridPixelSize(texture_grid->max_pixel_size());
+                texture_grid->squares[i][j]->texture_pixel_size=GridPixelSize(viewport_current_state.max_image_size());
                 texture_copy_successful=this->load_texture(dest_square,
                                                            image_square,
                                                            zoom_index,
@@ -100,15 +99,16 @@ void TextureUpdate::load_new_textures(INT_T i,
 
 void TextureUpdate::clear_textures(INT_T i,
                                    INT_T j,
+                                   const ViewPortCurrentState& viewport_current_state,
                                    TextureGrid* const texture_grid,
                                    std::atomic<bool> &keep_running) {
   auto max_zoom_index=texture_grid->textures_zoom_index_length()-1;
   // never clear out top level index
   for (INT_T zoom_index=0l; zoom_index < max_zoom_index-1; zoom_index++) {
     if (!keep_running) { break; }
-    auto upper_zoom=ViewPortCurrentState::find_zoom_upper(zoom_index);
+    auto upper_zoom=ViewPortTransferState::find_zoom_upper(zoom_index);
     auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index];
-    if (!_grid_square_visible(i,j,texture_grid,upper_zoom)) {
+    if (!_grid_square_visible(i,j,texture_grid,viewport_current_state,upper_zoom)) {
       // unload anything not visible that is loadable or displayable
       if (dest_square->is_loaded || dest_square->is_displayable) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
@@ -122,16 +122,21 @@ void TextureUpdate::clear_textures(INT_T i,
 }
 
 void TextureUpdate::add_filler_textures(INT_T i,
-                                  INT_T j,
-                                  TextureGrid* const texture_grid,
-                                  std::atomic<bool> &keep_running) {
+                                        INT_T j,
+                                        const ViewPortCurrentState& viewport_current_state,
+                                        TextureGrid* const texture_grid,
+                                        std::atomic<bool> &keep_running) {
   auto max_zoom_index=texture_grid->textures_zoom_index_length()-1;
+  auto current_zoom_index=ViewPortTransferState::find_zoom_index_bounded(viewport_current_state.zoom(),0,max_zoom_index);
   for (INT_T zoom_index=max_zoom_index; zoom_index >= 0l; zoom_index--) {
     if (!keep_running) { break; }
-    auto upper_zoom=ViewPortCurrentState::find_zoom_upper(zoom_index);
+    if (zoom_index != max_zoom_index && zoom_index != current_zoom_index) {
+      continue;
+    }
+    auto upper_zoom=ViewPortTransferState::find_zoom_upper(zoom_index);
     auto load_all=(zoom_index == max_zoom_index);
     auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index];
-    if (load_all || _grid_square_visible(i,j,texture_grid,upper_zoom)) {
+    if (load_all || _grid_square_visible(i,j,texture_grid,viewport_current_state,upper_zoom)) {
       // try to copy over filler if texture not sucessful
       bool load_filler_successful=false;
       if (!dest_square->is_displayable) {
@@ -139,7 +144,7 @@ void TextureUpdate::add_filler_textures(INT_T i,
         if (display_lock.try_lock()) {
           if (!dest_square->is_displayable) {
             // TODO: this line needs to be changed, I don't like doing this here
-            texture_grid->squares[i][j]->texture_pixel_size=GridPixelSize(texture_grid->max_pixel_size());
+            texture_grid->squares[i][j]->texture_pixel_size=GridPixelSize(viewport_current_state.max_image_size());
             load_filler_successful=this->load_filler(dest_square,
                                                      zoom_index,
                                                      texture_grid->squares[i][j]->texture_pixel_size);
@@ -157,15 +162,12 @@ void TextureUpdate::add_filler_textures(INT_T i,
 
 bool TextureUpdate::_grid_square_visible(INT_T i, INT_T j,
                                          const TextureGrid* const texture_grid,
+                                         const ViewPortCurrentState& viewport_current_state,
                                          FLOAT_T zoom) {
-  auto max_wpixel=texture_grid->max_pixel_size().wpixel();
-  auto max_hpixel=texture_grid->max_pixel_size().hpixel();
-  auto xgrid=this->_viewport_grid.xgrid();
-  auto ygrid=this->_viewport_grid.ygrid();
-  auto return_value=(ViewPortCurrentState::grid_index_visible(i, j,
-                                                              xgrid, ygrid,
-                                                              max_wpixel, max_hpixel,
-                                                              zoom) ||
+  auto xgrid=viewport_current_state.current_grid_coordinate().xgrid();
+  auto ygrid=viewport_current_state.current_grid_coordinate().ygrid();
+  auto return_value=(ViewPortTransferState::grid_index_visible(i, j,
+                                                               viewport_current_state) ||
                      (i >= floor(xgrid)-1 && i <= floor(xgrid)+1 &&
                       j >= floor(ygrid)-1 && j <= floor(ygrid)+1));
   return return_value;

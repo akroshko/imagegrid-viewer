@@ -11,43 +11,68 @@
 #include <SDL2/SDL.h>
 
 SDLApp::SDLApp() {
-  auto rendererFlags=SDL_RENDERER_ACCELERATED;
-  int windowFlags=0;
+  // auto rendererFlags=SDL_RENDERER_ACCELERATED;
+  int windowFlags=SDL_WINDOW_RESIZABLE;
   this->format=SDL_AllocFormat(SDL_PIXELFORMAT_RGB24);
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
     ERROR("Couldn't initialize SDL:" << SDL_GetError());
     this->_successful=false;
   } else {
-    this->window=SDL_CreateWindow("Image Grid Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, windowFlags);
+    this->window=SDL_CreateWindow("Image Grid Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_HEIGHT, windowFlags);
     if (!this->window) {
-      ERROR("Failed to open %d " << SCREEN_WIDTH << "x" << SCREEN_HEIGHT << " window: " << SDL_GetError());
+      ERROR("Failed to open %d " << INITIAL_SCREEN_WIDTH << "x" << INITIAL_SCREEN_HEIGHT << " window: " << SDL_GetError());
       this->_successful=false;
     } else {
-      this->screen_surface=SDL_GetWindowSurface(window);
       if (SDL_NumJoysticks() < 1) {
-        this->joystick_enabled=false;
+        this->_joystick_enabled=false;
       } else {
-        this->joystick_enabled=true;
-        this->game_controller=SDL_JoystickOpen(0);
+        this->_joystick_enabled=true;
+        this->_game_controller=SDL_JoystickOpen(0);
       }
     }
   }
 }
 
 SDLApp::~SDLApp() {
-  SDL_FreeSurface(screen_surface);
-  SDL_DestroyWindow(window);
+  SDL_FreeSurface(this->screen_surface);
+  SDL_DestroyWindow(this->window);
   window=nullptr;
   SDL_Quit();
 }
 
-bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y, FLOAT_T &current_speed_zoom, FLOAT_T &zoom, FLOAT_T &zoom_speed, const GridPixelSize &image_max_size, FLOAT_T &xgrid, FLOAT_T &ygrid) {
+bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
+                      FLOAT_T &current_speed_zoom,
+                      FLOAT_T &zoom, FLOAT_T &zoom_speed,
+                      const GridPixelSize &image_max_size,
+                      FLOAT_T &xgrid, FLOAT_T &ygrid,
+                      INT_T &window_w, INT_T &window_h) {
   SDL_Event e;
   auto keep_going=true;
   while(SDL_PollEvent(&e)) {
     auto pixel_size=(100.0/image_max_size.wpixel()/zoom);
     if (e.type == SDL_QUIT) {
       return false;
+    } else if (e.type == SDL_WINDOWEVENT) {
+      switch (e.window.event) {
+      case SDL_WINDOWEVENT_RESIZED:
+        window_w=e.window.data1;
+        window_h=e.window.data2;
+        break;
+      case SDL_WINDOWEVENT_SIZE_CHANGED:
+        window_w=e.window.data1;
+        window_h=e.window.data2;
+        break;
+      case SDL_WINDOWEVENT_MAXIMIZED:
+        int window_w_get;
+        int window_h_get;
+        SDL_GetWindowSize(this->window, &window_w_get, &window_h_get);
+        window_w=window_w_get;
+        window_h=window_h_get;
+        break;
+      default:
+        break;
+      }
+
     } else if (e.type == SDL_JOYAXISMOTION) {
       // TODO: deal with dead zones
       if (e.jaxis.which == 0) {
@@ -100,15 +125,6 @@ bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y, FLOAT_
   return keep_going;
 }
 
-void SDLApp::blank_viewport(const ViewportPixelSize &viewport_pixel_size) {
-  SDL_Rect screen_rect;
-  screen_rect.x=0;
-  screen_rect.y=0;
-  screen_rect.w=viewport_pixel_size.wpixel();
-  screen_rect.h=viewport_pixel_size.hpixel();
-  SDL_FillRect(this->screen_surface, &screen_rect, SDL_MapRGB(this->format,0,0,0));
-}
-
 void SDLApp::delay() {
   // SDL_Delay(SDL_DELAY);
   SDL_Delay(64);
@@ -116,4 +132,25 @@ void SDLApp::delay() {
 
 bool SDLApp::successful() const {
   return this->_successful;
+}
+
+SDLDrawableSurface::SDLDrawableSurface(SDLApp* const sdl_app,
+                                       const ViewportPixelSize &viewport_pixel_size) {
+  this->_sdl_app=sdl_app;
+  this->_screen_surface=SDL_GetWindowSurface(sdl_app->window);
+  SDL_Rect screen_rect;
+  screen_rect.x=0;
+  screen_rect.y=0;
+  screen_rect.w=viewport_pixel_size.wpixel();
+  screen_rect.h=viewport_pixel_size.hpixel();
+  SDL_FillRect(this->_screen_surface, &screen_rect, SDL_MapRGB(sdl_app->format,0,0,0));
+}
+
+SDLDrawableSurface::~SDLDrawableSurface() {
+  SDL_UpdateWindowSurface(this->_sdl_app->window);
+  SDL_FreeSurface(this->_screen_surface);
+}
+
+SDL_Surface* SDLDrawableSurface::screen_surface() {
+  return this->_screen_surface;
 }

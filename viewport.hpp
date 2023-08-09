@@ -36,8 +36,10 @@ public:
   BlitItem& operator=(const BlitItem&&)=delete;
   /**
    * Method called to do the actual blitting.
+   *
+   * @param screen_surface The screen surface to blit to.
    */
-  void blit_this(SDLApp* sdl_app);
+  void blit_this(SDL_Surface* screen_surface);
   /**
    * The square that will be blit to the screen.
    */
@@ -65,8 +67,8 @@ private:
 class ViewPort {
 public:
   ViewPort()=delete;
-  ViewPort(std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update,
-           std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update);
+  ViewPort(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update,
+           std::shared_ptr<ViewPortTransferState> viewport_current_state_imagegrid_update);
   ViewPort(const ViewPort&)=delete;
   ViewPort(const ViewPort&&)=delete;
   ViewPort& operator=(const ViewPort&)=delete;
@@ -79,19 +81,17 @@ public:
    */
   void update_viewport_info(FLOAT_T xgrid, FLOAT_T ygrid);
   /**
-   * Clear old textures from the viewport.
-   *
-   * @param sdl_app
-   */
-  void blank_viewport(SDLApp* sdl_app);
-  /**
    * Adjust initial location.
    *
-   * @param grid_setup
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
    */
   void adjust_initial_location(const GridSetup* grid_setup);
   /**
-   * Max size of images.
+   * Set max size of images.
+   *
+   * @param image_max_size The maximum size of images.
    */
   void set_image_max_size(const GridPixelSize &image_max_size);
 private:
@@ -110,9 +110,13 @@ private:
   FLOAT_T _current_speed_y=INITIAL_X_Y_SPEED;
   /** the current speed of zoom per SDL frame */
   FLOAT_T _current_speed_zoom=INITIAL_CURRENT_ZOOM_SPEED;
+  /** The window width in pixels */
+  INT_T _current_window_w=INITIAL_SCREEN_WIDTH;
+  /** The window height in pixels */
+  INT_T _current_window_h=INITIAL_SCREEN_HEIGHT;
   /** object for transfering the state of the viewport in a threadsafe manner */
-  std::shared_ptr<ViewPortCurrentState> _viewport_current_state_texturegrid_update;
-  std::shared_ptr<ViewPortCurrentState> _viewport_current_state_imagegrid_update;
+  std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;
+  std::shared_ptr<ViewPortTransferState> _viewport_current_state_imagegrid_update;
 };
 
 #endif

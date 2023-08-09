@@ -107,8 +107,7 @@ public:
    *                             images on the grid.
    */
   TextureGrid(const GridSetup* grid_setup,
-              INT_T zoom_index_length,
-              const GridPixelSize image_max_pixel_size);
+              INT_T zoom_index_length);
   ~TextureGrid();
   TextureGrid(const TextureGrid&)=delete;
   TextureGrid(const TextureGrid&&)=delete;
@@ -120,14 +119,13 @@ public:
    */
   /** the individual squares */
   std::unique_ptr<TextureGridSquare**[]> squares;
+  /** @return The size of the grid in images. */
   GridImageSize grid_image_size() const;
-  GridPixelSize max_pixel_size() const;
+  /** @return The length of texture zoom array. */
   INT_T textures_zoom_index_length() const;
 private:
   /** this size of this grid in number of textures */
   GridImageSize _grid_image_size;
-  /** maximum size of the individual textures in pixels */
-  GridPixelSize _max_pixel_size;
   /** the maximum zoom (maximum number of reductions by a factor of 2) */
   INT_T _zoom_index_length;
 };

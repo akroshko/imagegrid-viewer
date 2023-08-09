@@ -39,16 +39,16 @@ public:
    *
    * @param ygrid
    *
+   * @param window_w
+   *
+   * @param window_h
+   *
+   * @return Whether to keep going or to quit.
    */
   bool do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
                 FLOAT_T &current_speed_zoom, FLOAT_T &zoom_speed, FLOAT_T &zoom,
-                const GridPixelSize &image_max_size, FLOAT_T &xgrid, FLOAT_T &ygrid);
-  /**
-   * Blank out any textures on the viewport.
-   *
-   * @param viewport_pixel_size The size of the viewport.
-   */
-  void blank_viewport(const ViewportPixelSize &viewport_pixel_size);
+                const GridPixelSize &image_max_size, FLOAT_T &xgrid, FLOAT_T &ygrid,
+                INT_T &window_w, INT_T &window_h);
   /**
    * Check whether app was successful
    */
@@ -58,9 +58,25 @@ public:
   SDL_Surface* screen_surface;
 private:
   bool _successful=true;
-  bool joystick_enabled;
-  SDL_Renderer* renderer;
-  SDL_Joystick* game_controller;
+  bool _joystick_enabled;
+  SDL_Renderer* _renderer;
+  SDL_Joystick* _game_controller;
+};
+
+/**
+ * An object that gives a drawable surface for the lifetime of the
+ * object.
+ */
+class SDLDrawableSurface {
+public:
+  SDLDrawableSurface(SDLApp* const sdl_app,
+                     const ViewportPixelSize &viewport_pixel_size);
+  ~SDLDrawableSurface();
+  /** @return The drawable screen surface. */
+  SDL_Surface* screen_surface();
+private:
+  SDL_Surface* _screen_surface;
+  SDLApp* _sdl_app;
 };
 
 # endif

@@ -20,7 +20,7 @@
 class TextureUpdate {
 public:
   TextureUpdate()=delete;
-  TextureUpdate(std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update);
+  TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update);
   ~TextureUpdate()=default;
   TextureUpdate(const TextureUpdate&)=delete;
   TextureUpdate(const TextureUpdate&&)=delete;
@@ -31,7 +31,8 @@ public:
   /**
    * Find the textures needed to render the current viewport
    *
-   * @param keeping_running flag to stop what's happening, generally to indicate program exit
+   * @param keeping_running Set true to stop what's happening,
+   *                        generally to indicate program exit.
    */
   void find_current_textures(const ImageGrid* grid,
                              TextureGrid* texture_grid,
@@ -39,25 +40,25 @@ public:
   /**
    * Load textures based on the current coordinates and zoom level.
    *
-   * @param i the index along the width of the grid.
+   * @param i The index along the width of the grid.
    *
-   * @param j the index along the height of the grid.
+   * @param j The index along the height of the grid.
    *
-   * @param zoom current zoom
+   * @param zoom The current zoom.
    *
-   * @param grid the image grid
+   * @param grid The image grid.
    *
-   * @param texture_grid the texture grid
+   * @param texture_grid The texture grid.
    *
-   * @param texture_copy_count keeps track of numbers of textures
+   * @param texture_copy_count Keeps track of numbers of textures.
    *                           copied
    *
-   * @param keeping_running flag to stop what's happening, generally
-   *                        to indicate program exit
+   * @param keeping_running Set true to stop what's happening,
+   *                        generally to indicate program exit.
    */
   void load_new_textures(INT_T i,
                          INT_T j,
-                         FLOAT_T zoom,
+                         const ViewPortCurrentState& viewport_current_state,
                          const ImageGrid* const grid,
                          TextureGrid* const texture_grid,
                          INT_T &texture_copy_count,
@@ -65,46 +66,48 @@ public:
   /**
    * Clear textures based on the current coordinates.
    *
-   * @param i the index along the width of the grid.
+   * @param i The index along the width of the grid.
    *
-   * @param j the index along the height of the grid.
+   * @param j The index along the height of the grid.
    *
-   * @param texture_grid the texture grid
+   * @param texture_grid The texture grid.
    *
    * @param keeping_running flag to stop what's happening, generally to indicate program exit
    */
   void clear_textures(INT_T i,
                       INT_T j,
+                      const ViewPortCurrentState& viewport_current_state,
                       TextureGrid* const texture_grid,
                       std::atomic<bool> &keep_running);
   /**
    * Add filler textures where nothing can be loaded.
    *
-   * @param i the index along the width of the grid.
+   * @param i The index along the width of the grid.
    *
-   * @param j the index along the height of the grid.
+   * @param j The index along the height of the grid.
    *
-   * @param texture_grid the texture grid
+   * @param texture_grid The texture grid.
    *
-   * @param keeping_running flag to stop what's happening, generally
-   *                        to indicate program exit
+   * @param keeping_runnin Set true to stop what's happening,
+   *                       generally to indicate program exit.
    */
   void add_filler_textures(INT_T i,
                            INT_T j,
+                           const ViewPortCurrentState& viewport_current_state,
                            TextureGrid* const texture_grid,
                            std::atomic<bool> &keep_running);
   /**
    * Load a texture.
    *
-   * @param source_square the square containing the RGB data
+   * @param source_square The square containing the RGB data.
    *
-   * @param dest_square the destination square to load the texture into
+   * @param dest_square The destination square to load the texture into.
    *
-   * @param zoom_index the zoom index of the texture being loaded
+   * @param zoom_index The zoom index of the texture being loaded.
    *
-   * @param texture_pixel_size the original size of the image to be copied
+   * @param texture_pixel_size The original size of the image to be copied.
    *
-   * @return if texture was actually copied
+   * @return If texture was actually copied.
    */
   static bool load_texture(TextureGridSquareZoomLevel* dest_square,
                            const ImageGridSquareZoomLevel* source_square,
@@ -113,21 +116,21 @@ public:
   /**
    * Load a filler texture, such a uniform gray or a checkerboard.
    *
-   * @param dest_square the destination square to load the texture into
+   * @param dest_square The destination square to load the texture into.
    *
-   * @param zoom_index the zoom index of the texture being loaded
+   * @param zoom_index The zoom index of the texture being loaded.
    *
-   * @return if texture was actually copied
+   * @return If texture was actually copied.
    */
   static bool load_filler(TextureGridSquareZoomLevel* const dest_square,
                           INT_T zoom_index,
                           GridPixelSize texture_pixel_size);
 private:
   /** Threadsafe class for getting the state of the viewport */
-  std::shared_ptr<ViewPortCurrentState> _viewport_current_state_texturegrid_update;
-  GridCoordinate _viewport_grid;
+  std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;
   bool _grid_square_visible(INT_T i, INT_T j,
                             const TextureGrid* texture_grid,
+                            const ViewPortCurrentState& viewport_current_state,
                             FLOAT_T zoom);
 };
 

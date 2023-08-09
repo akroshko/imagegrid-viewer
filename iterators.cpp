@@ -20,11 +20,11 @@ bool ImageGridIterator::get_next(INT_T &i, INT_T &j) {
 
 // this is a pretty bad implementation, but encapsulates this looping code at least
 ImageGridIteratorFull::ImageGridIteratorFull(INT_T w_image_grid, INT_T h_image_grid,
-                                             INT_T max_wpixel, INT_T max_hpixel,
-                                             FLOAT_T current_grid_x, FLOAT_T current_grid_y,
-                                             FLOAT_T zoom) {
+                                             const ViewPortCurrentState& viewport_current_state) {
   this->_w=w_image_grid;
   this->_h=h_image_grid;
+  auto current_grid_x=viewport_current_state.current_grid_coordinate().xgrid();
+  auto current_grid_y=viewport_current_state.current_grid_coordinate().ygrid();
   // TODO need a good iterator class for this type of work
   // load the one we are looking at
   // do the center
@@ -78,23 +78,15 @@ ImageGridIteratorFull::ImageGridIteratorFull(INT_T w_image_grid, INT_T h_image_g
 //       - calculate bounds (should this calculation be switched from texture_update to viewport)
 // TODO: will need a default to do if viewport unavailable
 ImageGridIteratorVisible::ImageGridIteratorVisible(INT_T w_image_grid, INT_T h_image_grid,
-                                                   INT_T max_wpixel, INT_T max_hpixel,
-                                                   FLOAT_T current_grid_x, FLOAT_T current_grid_y,
-                                                   FLOAT_T zoom) {
+                                                   const ViewPortCurrentState& viewport_current_state) {
   this->_w=w_image_grid;
   this->_h=h_image_grid;
-  auto leftmost_visible=ViewPortCurrentState::find_leftmost_visible(current_grid_x, current_grid_y,
-                                                                    max_wpixel, max_hpixel,
-                                                                    zoom);
-  auto rightmost_visible=ViewPortCurrentState::find_rightmost_visible(current_grid_x, current_grid_y,
-                                                                      max_wpixel, max_hpixel,
-                                                                      zoom);
-  auto topmost_visible=ViewPortCurrentState::find_topmost_visible(current_grid_x, current_grid_y,
-                                                                  max_wpixel, max_hpixel,
-                                                                  zoom);
-  auto bottommost_visible=ViewPortCurrentState::find_bottommost_visible(current_grid_x, current_grid_y,
-                                                                        max_wpixel, max_hpixel,
-                                                                        zoom);
+  auto current_grid_x=viewport_current_state.current_grid_coordinate().xgrid();
+  auto current_grid_y=viewport_current_state.current_grid_coordinate().ygrid();
+  auto leftmost_visible=ViewPortTransferState::find_leftmost_visible(viewport_current_state);
+  auto rightmost_visible=ViewPortTransferState::find_rightmost_visible(viewport_current_state);
+  auto topmost_visible=ViewPortTransferState::find_topmost_visible(viewport_current_state);
+  auto bottommost_visible=ViewPortTransferState::find_bottommost_visible(viewport_current_state);
   auto visible_imin=floor(leftmost_visible);
   auto visible_imax=floor(rightmost_visible);
   auto visible_jmin=floor(topmost_visible);

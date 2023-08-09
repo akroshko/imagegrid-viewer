@@ -111,11 +111,8 @@ comfortably using half the memory of a 16GB machine.
 
 ## Near future
 
-- Variable window sizes and reading the actual screen size rather than
-  assuming 1080p.
 - Directly use zip files, pdf files, or other file formats images are
   distributed in.
-- Cache some data to disk and implement limits on memory usage.
 - Configuration settings to help work take advantage of either
   available resources or resource limitations
 - Break up large images in memory so the textures used are not much

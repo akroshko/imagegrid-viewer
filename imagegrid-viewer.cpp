@@ -132,13 +132,13 @@ public:
    *
    * Data must be transferred from ViewPort to the TextureUpdate, and
    * ImageGrid objects, which run in different threads.  The
-   * ViewPortCurrentState class contains a mutex to help with this.
+   * ViewPortTransferState class contains a mutex to help with this.
    * Once I have all the multithreaded components I want done (see
    * description of ImageGrid above) I will evaluate whether this is
    * the best technique.
    */
-  std::shared_ptr<ViewPortCurrentState> viewport_current_state_texturegrid_update;
-  std::shared_ptr<ViewPortCurrentState> viewport_current_state_imagegrid_update;
+  std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update;
+  std::shared_ptr<ViewPortTransferState> viewport_current_state_imagegrid_update;
   bool successful;
 };
 
@@ -154,8 +154,8 @@ public:
  */
 ImageGridViewerContext::ImageGridViewerContext(const GridSetup* const grid_setup) {
   this->sdl_app=std::make_unique<SDLApp>();
-  this->viewport_current_state_texturegrid_update=std::make_shared<ViewPortCurrentState>();
-  this->viewport_current_state_imagegrid_update=std::make_shared<ViewPortCurrentState>();
+  this->viewport_current_state_texturegrid_update=std::make_shared<ViewPortTransferState>();
+  this->viewport_current_state_imagegrid_update=std::make_shared<ViewPortTransferState>();
   this->viewport=std::make_unique<ViewPort>(this->viewport_current_state_texturegrid_update,
                                             this->viewport_current_state_imagegrid_update);
   this->texture_update=std::make_unique<TextureUpdate>(this->viewport_current_state_texturegrid_update);
@@ -167,8 +167,7 @@ ImageGridViewerContext::ImageGridViewerContext(const GridSetup* const grid_setup
   if (read_images_successful) {
     this->viewport->set_image_max_size(this->grid->get_image_max_pixel_size());
     this->texture_grid=std::make_unique<TextureGrid>(grid_setup,
-                                                     this->grid->zoom_index_length(),
-                                                     this->grid->get_image_max_pixel_size());
+                                                     this->grid->zoom_index_length());
     // adjust initial position to a sensible default depending on how
     // many images are loaded
     this->viewport->adjust_initial_location(grid_setup);
