@@ -18,13 +18,12 @@ etags:
 
 .PHONY: compilation_commands
 compilation_commands:
-	make clean; bear make all
+	make clean; bear -- make all
 	rc -J
 
 .PHONY: rtags
 rtags:
 	rc -J
-
 
 .PHONY: tidy
 tidy:

@@ -21,9 +21,11 @@
 #include <utility>
 #include <vector>
 // C headers
+#include <cstring>
 #include <stdlib.h>
-#include <tiffio.h>
+// C library headers
 #include <png.h>
+#include <tiffio.h>
 
 // regex to help find files
 std::regex regex_digits_search("([0-9]{1,4})",std::regex_constants::ECMAScript | std::regex_constants::icase);
@@ -144,7 +146,7 @@ bool read_tiff_data(std::string filename,
   if (!tif) {
     ERROR("load_tiff_as_rgb() Failed to allocate raster for: " << filename);
   } else {
-    uint32 w,h;
+    uint32_t w,h;
 
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
@@ -164,7 +166,7 @@ bool load_tiff_as_rgb(const std::string filename,
   if (!tif) {
     ERROR("load_tiff_as_rgb() Failed to allocate raster for: " << filename);
   } else {
-    uint32 tiff_width,tiff_height;
+    uint32_t tiff_width,tiff_height;
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &tiff_width);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &tiff_height);
     // cache this data somewhere...
@@ -247,9 +249,9 @@ bool load_tiff_as_rgb(const std::string filename,
     }
     if (!can_cache) {
       size_t npixels;
-      uint32* raster;
+      uint32_t* raster;
       npixels=tiff_width*tiff_height;
-      raster=(uint32*) _TIFFmalloc(npixels * sizeof (uint32));
+      raster=(uint32_t*) _TIFFmalloc(npixels * sizeof (uint32_t));
       if (raster == NULL) {
         ERROR("Failed to allocate raster for: " << filename);
       } else {

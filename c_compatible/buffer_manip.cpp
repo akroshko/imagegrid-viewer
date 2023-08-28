@@ -11,7 +11,7 @@
 
 typedef unsigned char (*rgb_extract)(unsigned char);
 
-void buffer_copy_reduce_tiff (uint32* source_buffer, uint32 w, uint32 h,
+void buffer_copy_reduce_tiff (uint32_t* source_buffer, uint32_t w, uint32_t h,
                               unsigned char* dest_buffer, size_t w_reduced, size_t h_reduced,
                               INT_T zoom_index) {
   // the loops in this function ensure memory is accessed sequentially
