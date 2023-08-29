@@ -40,6 +40,16 @@ SDLApp::~SDLApp() {
   SDL_Quit();
 }
 
+Sint16 SDLApp::get_jaxis(Sint16 jaxis_original) {
+  if (jaxis_original > JOY_DEADZONE) {
+    return jaxis_original-JOY_DEADZONE;
+  } else if (jaxis_original < -JOY_DEADZONE) {
+    return jaxis_original+JOY_DEADZONE;
+  } else {
+    return 0;
+  }
+}
+
 bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
                       FLOAT_T &current_speed_zoom,
                       FLOAT_T &zoom, FLOAT_T &zoom_speed,
@@ -76,13 +86,14 @@ bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
     } else if (e.type == SDL_JOYAXISMOTION) {
       // TODO: deal with dead zones
       if (e.jaxis.which == 0) {
-        DEBUGIO("jaxis 0: " << e.jaxis.axis << " ++ " << e.jaxis.value);
+        auto jaxis_adjusted=this->get_jaxis(e.jaxis.value);
+        DEBUGIO("jaxis 0: " << e.jaxis.axis << " ++ " << e.jaxis.value << " ++ " << jaxis_adjusted);
         if (e.jaxis.axis == 0) {
-          current_speed_x=(e.jaxis.value/JOY_MAX)*(JOY_BASE_MOVE*pixel_size);
+          current_speed_x=(jaxis_adjusted/JOY_MAX)*(JOY_BASE_MOVE*pixel_size);
         } else if (e.jaxis.axis == 1) {
-          current_speed_y=(e.jaxis.value/JOY_MAX)*(JOY_BASE_MOVE*pixel_size);
+          current_speed_y=(jaxis_adjusted/JOY_MAX)*(JOY_BASE_MOVE*pixel_size);
         } else if (e.jaxis.axis == 4) {
-          current_speed_zoom=JOY_BASE_ZOOM*(e.jaxis.value/JOY_MAX);
+          current_speed_zoom=JOY_BASE_ZOOM*(jaxis_adjusted/JOY_MAX);
         }
       }
     } else if (e.type == SDL_KEYDOWN) {

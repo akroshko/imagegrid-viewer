@@ -7,6 +7,7 @@
 #include "types.hpp"
 #include <chrono>
 #include <climits>
+#include <string>
 
 // screen width
 // TODO: make dynamic and configurable
@@ -68,5 +69,9 @@ const INT_T CACHE_MAX_PIXEL_SIZE=512;
 // I don't see myself moving away from powers of two, but it's nice to
 // have it visible where I make this assumption
 const INT_T ZOOM_STEP=2;
+
+const std::string EMPTY_FILE_PLACEHOLDER="[[EMPTY]]";
+
+const INT_T JOY_DEADZONE=2048;
 
 #endif

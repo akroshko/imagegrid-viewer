@@ -57,13 +57,14 @@ bool ImageGridSquareZoomLevel::load_file(std::string filename,
     // printing pointer here
     MSG("Done TIFF: " << filename);
     load_successful=true;
-    } else if (check_png(filename)) {
+  } else if (check_png(filename)) {
       MSG("Loading PNG: " << filename);
       // TODO: check success
       load_png_as_rgb(filename,
                       data_read);
       MSG("Done PNG: " << filename);
       load_successful=true;
+  } else if (check_empty(filename)) {
   } else {
     ERROR("ImageGridSquare::load_file can't load: " << filename);
   }
@@ -128,6 +129,11 @@ void ImageGridSquare::_read_file(std::string filename) {
     read_png_data(filename,
                   this->_image_wpixel,
                   this->_image_hpixel);
+  } else if (check_empty(filename)) {
+    // think that 0 is a reasonable non-image for these values
+    // TODO: other values may be good
+    this->_image_wpixel=0;
+    this->_image_hpixel=0;
   } else {
     ERROR("ImageGridSquare::read_file can't read: " << filename);
   }

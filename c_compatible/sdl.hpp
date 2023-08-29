@@ -50,6 +50,10 @@ public:
                 const GridPixelSize &image_max_size, FLOAT_T &xgrid, FLOAT_T &ygrid,
                 INT_T &window_w, INT_T &window_h);
   /**
+   *
+   */
+  Sint16 get_jaxis(Sint16 jaxis_original);
+  /**
    * Check whether app was successful
    */
   bool successful() const;

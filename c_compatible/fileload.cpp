@@ -31,8 +31,10 @@
 std::regex regex_digits_search("([0-9]{1,4})",std::regex_constants::ECMAScript | std::regex_constants::icase);
 // match each filetype
 // TODO: have better file detection, e.g., magic numbers
-std::regex png_search("\\.png$",std::regex_constants::ECMAScript | std::regex_constants::icase);
+// give an empty file descriptor
+std::regex empty_search("^\\[\\[EMPTY\\]\\]$",std::regex_constants::ECMAScript | std::regex_constants::icase);
 std::regex jpeg_search("\\.jpeg$|\\.jpg$",std::regex_constants::ECMAScript | std::regex_constants::icase);
+std::regex png_search("\\.png$",std::regex_constants::ECMAScript | std::regex_constants::icase);
 std::regex tiff_search("\\.tiff|\\.tif$",std::regex_constants::ECMAScript | std::regex_constants::icase);
 
 std::vector<std::string> load_numbered_images(std::string images_path
@@ -353,6 +355,14 @@ bool check_tiff(std::string filename) {
 
 bool check_png(std::string filename) {
   if (regex_search(filename,png_search)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool check_empty(std::string filename) {
+  if (regex_search(filename,empty_search)) {
     return true;
   } else {
     return false;

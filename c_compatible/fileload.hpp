@@ -120,4 +120,11 @@ bool check_tiff(std::string filename);
  */
 bool check_png(std::string filename);
 
+/**
+ * Check if a file is an empty file placeholder.
+ *
+ * @param filename The filname to check.
+ */
+bool check_empty(std::string filename);
+
 #endif
