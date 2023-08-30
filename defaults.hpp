@@ -70,8 +70,12 @@ const INT_T CACHE_MAX_PIXEL_SIZE=512;
 // have it visible where I make this assumption
 const INT_T ZOOM_STEP=2;
 
+// placeholder in command line arguments for empty file
 const std::string EMPTY_FILE_PLACEHOLDER="[[EMPTY]]";
 
+// size of joystick deadzone
+// SDL assumes joystick is -32768 to 32768
+// TODO: range may be off by one
 const INT_T JOY_DEADZONE=2048;
 
 #endif

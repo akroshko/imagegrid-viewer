@@ -113,11 +113,12 @@ public:
   TextureGrid(const TextureGrid&&)=delete;
   TextureGrid& operator=(const TextureGrid&)=delete;
   TextureGrid& operator=(const TextureGrid&&)=delete;
-  /**
-   * Initialize the maximum size of each texture and the maximum zoom,
-   * generally has to be done after all imagesquare loaded.
-   */
-  /** the individual squares */
+  // TODO: may need this comment for the future
+  // /**
+  //  * Initialize the maximum size of each texture and the maximum zoom,
+  //  * generally has to be done after all imagesquare loaded.
+  //  */
+  // /** the individual squares */
   std::unique_ptr<TextureGridSquare**[]> squares;
   /** @return The size of the grid in images. */
   GridImageSize grid_image_size() const;

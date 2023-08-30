@@ -66,9 +66,9 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       break;
     case '?':
       if (optopt == 'w' || optopt == 'h' || optopt == 'p' || optopt == 'd') {
-        std::cerr << "Option " << optopt << " requires an argument.";
+        ERROR("Option " << optopt << " requires an argument.");
       } else {
-        std::cerr << "Unknown option: " << (char)optopt << std::endl;
+        ERROR("Unknown option: " << (char)optopt << std::endl);
       }
       this->_successful=false;
       return;
@@ -89,6 +89,12 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
         this->_filenames.push_back(std::string(argv[i]));
       }
     }
+  }
+  auto grid_size=himage*wimage;
+  if (grid_size != this->_filenames.size()) {
+    this->_successful=false;
+    ERROR("Number of filenames " << this->_filenames.size() << " does not match grid size " << grid_size);
+    return;
   }
   // load number images if this is appropriate
   if (this->_path_value[0] != 0) {

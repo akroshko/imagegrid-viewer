@@ -50,7 +50,11 @@ public:
                 const GridPixelSize &image_max_size, FLOAT_T &xgrid, FLOAT_T &ygrid,
                 INT_T &window_w, INT_T &window_h);
   /**
+   * Process raw joystick values.
    *
+   * @param jaxis_original the raw joystick axis value
+   *
+   * @return the processed value, generally with deadzones for now.
    */
   Sint16 get_jaxis(Sint16 jaxis_original);
   /**
