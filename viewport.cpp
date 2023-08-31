@@ -23,12 +23,7 @@ BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT_T count,
 }
 
 void BlitItem::blit_this(SDL_Surface* screen_surface) {
-  SDL_Rect scaled_rect;
-  scaled_rect.x=this->viewport_pixel_coordinate.xpixel();
-  scaled_rect.y=this->viewport_pixel_coordinate.ypixel();
-  scaled_rect.w=this->image_pixel_size_viewport.wpixel();
-  scaled_rect.h=this->image_pixel_size_viewport.hpixel();
-  SDL_BlitScaled(blit_square->display_texture, NULL, screen_surface, &scaled_rect);
+  blit_square->display_texture_wrapper->blit_texture(screen_surface, this->viewport_pixel_coordinate, this->image_pixel_size_viewport);
 }
 
 ViewPort::ViewPort(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update,
@@ -64,8 +59,8 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid, SDLApp* const
   ////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
   // now loop over grid squares
-  for (INT_T i=0l; i < texture_grid->grid_image_size().wimage(); i++) {
-    for (INT_T j=0l; j < texture_grid->grid_image_size().himage(); j++) {
+  for (INT_T i=0L; i < texture_grid->grid_image_size().wimage(); i++) {
+    for (INT_T j=0L; j < texture_grid->grid_image_size().himage(); j++) {
       auto gi=j*texture_grid->grid_image_size().wimage()+i;
       auto upperleft_gridsquare=GridCoordinate(i,j);
       auto viewport_pixel_0_grid=GridCoordinate(viewport_left_grid,viewport_top_grid);
@@ -94,7 +89,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid, SDLApp* const
           mutex_vector.emplace_back(std::unique_lock<std::mutex>{texture_square_zoom->display_mutex,std::defer_lock});
           if (mutex_vector.back().try_lock()) {
             lock_succeeded=true;
-            if ( texture_grid->squares[i][j]->texture_array[actual_zoom]->display_texture != nullptr) {
+            if ( texture_grid->squares[i][j]->texture_array[actual_zoom]->display_texture_wrapper->is_valid()) {
               texture_loaded=true;
               auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.wpixel()*this->_zoom),
                                                             (int)round(this->_image_max_size.hpixel()*this->_zoom));

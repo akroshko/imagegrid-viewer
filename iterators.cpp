@@ -45,7 +45,7 @@ ImageGridIteratorFull::ImageGridIteratorFull(INT_T w_image_grid, INT_T h_image_g
   auto j=adjusted_grid_y;
   this->_index_values.push({i,j});
   // load near the viewport one first then work way out
-  for (INT_T r=1l; r <= (std::max(w_image_grid,h_image_grid)); r++) {
+  for (INT_T r=1L; r <= (std::max(w_image_grid,h_image_grid)); r++) {
     // start at top left corner, go to top right corner
     for (INT_T i=adjusted_grid_x-r; i <= adjusted_grid_x+r; i++) {
       auto j=adjusted_grid_y-r;
@@ -99,7 +99,7 @@ ImageGridIteratorVisible::ImageGridIteratorVisible(INT_T w_image_grid, INT_T h_i
                     std::abs(visible_jmax-center_j));
   auto r_visible=std::max(std::abs(r_i),std::abs(r_j));
   // check visible layer first
-  for (INT_T r=0l; r <= r_visible; r++) {
+  for (INT_T r=0L; r <= r_visible; r++) {
     for (INT_T i=center_i-r; i <= center_i+r; i++) {
       auto j=center_j-r;
       if (i >= 0 && i < w_image_grid && j >= 0 && j < h_image_grid) {

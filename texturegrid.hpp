@@ -11,7 +11,6 @@
 #include "coordinates.hpp"
 #include "gridsetup.hpp"
 #include "viewport_current_state.hpp"
-
 // C++ headers
 #include <array>
 #include <atomic>
@@ -21,9 +20,8 @@
 #include <queue>
 #include <string>
 #include <vector>
-
-// library headers
-#include <SDL2/SDL.h>
+// C headers
+#include "c_compatible/sdl.hpp"
 
 /**
  * An individual square at a particular zoom level in the texture
@@ -31,7 +29,7 @@
  */
 class TextureGridSquareZoomLevel {
 public:
-  TextureGridSquareZoomLevel()=default;
+  TextureGridSquareZoomLevel();
   ~TextureGridSquareZoomLevel();
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&)=delete;
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&&)=delete;
@@ -58,7 +56,7 @@ public:
   std::atomic<bool> is_loaded{false};
   // is something loaded that makes this displayable, can be a filler texture
   std::atomic<bool> is_displayable{false};
-  SDL_Surface* display_texture=nullptr;
+  std::unique_ptr<SDLDisplayTextureWrapper> display_texture_wrapper;
   // TODO: this one needs help being private and investigation whether
   // there's a better way
   INT_T last_load_index=INT_MAX;

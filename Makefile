@@ -7,7 +7,7 @@ OBJ_TEST = $(SRC_TEST:.cpp=.o)
 OBJ = $(SRC:.cpp=.o)
 
 LDFLAGS = -lstdc++ -lstdc++fs -lm -lpng -ltiff -lSDL2 -pthread
-CXXFLAGS = -std=c++17 -Wall
+CXXFLAGS = -std=c++17 -Wall -Wshadow -Wundef
 # -Wconversion -Wsign-conversion
 
 all: imagegrid-viewer test_file

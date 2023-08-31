@@ -72,7 +72,7 @@ private:
 };
 
 /**
- * An object that gives a drawable surface for the lifetime of the
+ * An object that wraps a drawable surface for the lifetime of the
  * object.
  */
 class SDLDrawableSurface {
@@ -85,6 +85,67 @@ public:
 private:
   SDL_Surface* _screen_surface;
   SDLApp* _sdl_app;
+};
+
+/**
+ * An object that wraps SDL_Surface as a texture.
+ */
+class SDLDisplayTextureWrapper {
+public:
+  SDLDisplayTextureWrapper()=default;
+  ~SDLDisplayTextureWrapper();
+  /**
+   * Is the texture currently valid?
+   *
+   * @return Is the texture valid?
+   */
+  bool is_valid();
+  /**
+   * Create a new surface.
+   *
+   * Unlocks surface if locked.
+   *
+   * @param wpixel The width of the surface.
+   *
+   * @param hpixel The height of the surface.
+   *
+   * @return The new surface.
+   */
+  void create_surface(INT_T wpixel, INT_T hpixel);
+  /**
+   * Unload the surface if it is loaded.
+   */
+  void unload_surface();
+  /**
+   * Get the raw pixels array of the surface.
+   *
+   * @return A pointer to the raw pixel array.
+   */
+  void* pixels();
+  /**
+   * Lock the surface.
+   *
+   * @return If the surface was successfully locked.
+   */
+  bool lock_surface();
+  /**
+   * Unlock the surface.
+   */
+  void unlock_surface();
+  /**
+   * Blit a texture to the surface.
+   *
+   * @param screen_surface The screen surface to blit to.
+   *
+   * @param viewport_pixel_coordinate The coorindate to blit to on the viewport.
+   *
+   * @param image_pixel_size_viewport The size of the texture on the viewport.
+   */
+  void blit_texture(SDL_Surface* screen_surface,
+                    ViewportPixelCoordinate &viewport_pixel_coordinate,
+                    ViewportPixelSize &image_pixel_size_viewport);
+private:
+  SDL_Surface* _display_texture=nullptr;
 };
 
 # endif

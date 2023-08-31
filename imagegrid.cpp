@@ -113,7 +113,7 @@ ImageGridSquare::ImageGridSquare(std::string filename) {
 
 ImageGridSquare::~ImageGridSquare() {
   // TODO: want better way to do this
-  for (auto i=0l; i < this->_zoom_step_number; i++) {
+  for (auto i=0L; i < this->_zoom_step_number; i++) {
     DELETE_IF_NOT_NULLPTR(this->image_array[i]);
   }
 }
@@ -148,8 +148,8 @@ INT_T ImageGridSquare::image_hpixel() const {
 }
 
 ImageGrid::~ImageGrid() {
-  for (INT_T i=0l; i < this->_grid_image_size.wimage(); i++) {
-    for (INT_T j=0l; j < this->_grid_image_size.himage(); j++) {
+  for (INT_T i=0L; i < this->_grid_image_size.wimage(); i++) {
+    for (INT_T j=0L; j < this->_grid_image_size.himage(); j++) {
       DELETE_IF_NOT_NULLPTR(this->squares[i][j]);
     }
     DELETE_ARRAY_IF_NOT_NULLPTR(this->squares[i]);
@@ -158,13 +158,13 @@ ImageGrid::~ImageGrid() {
 
 void ImageGrid::_read_grid_info_setup_squares(const GridSetup* const grid_setup) {
   this->squares=std::make_unique<ImageGridSquare**[]>(grid_setup->grid_image_size().wimage());
-  for (INT_T i=0l; i < grid_setup->grid_image_size().wimage(); i++) {
+  for (INT_T i=0L; i < grid_setup->grid_image_size().wimage(); i++) {
     this->squares[i]=new ImageGridSquare*[grid_setup->grid_image_size().himage()];
   }
   this->_image_max_size=GridPixelSize(0,0);
   // now actually intialize squares
-  for (INT_T i=0l; i < this->_grid_image_size.wimage(); i++) {
-    for (INT_T j=0l; j < this->_grid_image_size.himage(); j++) {
+  for (INT_T i=0L; i < this->_grid_image_size.wimage(); i++) {
+    for (INT_T j=0L; j < this->_grid_image_size.himage(); j++) {
       auto ij=j*this->_grid_image_size.wimage()+i;
       this->squares[i][j]=new ImageGridSquare(grid_setup->filenames()[ij]);
       // set the RGB of the surface
@@ -203,12 +203,12 @@ void ImageGrid::_read_grid_info_setup_squares(const GridSetup* const grid_setup)
   auto zoom_step=ZOOM_STEP;
   MSG("zoom_step: " << zoom_step);
   // add this info to the various data structure
-  for (INT_T i=0l; i < this->_grid_image_size.wimage(); i++) {
-    for (INT_T j=0l; j < this->_grid_image_size.himage(); j++) {
+  for (INT_T i=0L; i < this->_grid_image_size.wimage(); i++) {
+    for (INT_T j=0L; j < this->_grid_image_size.himage(); j++) {
       this->squares[i][j]->image_array=std::make_unique<ImageGridSquareZoomLevel*[]>(this->_zoom_index_length);
       INT_T zoom_out_value=1;
       this->squares[i][j]->_zoom_step_number=this->_zoom_index_length;
-      for (auto k=0l; k < this->_zoom_index_length; k++) {
+      for (auto k=0L; k < this->_zoom_index_length; k++) {
         this->squares[i][j]->image_array[k]=new ImageGridSquareZoomLevel(zoom_out_value);
         zoom_out_value*=zoom_step;
       }
@@ -269,7 +269,7 @@ bool ImageGrid::_load_file(const ViewPortCurrentState& viewport_current_state,
   bool load_successful=false;
   if (this->_check_bounds(i, j)) {
     std::vector<INT_T> zoom_index_list;
-    for (INT_T zoom_index=this->_zoom_index_length-1; zoom_index >= 0l; zoom_index--) {
+    for (INT_T zoom_index=this->_zoom_index_length-1; zoom_index >= 0L; zoom_index--) {
       if (this->_check_load(viewport_current_state,
                             zoom_index, i, j, zoom_index_lower_limit,
                             load_all)) {
@@ -301,7 +301,7 @@ bool ImageGrid::_load_file(const ViewPortCurrentState& viewport_current_state,
 
 bool ImageGrid::_write_cache(INT_T i, INT_T j, std::string filename) {
   bool loaded_512=false;
-  for (INT_T k=0l; k<this->_zoom_index_length; k++) {
+  for (INT_T k=0L; k<this->_zoom_index_length; k++) {
     if (loaded_512) {
       break;
     }
@@ -357,9 +357,9 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &
   auto load_all=false;
   auto zoom_index_lower_limit=current_zoom_index-1;
   // unload first
-  for (auto zoom_index=this->_zoom_index_length-1; zoom_index >= 0l; zoom_index--) {
-    for (INT_T i=0l; i < grid_w; i++) {
-      for (INT_T j=0l; j < grid_h; j++) {
+  for (auto zoom_index=this->_zoom_index_length-1; zoom_index >= 0L; zoom_index--) {
+    for (INT_T i=0L; i < grid_w; i++) {
+      for (INT_T j=0L; j < grid_h; j++) {
         if (!keep_running) {
           keep_trying=false;
         }
@@ -414,14 +414,14 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &
   }
   // uncomment for something fairly useful for seeing how files load
   // MSG("================================================================================");
-  // for (auto zoom_index=this->_zoom_index_length-1; zoom_index >= 0l; zoom_index--) {
+  // for (auto zoom_index=this->_zoom_index_length-1; zoom_index >= 0L; zoom_index--) {
   //   MSG("Zoom: " << zoom_index);
-  //   for (INT_T j=0l; j < grid_h; j++) {
-  //     for (INT_T i=0l; i < grid_w; i++) {
+  //   for (INT_T j=0L; j < grid_h; j++) {
+  //     for (INT_T i=0L; i < grid_w; i++) {
   //       std::cout << this->squares[i][j]->image_array[zoom_index]->is_loaded;
   //     }
   //     std::cout << " === ";
-  //     for (INT_T i=0l; i < grid_w; i++) {
+  //     for (INT_T i=0L; i < grid_w; i++) {
   //       std::cout << this->_check_load(viewport_current_state,
   //                                      zoom_index,i,j,zoom_index_lower_limit,load_all);
   //     }
@@ -442,8 +442,8 @@ void ImageGrid::setup_grid_cache(const GridSetup* grid_setup) {
   auto grid_h=this->_grid_image_size.himage();
   this->_read_grid_info_setup_squares(grid_setup);
   // loop over the whole grid
-  for (INT_T i=0l; i < grid_w; i++) {
-    for (INT_T j=0l; j < grid_h; j++) {
+  for (INT_T i=0L; i < grid_w; i++) {
+    for (INT_T j=0L; j < grid_h; j++) {
       // load the file into the data structure
       // current_grid_x and current_grid_y are dummy argument because of load_all being true
       // don't like this dummy stuff
@@ -453,13 +453,13 @@ void ImageGrid::setup_grid_cache(const GridSetup* grid_setup) {
                                             ViewportPixelSize(0,0),
                                             true),
                        i,j,
-                       0l,true,grid_setup);
+                       0L,true,grid_setup);
       // TODO: eventually cache this out as tiles that fit in 128x128 and 512x512
       auto ij=j*this->_grid_image_size.wimage()+i;
       auto filename=grid_setup->filenames()[ij];
       this->_write_cache(i,j,filename);
       // unload
-      for (auto k=this->_zoom_index_length-1; k >= 0l; k--) {
+      for (auto k=this->_zoom_index_length-1; k >= 0L; k--) {
         this->squares[i][j]->image_array[k]->unload_file();
       }
     }

@@ -165,3 +165,51 @@ SDLDrawableSurface::~SDLDrawableSurface() {
 SDL_Surface* SDLDrawableSurface::screen_surface() {
   return this->_screen_surface;
 }
+
+bool SDLDisplayTextureWrapper::is_valid () {
+  return (this->_display_texture != nullptr);
+}
+
+SDLDisplayTextureWrapper::~SDLDisplayTextureWrapper () {
+  if (this->_display_texture != nullptr) {
+    SDL_FreeSurface(this->_display_texture);
+    this->_display_texture=nullptr;
+  }
+}
+
+void SDLDisplayTextureWrapper::create_surface(INT_T wpixel, INT_T hpixel) {
+  if (this->_display_texture != nullptr) {
+    this->unlock_surface();
+  }
+  this->_display_texture=SDL_CreateRGBSurfaceWithFormat(0,wpixel,hpixel,24,SDL_PIXELFORMAT_RGB24);
+}
+
+void SDLDisplayTextureWrapper::unload_surface() {
+  SDL_FreeSurface(this->_display_texture);
+  this->_display_texture=nullptr;
+}
+
+void* SDLDisplayTextureWrapper::pixels () {
+  return this->_display_texture->pixels;
+}
+
+bool SDLDisplayTextureWrapper::lock_surface () {
+  return SDL_LockSurface(this->_display_texture);
+}
+
+void SDLDisplayTextureWrapper::unlock_surface () {
+  if (this->_display_texture != nullptr) {
+    SDL_UnlockSurface(this->_display_texture);
+  }
+}
+
+void SDLDisplayTextureWrapper::blit_texture(SDL_Surface* screen_surface,
+                                            ViewportPixelCoordinate &viewport_pixel_coordinate,
+                                            ViewportPixelSize &image_pixel_size_viewport) {
+  SDL_Rect scaled_rect;
+  scaled_rect.x=viewport_pixel_coordinate.xpixel();
+  scaled_rect.y=viewport_pixel_coordinate.ypixel();
+  scaled_rect.w=image_pixel_size_viewport.wpixel();
+  scaled_rect.h=image_pixel_size_viewport.hpixel();
+  SDL_BlitScaled(this->_display_texture, NULL, screen_surface, &scaled_rect);
+}

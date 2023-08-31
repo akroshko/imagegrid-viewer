@@ -22,9 +22,6 @@
 #include <string>
 #include <vector>
 
-// library headers
-#include <SDL2/SDL.h>
-
 class ImageGrid;
 
 /**

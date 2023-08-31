@@ -27,8 +27,8 @@ void TextureUpdate::find_current_textures (const ImageGrid* const grid,
   // if (view_changed) {
   // don't do anything here if viewport_current_state hasn't been initialized
   if (!viewport_current_state.current_grid_coordinate().invalid()) {
-    for (INT_T j=0l; j < texture_grid->grid_image_size().himage(); j++) {
-      for (INT_T i=0l; i < texture_grid->grid_image_size().wimage(); i++) {
+    for (INT_T j=0L; j < texture_grid->grid_image_size().himage(); j++) {
+      for (INT_T i=0L; i < texture_grid->grid_image_size().wimage(); i++) {
         this->load_new_textures(i,j,viewport_current_state,grid,texture_grid,texture_copy_count,keep_running);
         this->clear_textures(i,j,viewport_current_state,texture_grid,keep_running);
         this->add_filler_textures(i,j,viewport_current_state,texture_grid,keep_running);
@@ -104,7 +104,7 @@ void TextureUpdate::clear_textures(INT_T i,
                                    std::atomic<bool> &keep_running) {
   auto max_zoom_index=texture_grid->textures_zoom_index_length()-1;
   // never clear out top level index
-  for (INT_T zoom_index=0l; zoom_index < max_zoom_index-1; zoom_index++) {
+  for (INT_T zoom_index=0L; zoom_index < max_zoom_index-1; zoom_index++) {
     if (!keep_running) { break; }
     auto upper_zoom=ViewPortTransferState::find_zoom_upper(zoom_index);
     auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index];
@@ -128,7 +128,7 @@ void TextureUpdate::add_filler_textures(INT_T i,
                                         std::atomic<bool> &keep_running) {
   auto max_zoom_index=texture_grid->textures_zoom_index_length()-1;
   auto current_zoom_index=ViewPortTransferState::find_zoom_index_bounded(viewport_current_state.zoom(),0,max_zoom_index);
-  for (INT_T zoom_index=max_zoom_index; zoom_index >= 0l; zoom_index--) {
+  for (INT_T zoom_index=max_zoom_index; zoom_index >= 0L; zoom_index--) {
     if (!keep_running) { break; }
     if (zoom_index != max_zoom_index && zoom_index != current_zoom_index) {
       continue;
@@ -184,16 +184,14 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
   auto dest_wpixel=texture_pixel_size.wpixel()/texture_zoom_reduction;
   auto dest_hpixel=texture_pixel_size.hpixel()/texture_zoom_reduction;
   dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
-  if (dest_square->display_texture != nullptr) {
-    dest_square->unload_texture();
-  }
-  dest_square->display_texture=SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
+  dest_square->unload_texture();
+  dest_square->display_texture_wrapper->create_surface(dest_wpixel, dest_hpixel);
   // skip if can't load texture
-  if (dest_square->display_texture) {
-    auto lock_surface_return=SDL_LockSurface(dest_square->display_texture);
+  if (dest_square->display_texture_wrapper->is_valid()) {
+    auto lock_surface_return=dest_square->display_texture_wrapper->lock_surface();
     if (lock_surface_return == 0) {
       auto source_data=source_square->rgb_data;
-      auto dest_array=dest_square->display_texture->pixels;
+      auto dest_array=dest_square->display_texture_wrapper->pixels();
       // do the things we are copying exist?
       if (dest_array != nullptr && source_data != nullptr) {
         // these should only be powers of 2, add an assert
@@ -208,8 +206,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
           // we are expanding the surface
           auto skip=source_zoom_out_value/dest_zoom_index;
           // loop over dest since we are expanding the source to match the dest
-          for (INT_T l=0l; l < dest_hpixel; l++) {
-            for (INT_T k=0l; k < dest_wpixel; k++) {
+          for (INT_T l=0L; l < dest_hpixel; l++) {
+            for (INT_T k=0L; k < dest_wpixel; k++) {
               // find appropriate source pixel
               auto ls=l/skip;
               auto ks=k/skip;
@@ -224,15 +222,11 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
           }
         }
       } else {
-        if (dest_square->display_texture != nullptr) {
-          SDL_UnlockSurface(dest_square->display_texture);
-        }
+        dest_square->display_texture_wrapper->unlock_surface();
         dest_square->unload_texture();
         successful=false;
       }
-      if (dest_square->display_texture != nullptr) {
-        SDL_UnlockSurface(dest_square->display_texture);
-      }
+      dest_square->display_texture_wrapper->unlock_surface();
     } else {
       dest_square->unload_texture();
       successful=false;
@@ -251,19 +245,17 @@ bool TextureUpdate::load_filler(TextureGridSquareZoomLevel* const dest_square,
   auto dest_wpixel=texture_pixel_size.wpixel()/texture_zoom_reduction;
   auto dest_hpixel=texture_pixel_size.hpixel()/texture_zoom_reduction;
   dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
-  if (dest_square->display_texture != nullptr) {
-    dest_square->unload_texture();
-  }
-  dest_square->display_texture=SDL_CreateRGBSurfaceWithFormat(0,dest_wpixel,dest_hpixel,24,SDL_PIXELFORMAT_RGB24);
-  if (dest_square->display_texture) {
-    auto lock_surface_return=SDL_LockSurface(dest_square->display_texture);
+  dest_square->unload_texture();
+  dest_square->display_texture_wrapper->create_surface(dest_wpixel, dest_hpixel);
+  if (dest_square->display_texture_wrapper->is_valid()) {
+    auto lock_surface_return=dest_square->display_texture_wrapper->lock_surface();
     if (lock_surface_return == 0) {
-      auto dest_array=dest_square->display_texture->pixels;
+      auto dest_array=dest_square->display_texture_wrapper->pixels();
       // do the things we are copying exist?
       if (dest_array != nullptr) {
         // copy over gray
-        for (INT_T l=0l; l < dest_hpixel; l++) {
-          for (INT_T k=0l; k < dest_wpixel; k++) {
+        for (INT_T l=0L; l < dest_hpixel; l++) {
+          for (INT_T k=0L; k < dest_wpixel; k++) {
             auto dest_index=(l*dest_wpixel+k)*3;
             ((unsigned char *)dest_array)[dest_index]=FILLER_LEVEL;
             ((unsigned char *)dest_array)[dest_index+1]=FILLER_LEVEL;
@@ -271,15 +263,11 @@ bool TextureUpdate::load_filler(TextureGridSquareZoomLevel* const dest_square,
           }
         }
       } else {
-        if (dest_square->display_texture != nullptr) {
-          SDL_UnlockSurface(dest_square->display_texture);
-        }
+        dest_square->display_texture_wrapper->unlock_surface();
         dest_square->unload_texture();
         successful=false;
       }
-      if (dest_square->display_texture != nullptr) {
-        SDL_UnlockSurface(dest_square->display_texture);
-      }
+      dest_square->display_texture_wrapper->unlock_surface();
     } else {
       dest_square->unload_texture();
       successful=false;

@@ -45,7 +45,7 @@ protected:
    *
    * TODO: change away from a raw string array
    */
-  char _path_value[PATH_BUFFER_SIZE]={ 0 };
+  std::string _path_value;
   /** For future expansion. */
   // char _data_set[PATH_BUFFER_SIZE]={ 0 };
   bool _do_cache=false;
