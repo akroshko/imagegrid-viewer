@@ -26,23 +26,14 @@ public:
    * Update the various parameters ViewPort needs based on SDL inputs.
    *
    * @param current_speed_x
-   *
    * @param current_speed_y
-   *
    * @param current_speed_zoom
-   *
    * @param zoom_speed
-   *
    * @param image_max_size
-   *
    * @param xgrid
-   *
    * @param ygrid
-   *
    * @param window_w
-   *
    * @param window_h
-   *
    * @return Whether to keep going or to quit.
    */
   bool do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
@@ -53,7 +44,6 @@ public:
    * Process raw joystick values.
    *
    * @param jaxis_original the raw joystick axis value
-   *
    * @return the processed value, generally with deadzones for now.
    */
   Sint16 get_jaxis(Sint16 jaxis_original);
@@ -106,9 +96,7 @@ public:
    * Unlocks surface if locked.
    *
    * @param wpixel The width of the surface.
-   *
    * @param hpixel The height of the surface.
-   *
    * @return The new surface.
    */
   void create_surface(INT_T wpixel, INT_T hpixel);
@@ -136,9 +124,7 @@ public:
    * Blit a texture to the surface.
    *
    * @param screen_surface The screen surface to blit to.
-   *
    * @param viewport_pixel_coordinate The coorindate to blit to on the viewport.
-   *
    * @param image_pixel_size_viewport The size of the texture on the viewport.
    */
   void blit_texture(SDL_Surface* screen_surface,

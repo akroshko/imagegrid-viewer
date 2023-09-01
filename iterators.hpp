@@ -22,9 +22,7 @@ public:
    * Get the next index of i,j.
    *
    * @param i The next index along a row.
-   *
    * @param j The next index along a column.
-   *
    * @return Whether to continue.
    */
   virtual bool get_next(INT_T &i, INT_T &j);
@@ -48,9 +46,7 @@ public:
    * center of visibility is not on the grid.
    *
    * @param w_image_grid Width of the image grid in images.
-   *
    * @param h_image_grid Height of the image grid in images.
-   *
    * @param viewport_current_state The current state of the viewport.
    */
   ImageGridIteratorFull(INT_T w_image_grid, INT_T h_image_grid,
@@ -66,9 +62,7 @@ public:
    * visibility.
    *
    * @param w_image_grid Width of the image grid in images.
-   *
    * @param h_image_grid Height of the image grid in images.
-   *
    * @param viewport_current_state The current state of the viewport.
    */
   ImageGridIteratorVisible(INT_T w_image_grid, INT_T h_image_grid,

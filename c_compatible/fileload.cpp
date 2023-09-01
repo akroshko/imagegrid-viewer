@@ -206,29 +206,29 @@ bool load_tiff_as_rgb(const std::string filename,
         width_test=reduce_and_pad(tiff_width,cached_zoom_out_value);
         height_test=reduce_and_pad(tiff_height,cached_zoom_out_value);
       }
-      png_image png_image;
+      png_image png_image_local;
       // TODO: check libpng library, may not want this
-      memset(&png_image, 0, (sizeof png_image));
-      png_image.version=PNG_IMAGE_VERSION;
-      if (png_image_begin_read_from_file(&png_image, cached_filename.c_str()) == 0) {
+      memset(&png_image_local, 0, (sizeof png_image_local));
+      png_image_local.version=PNG_IMAGE_VERSION;
+      if (png_image_begin_read_from_file(&png_image_local, cached_filename.c_str()) == 0) {
         ERROR("load_tiff_as_rgb() failed to read from png file: " << cached_filename);
         can_cache=false;
       } else {
         TIFFClose(tif);
         png_bytep png_raster;
-        png_image.format=PNG_FORMAT_RGB;
-        png_raster=new unsigned char[PNG_IMAGE_SIZE(png_image)];
+        png_image_local.format=PNG_FORMAT_RGB;
+        png_raster=new unsigned char[PNG_IMAGE_SIZE(png_image_local)];
         if (png_raster == NULL) {
           ERROR("load_tiff_as_rgb() failed to allocate png buffer!");
           can_cache=false;
         } else {
-          if (png_image_finish_read(&png_image, NULL, png_raster, 0, NULL) == 0) {
+          if (png_image_finish_read(&png_image_local, NULL, png_raster, 0, NULL) == 0) {
             ERROR("load_tiff_as_rgb() failed to read full png image!");
             can_cache=false;
           } else {
             // TODO: test for mismatched size
-            auto png_width=(size_t)png_image.width;
-            auto png_height=(size_t)png_image.height;
+            auto png_width=(size_t)png_image_local.width;
+            auto png_height=(size_t)png_image_local.height;
             for (auto & file_data : load_file_data) {
               auto zoom_out_value=file_data->zoom_out_value;
               auto actual_zoom_out_value=file_data->zoom_out_value/cached_zoom_out_value;

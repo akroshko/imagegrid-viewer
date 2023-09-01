@@ -150,13 +150,10 @@ public:
    * Convert a grid coordinate to a viewport pixel coordinate.
    *
    * @param grid_coordinate The GridCoordinate to convert.
-   *
    * @param zoom The zoom level, used to convert between pixels on the
    *             image grid and viewport.
-   *
    * @param grid_coordinate_pixel_0 The grid coordinate of the origin
    *                                of the viewport.
-   *
    * @param viewport_pixel_size The size of the viewport in pixels.
    */
   ViewportPixelCoordinate(GridCoordinate &grid_coordinate, FLOAT_T zoom, GridCoordinate &grid_coordinate_pixel_0, const ViewportPixelSize &viewport_pixel_size);

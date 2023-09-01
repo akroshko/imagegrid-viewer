@@ -60,10 +60,9 @@ struct LoadFileData {
  * http://www.libtiff.org/libtiff.html
  *
  * @param filename The filename to load.
- *
  * @param width Set as the width of the image in pixels.
- *
  * @param height Set as the height of the image in pixels.
+ * @return If reading image data was successful.
  */
 bool read_tiff_data(std::string filename, INT_T &width, INT_T &height);
 
@@ -72,13 +71,11 @@ bool read_tiff_data(std::string filename, INT_T &width, INT_T &height);
  * http://www.libtiff.org/libtiff.html
  *
  * @param filename The filename to load.
- *
  * @param cached_filename The filename that cached the parts of the
  *                        image fitting in 512x512.
- *
  * @param load_file_data A vector structs to be updated with data as
  *                       it is loaded.
- *
+ * @return If loading image was successful.
  */
 bool load_tiff_as_rgb(const std::string filename,
                       const std::string cached_filename,
@@ -88,10 +85,9 @@ bool load_tiff_as_rgb(const std::string filename,
  * Read data about a png file using libpng.
  *
  * @param filename The filename to load.
- *
  * @param width Set as the width of the image in pixels.
- *
  * @param height Set as the height of the image in pixels.
+ * @return If reading image data was successful.
  */
 bool read_png_data(std::string filename, INT_T &width, INT_T &height);
 
@@ -99,9 +95,9 @@ bool read_png_data(std::string filename, INT_T &width, INT_T &height);
  * Load a png file using libpng.
  *
  * @param filename The filename to load.
- *
  * @param load_file_data A vector structs to be updated with data as
  *                       it is loaded.
+ * @return If loading image was successful.
  */
 bool load_png_as_rgb(std::string filename,
                      const std::vector<std::shared_ptr<LoadFileData>> load_file_data);
@@ -110,6 +106,7 @@ bool load_png_as_rgb(std::string filename,
  * Check if a file is a tiff file.
  *
  * @param filename The filname to check.
+ * @return If the file is a tiff file.
  */
 bool check_tiff(std::string filename);
 
@@ -117,6 +114,7 @@ bool check_tiff(std::string filename);
  * Check if a file is a png file.
  *
  * @param filename The filname to check.
+ * @return If the file is a png file.
  */
 bool check_png(std::string filename);
 
@@ -124,6 +122,7 @@ bool check_png(std::string filename);
  * Check if a file is an empty file placeholder.
  *
  * @param filename The filname to check.
+ * @return If the file is an empty placeholder file.
  */
 bool check_empty(std::string filename);
 

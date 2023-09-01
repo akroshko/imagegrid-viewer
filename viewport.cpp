@@ -15,10 +15,10 @@
 #include <vector>
 
 BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT_T count,
-                   const ViewportPixelCoordinate &viewport_pixel_coordinate, const ViewportPixelSize &grid_image_size_zoomed) {
+                   const ViewportPixelCoordinate &l_viewport_pixel_coordinate, const ViewportPixelSize &grid_image_size_zoomed) {
   blit_index=count;
   blit_square=square;
-  this->viewport_pixel_coordinate=ViewportPixelCoordinate(viewport_pixel_coordinate);
+  this->viewport_pixel_coordinate=ViewportPixelCoordinate(l_viewport_pixel_coordinate);
   this->image_pixel_size_viewport=ViewportPixelSize(grid_image_size_zoomed);
 }
 

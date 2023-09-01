@@ -201,7 +201,6 @@ public:
    * @param grid_setup The object holding the data on the images in
    *                   the grid, including the filenames and grid
    *                   size.
-   *
    * @param grid       The object holding the loaded image data.
    */
   UpdateImageGridThread(GridSetup* const grid_setup, ImageGrid* const grid) {
@@ -216,8 +215,8 @@ public:
    * Start the thread itself.
    */
   std::thread start() {
-    std::thread _worker_thread(&UpdateImageGridThread::run, this);
-    return _worker_thread;
+    std::thread worker_thread(&UpdateImageGridThread::run, this);
+    return worker_thread;
   }
   /**
    * Terminate the thread.
@@ -248,7 +247,7 @@ private:
   GridSetup* _grid_setup;
   std::atomic<bool> _keep_running{true};
   std::atomic<bool> _all_loaded{false};
-  std::thread _worker_thread;
+  // std::thread _worker_thread;
 };
 
 /**
@@ -262,9 +261,7 @@ public:
    *
    * @param texture_update The TextureUpdate class this thread will
    *                       run.
-   *
    * @param grid The ImageGrid class this thread will get images from.
-   *
    * @param texture_grid The TextureGrid class that will hold the
    *                     scaled texture.
    */
@@ -284,8 +281,8 @@ public:
    * Start the thread itself.
    */
   std::thread start() {
-    std::thread _worker_thread(&UpdateTextureThread::run, this);
-    return _worker_thread;
+    std::thread worker_thread(&UpdateTextureThread::run, this);
+    return worker_thread;
   }
   /**
    * Terminate cleanly.  Joining needs to occur outside this scope for
@@ -311,7 +308,7 @@ private:
   }
   /** Flag to indicate whether the thread should keep running. */
   std::atomic<bool> _keep_running{true};
-  std::thread _worker_thread;
+  // std::thread _worker_thread;
   TextureUpdate* _texture_update;
   ImageGrid* _grid;
   TextureGrid* _texture_grid;

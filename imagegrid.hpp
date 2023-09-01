@@ -45,9 +45,7 @@ public:
    * Load a file and fill out squares.
    *
    * @param filename The filename to load.
-   *
    * @param cached_filename The cached version of filename to load.
-   *
    * @param dest_square A vector of this class to be loaded.
    */
   static bool load_file(std::string filename,
@@ -135,7 +133,6 @@ private:
    * Check that particular indices are valid.
    *
    * @param i The index along the width of the grid.
-   *
    * @param j The index along the height of the grid.
    */
   bool _check_bounds(INT_T i, INT_T j);
@@ -144,18 +141,14 @@ private:
    * viewport corrdinates and zoom level.
    *
    * @param viewport_current_state The current state of the viewport.
-   *
    * @param zoom_index The zoom index to check.
-   *
    * @param i The index along the width of the grid.
-   *
    * @param j The index along the height of the grid.
-   *
    * @param zoom_index_lower_limit The lower limit of the zoom index
    *                               for things outside adjacent grid
    *                               squares.
-   *
    * @param load_all Specify if all valid files are to be loaded.
+   * @return If file should be loaded for current conditions.
    */
   bool _check_load(const ViewPortCurrentState& viewport_current_state,
                    INT_T zoom_index, INT_T i, INT_T j,
@@ -165,20 +158,16 @@ private:
    * Actually load the file.
    *
    * @param viewport_current_state The current state of the viewport.
-   *
    * @param i The index along the width of the grid.
-   *
    * @param j The index along the height of the grid.
-   *
    * @param zoom_index_lower_limit Do not load if only things that
    *                               need to be loaded are below this
    *                               limit
-   *
    * @param load_all specify if all valid files are to be loaded
-   *
    * @param grid_setup The object holding the data on the images in
    *                   the grid, including the filenames and grid
    *                   size.
+   * @return If the file was loaded.
    */
   bool _load_file(const ViewPortCurrentState& viewport_current_state,
                   INT_T i, INT_T j,
@@ -197,9 +186,7 @@ private:
    * Write out a cached copy of a file.
    *
    * @param i The index along the width of the grid.
-   *
    * @param j The index along the height of the grid.
-   *
    * @param filename The filename to cache.
    */
   bool _write_cache(INT_T i, INT_T j, std::string filename);

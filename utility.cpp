@@ -12,9 +12,8 @@
  * Pad a number and then reduce by a factor.
  *
  * @param x the number to pad and reduce
- *
  * @param reduction_factor The factor to reduce the number by.
- *
+ * @return The reduced and padded value.
  */
 INT_T reduce_and_pad(INT_T x, INT_T reduction_factor) {
   auto padded_x=pad(x, reduction_factor);
@@ -33,9 +32,9 @@ INT_T reduce_and_pad(INT_T x, INT_T reduction_factor) {
  * Pad a number.
  *
  * @param x The number to pad.
- *
  * @param pad_size The amount of padding to add to make it a multiple
  *                 of this.
+ * @return The padded value.
  */
 INT_T pad (INT_T x, INT_T pad_size) {
   if (pad_size == 0 || x % pad_size == 0) {

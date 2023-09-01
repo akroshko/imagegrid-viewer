@@ -310,6 +310,7 @@ bool ImageGrid::_write_cache(INT_T i, INT_T j, std::string filename) {
     auto wpixel=dest_square->rgb_wpixel();
     auto hpixel=dest_square->rgb_hpixel();
     if (wpixel < CACHE_MAX_PIXEL_SIZE && hpixel < CACHE_MAX_PIXEL_SIZE) {
+      // TODO: check size of filename_new here
       auto filename_new=this->_create_cache_filename(filename);
       char new_filename[PATH_BUFFER_SIZE]="";
       strncpy(new_filename,filename_new.c_str(),PATH_BUFFER_SIZE);

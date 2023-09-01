@@ -41,18 +41,12 @@ public:
    * Load textures based on the current coordinates and zoom level.
    *
    * @param i The index along the width of the grid.
-   *
    * @param j The index along the height of the grid.
-   *
    * @param zoom The current zoom.
-   *
    * @param grid The image grid.
-   *
    * @param texture_grid The texture grid.
-   *
    * @param texture_copy_count Keeps track of numbers of textures.
    *                           copied
-   *
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */
@@ -67,11 +61,8 @@ public:
    * Clear textures based on the current coordinates.
    *
    * @param i The index along the width of the grid.
-   *
    * @param j The index along the height of the grid.
-   *
    * @param texture_grid The texture grid.
-   *
    * @param keeping_running flag to stop what's happening, generally to indicate program exit
    */
   void clear_textures(INT_T i,
@@ -83,11 +74,8 @@ public:
    * Add filler textures where nothing can be loaded.
    *
    * @param i The index along the width of the grid.
-   *
    * @param j The index along the height of the grid.
-   *
    * @param texture_grid The texture grid.
-   *
    * @param keeping_runnin Set true to stop what's happening,
    *                       generally to indicate program exit.
    */
@@ -100,13 +88,9 @@ public:
    * Load a texture.
    *
    * @param source_square The square containing the RGB data.
-   *
    * @param dest_square The destination square to load the texture into.
-   *
    * @param zoom_index The zoom index of the texture being loaded.
-   *
    * @param texture_pixel_size The original size of the image to be copied.
-   *
    * @return If texture was actually copied.
    */
   static bool load_texture(TextureGridSquareZoomLevel* dest_square,
@@ -117,9 +101,7 @@ public:
    * Load a filler texture, such a uniform gray or a checkerboard.
    *
    * @param dest_square The destination square to load the texture into.
-   *
    * @param zoom_index The zoom index of the texture being loaded.
-   *
    * @return If texture was actually copied.
    */
   static bool load_filler(TextureGridSquareZoomLevel* const dest_square,

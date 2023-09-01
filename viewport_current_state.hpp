@@ -20,8 +20,10 @@ public:
                        FLOAT_T zoom,
                        ViewportPixelSize screen_size,
                        bool valid_update);
+  // these are enabled because this class is used for data transfer
+  // and created and returned from a function
   ViewPortCurrentState(ViewPortCurrentState&)=default;
-  ViewPortCurrentState(ViewPortCurrentState&&)=delete;
+  ViewPortCurrentState(ViewPortCurrentState&&)=default;
   ViewPortCurrentState& operator=(ViewPortCurrentState&)=delete;
   ViewPortCurrentState& operator=(ViewPortCurrentState&&)=delete;
   GridCoordinate current_grid_coordinate() const;
@@ -65,11 +67,8 @@ public:
    * Find zoom index from a zoom value.
    *
    * @param zoom The zoom value to convert to an index.
-   *
    * @param min_zoom_index The minimum zoom value to return.
-   *
    * @param max_zoom_index The maximum zoom value to return.
-   *
    * @return The bounded zoom index corresponding to the zoom value.
    */
   static INT_T find_zoom_index_bounded(FLOAT_T zoom,
@@ -79,9 +78,7 @@ public:
    * Find the maximum upper bound a zoom_index corresponds to.
    *
    * @param zoom_index An index into an array of zoomed textures or images.
-   *
    * @param the corresponding upper bound on the zoom value.
-   *
    * @return The upper bound of the zoom.
    */
   static FLOAT_T find_zoom_upper(INT_T zoom_index);
@@ -91,7 +88,6 @@ public:
    * based on zoom<-->zoom_index conversion.
    *
    * @param viewport_current_state The current state of the viewport.
-   *
    * @return The leftmost visible coordinate.
    */
   static FLOAT_T find_leftmost_visible(const ViewPortCurrentState& viewport_current_state);
@@ -101,7 +97,6 @@ public:
    * based on zoom<-->zoom_index conversion.
    *
    * @param viewport_current_state The current state of the viewport.
-   *
    * @return The rightmost visible coordinate.
    */
   static FLOAT_T find_rightmost_visible(const ViewPortCurrentState& viewport_current_state);
@@ -111,7 +106,6 @@ public:
    * zoom<-->zoom_index conversion.
    *
    * @param viewport_current_state The current state of the viewport.
-   *
    * @return The topmost visible coordinate.
    */
   static FLOAT_T find_topmost_visible(const ViewPortCurrentState& viewport_current_state);
@@ -121,7 +115,6 @@ public:
    * zoom<-->zoom_index conversion.
    *
    * @param viewport_current_state The current state of the viewport.
-   *
    * @return The bottommost visible coordinate.
    */
   static FLOAT_T find_bottommost_visible(const ViewPortCurrentState& viewport_current_state);
@@ -131,11 +124,8 @@ public:
    * based on zoom<-->zoom_index conversion.
    *
    * @param i the index along the width of the grid.
-   *
    * @param j the index along the height of the grid.
-   *
    * @param viewport_current_state The current state of the viewport.
-   *
    * @return Whether the index is visible.
    */
   static bool grid_index_visible(INT_T i, INT_T j,

@@ -41,9 +41,9 @@ ImageGridIteratorFull::ImageGridIteratorFull(INT_T w_image_grid, INT_T h_image_g
   } else if (current_grid_y < 0) {
     adjusted_grid_y=0;
   }
-  auto i=adjusted_grid_x;
-  auto j=adjusted_grid_y;
-  this->_index_values.push({i,j});
+  auto i_initial=adjusted_grid_x;
+  auto j_initial=adjusted_grid_y;
+  this->_index_values.push({i_initial,j_initial});
   // load near the viewport one first then work way out
   for (INT_T r=1L; r <= (std::max(w_image_grid,h_image_grid)); r++) {
     // start at top left corner, go to top right corner
