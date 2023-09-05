@@ -26,8 +26,6 @@ public:
   TextureUpdate(const TextureUpdate&&)=delete;
   TextureUpdate& operator=(const TextureUpdate&)=delete;
   TextureUpdate& operator=(const TextureUpdate&&)=delete;
-  /** Find zoom index (for indexing textures) based on actual zoom. */
-  int find_zoom_index(FLOAT_T zoom);
   /**
    * Find the textures needed to render the current viewport
    *
@@ -97,16 +95,6 @@ public:
                            const ImageGridSquareZoomLevel* source_square,
                            INT_T zoom_index,
                            GridPixelSize texture_pixel_size);
-  /**
-   * Load a filler texture, such a uniform gray or a checkerboard.
-   *
-   * @param dest_square The destination square to load the texture into.
-   * @param zoom_index The zoom index of the texture being loaded.
-   * @return If texture was actually copied.
-   */
-  static bool load_filler(TextureGridSquareZoomLevel* const dest_square,
-                          INT_T zoom_index,
-                          GridPixelSize texture_pixel_size);
 private:
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;

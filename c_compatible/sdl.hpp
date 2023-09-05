@@ -89,7 +89,7 @@ public:
    *
    * @return Is the texture valid?
    */
-  bool is_valid();
+  bool is_valid() const;
   /**
    * Create a new surface.
    *
@@ -109,7 +109,7 @@ public:
    *
    * @return A pointer to the raw pixel array.
    */
-  void* pixels();
+  void* const pixels();
   /**
    * Lock the surface.
    *

@@ -69,7 +69,6 @@ private:
   INT_T _zoom_out_value;
 };
 
-
 /**
  * An individual square on the grid.
  */

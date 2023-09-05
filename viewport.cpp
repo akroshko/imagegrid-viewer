@@ -15,15 +15,24 @@
 #include <vector>
 
 BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT_T count,
-                   const ViewportPixelCoordinate &l_viewport_pixel_coordinate, const ViewportPixelSize &grid_image_size_zoomed) {
-  blit_index=count;
-  blit_square=square;
+                   const ViewportPixelCoordinate &l_viewport_pixel_coordinate,
+                   const ViewportPixelSize &grid_image_size_zoomed) {
+  this->_blit_index=count;
+  this->blit_square=square;
   this->viewport_pixel_coordinate=ViewportPixelCoordinate(l_viewport_pixel_coordinate);
   this->image_pixel_size_viewport=ViewportPixelSize(grid_image_size_zoomed);
 }
 
 void BlitItem::blit_this(SDL_Surface* screen_surface) {
-  blit_square->display_texture_wrapper->blit_texture(screen_surface, this->viewport_pixel_coordinate, this->image_pixel_size_viewport);
+  if (this->blit_square->get_image_filler()) {
+    blit_square->filler_texture_wrapper()->blit_texture(screen_surface,
+                                                        this->viewport_pixel_coordinate,
+                                                        this->image_pixel_size_viewport);
+  } else {
+    blit_square->display_texture_wrapper()->blit_texture(screen_surface,
+                                                         this->viewport_pixel_coordinate,
+                                                         this->image_pixel_size_viewport);
+  }
 }
 
 ViewPort::ViewPort(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update,
@@ -89,12 +98,12 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid, SDLApp* const
           mutex_vector.emplace_back(std::unique_lock<std::mutex>{texture_square_zoom->display_mutex,std::defer_lock});
           if (mutex_vector.back().try_lock()) {
             lock_succeeded=true;
-            if ( texture_grid->squares[i][j]->texture_array[actual_zoom]->display_texture_wrapper->is_valid()) {
+            if ( texture_grid->squares[i][j]->texture_array[actual_zoom]->display_texture_wrapper()->is_valid() ||
+                 (texture_grid->squares[i][j]->texture_array[actual_zoom]->get_image_filler() &&
+                  texture_grid->squares[i][j]->texture_array[actual_zoom]->filler_texture_wrapper()->is_valid())) {
               texture_loaded=true;
               auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.wpixel()*this->_zoom),
                                                             (int)round(this->_image_max_size.hpixel()*this->_zoom));
-
-
               auto new_blit_item=std::make_unique<BlitItem>(texture_square_zoom,
                                                             gi,
                                                             viewport_pixel_coordinate,

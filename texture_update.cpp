@@ -75,12 +75,10 @@ void TextureUpdate::load_new_textures(INT_T i,
               if (image_square->is_loaded &&
                   (!dest_square->is_loaded ||
                    dest_square->last_load_index>load_index)) {
-                // TODO: this line needs to be changed, I don't like doing this here
-                texture_grid->squares[i][j]->texture_pixel_size=GridPixelSize(viewport_current_state.max_image_size());
                 texture_copy_successful=this->load_texture(dest_square,
                                                            image_square,
                                                            zoom_index,
-                                                           texture_grid->squares[i][j]->texture_pixel_size);
+                                                           GridPixelSize(viewport_current_state.max_image_size()));
                 if (texture_copy_successful) {
                   dest_square->set_image_loaded(load_index);
                   texture_copy_count+=1;
@@ -136,21 +134,14 @@ void TextureUpdate::add_filler_textures(INT_T i,
     auto upper_zoom=ViewPortTransferState::find_zoom_upper(zoom_index);
     auto load_all=(zoom_index == max_zoom_index);
     auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index];
+    // take all the precautions for setting a texture as filler as
+    // when we used to copy
     if (load_all || _grid_square_visible(i,j,texture_grid,viewport_current_state,upper_zoom)) {
-      // try to copy over filler if texture not sucessful
-      bool load_filler_successful=false;
       if (!dest_square->is_displayable) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
         if (display_lock.try_lock()) {
           if (!dest_square->is_displayable) {
-            // TODO: this line needs to be changed, I don't like doing this here
-            texture_grid->squares[i][j]->texture_pixel_size=GridPixelSize(viewport_current_state.max_image_size());
-            load_filler_successful=this->load_filler(dest_square,
-                                                     zoom_index,
-                                                     texture_grid->squares[i][j]->texture_pixel_size);
-            if (load_filler_successful) {
-              dest_square->set_image_filler();
-            }
+            dest_square->set_image_filler();
           }
           display_lock.unlock();
         }
@@ -185,13 +176,13 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
   auto dest_hpixel=texture_pixel_size.hpixel()/texture_zoom_reduction;
   dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
   dest_square->unload_texture();
-  dest_square->display_texture_wrapper->create_surface(dest_wpixel, dest_hpixel);
+  dest_square->display_texture_wrapper()->create_surface(dest_wpixel, dest_hpixel);
   // skip if can't load texture
-  if (dest_square->display_texture_wrapper->is_valid()) {
-    auto lock_surface_return=dest_square->display_texture_wrapper->lock_surface();
+  if (dest_square->display_texture_wrapper()->is_valid()) {
+    auto lock_surface_return=dest_square->display_texture_wrapper()->lock_surface();
     if (lock_surface_return == 0) {
       auto source_data=source_square->rgb_data;
-      auto dest_array=dest_square->display_texture_wrapper->pixels();
+      auto dest_array=dest_square->display_texture_wrapper()->pixels();
       // do the things we are copying exist?
       if (dest_array != nullptr && source_data != nullptr) {
         // these should only be powers of 2, add an assert
@@ -222,52 +213,11 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
           }
         }
       } else {
-        dest_square->display_texture_wrapper->unlock_surface();
+        dest_square->display_texture_wrapper()->unlock_surface();
         dest_square->unload_texture();
         successful=false;
       }
-      dest_square->display_texture_wrapper->unlock_surface();
-    } else {
-      dest_square->unload_texture();
-      successful=false;
-    }
-  } else {
-    successful=false;
-  }
-  return successful;
-}
-
-bool TextureUpdate::load_filler(TextureGridSquareZoomLevel* const dest_square,
-                                INT_T zoom_index,
-                                GridPixelSize texture_pixel_size) {
-  auto successful=true;
-  auto texture_zoom_reduction=((INT_T)pow(2,zoom_index));
-  auto dest_wpixel=texture_pixel_size.wpixel()/texture_zoom_reduction;
-  auto dest_hpixel=texture_pixel_size.hpixel()/texture_zoom_reduction;
-  dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
-  dest_square->unload_texture();
-  dest_square->display_texture_wrapper->create_surface(dest_wpixel, dest_hpixel);
-  if (dest_square->display_texture_wrapper->is_valid()) {
-    auto lock_surface_return=dest_square->display_texture_wrapper->lock_surface();
-    if (lock_surface_return == 0) {
-      auto dest_array=dest_square->display_texture_wrapper->pixels();
-      // do the things we are copying exist?
-      if (dest_array != nullptr) {
-        // copy over gray
-        for (INT_T l=0L; l < dest_hpixel; l++) {
-          for (INT_T k=0L; k < dest_wpixel; k++) {
-            auto dest_index=(l*dest_wpixel+k)*3;
-            ((unsigned char *)dest_array)[dest_index]=FILLER_LEVEL;
-            ((unsigned char *)dest_array)[dest_index+1]=FILLER_LEVEL;
-            ((unsigned char *)dest_array)[dest_index+2]=FILLER_LEVEL;
-          }
-        }
-      } else {
-        dest_square->display_texture_wrapper->unlock_surface();
-        dest_square->unload_texture();
-        successful=false;
-      }
-      dest_square->display_texture_wrapper->unlock_surface();
+      dest_square->display_texture_wrapper()->unlock_surface();
     } else {
       dest_square->unload_texture();
       successful=false;

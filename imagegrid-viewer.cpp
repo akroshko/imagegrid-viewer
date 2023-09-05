@@ -168,6 +168,9 @@ ImageGridViewerContext::ImageGridViewerContext(const GridSetup* const grid_setup
     this->viewport->set_image_max_size(this->grid->get_image_max_pixel_size());
     this->texture_grid=std::make_unique<TextureGrid>(grid_setup,
                                                      this->grid->zoom_index_length());
+    this->texture_grid->init_filler_squares(grid_setup,
+                                            this->grid->zoom_index_length(),
+                                            this->grid->get_image_max_pixel_size());
     // adjust initial position to a sensible default depending on how
     // many images are loaded
     this->viewport->adjust_initial_location(grid_setup);

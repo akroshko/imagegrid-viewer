@@ -166,7 +166,7 @@ SDL_Surface* SDLDrawableSurface::screen_surface() {
   return this->_screen_surface;
 }
 
-bool SDLDisplayTextureWrapper::is_valid () {
+bool SDLDisplayTextureWrapper::is_valid () const {
   return (this->_display_texture != nullptr);
 }
 
@@ -189,7 +189,7 @@ void SDLDisplayTextureWrapper::unload_surface() {
   this->_display_texture=nullptr;
 }
 
-void* SDLDisplayTextureWrapper::pixels () {
+void* const SDLDisplayTextureWrapper::pixels () {
   return this->_display_texture->pixels;
 }
 

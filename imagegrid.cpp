@@ -104,7 +104,6 @@ size_t ImageGridSquareZoomLevel::rgb_hpixel() const {
   return this->_rgb_hpixel;
 }
 
-
 ImageGridSquare::ImageGridSquare(std::string filename) {
   // TODO: this is the place
   MSG("Reading: " << filename);

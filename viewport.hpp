@@ -58,7 +58,7 @@ private:
    * Just counting the number of items to be blit, mostly for
    * debugging.
    */
-  int blit_index;
+  int _blit_index;
 };
 
 /**

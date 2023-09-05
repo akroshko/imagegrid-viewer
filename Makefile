@@ -27,7 +27,7 @@ rtags:
 
 .PHONY: tidy
 tidy:
-	clang-tidy -checks=cert-* -header-filter=.* $(SRC_MAIN)
+	clang-tidy -checks=bugprone-*,cert-* -header-filter=.* $(SRC_MAIN)
 
 .PHONY: debug
 debug: imagegrid-viewer-debug
@@ -36,7 +36,7 @@ imagegrid-viewer-debug: CXXFLAGS += -DDEBUG_MESSAGES -DDEBUG_IO -g -O0
 imagegrid-viewer-debug: $(OBJ_MAIN) imagegrid-viewer.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-imagegrid-viewer: CXXFLAGS += -O2
+imagegrid-viewer: CXXFLAGS += -O2 -g
 imagegrid-viewer: $(OBJ_MAIN) imagegrid-viewer.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
