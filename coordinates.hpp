@@ -4,10 +4,7 @@
 #ifndef COORDINATES_HPP
 #define COORDINATES_HPP
 
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include <memory>
+#include "common.hpp"
 
 class GridCoordinate;
 class GridPixelCoordinate;

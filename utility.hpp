@@ -4,7 +4,7 @@
 #ifndef UTILITY_HPP
 #define UTILITY_HPP
 
-#include "types.hpp"
+#include "common.hpp"
 
 INT_T round_down_positive_power_of_2(FLOAT_T x);
 

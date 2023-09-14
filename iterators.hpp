@@ -1,10 +1,7 @@
 #ifndef ITERATORS_HPP
 #define ITERATORS_HPP
 
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include "defaults.hpp"
+#include "common.hpp"
 #include "viewport_current_state.hpp"
 // C++ headers
 #include <array>

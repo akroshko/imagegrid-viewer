@@ -2,14 +2,8 @@
  * Implementation of the classes that represent different coordinates.
  *
  */
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include "defaults.hpp"
-#include "gridsetup.hpp"
+#include "common.hpp"
 #include "coordinates.hpp"
-// C++ headers
-#include <memory>
 // C headers
 #include <cmath>
 

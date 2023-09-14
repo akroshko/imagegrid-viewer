@@ -1,8 +1,7 @@
 /**
  * Some utility functions.
  */
-#include "defaults.hpp"
-#include "types.hpp"
+#include "common.hpp"
 #include "utility.hpp"
 // C++ headers
 #include <thread>

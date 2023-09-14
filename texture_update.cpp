@@ -1,19 +1,14 @@
 /**
  * Implementation of updating the loaded and zoomed textures.
  */
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include "utility.hpp"
+#include "common.hpp"
 #include "coordinates.hpp"
-#include "imagegrid.hpp"
+#include "imagegrid/imagegrid.hpp"
 #include "texturegrid.hpp"
 #include "texture_update.hpp"
 #include "viewport_current_state.hpp"
 // C compatible headers
 #include "cinterface/buffer_manip.hpp"
-// C++ headers
-#include <thread>
 
 TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update) {
   this->_viewport_current_state_texturegrid_update=viewport_current_state_texturegrid_update;

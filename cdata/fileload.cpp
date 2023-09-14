@@ -4,10 +4,7 @@
  *
  */
 // local headers
-#include "../debug.hpp"
-#include "../error.hpp"
-#include "../types.hpp"
-#include "../defaults.hpp"
+#include "../common.hpp"
 #include "../utility.hpp"
 #include "fileload.hpp"
 #include "../cinterface/buffer_manip.hpp"
@@ -135,6 +132,58 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
     return tiff_sorted_files;
   }
   return empty_files;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// general file functions
+
+void read_data(std::string filename,
+               INT_T &width, INT_T &height) {
+  if (check_tiff(filename)) {
+    // TODO: check success
+    read_tiff_data(filename,
+                   width,
+                   height);
+  } else if (check_png(filename)) {
+    // TODO: check success
+    read_png_data(filename,
+                  width,
+                  height);
+  } else if (check_empty(filename)) {
+    // think that 0 is a reasonable non-image for these values
+    // TODO: other values may be good
+    width=0;
+    height=0;
+  } else {
+    ERROR("read_data can't read: " << filename);
+  }
+}
+
+bool load_data_as_rgb(const std::string filename,
+                      const std::string cached_filename,
+                      const std::vector<std::shared_ptr<LoadFileData>> load_file_data) {
+  bool load_successful=false;
+  if (check_tiff(filename)) {
+    MSG("Loading TIFF: " << filename);
+    // TODO: check success
+    load_tiff_as_rgb(filename,
+                     cached_filename,
+                     load_file_data);
+    // printing pointer here
+    MSG("Done TIFF: " << filename);
+    load_successful=true;
+  } else if (check_png(filename)) {
+      MSG("Loading PNG: " << filename);
+      // TODO: check success
+      load_png_as_rgb(filename,
+                      load_file_data);
+      MSG("Done PNG: " << filename);
+      load_successful=true;
+  } else if (check_empty(filename)) {
+  } else {
+    ERROR("load_data_as_rgb can't load: " << filename);
+  }
+  return load_successful;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

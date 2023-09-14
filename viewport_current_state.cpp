@@ -1,9 +1,5 @@
 // local headers
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include "defaults.hpp"
-#include "utility.hpp"
+#include "common.hpp"
 #include "coordinates.hpp"
 #include "viewport_current_state.hpp"
 // C++ headers

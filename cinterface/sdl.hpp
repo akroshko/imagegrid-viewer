@@ -4,9 +4,7 @@
 #ifndef SDL_HPP
 #define SDL_HPP
 
-#include "../debug.hpp"
-#include "../error.hpp"
-#include "../defaults.hpp"
+#include "../common.hpp"
 #include "../coordinates.hpp"
 // library headers
 #include <SDL2/SDL.h>
@@ -123,11 +121,11 @@ public:
   /**
    * Blit a texture to the surface.
    *
-   * @param screen_surface The screen surface to blit to.
+   * @param drawable_surface A pointer to the the SDLDrawableSurface to blit to.
    * @param viewport_pixel_coordinate The coorindate to blit to on the viewport.
    * @param image_pixel_size_viewport The size of the texture on the viewport.
    */
-  void blit_texture(SDL_Surface* screen_surface,
+  void blit_texture(SDLDrawableSurface* drawable_surface,
                     ViewportPixelCoordinate &viewport_pixel_coordinate,
                     ViewportPixelSize &image_pixel_size_viewport);
 private:

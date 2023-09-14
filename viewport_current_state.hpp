@@ -5,10 +5,7 @@
 #define VIEWPORT_CURRENT_STATE_HPP
 
 // local headers
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include "defaults.hpp"
+#include "common.hpp"
 #include "coordinates.hpp"
 // C++ headers
 #include <mutex>

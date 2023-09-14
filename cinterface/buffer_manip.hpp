@@ -1,9 +1,7 @@
 #ifndef BUFFER_MANIP_HPP
 #define BUFFER_MANIP_HPP
 
-#include "../debug.hpp"
-#include "../error.hpp"
-#include "../types.hpp"
+#include "../common.hpp"
 #include <tiffio.h>
 
 /**

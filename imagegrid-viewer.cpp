@@ -28,24 +28,19 @@
  *
  */
 // local headers
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include "defaults.hpp"
+#include "common.hpp"
 #include "utility.hpp"
-#include "gridsetup.hpp"
-#include "imagegrid.hpp"
+#include "imagegrid/gridsetup.hpp"
+#include "imagegrid/imagegrid.hpp"
 #include "texturegrid.hpp"
 #include "texture_update.hpp"
 #include "viewport.hpp"
 // C compatible headers
 #include "cinterface/sdl.hpp"
-#include "cdata/fileload.hpp"
 // C++ headers
 #include <atomic>
-#include <iostream>
+#include <memory>
 #include <thread>
-#include <utility>
 
 /**
  * The ImageGridViewerContext class stores the data structures

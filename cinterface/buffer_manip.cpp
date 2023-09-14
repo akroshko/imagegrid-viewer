@@ -1,13 +1,10 @@
 // local headers
-#include "../debug.hpp"
-#include "../error.hpp"
-#include "../types.hpp"
+#include "../common.hpp"
 // C++ headers
 #include <memory>
 // C headers
 #include <cmath>
 // C library headers
-#include <png.h>
 #include <tiffio.h>
 
 typedef unsigned char (*rgb_extract)(unsigned char);

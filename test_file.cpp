@@ -1,11 +1,9 @@
 /**
  * Test code to blit a 640x480 texture to an SDL window.
  */
-#include "debug.hpp"
-#include "error.hpp"
-#include "defaults.hpp"
+#include "common.hpp"
 #include "utility.hpp"
-#include "imagegrid.hpp"
+#include "imagegrid/imagegrid.hpp"
 // C compatible headers
 #include "cinterface/sdl.hpp"
 

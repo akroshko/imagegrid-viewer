@@ -1,7 +1,4 @@
-#include "../debug.hpp"
-#include "../error.hpp"
-#include "../types.hpp"
-#include "../defaults.hpp"
+#include "../common.hpp"
 // C++ headers
 #include <string>
 #include <vector>

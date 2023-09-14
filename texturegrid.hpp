@@ -4,23 +4,14 @@
 #ifndef TEXTUREGRID_HPP
 #define TEXTUREGRID_HPP
 
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include "defaults.hpp"
+#include "common.hpp"
 #include "coordinates.hpp"
-#include "gridsetup.hpp"
-#include "viewport_current_state.hpp"
+#include "imagegrid/gridsetup.hpp"
 #include "cinterface/sdl.hpp"
 // C++ headers
-#include <array>
 #include <atomic>
-#include <iostream>
 #include <memory>
 #include <mutex>
-#include <queue>
-#include <string>
-#include <vector>
 
 class TextureGrid;
 

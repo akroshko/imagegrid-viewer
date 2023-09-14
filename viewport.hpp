@@ -5,21 +5,15 @@
 #define VIEWPORT_HPP
 
 // local headers
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include "defaults.hpp"
-#include "gridsetup.hpp"
-#include "imagegrid.hpp"
+#include "common.hpp"
+#include "imagegrid/gridsetup.hpp"
+#include "imagegrid/imagegrid.hpp"
 #include "texturegrid.hpp"
 #include "coordinates.hpp"
 // C compatible headers
 #include "cinterface/sdl.hpp"
 // C++ headers
-#include <iostream>
-#include <mutex>
-#include <string>
-#include <vector>
+#include <memory>
 
  /** Class that stores an item that ready to be blit to the screen. */
 class BlitItem {
@@ -39,7 +33,7 @@ public:
    *
    * @param screen_surface The screen surface to blit to.
    */
-  void blit_this(SDL_Surface* screen_surface);
+  void blit_this(SDLDrawableSurface* screen_surface);
   /**
    * The square that will be blit to the screen.
    */

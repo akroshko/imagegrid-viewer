@@ -3,26 +3,15 @@
  * (zoomed) textures.
  */
 // local headers
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
+#include "common.hpp"
 #include "utility.hpp"
-#include "gridsetup.hpp"
-#include "imagegrid.hpp"
+#include "imagegrid/gridsetup.hpp"
 #include "texturegrid.hpp"
 #include "iterators.hpp"
-#include "viewport_current_state.hpp"
 // C compatible headers
-#include "cdata/fileload.hpp"
 #include "cinterface/sdl.hpp"
 // C++ headers
-#include <array>
 #include <atomic>
-#include <iostream>
-#include <string>
-#include <thread>
-#include <utility>
-#include <vector>
 // C headers
 #include <cmath>
 

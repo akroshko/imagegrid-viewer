@@ -2,9 +2,7 @@
  * Implementaton of classes that encapsulate SDL functions.
  */
 // local headers
-#include "../debug.hpp"
-#include "../error.hpp"
-#include "../defaults.hpp"
+#include "../common.hpp"
 #include "../coordinates.hpp"
 #include "sdl.hpp"
 // C library headers
@@ -203,7 +201,7 @@ void SDLDisplayTextureWrapper::unlock_surface () {
   }
 }
 
-void SDLDisplayTextureWrapper::blit_texture(SDL_Surface* screen_surface,
+void SDLDisplayTextureWrapper::blit_texture(SDLDrawableSurface* drawable_surface,
                                             ViewportPixelCoordinate &viewport_pixel_coordinate,
                                             ViewportPixelSize &image_pixel_size_viewport) {
   SDL_Rect scaled_rect;
@@ -211,5 +209,5 @@ void SDLDisplayTextureWrapper::blit_texture(SDL_Surface* screen_surface,
   scaled_rect.y=viewport_pixel_coordinate.ypixel();
   scaled_rect.w=image_pixel_size_viewport.wpixel();
   scaled_rect.h=image_pixel_size_viewport.hpixel();
-  SDL_BlitScaled(this->_display_texture, NULL, screen_surface, &scaled_rect);
+  SDL_BlitScaled(this->_display_texture, NULL, drawable_surface->screen_surface(), &scaled_rect);
 }

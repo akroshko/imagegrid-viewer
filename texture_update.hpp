@@ -4,12 +4,9 @@
 #ifndef TEXTURE_UPDATE_HPP
 #define TEXTURE_UPDATE_HPP
 
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include "viewport.hpp"
+#include "common.hpp"
 #include "coordinates.hpp"
-#include "imagegrid.hpp"
+#include "imagegrid/imagegrid.hpp"
 #include "texturegrid.hpp"
 // C++ headers
 #include <atomic>

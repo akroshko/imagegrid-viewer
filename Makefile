@@ -1,5 +1,5 @@
-HEADERS=$(wildcard *.hpp) $(wildcard cinterface/*.hpp) $(wildcard cdata/*.hpp)
-SRC = $(wildcard *.cpp) $(wildcard cinterface/*.cpp) $(wildcard cdata/*.cpp)
+HEADERS=$(wildcard *.hpp)  $(wildcard imagegrid/*.hpp) $(wildcard cinterface/*.hpp) $(wildcard cdata/*.hpp)
+SRC = $(wildcard *.cpp) $(wildcard imagegrid/*.cpp) $(wildcard cinterface/*.cpp) $(wildcard cdata/*.cpp)
 SRC_MAIN = $(filter-out $(wildcard test_*.cpp),$(SRC))
 OBJ_MAIN = $(SRC_MAIN:.cpp=.o)
 SRC_TEST = $(filter-out $(wildcard imagegrid-viewer.cpp),$(SRC))
@@ -28,6 +28,10 @@ rtags:
 .PHONY: tidy
 tidy:
 	clang-tidy -checks=bugprone-*,cert-* -header-filter=.* $(SRC_MAIN)
+
+.PHONY: iwyu
+iwyu:
+	echo "$(SRC_MAIN)"'\0' | tr ' ' '\0' | xargs -0 -n1 iwyu -Xiwyu --cxx17ns -Xiwyu --no_fwd_decls
 
 .PHONY: debug
 debug: imagegrid-viewer-debug

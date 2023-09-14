@@ -1,9 +1,7 @@
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include "defaults.hpp"
+#include "common.hpp"
 #include "iterators.hpp"
 #include "viewport_current_state.hpp"
+
 
 bool ImageGridIterator::get_next(INT_T &i, INT_T &j) {
   if (this->_index_values.size() > 0) {

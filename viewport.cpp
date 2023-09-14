@@ -1,8 +1,5 @@
-#include "debug.hpp"
-#include "error.hpp"
-#include "types.hpp"
-#include "utility.hpp"
-#include "gridsetup.hpp"
+#include "common.hpp"
+#include "imagegrid/gridsetup.hpp"
 #include "coordinates.hpp"
 #include "viewport.hpp"
 #include "viewport_current_state.hpp"
@@ -24,7 +21,7 @@ BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT_T count,
   this->image_pixel_size_viewport=ViewportPixelSize(grid_image_size_zoomed);
 }
 
-void BlitItem::blit_this(SDL_Surface* screen_surface) {
+void BlitItem::blit_this(SDLDrawableSurface* screen_surface) {
   if (this->blit_square->get_image_filler()) {
     blit_square->filler_texture_wrapper()->blit_texture(screen_surface,
                                                         this->viewport_pixel_coordinate,
@@ -131,7 +128,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid, SDLApp* const
     auto viewport_pixel_size=ViewportPixelSize(this->_current_window_w,this->_current_window_h);
     std::unique_ptr<SDLDrawableSurface> drawable_surface=std::make_unique<SDLDrawableSurface>(sdl_app,viewport_pixel_size);
     for (size_t i=0; i < blititems.size(); i++) {
-      blititems[i]->blit_this(drawable_surface->screen_surface());
+      blititems[i]->blit_this(drawable_surface.get());
     }
   }
   for (auto & m : mutex_vector) {

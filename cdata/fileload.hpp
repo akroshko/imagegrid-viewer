@@ -7,9 +7,7 @@
 #define FILELOAD_HPP
 
 //local includes
-#include "../debug.hpp"
-#include "../error.hpp"
-#include "../types.hpp"
+#include "../common.hpp"
 // C++ headers
 #include <string>
 #include <regex>
@@ -55,6 +53,28 @@ struct LoadFileData {
   size_t rgb_hpixel=INT_MIN;
   INT_T zoom_out_value=INT_MIN;
 };
+
+/**
+ * Read data from a filename.
+ * @param filename The filename to load.
+ * @param width Set as the width of the image in pixels.
+ * @param height Set as the height of the image in pixels.
+ * @return If reading image data was successful.
+ */
+void read_data(std::string filename,
+               INT_T &width, INT_T &height);
+
+/**
+ * Load data as RGB.
+ *
+ * @param filename The filename to load.
+ * @param width Set as the width of the image in pixels.
+ * @param height Set as the height of the image in pixels.
+ * @return If reading image data was successful.
+ */
+bool load_data_as_rgb(const std::string filename,
+                      const std::string cached_filename,
+                      const std::vector<std::shared_ptr<LoadFileData>> load_file_data);
 
 /**
  * Read data about a tiff file using libtiff,based off of
