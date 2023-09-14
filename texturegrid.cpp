@@ -13,17 +13,18 @@
 #include "iterators.hpp"
 #include "viewport_current_state.hpp"
 // C compatible headers
-#include "c_compatible/fileload.hpp"
-#include "c_compatible/sdl.hpp"
+#include "cdata/fileload.hpp"
+#include "cinterface/sdl.hpp"
 // C++ headers
 #include <array>
 #include <atomic>
-#include <cmath>
 #include <iostream>
 #include <string>
 #include <thread>
 #include <utility>
 #include <vector>
+// C headers
+#include <cmath>
 
 TextureGridSquareZoomLevel::TextureGridSquareZoomLevel () {
   this->_display_texture_wrapper=std::make_unique<SDLDisplayTextureWrapper>();

@@ -6,8 +6,8 @@
 #include "error.hpp"
 #include "types.hpp"
 #include "gridsetup.hpp"
-#include "c_compatible/fileload.hpp"
-#include "c_compatible/argument_parse.hpp"
+#include "cdata/fileload.hpp"
+#include "cinterface/argument_parse.hpp"
 // C++ headers
 #include <string>
 #include <vector>

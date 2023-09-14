@@ -11,7 +11,7 @@
 #include "coordinates.hpp"
 #include "gridsetup.hpp"
 #include "viewport_current_state.hpp"
-#include "c_compatible/sdl.hpp"
+#include "cinterface/sdl.hpp"
 // C++ headers
 #include <array>
 #include <atomic>

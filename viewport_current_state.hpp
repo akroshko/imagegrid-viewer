@@ -10,8 +10,10 @@
 #include "types.hpp"
 #include "defaults.hpp"
 #include "coordinates.hpp"
-#include <cmath>
+// C++ headers
 #include <mutex>
+// C headers
+#include <cmath>
 
 class ViewPortCurrentState {
 public:

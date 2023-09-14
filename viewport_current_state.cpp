@@ -6,8 +6,10 @@
 #include "utility.hpp"
 #include "coordinates.hpp"
 #include "viewport_current_state.hpp"
-#include <cmath>
+// C++ headers
 #include <mutex>
+// C headers
+#include <cmath>
 
 ViewPortCurrentState::ViewPortCurrentState(GridCoordinate current_grid_coordinate,
                                            GridPixelSize max_image_size,

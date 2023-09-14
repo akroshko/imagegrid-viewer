@@ -11,7 +11,7 @@
 #include "texture_update.hpp"
 #include "viewport_current_state.hpp"
 // C compatible headers
-#include "c_compatible/buffer_manip.hpp"
+#include "cinterface/buffer_manip.hpp"
 // C++ headers
 #include <thread>
 

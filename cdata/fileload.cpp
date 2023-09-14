@@ -10,9 +10,9 @@
 #include "../defaults.hpp"
 #include "../utility.hpp"
 #include "fileload.hpp"
-#include "buffer_manip.hpp"
+#include "../cinterface/buffer_manip.hpp"
 // C++ headers
-#include <cmath>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 // C headers
+#include <cmath>
 #include <cstring>
 #include <stdlib.h>
 // C library headers
@@ -343,6 +344,31 @@ bool load_png_as_rgb(std::string filename,
     png_image_free(&image);
   }
   return success;
+}
+
+bool write_png(std::string filename_new, INT_T wpixel, INT_T hpixel, unsigned char* rgb_data) {
+   char new_filename[PATH_BUFFER_SIZE]="";
+   // TODO: catch exception for overly long filenames once exceptions are handled
+   auto c_str=filename_new.c_str();
+   auto c_size=filename_new.size();
+   if (c_size < PATH_BUFFER_SIZE) {
+     strncpy(new_filename,c_str,c_size);
+   } else {
+     throw std::runtime_error("Invalid filename size.");
+   }
+   // write a PNG
+   // TODO: put this elsewhere
+   png_image image;
+   memset(&image, 0, (sizeof image));
+   image.version=PNG_IMAGE_VERSION;
+   image.opaque=NULL;
+   image.width=wpixel;
+   image.height=hpixel;
+   image.format=PNG_FORMAT_RGB;
+   image.flags=0;
+   image.colormap_entries=0;
+   png_image_write_to_file(&image, new_filename, 0, (void*)rgb_data, 0, 0);
+   return true;
 }
 
 bool check_tiff(std::string filename) {

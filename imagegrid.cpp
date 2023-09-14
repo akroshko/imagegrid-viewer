@@ -13,18 +13,19 @@
 #include "viewport.hpp"
 #include "viewport_current_state.hpp"
 // C compatible headers
-#include "c_compatible/fileload.hpp"
+#include "cdata/fileload.hpp"
 #include <png.h>
 // C++ headers
 #include <array>
 #include <atomic>
-#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <string>
 #include <thread>
 #include <utility>
 #include <vector>
+// C headers
+#include <cmath>
 
 ImageGridSquareZoomLevel::ImageGridSquareZoomLevel(INT_T zoom_out_value) {
   this->_zoom_out_value=zoom_out_value;
@@ -308,24 +309,10 @@ bool ImageGrid::_write_cache(INT_T i, INT_T j, std::string filename) {
     // find current size
     auto wpixel=dest_square->rgb_wpixel();
     auto hpixel=dest_square->rgb_hpixel();
+    // TODO: check size of filename_new here
+    auto filename_new=this->_create_cache_filename(filename);
     if (wpixel < CACHE_MAX_PIXEL_SIZE && hpixel < CACHE_MAX_PIXEL_SIZE) {
-      // TODO: check size of filename_new here
-      auto filename_new=this->_create_cache_filename(filename);
-      char new_filename[PATH_BUFFER_SIZE]="";
-      strncpy(new_filename,filename_new.c_str(),PATH_BUFFER_SIZE);
-      // write a PNG
-      // TODO: put this elsewhere
-      png_image image;
-      memset(&image, 0, (sizeof image));
-      image.version=PNG_IMAGE_VERSION;
-      image.opaque=NULL;
-      image.width=wpixel;
-      image.height=hpixel;
-      image.format=PNG_FORMAT_RGB;
-      image.flags=0;
-      image.colormap_entries=0;
-      png_image_write_to_file(&image, new_filename, 0, (void*)dest_square->rgb_data, 0, 0);
-      loaded_512=true;
+      loaded_512=write_png(filename_new, wpixel, hpixel, dest_square->rgb_data);
     }
   }
   return 0;

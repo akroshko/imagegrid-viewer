@@ -3,9 +3,10 @@
 #include "../error.hpp"
 #include "../types.hpp"
 // C++ headers
-#include <cmath>
 #include <memory>
 // C headers
+#include <cmath>
+// C library headers
 #include <png.h>
 #include <tiffio.h>
 

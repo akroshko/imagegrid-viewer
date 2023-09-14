@@ -7,12 +7,13 @@
 #include "viewport.hpp"
 #include "viewport_current_state.hpp"
 // C compatible headers
-#include "c_compatible/sdl.hpp"
+#include "cinterface/sdl.hpp"
 // C++ headers
-#include <cmath>
 #include <iostream>
 #include <string>
 #include <vector>
+// C headers
+#include <cmath>
 
 BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT_T count,
                    const ViewportPixelCoordinate &l_viewport_pixel_coordinate,

@@ -9,8 +9,9 @@
 #include "gridsetup.hpp"
 #include "coordinates.hpp"
 // C++ headers
-#include <cmath>
 #include <memory>
+// C headers
+#include <cmath>
 
 GridImageSize::GridImageSize() {
   // initializing to zero is best for now

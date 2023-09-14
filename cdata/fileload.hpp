@@ -11,11 +11,12 @@
 #include "../error.hpp"
 #include "../types.hpp"
 // C++ headers
-#include <climits>
 #include <string>
 #include <regex>
 #include <vector>
 #include <utility>
+// C headers
+#include <climits>
 
 enum IMAGEDIRECTION {tl_horiz_reset,tl_horiz_follow};
 
@@ -101,6 +102,17 @@ bool read_png_data(std::string filename, INT_T &width, INT_T &height);
  */
 bool load_png_as_rgb(std::string filename,
                      const std::vector<std::shared_ptr<LoadFileData>> load_file_data);
+
+/**
+ * Write a png file using libpng.
+ *
+ * @param filename_new The filename to write.
+ * @param wpixel The width in pixels.
+ * @param hpixel The height in pixels.
+ * @param rgb_data The rgb data.
+ * @return If writing image was successful.
+ */
+bool write_png(std::string filename_new, INT_T wpixel, INT_T hpixel, unsigned char* rgb_data);
 
 /**
  * Check if a file is a tiff file.

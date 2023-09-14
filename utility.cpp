@@ -5,8 +5,9 @@
 #include "types.hpp"
 #include "utility.hpp"
 // C++ headers
-#include <cmath>
 #include <thread>
+// C headers
+#include <cmath>
 
 /**
  * Pad a number and then reduce by a factor.

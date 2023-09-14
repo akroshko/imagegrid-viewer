@@ -5,9 +5,11 @@
 #ifndef DEFAULTS_HPP
 #define DEFAULTS_HPP
 #include "types.hpp"
+// C++ headers
 #include <chrono>
-#include <climits>
 #include <string>
+// C headers
+#include <climits>
 
 // screen width
 // TODO: make dynamic and configurable

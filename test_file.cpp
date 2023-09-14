@@ -7,7 +7,7 @@
 #include "utility.hpp"
 #include "imagegrid.hpp"
 // C compatible headers
-#include "c_compatible/sdl.hpp"
+#include "cinterface/sdl.hpp"
 
 int main(int argc, char* argv[]) {
   auto texture_wpixel=512ul;

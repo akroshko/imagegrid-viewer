@@ -14,7 +14,7 @@
 #include "texturegrid.hpp"
 #include "coordinates.hpp"
 // C compatible headers
-#include "c_compatible/sdl.hpp"
+#include "cinterface/sdl.hpp"
 // C++ headers
 #include <iostream>
 #include <mutex>

@@ -1,5 +1,5 @@
-HEADERS=$(wildcard *.hpp) $(wildcard c_compatible/*.hpp)
-SRC = $(wildcard *.cpp) $(wildcard c_compatible/*.cpp)
+HEADERS=$(wildcard *.hpp) $(wildcard cinterface/*.hpp) $(wildcard cdata/*.hpp)
+SRC = $(wildcard *.cpp) $(wildcard cinterface/*.cpp) $(wildcard cdata/*.cpp)
 SRC_MAIN = $(filter-out $(wildcard test_*.cpp),$(SRC))
 OBJ_MAIN = $(SRC_MAIN:.cpp=.o)
 SRC_TEST = $(filter-out $(wildcard imagegrid-viewer.cpp),$(SRC))
