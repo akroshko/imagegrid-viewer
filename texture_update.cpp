@@ -52,13 +52,13 @@ void TextureUpdate::load_new_textures(INT_T i,
       continue;
     }
     auto upper_zoom=ViewPortTransferState::find_zoom_upper(zoom_index);
-    auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index];
+    auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index].get();
     auto load_all=(zoom_index == max_zoom_index);
     if (load_all || _grid_square_visible(i,j,texture_grid,viewport_current_state,upper_zoom)) {
       auto load_index=zoom_index;
       bool texture_copy_successful=false;
       do {
-        auto image_square=grid->squares[i][j]->image_array[load_index];
+        auto image_square=grid->squares[i][j]->image_array[load_index].get();
         if (image_square->is_loaded &&
             (!dest_square->is_loaded ||
              dest_square->last_load_index>load_index)) {
@@ -100,7 +100,7 @@ void TextureUpdate::clear_textures(INT_T i,
   for (INT_T zoom_index=0L; zoom_index < max_zoom_index-1; zoom_index++) {
     if (!keep_running) { break; }
     auto upper_zoom=ViewPortTransferState::find_zoom_upper(zoom_index);
-    auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index];
+    auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index].get();
     if (!_grid_square_visible(i,j,texture_grid,viewport_current_state,upper_zoom)) {
       // unload anything not visible that is loadable or displayable
       if (dest_square->is_loaded || dest_square->is_displayable) {
@@ -128,7 +128,7 @@ void TextureUpdate::add_filler_textures(INT_T i,
     }
     auto upper_zoom=ViewPortTransferState::find_zoom_upper(zoom_index);
     auto load_all=(zoom_index == max_zoom_index);
-    auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index];
+    auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index].get();
     // take all the precautions for setting a texture as filler as
     // when we used to copy
     if (load_all || _grid_square_visible(i,j,texture_grid,viewport_current_state,upper_zoom)) {

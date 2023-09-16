@@ -73,7 +73,7 @@ private:
 class TextureGridSquare {
 public:
   TextureGridSquare(INT_T zoom_index_length);
-  ~TextureGridSquare();
+  ~TextureGridSquare()=default;
   TextureGridSquare(const TextureGridSquare&)=delete;
   TextureGridSquare(const TextureGridSquare&&)=delete;
   TextureGridSquare& operator=(const TextureGridSquare&)=delete;
@@ -83,7 +83,7 @@ public:
    * full-size texture the subsequent elements are zoomed textures
    * each reduced by a factor of 2.
    */
-  std::unique_ptr<TextureGridSquareZoomLevel*[]> texture_array;
+  std::unique_ptr<std::unique_ptr<TextureGridSquareZoomLevel>[]> texture_array;
 private:
   INT_T _zoom_index_length;
 };

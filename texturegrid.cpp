@@ -57,16 +57,11 @@ SDLDisplayTextureWrapper* const TextureGridSquareZoomLevel::filler_texture_wrapp
 
 TextureGridSquare::TextureGridSquare (INT_T zoom_index_length) {
   this->_zoom_index_length=zoom_index_length;
-  this->texture_array=std::make_unique<TextureGridSquareZoomLevel*[]>(zoom_index_length);
+  this->texture_array=std::make_unique<std::unique_ptr<TextureGridSquareZoomLevel>[]>(zoom_index_length);
   for (auto i=0L; i < zoom_index_length; i++) {
-    this->texture_array[i]=new TextureGridSquareZoomLevel();
+    this->texture_array[i]=std::make_unique<TextureGridSquareZoomLevel>();
   }
-}
 
-TextureGridSquare::~TextureGridSquare () {
-  for (auto i=0u; i < this->_zoom_index_length; i++) {
-    DELETE_IF_NOT_NULLPTR(this->texture_array[i]);
-  }
 }
 
 TextureGrid::TextureGrid (const GridSetup* const grid_setup,

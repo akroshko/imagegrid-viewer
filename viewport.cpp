@@ -88,7 +88,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid, SDLApp* const
           actual_zoom=zoom_index;
           try_loaded=false;
         }
-        auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[actual_zoom];
+        auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[actual_zoom].get();
         if ((try_loaded &&
              texture_square_zoom->is_loaded &&
              texture_square_zoom->is_displayable) ||
