@@ -9,7 +9,7 @@
 #include "texturegrid.hpp"
 #include "iterators.hpp"
 // C compatible headers
-#include "cinterface/sdl.hpp"
+#include "c_misc/sdl.hpp"
 // C++ headers
 #include <atomic>
 // C headers

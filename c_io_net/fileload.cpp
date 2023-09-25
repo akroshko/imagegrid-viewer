@@ -7,7 +7,7 @@
 #include "../common.hpp"
 #include "../utility.hpp"
 #include "fileload.hpp"
-#include "../cinterface/buffer_manip.hpp"
+#include "../c_misc/buffer_manip.hpp"
 // C++ headers
 #include <exception>
 #include <filesystem>

@@ -7,7 +7,7 @@
 #include "common.hpp"
 #include "coordinates.hpp"
 #include "imagegrid/gridsetup.hpp"
-#include "cinterface/sdl.hpp"
+#include "c_misc/sdl.hpp"
 // C++ headers
 #include <atomic>
 #include <memory>

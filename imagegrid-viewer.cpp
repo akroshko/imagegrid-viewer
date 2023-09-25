@@ -36,7 +36,7 @@
 #include "texture_update.hpp"
 #include "viewport.hpp"
 // C compatible headers
-#include "cinterface/sdl.hpp"
+#include "c_misc/sdl.hpp"
 // C++ headers
 #include <atomic>
 #include <memory>

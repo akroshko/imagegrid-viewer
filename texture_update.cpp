@@ -8,7 +8,7 @@
 #include "texture_update.hpp"
 #include "viewport_current_state.hpp"
 // C compatible headers
-#include "cinterface/buffer_manip.hpp"
+#include "c_misc/buffer_manip.hpp"
 
 TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update) {
   this->_viewport_current_state_texturegrid_update=viewport_current_state_texturegrid_update;
