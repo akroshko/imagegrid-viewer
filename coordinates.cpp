@@ -79,11 +79,7 @@ FLOAT_T GridCoordinate::ygrid() const {
 }
 
 bool GridCoordinate::invalid() const {
-  if (std::isnan(this->_xgrid) || std::isnan(this->_ygrid)) {
-    return true;
-  } else {
-    return false;
-  }
+  return (std::isnan(this->_xgrid) || std::isnan(this->_ygrid));
 }
 
 GridPixelSize::GridPixelSize() {

@@ -52,17 +52,52 @@ public:
   void unload_file();
   /** @return The amount zoomed out this class represents. */
   INT_T zoom_out_value() const;
-  /** @return The width in pixels. */
-  size_t rgb_wpixel() const;
-  /** @return The height in pixels. */
-  size_t rgb_hpixel() const;
-  /** The actual RGB data for this square and zoom level */
-  unsigned char* rgb_data=nullptr;
+  /**
+   * @param w_index
+   * @param h_index
+   * @return The width in pixels.
+   */
+  size_t rgb_wpixel(INT_T w_index, INT_T h_index) const;
+  /**
+   * @param w_index
+   * @param h_index
+   * @return The height in pixels.
+   */
+  size_t rgb_hpixel(INT_T w_index, INT_T h_index) const;
+  /** @return The number of subgrid images in width. */
+  size_t w_subgrid() const;
+  /** @return The number of subgrid images in height. */
+  size_t h_subgrid() const;
+  /**
+   * @param w_index
+   * @param h_index
+   * @return The x origin coordinate in pixels.
+   */
+  INT_T rgb_xpixel_origin(INT_T w_index, INT_T h_index) const;
+  /**
+   * @param w_index
+   * @param h_index
+   * @return The y origin coordinate in pixels.
+   */
+  INT_T rgb_ypixel_origin(INT_T w_index, INT_T h_index) const;
+  /**
+   * @param w_index
+   * @param h_index
+   * @return A pointer to the RGB data.
+   */
+  unsigned char* get_rgb_data(INT_T w_index, INT_T h_index) const;
 private:
-  // these don't use an object from coordinates.hpp since they are
-  // managing raw manually allocated memory
-  size_t _rgb_wpixel;
-  size_t _rgb_hpixel;
+  friend class ImageGrid;
+  /** The actual RGB data for this square and zoom level */
+  std::unique_ptr<std::unique_ptr<unsigned char*[]>[]> rgb_data;
+  // TOOD: will eventually use an object from coordinates.hpp, but for
+  // now I want this freedom
+  std::unique_ptr<std::unique_ptr<size_t[]>[]> _rgb_wpixel;
+  std::unique_ptr<std::unique_ptr<size_t[]>[]> _rgb_hpixel;
+  size_t _w_subgrid=1;
+  size_t _h_subgrid=1;
+  std::unique_ptr<std::unique_ptr<INT_T[]>[]> _rgb_xpixel_origin;
+  std::unique_ptr<std::unique_ptr<INT_T[]>[]> _rgb_ypixel_origin;
   INT_T _zoom_out_value;
 };
 

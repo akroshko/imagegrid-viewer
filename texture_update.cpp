@@ -7,6 +7,9 @@
 #include "texturegrid.hpp"
 #include "texture_update.hpp"
 #include "viewport_current_state.hpp"
+// C headers
+// TODO: move out code like this
+#include <cstring>
 // C compatible headers
 #include "c_misc/buffer_manip.hpp"
 
@@ -163,9 +166,9 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                   const ImageGridSquareZoomLevel* const source_square,
                                   INT_T zoom_index,
                                   GridPixelSize texture_pixel_size) {
+  INT_T subimages_w=1;
+  INT_T subimages_h=1;
   auto successful=true;
-  auto source_wpixel=(INT_T)source_square->rgb_wpixel();
-  auto source_hpixel=(INT_T)source_square->rgb_hpixel();
   auto texture_zoom_reduction=((INT_T)pow(2,zoom_index));
   auto dest_wpixel=texture_pixel_size.wpixel()/texture_zoom_reduction;
   auto dest_hpixel=texture_pixel_size.hpixel()/texture_zoom_reduction;
@@ -176,41 +179,41 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
   if (dest_square->display_texture_wrapper()->is_valid()) {
     auto lock_surface_return=dest_square->display_texture_wrapper()->lock_surface();
     if (lock_surface_return == 0) {
-      auto source_data=source_square->rgb_data;
-      auto dest_array=dest_square->display_texture_wrapper()->pixels();
-      // do the things we are copying exist?
-      if (dest_array != nullptr && source_data != nullptr) {
-        // these should only be powers of 2, add an assert
-        auto source_zoom_out_value=source_square->zoom_out_value();
-        auto dest_zoom_index=texture_zoom_reduction;
-        if (source_zoom_out_value <= dest_zoom_index) {
-          auto skip=dest_zoom_index/source_zoom_out_value;
-          buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
-                                     (unsigned char*)dest_array,dest_wpixel,dest_hpixel,
-                                     skip);
-        } else {
-          // we are expanding the surface
-          auto skip=source_zoom_out_value/dest_zoom_index;
-          // loop over dest since we are expanding the source to match the dest
-          for (INT_T l=0L; l < dest_hpixel; l++) {
-            for (INT_T k=0L; k < dest_wpixel; k++) {
-              // find appropriate source pixel
-              auto ls=l/skip;
-              auto ks=k/skip;
-              auto dest_index=(l*dest_wpixel+k)*3;
-              auto source_index=(ls*source_wpixel+ks)*3;
-              if (ks < source_wpixel && ls < source_hpixel) {
-                ((unsigned char *)dest_array)[dest_index]=source_data[source_index];
-                ((unsigned char *)dest_array)[dest_index+1]=source_data[source_index+1];
-                ((unsigned char *)dest_array)[dest_index+2]=source_data[source_index+2];
-              }
+      // everything is read, loop over
+      for (INT_T i_sub=0; i_sub < subimages_w; i_sub++) {
+        for (INT_T j_sub=0; j_sub < subimages_h; j_sub++) {
+          auto source_wpixel=(INT_T)source_square->rgb_wpixel(i_sub, j_sub);
+          auto source_hpixel=(INT_T)source_square->rgb_hpixel(i_sub, j_sub);
+          auto source_data=source_square->get_rgb_data(i_sub,j_sub);
+          auto source_data_origin_x=source_square->rgb_xpixel_origin(i_sub, j_sub);
+          auto source_data_origin_y=source_square->rgb_ypixel_origin(i_sub, j_sub);
+          auto dest_array=dest_square->display_texture_wrapper()->pixels();
+          // do the things we are copying exist?
+          if (dest_array != nullptr && source_data != nullptr) {
+            // these should only be powers of 2, add an assert
+            auto source_zoom_out_value=source_square->zoom_out_value();
+            auto dest_zoom_index=texture_zoom_reduction;
+            // TODO: move out once I restructure code appropriately
+            std::memset((void*)dest_array,0,dest_wpixel*dest_hpixel*3);
+            if (source_zoom_out_value <= dest_zoom_index) {
+              auto skip=dest_zoom_index/source_zoom_out_value;
+              buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
+                                             source_data_origin_x, source_data_origin_y,
+                                             (unsigned char*)dest_array,dest_wpixel,dest_hpixel,
+                                             skip);
+            } else {
+              auto skip=source_zoom_out_value/dest_zoom_index;
+              buffer_copy_expand_generic(source_data,source_wpixel,source_hpixel,
+                                         source_data_origin_x, source_data_origin_y,
+                                         (unsigned char*)dest_array,dest_wpixel,dest_hpixel,
+                                         skip);
             }
+          } else {
+            dest_square->display_texture_wrapper()->unlock_surface();
+            dest_square->unload_texture();
+            successful=false;
           }
         }
-      } else {
-        dest_square->display_texture_wrapper()->unlock_surface();
-        dest_square->unload_texture();
-        successful=false;
       }
       dest_square->display_texture_wrapper()->unlock_surface();
     } else {

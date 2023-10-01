@@ -31,14 +31,15 @@ int main(int argc, char* argv[]) {
   SDL_Surface* display_texture=nullptr;
   display_texture=SDL_CreateRGBSurfaceWithFormat(0,texture_wpixel,texture_hpixel,24,SDL_PIXELFORMAT_RGB24);
   SDL_LockSurface(display_texture);
-  for (auto i=0ul; i < square->rgb_wpixel(); i++) {
-    for (auto j=0ul; j < square->rgb_wpixel(); j++) {
-      auto rgb_index=(i*square->rgb_wpixel()+j)*3;
+  INT_T index=0;
+  for (auto i=0ul; i < square->rgb_wpixel(index,index); i++) {
+    for (auto j=0ul; j < square->rgb_wpixel(index,index); j++) {
+      auto rgb_index=(i*square->rgb_wpixel(index,index)+j)*3;
       auto texture_index=(i*texture_hpixel+j)*3;
       if (i < texture_wpixel && j < texture_hpixel) {
-        ((unsigned char *)display_texture->pixels)[texture_index]=square->rgb_data[rgb_index];
-        ((unsigned char *)display_texture->pixels)[texture_index+1]=square->rgb_data[rgb_index+1];
-        ((unsigned char *)display_texture->pixels)[texture_index+2]=square->rgb_data[rgb_index+2];
+        ((unsigned char *)display_texture->pixels)[texture_index]=square->get_rgb_data(index,index)[rgb_index];
+        ((unsigned char *)display_texture->pixels)[texture_index+1]=square->get_rgb_data(index,index)[rgb_index+1];
+        ((unsigned char *)display_texture->pixels)[texture_index+2]=square->get_rgb_data(index,index)[rgb_index+2];
       }
     }
   }

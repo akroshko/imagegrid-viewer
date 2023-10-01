@@ -290,8 +290,9 @@ bool load_tiff_as_rgb(const std::string filename,
               size_t npixel_reduced=w_reduced*h_reduced;
               file_data->rgb_data=new unsigned char[npixel_reduced*3];
               buffer_copy_reduce_generic((unsigned char *)png_raster,png_width,png_height,
-                                         file_data->rgb_data,w_reduced,h_reduced,
-                                         actual_zoom_out_value);
+                                             0, 0,
+                                             file_data->rgb_data,w_reduced,h_reduced,
+                                             actual_zoom_out_value);
             }
           }
           delete[] png_raster;
@@ -383,8 +384,9 @@ bool load_png_as_rgb(std::string filename,
           size_t npixel_reduced=w_reduced*h_reduced;
           file_data->rgb_data=new unsigned char[npixel_reduced*3];
           buffer_copy_reduce_generic((unsigned char *)raster,width,height,
-                                     file_data->rgb_data,w_reduced,h_reduced,
-                                     zoom_out_value);
+                                         0, 0,
+                                         file_data->rgb_data,w_reduced,h_reduced,
+                                         zoom_out_value);
           success=true;
         }
       }
@@ -421,25 +423,13 @@ bool write_png(std::string filename_new, INT_T wpixel, INT_T hpixel, unsigned ch
 }
 
 bool check_tiff(std::string filename) {
-  if (regex_search(filename,tiff_search)) {
-    return true;
-  } else {
-    return false;
-  }
+  return regex_search(filename,tiff_search);
 }
 
 bool check_png(std::string filename) {
-  if (regex_search(filename,png_search)) {
-    return true;
-  } else {
-    return false;
-  }
+  return regex_search(filename,png_search);
 }
 
 bool check_empty(std::string filename) {
-  if (regex_search(filename,empty_search)) {
-    return true;
-  } else {
-    return false;
-  }
+  return regex_search(filename,empty_search);
 }
