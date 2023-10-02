@@ -157,16 +157,21 @@ INT_T ImageGridSquare::image_hpixel() const {
 }
 
 void ImageGrid::_read_grid_info_setup_squares(const GridSetup* const grid_setup) {
+  // delayed allocation for the squares
   this->squares=std::make_unique<std::unique_ptr<std::unique_ptr<ImageGridSquare>[]>[]>(grid_setup->grid_image_size().wimage());
   for (INT_T i=0L; i < grid_setup->grid_image_size().wimage(); i++) {
     this->squares[i]=std::make_unique<std::unique_ptr<ImageGridSquare>[]>(grid_setup->grid_image_size().himage());
   }
   this->_image_max_size=GridPixelSize(0,0);
-  // now actually intialize squares
+  // TODO: naive for now, but iterators once I changeover
   for (INT_T i=0L; i < this->_grid_image_size.wimage(); i++) {
     for (INT_T j=0L; j < this->_grid_image_size.himage(); j++) {
-      auto ij=j*this->_grid_image_size.wimage()+i;
-      this->squares[i][j]=std::make_unique<ImageGridSquare>(grid_setup->filenames()[ij]);
+      const std::pair<INT_T,INT_T> grid_pair(i,j);
+      // TODO: for now
+      const std::pair<INT_T,INT_T> subgrid_pair(0,0);
+      auto file_data=grid_setup->file_data();
+      auto filename=file_data[grid_pair][subgrid_pair];
+      this->squares[i][j]=std::make_unique<ImageGridSquare>(filename);
       // set the RGB of the surface
       auto rgb_wpixel=this->squares[i][j]->image_wpixel();
       auto rgb_hpixel=this->squares[i][j]->image_hpixel();
@@ -283,8 +288,13 @@ bool ImageGrid::_load_file(const ViewPortCurrentState& viewport_current_state,
       for (auto & zoom_index : zoom_index_list) {
         dest_squares.push_back(this->squares[i][j]->image_array[zoom_index].get());
       }
-      auto ij=j*this->_grid_image_size.wimage()+i;
-      auto filename=grid_setup->filenames()[ij];
+      const std::pair<INT_T,INT_T> grid_pair(i,j);
+      // TODO: for now
+      const std::pair<INT_T,INT_T> subgrid_pair(0,0);
+      auto file_data=grid_setup->file_data();
+      auto filename=file_data[grid_pair][subgrid_pair];
+      // auto ij=j*this->_grid_image_size.wimage()+i;
+      // auto filename=grid_setup->filenames()[ij];
       std::string cached_file;
       if (grid_setup->use_cache()) {
         cached_file=this->_create_cache_filename(filename);
@@ -440,8 +450,11 @@ void ImageGrid::setup_grid_cache(const GridSetup* grid_setup) {
                        i,j,
                        0L,true,grid_setup);
       // TODO: eventually cache this out as tiles that fit in 128x128 and 512x512
-      auto ij=j*this->_grid_image_size.wimage()+i;
-      auto filename=grid_setup->filenames()[ij];
+      const std::pair<INT_T,INT_T> grid_pair(i,j);
+      // TODO: for now
+      const std::pair<INT_T,INT_T> subgrid_pair(0,0);
+      auto file_data=grid_setup->file_data();
+      auto filename=file_data[grid_pair][subgrid_pair];
       this->_write_cache(i,j,filename);
       // unload
       for (auto k=this->_zoom_index_length-1; k >= 0L; k--) {

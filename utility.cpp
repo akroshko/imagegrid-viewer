@@ -6,7 +6,7 @@
 // C++ headers
 #include <thread>
 // C headers
-#include <cmath>
+// #include <cmath>
 
 /**
  * Pad a number and then reduce by a factor.

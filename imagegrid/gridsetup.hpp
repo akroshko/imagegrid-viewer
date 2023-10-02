@@ -25,10 +25,12 @@ public:
   GridSetup& operator=(const GridSetup&&)=delete;
   /** Indicate whether setup was successful. */
   bool successful() const;
-  /** Returns a path of images to load. */
-  std::vector<std::string> filenames() const;
   /** The size of the grid loaded. */
   GridImageSize grid_image_size() const;
+  /** Get the file data.
+   *  @return The file data container.
+   */
+  const FILE_DATA_T& file_data() const;
   /** Indicate whether to cache images. */
   bool do_cache() const;
   /** Indicate whether to use cached images. */
@@ -37,11 +39,13 @@ protected:
   bool _successful=false;
   GridImageSize _grid_image_size;
   std::vector<std::string> _filenames;
+  std::string _text_filename;
   /** Stores a path of images to load.
    *
    * TODO: change away from a raw string array
    */
   std::string _path_value;
+  FILE_DATA_T _file_data;
   /** For future expansion. */
   // char _data_set[PATH_BUFFER_SIZE]={ 0 };
   bool _do_cache=false;

@@ -8,16 +8,16 @@
 // C library headers
 #include <getopt.h>
 
-
 void parse_standard_arguments(int argc, char* const* argv,
                               INT_T &wimage, INT_T &himage,
                               bool &do_cache, bool &use_cache, bool &successful,
-                              std::string &path_value, std::vector<std::string> &filenames) {
+                              std::string &path_value, std::vector<std::string> &filenames,
+                              std::string &text_filename) {
   int opt;
   char *end;
   // char path_value_local[PATH_BUFFER_SIZE]={ 0 };
   // get options
-  while((opt=getopt(argc ,argv, "w:h:p:cd")) != -1) {
+  while((opt=getopt(argc ,argv, "w:h:p:f:cd")) != -1) {
     switch(opt) {
     case 'w':
       // width in images
@@ -31,6 +31,9 @@ void parse_standard_arguments(int argc, char* const* argv,
       // get numbered images from path
       // strncpy(path_value_local,optarg,PATH_BUFFER_SIZE);
       path_value=std::string(optarg);
+      break;
+    case 'f':
+      text_filename=std::string(optarg);
       break;
     case 'c':
       // only cache images

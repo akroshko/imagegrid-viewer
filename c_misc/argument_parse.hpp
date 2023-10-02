@@ -15,8 +15,11 @@
  * @param successful Reference to update on whether arguments were valid.
  * @param path_value A path namesto search for images.
  * @param filenames A list of filenames.
+ * @param text_filename A filename corresponding to a text file that
+ *        contains the parameters for the imagegrid.
  */
 void parse_standard_arguments(int argc, char* const* argv,
                               INT_T &wimage, INT_T &himage,
                               bool &do_cache, bool &use_cache, bool &successful,
-                              std::string &path_value, std::vector<std::string> &filenames);
+                              std::string &path_value, std::vector<std::string> &filenames,
+                              std::string &text_filename);

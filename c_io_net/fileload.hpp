@@ -9,12 +9,47 @@
 //local includes
 #include "../common.hpp"
 // C++ headers
+#include <memory>
 #include <string>
-#include <regex>
+#include <unordered_map>
 #include <vector>
 #include <utility>
 // C headers
 #include <climits>
+
+////////////////////////////////////////////////////////////////////////////////
+// more complex types
+
+// TODO: FIGURE OUT WHY THIS IS NECESSARY!!!! I HATE THIS WORKAROUND!!!!
+// #ifndef FILE_DATA_T_GUARD
+// #define FILE_DATA_T_GUARD
+// // derived from https://en.cppreference.com/w/cpp/utility/hash
+// // can this be improved
+// struct hash_pair {
+//   template <class T1, class T2>
+//   std::size_t operator()(const std::pair<T1, T2>& p) const {
+//     auto h1=std::hash<T1>{}(p.first);
+//     auto h2=std::hash<T2>{}(p.second);
+//
+//     if (h1 != h2) {
+//       return h1^h2;
+//     }
+//     return h1;
+//   }
+// };
+//
+// /**
+//  * A container that holds the pair of coordinates for the grid, i.e.,
+//  * x y. Then a pair of coordinates for the subgrid, i.e., x,y.  These
+//  * coordinates reference a filenmame.
+//  */
+//
+// typedef std::unordered_map<std::pair<INT_T,INT_T>,
+//                            std::unordered_map<std::pair<INT_T,INT_T>,
+//                                               std::string,
+//                                               hash_pair>,
+//                            hash_pair> FILE_DATA_T;
+// #endif
 
 enum IMAGEDIRECTION {tl_horiz_reset,tl_horiz_follow};
 
@@ -157,5 +192,13 @@ bool check_png(std::string filename);
  * @return If the file is an empty placeholder file.
  */
 bool check_empty(std::string filename);
+
+/**
+ * Load image grid from a text file.
+ *
+ * @param text_file The text file to load from.
+ * @param file_data A container that holds the grid/file information.
+ */
+void load_image_grid_from_text (std::string text_file, FILE_DATA_T& file_data);
 
 #endif

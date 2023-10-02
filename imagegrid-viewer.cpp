@@ -35,6 +35,7 @@
 #include "texturegrid.hpp"
 #include "texture_update.hpp"
 #include "viewport.hpp"
+#include "viewport_current_state.hpp"
 // C compatible headers
 #include "c_misc/sdl.hpp"
 // C++ headers

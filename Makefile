@@ -40,7 +40,7 @@ tidy:
 
 .PHONY: iwyu
 iwyu:
-	echo "$(SRC_MAIN) $(SRC_CIONET) $(SRC_CMISC)"'\0' | tr ' ' '\0' | xargs -0 -n1 iwyu -Xiwyu --cxx17ns -Xiwyu --no_fwd_decls
+	echo "$(SRC_MAIN) $(SRC_CIONET) $(SRC_CMISC)"'\0' | tr ' ' '\0' | xargs -0 -n1 iwyu -Xiwyu --cxx17ns -Xiwyu --no_fwd_decls -std=c++17
 
 imagegrid-viewer: CXXFLAGS_SAFE +=  -g3 -O2
 imagegrid-viewer: CXXFLAGS_UNSAFE += -g3 -O2

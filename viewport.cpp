@@ -6,8 +6,6 @@
 // C compatible headers
 #include "c_misc/sdl.hpp"
 // C++ headers
-#include <iostream>
-#include <string>
 #include <vector>
 // C headers
 #include <cmath>

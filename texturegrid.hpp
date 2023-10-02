@@ -12,6 +12,8 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+// C headers
+#include <climits>
 
 class TextureGrid;
 

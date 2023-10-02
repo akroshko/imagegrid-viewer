@@ -8,8 +8,10 @@
 #include "coordinates.hpp"
 #include "imagegrid/imagegrid.hpp"
 #include "texturegrid.hpp"
+#include "viewport_current_state.hpp"
 // C++ headers
 #include <atomic>
+#include <memory>
 
 /**
  * This class updates the currently loaded textures

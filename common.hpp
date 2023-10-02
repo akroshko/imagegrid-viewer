@@ -2,6 +2,8 @@
 #include <chrono>
 #include <iostream>
 #include <string>
+#include <unordered_map>
+#include <utility>
 // C headers
 #include <climits>
 #include <cstdint>
@@ -49,6 +51,31 @@
 typedef double FLOAT_T;
 typedef uint64_t UINT_T;
 typedef int64_t INT_T;
+
+
+////////////////////////////////////////////////////////////////////////////////
+// more complex types
+
+// derived from https://en.cppreference.com/w/cpp/utility/hash
+// can this be improved
+struct hash_pair {
+  template <class T1, class T2>
+  std::size_t operator()(const std::pair<T1, T2>& p) const {
+    auto h1=std::hash<T1>{}(p.first);
+    auto h2=std::hash<T2>{}(p.second);
+
+    if (h1 != h2) {
+      return h1^h2;
+    }
+    return h1;
+  }
+};
+
+typedef std::unordered_map<std::pair<INT_T,INT_T>,
+                           std::unordered_map<std::pair<INT_T,INT_T>,
+                                              std::string,
+                                              hash_pair>,
+                           hash_pair> FILE_DATA_T;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Contains some default values.  Many of these are placeholders for

@@ -7,9 +7,9 @@
 // local headers
 #include "common.hpp"
 #include "imagegrid/gridsetup.hpp"
-#include "imagegrid/imagegrid.hpp"
 #include "texturegrid.hpp"
 #include "coordinates.hpp"
+#include  "viewport_current_state.hpp"
 // C compatible headers
 #include "c_misc/sdl.hpp"
 // C++ headers

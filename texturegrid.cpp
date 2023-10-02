@@ -7,7 +7,6 @@
 #include "utility.hpp"
 #include "imagegrid/gridsetup.hpp"
 #include "texturegrid.hpp"
-#include "iterators.hpp"
 // C compatible headers
 #include "c_misc/sdl.hpp"
 // C++ headers
