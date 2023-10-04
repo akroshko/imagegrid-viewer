@@ -24,8 +24,6 @@ class ImageGrid;
 /**
  * An individual square on the grid at a particular zoom level.
  *
- * TODO: Currently only stores one zoom level.  However code is in the
- * works that improves this.
  */
 class ImageGridSquareZoomLevel {
 public:
@@ -42,14 +40,15 @@ public:
    * Load a file and fill out squares.
    *
    * @param filename The filename to load.
-   * @param cached_filename The cached version of filename to load.
+   * @param use_cache Whether to use the cache for initial loading.
    * @param dest_square A vector of this class to be loaded.
    */
-  static bool load_file(std::string filename,
-                        std::string cached_filename,
-                        std::vector<ImageGridSquareZoomLevel*> dest_square);
+  static bool load_square(SQUARE_DATA_T square_data,
+                          bool use_cache,
+                          std::vector<ImageGridSquareZoomLevel*> dest_square);
+  static std::string create_cache_filename(std::string filename);
   /** Unload and free memory from a loaded file */
-  void unload_file();
+  void unload_square();
   /** @return The amount zoomed out this class represents. */
   INT_T zoom_out_value() const;
   /**
@@ -107,17 +106,13 @@ private:
 class ImageGridSquare {
 public:
   ImageGridSquare()=delete;
-  ImageGridSquare(std::string filename);
+  ImageGridSquare(SQUARE_DATA_T square_data);
   ~ImageGridSquare()=default;
   ImageGridSquare(const ImageGridSquare&)=delete;
   ImageGridSquare(const ImageGridSquare&&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
   std::unique_ptr<std::unique_ptr<ImageGridSquareZoomLevel>[]> image_array;
-  /** @return The width in pixels. */
-  INT_T image_wpixel() const;
-  /** @return The height in pixels. */
-  INT_T image_hpixel() const;
 private:
   friend class ImageGrid;
   /**
@@ -129,9 +124,9 @@ private:
   /**
    * Read in a the file cooresponing to this square.
    *
-   * @param filename The filename to load.
+   * @param square_data The data on this grid square.
    */
-  void _read_file(std::string filename);
+  void _read_data(SQUARE_DATA_T square_data);
 };
 
 /**
@@ -146,11 +141,23 @@ public:
   ImageGrid(const ImageGrid&&)=delete;
   ImageGrid& operator=(const ImageGrid&)=delete;
   ImageGrid& operator=(const ImageGrid&&)=delete;
+  /**
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   * @param viewport_current_state_imagegrid_update The current state of the viewport.
+   */
   void read_grid_info(const GridSetup* grid_setup,
                       std::shared_ptr<ViewPortTransferState> viewport_current_state_imagegrid_update);
+  /**
+   *
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   * @param keep_running Toggled when this is shutting down.
+   */
   void load_grid(const GridSetup* grid_setup, std::atomic<bool> &keep_running);
   void setup_grid_cache(const GridSetup* grid_setup);
-  static std::string _create_cache_filename(std::string filename);
   GridPixelSize get_image_max_pixel_size() const;
   /** The individual squares in the image grid. */
   std::unique_ptr<std::unique_ptr<std::unique_ptr<ImageGridSquare>[]>[]> squares;
@@ -186,7 +193,7 @@ private:
                    INT_T zoom_index_lower_limit,
                    INT_T load_all);
   /**
-   * Actually load the file.
+   * Actually load the square.
    *
    * @param viewport_current_state The current state of the viewport.
    * @param i The index along the width of the grid.
@@ -200,7 +207,7 @@ private:
    *                   size.
    * @return If the file was loaded.
    */
-  bool _load_file(const ViewPortCurrentState& viewport_current_state,
+  bool _load_square(const ViewPortCurrentState& viewport_current_state,
                   INT_T i, INT_T j,
                   INT_T zoom_index_lower_limit,
                   INT_T load_all,

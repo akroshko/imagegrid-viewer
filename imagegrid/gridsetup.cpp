@@ -60,7 +60,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       INT_T x=i%wimage;
       INT_T y=i/wimage;
       auto current_grid=std::pair<INT_T,INT_T>(x,y);
-      auto current_subgrid=std::pair<INT_T,INT_T>(0,0);
+      auto current_subgrid=CURRENT_SUBGRID_T(0,0);
       this->_file_data[current_grid][current_subgrid]=this->_filenames[i];
     }
     this->_successful=true;

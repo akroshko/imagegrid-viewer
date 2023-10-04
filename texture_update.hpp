@@ -98,9 +98,7 @@ private:
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;
   bool _grid_square_visible(INT_T i, INT_T j,
-                            const TextureGrid* texture_grid,
-                            const ViewPortCurrentState& viewport_current_state,
-                            FLOAT_T zoom);
+                            const ViewPortCurrentState& viewport_current_state);
 };
 
 #endif

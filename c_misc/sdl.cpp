@@ -187,7 +187,7 @@ void SDLDisplayTextureWrapper::unload_surface() {
   this->_display_texture=nullptr;
 }
 
-void* const SDLDisplayTextureWrapper::pixels () {
+void* SDLDisplayTextureWrapper::pixels () {
   return this->_display_texture->pixels;
 }
 

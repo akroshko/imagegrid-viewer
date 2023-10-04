@@ -26,6 +26,7 @@ public:
    * @param himage
    */
   GridImageSize(const INT_T wimage, const INT_T himage);
+  GridImageSize& operator=(const GridImageSize &grid_image_size);
   /** @return The width. */
   INT_T wimage() const;
   /** @return The height. */
@@ -47,6 +48,7 @@ public:
   GridCoordinateSize();
   GridCoordinateSize(const GridCoordinateSize &grid_coordinate_size);
   GridCoordinateSize(const FLOAT_T wgrid, const FLOAT_T hgrid);
+  GridCoordinateSize& operator=(const GridCoordinateSize &grid_coordinate_size);
   /** @return The width. */
   FLOAT_T wgrid() const;
   /** @return The height. */
@@ -66,8 +68,9 @@ private:
 class GridCoordinate {
 public:
   GridCoordinate();
-  GridCoordinate(const GridCoordinate &grid_coordinate_size);
+  GridCoordinate(const GridCoordinate &grid_coordinate);
   GridCoordinate(const FLOAT_T xgrid, FLOAT_T ygrid);
+  GridCoordinate& operator=(const GridCoordinate &grid_coordinate);
   /** @return The x coordinate. */
   FLOAT_T xgrid() const;
   /** @return The y coordinate. */
@@ -89,6 +92,7 @@ public:
   GridPixelSize();
   GridPixelSize(const GridPixelSize &grid_pixel_size);
   GridPixelSize(INT_T wpixel, INT_T hpixel);
+  GridPixelSize& operator=(const GridPixelSize &grid_pixel_size);
   /** @return The width. */
   INT_T wpixel() const;
   /** @return The height. */
@@ -124,6 +128,7 @@ public:
   ViewportPixelSize();
   ViewportPixelSize(const ViewportPixelSize &viewport_pixel_size);
   ViewportPixelSize(INT_T wpixel, INT_T xpixel);
+  ViewportPixelSize& operator= (const ViewportPixelSize &viewport_pixel_size);
   /** @return The width. */
   INT_T wpixel() const;
   /** @return The height. */
@@ -154,7 +159,7 @@ public:
    * @param viewport_pixel_size The size of the viewport in pixels.
    */
   ViewportPixelCoordinate(GridCoordinate &grid_coordinate, FLOAT_T zoom, GridCoordinate &grid_coordinate_pixel_0, const ViewportPixelSize &viewport_pixel_size);
-
+  ViewportPixelCoordinate& operator=(const ViewportPixelCoordinate &viewport_pixel_coordinate);
   /** @return The x coordinate. */
   INT_T xpixel() const;
   /** @return The y coordinate. */

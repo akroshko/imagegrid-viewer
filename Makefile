@@ -15,11 +15,13 @@ OBJ_MAIN = $(SRC_MAIN:.cpp=.o)
 OBJ_TEST = $(SRC_TEST:.cpp=.o)
 
 LDFLAGS = -lstdc++ -lstdc++fs -lm -lpng -ltiff -lSDL2 -pthread
-CXXFLAGS_SAFE = -std=c++17 -Wall -Wshadow -Wundef -Wpedantic
-CXXFLAGS_UNSAFE = -std=c++17 -Wall -Wshadow -Wundef
+CXXFLAGS_SAFE = -std=c++17 -Wall -Wextra -Wshadow -Wundef -Wpedantic
+CXXFLAGS_UNSAFE = -std=c++17 -Wall -Wextra -Wshadow -Wundef
 # -Wconversion -Wsign-conversion
 
-all: imagegrid-viewer test_file
+# TODO: reenable test code
+# all: imagegrid-viewer test_file
+all: imagegrid-viewer
 
 .PHONY: etags
 etags:

@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
   // load in a file
   std::vector<ImageGridSquareZoomLevel*> squares;
   squares.emplace_back(square.get());
-  ImageGridSquareZoomLevel::load_file(file_to_load,
+  ImageGridSquareZoomLevel::load_square(file_to_load,
                                       // TODO: replace with cached file
                                       file_to_load,
                                       squares);

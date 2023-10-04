@@ -59,8 +59,8 @@ public:
   // TODO: this one needs help being private and investigation whether
   // there's a better way
   INT_T last_load_index=INT_MAX;
-  SDLDisplayTextureWrapper* const display_texture_wrapper();
-  SDLDisplayTextureWrapper* const filler_texture_wrapper();
+  SDLDisplayTextureWrapper* display_texture_wrapper();
+  SDLDisplayTextureWrapper* filler_texture_wrapper();
 private:
   friend class TextureGrid;
   // the actual display texture

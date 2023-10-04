@@ -77,6 +77,20 @@ typedef std::unordered_map<std::pair<INT_T,INT_T>,
                                               hash_pair>,
                            hash_pair> FILE_DATA_T;
 
+typedef std::unordered_map<std::pair<INT_T,INT_T>,
+                           std::string,
+                           hash_pair> SQUARE_DATA_T;
+
+typedef std::unordered_map<std::pair<INT_T,INT_T>,
+                           size_t,
+                           hash_pair> SUBGRID_SIZE_T;
+
+typedef std::unordered_map<std::pair<INT_T,INT_T>,
+                           unsigned char *,
+                           hash_pair> SUBGRID_DATA_T;
+
+typedef std::pair<INT_T,INT_T> CURRENT_SUBGRID_T;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Contains some default values.  Many of these are placeholders for
 // values that may eventually be configurable.

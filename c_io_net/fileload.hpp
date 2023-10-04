@@ -17,40 +17,6 @@
 // C headers
 #include <climits>
 
-////////////////////////////////////////////////////////////////////////////////
-// more complex types
-
-// TODO: FIGURE OUT WHY THIS IS NECESSARY!!!! I HATE THIS WORKAROUND!!!!
-// #ifndef FILE_DATA_T_GUARD
-// #define FILE_DATA_T_GUARD
-// // derived from https://en.cppreference.com/w/cpp/utility/hash
-// // can this be improved
-// struct hash_pair {
-//   template <class T1, class T2>
-//   std::size_t operator()(const std::pair<T1, T2>& p) const {
-//     auto h1=std::hash<T1>{}(p.first);
-//     auto h2=std::hash<T2>{}(p.second);
-//
-//     if (h1 != h2) {
-//       return h1^h2;
-//     }
-//     return h1;
-//   }
-// };
-//
-// /**
-//  * A container that holds the pair of coordinates for the grid, i.e.,
-//  * x y. Then a pair of coordinates for the subgrid, i.e., x,y.  These
-//  * coordinates reference a filenmame.
-//  */
-//
-// typedef std::unordered_map<std::pair<INT_T,INT_T>,
-//                            std::unordered_map<std::pair<INT_T,INT_T>,
-//                                               std::string,
-//                                               hash_pair>,
-//                            hash_pair> FILE_DATA_T;
-// #endif
-
 enum IMAGEDIRECTION {tl_horiz_reset,tl_horiz_follow};
 
 /**
@@ -81,11 +47,11 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
  * May not be permanent, members correspond to those in
  * ImageGridSquareZoomLevel.
  */
-struct LoadFileData {
+struct LoadSquareData {
   std::string filename;
-  unsigned char* rgb_data=nullptr;
-  size_t rgb_wpixel=INT_MIN;
-  size_t rgb_hpixel=INT_MIN;
+  SUBGRID_DATA_T rgb_data;
+  SUBGRID_SIZE_T rgb_wpixel;
+  SUBGRID_SIZE_T rgb_hpixel;
   INT_T zoom_out_value=INT_MIN;
 };
 
@@ -103,13 +69,15 @@ void read_data(std::string filename,
  * Load data as RGB.
  *
  * @param filename The filename to load.
- * @param width Set as the width of the image in pixels.
- * @param height Set as the height of the image in pixels.
+ * @param cached_filename The cached filename.
+ * @param current_subgrid The current subgrid to load.
+ * @param load_file_data The filedata to load.
  * @return If reading image data was successful.
  */
 bool load_data_as_rgb(const std::string filename,
                       const std::string cached_filename,
-                      const std::vector<std::shared_ptr<LoadFileData>> load_file_data);
+                      const CURRENT_SUBGRID_T current_subgrid,
+                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
 
 /**
  * Read data about a tiff file using libtiff,based off of
@@ -129,13 +97,15 @@ bool read_tiff_data(std::string filename, INT_T &width, INT_T &height);
  * @param filename The filename to load.
  * @param cached_filename The filename that cached the parts of the
  *                        image fitting in 512x512.
+ * @param current_subgrid The current subgrid to load.
  * @param load_file_data A vector structs to be updated with data as
  *                       it is loaded.
  * @return If loading image was successful.
  */
 bool load_tiff_as_rgb(const std::string filename,
                       const std::string cached_filename,
-                      const std::vector<std::shared_ptr<LoadFileData>> load_file_data);
+                      const CURRENT_SUBGRID_T current_subgrid,
+                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
 
 /**
  * Read data about a png file using libpng.
@@ -151,12 +121,14 @@ bool read_png_data(std::string filename, INT_T &width, INT_T &height);
  * Load a png file using libpng.
  *
  * @param filename The filename to load.
+ * @param current_subgrid The current subgrid to load.
  * @param load_file_data A vector structs to be updated with data as
  *                       it is loaded.
  * @return If loading image was successful.
  */
 bool load_png_as_rgb(std::string filename,
-                     const std::vector<std::shared_ptr<LoadFileData>> load_file_data);
+                     const CURRENT_SUBGRID_T current_subgrid,
+                     const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
 
 /**
  * Write a png file using libpng.

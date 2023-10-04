@@ -107,7 +107,7 @@ public:
    *
    * @return A pointer to the raw pixel array.
    */
-  void* const pixels();
+  void* pixels();
   /**
    * Lock the surface.
    *

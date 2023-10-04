@@ -19,6 +19,13 @@ GridImageSize::GridImageSize(const GridImageSize &grid_image_size) {
   this->_himage=grid_image_size._himage;
 };
 
+GridImageSize& GridImageSize::operator=(const GridImageSize &grid_image_size) {
+  this->_wimage=grid_image_size._wimage;
+  this->_himage=grid_image_size._himage;
+  return *this;
+};
+
+
 GridImageSize::GridImageSize(const INT_T wimage, const INT_T himage) {
   this->_wimage=wimage;
   this->_himage=himage;
@@ -42,6 +49,12 @@ GridCoordinateSize::GridCoordinateSize(const GridCoordinateSize &grid_coordinate
   this->_hgrid=grid_coordinate_size._hgrid;
 }
 
+GridCoordinateSize& GridCoordinateSize::operator=(const GridCoordinateSize &grid_coordinate_size) {
+  this->_wgrid=grid_coordinate_size._wgrid;
+  this->_hgrid=grid_coordinate_size._hgrid;
+  return *this;
+}
+
 GridCoordinateSize::GridCoordinateSize(FLOAT_T wgrid, FLOAT_T hgrid) {
   this->_wgrid=wgrid;
   this->_hgrid=hgrid;
@@ -63,6 +76,12 @@ GridCoordinate::GridCoordinate() {
 GridCoordinate::GridCoordinate(const GridCoordinate &grid_coordinate) {
   this->_xgrid=grid_coordinate._xgrid;
   this->_ygrid=grid_coordinate._ygrid;
+}
+
+GridCoordinate& GridCoordinate::operator=(const GridCoordinate &grid_coordinate) {
+  this->_xgrid=grid_coordinate._xgrid;
+  this->_ygrid=grid_coordinate._ygrid;
+  return *this;
 }
 
 GridCoordinate::GridCoordinate(FLOAT_T xgrid, FLOAT_T ygrid) {
@@ -92,6 +111,12 @@ GridPixelSize::GridPixelSize(const GridPixelSize &grid_pixel_size) {
   this->_hpixel=grid_pixel_size._hpixel;
 }
 
+GridPixelSize& GridPixelSize::operator=(const GridPixelSize &grid_pixel_size) {
+  this->_wpixel=grid_pixel_size._wpixel;
+  this->_hpixel=grid_pixel_size._hpixel;
+  return *this;
+}
+
 GridPixelSize::GridPixelSize(INT_T wpixel, INT_T hpixel) {
   this->_wpixel=wpixel;
   this->_hpixel=hpixel;
@@ -112,6 +137,12 @@ ViewportPixelCoordinate::ViewportPixelCoordinate() {
 ViewportPixelCoordinate::ViewportPixelCoordinate(const ViewportPixelCoordinate &viewport_pixel_coordinate) {
   this->_xpixel=viewport_pixel_coordinate._xpixel;
   this->_ypixel=viewport_pixel_coordinate._ypixel;
+}
+
+ViewportPixelCoordinate& ViewportPixelCoordinate::operator=(const ViewportPixelCoordinate &viewport_pixel_coordinate) {
+  this->_xpixel=viewport_pixel_coordinate._xpixel;
+  this->_ypixel=viewport_pixel_coordinate._ypixel;
+  return *this;
 }
 
 ViewportPixelCoordinate:: ViewportPixelCoordinate(INT_T xpixel, INT_T ypixel) {
@@ -140,6 +171,12 @@ ViewportPixelSize::ViewportPixelSize() {
 ViewportPixelSize::ViewportPixelSize(const ViewportPixelSize &viewport_pixel_size) {
   this->_wpixel=viewport_pixel_size._wpixel;
   this->_hpixel=viewport_pixel_size._hpixel;
+}
+
+ViewportPixelSize& ViewportPixelSize::operator=(const ViewportPixelSize &viewport_pixel_size) {
+  this->_wpixel=viewport_pixel_size._wpixel;
+  this->_hpixel=viewport_pixel_size._hpixel;
+  return *this;
 }
 
 ViewportPixelSize::ViewportPixelSize(INT_T wpixel, INT_T hpixel) {

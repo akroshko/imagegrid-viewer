@@ -47,10 +47,10 @@ bool TextureGridSquareZoomLevel::get_image_filler () const {
   return !this->is_loaded && this->is_displayable;
 }
 
-SDLDisplayTextureWrapper* const TextureGridSquareZoomLevel::display_texture_wrapper() {
+SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::display_texture_wrapper() {
   return this->_display_texture_wrapper.get();
 }
-SDLDisplayTextureWrapper* const TextureGridSquareZoomLevel::filler_texture_wrapper() {
+SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::filler_texture_wrapper() {
   return this->_filler_texture_wrapper;
 }
 

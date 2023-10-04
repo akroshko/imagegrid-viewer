@@ -160,13 +160,15 @@ void read_data(std::string filename,
 
 bool load_data_as_rgb(const std::string filename,
                       const std::string cached_filename,
-                      const std::vector<std::shared_ptr<LoadFileData>> load_file_data) {
+                      const CURRENT_SUBGRID_T current_subgrid,
+                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
   bool load_successful=false;
   if (check_tiff(filename)) {
     MSG("Loading TIFF: " << filename);
     // TODO: check success
     load_tiff_as_rgb(filename,
                      cached_filename,
+                     current_subgrid,
                      load_file_data);
     // printing pointer here
     MSG("Done TIFF: " << filename);
@@ -175,6 +177,7 @@ bool load_data_as_rgb(const std::string filename,
       MSG("Loading PNG: " << filename);
       // TODO: check success
       load_png_as_rgb(filename,
+                      current_subgrid,
                       load_file_data);
       MSG("Done PNG: " << filename);
       load_successful=true;
@@ -211,7 +214,8 @@ bool read_tiff_data(std::string filename,
 
 bool load_tiff_as_rgb(const std::string filename,
                       const std::string cached_filename,
-                      const std::vector<std::shared_ptr<LoadFileData>> load_file_data) {
+                      const CURRENT_SUBGRID_T current_subgrid,
+                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
   auto success=false;
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
   if (!tif) {
@@ -223,7 +227,6 @@ bool load_tiff_as_rgb(const std::string filename,
     // cache this data somewhere...
     // do a trial first to see if we can use the cached file
     // it is ironic this is in PNG...
-    // auto can_cache=true;
     auto can_cache=true;
     if (!std::filesystem::exists(cached_filename)) {
       can_cache=false;
@@ -284,14 +287,14 @@ bool load_tiff_as_rgb(const std::string filename,
               // TODO: might want to add an assert here but should be safe due to earlier check
               size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
               size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
-              file_data->rgb_wpixel=w_reduced;
-              file_data->rgb_hpixel=h_reduced;
+              file_data->rgb_wpixel[current_subgrid]=w_reduced;
+              file_data->rgb_hpixel[current_subgrid]=h_reduced;
               size_t npixel_reduced=w_reduced*h_reduced;
-              file_data->rgb_data=new unsigned char[npixel_reduced*3];
+              file_data->rgb_data[current_subgrid]=new unsigned char[npixel_reduced*3];
               buffer_copy_reduce_generic((unsigned char *)png_raster,png_width,png_height,
-                                             0, 0,
-                                             file_data->rgb_data,w_reduced,h_reduced,
-                                             actual_zoom_out_value);
+                                         0, 0,
+                                         file_data->rgb_data[current_subgrid],w_reduced,h_reduced,
+                                         actual_zoom_out_value);
             }
           }
           delete[] png_raster;
@@ -315,12 +318,12 @@ bool load_tiff_as_rgb(const std::string filename,
             auto zoom_out_value=file_data->zoom_out_value;
             size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
             size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
-            file_data->rgb_wpixel=w_reduced;
-            file_data->rgb_hpixel=h_reduced;
+            file_data->rgb_wpixel[current_subgrid]=w_reduced;
+            file_data->rgb_hpixel[current_subgrid]=h_reduced;
             auto npixels_reduced=w_reduced*h_reduced;
-            file_data->rgb_data=new unsigned char[npixels_reduced*3];
+            file_data->rgb_data[current_subgrid]=new unsigned char[npixels_reduced*3];
             buffer_copy_reduce_tiff(raster,tiff_width,tiff_height,
-                                    file_data->rgb_data,w_reduced,h_reduced,
+                                    file_data->rgb_data[current_subgrid],w_reduced,h_reduced,
                                     zoom_out_value);
           }
           success=true;
@@ -351,7 +354,8 @@ bool read_png_data(std::string filename,
 }
 
 bool load_png_as_rgb(std::string filename,
-                     const std::vector<std::shared_ptr<LoadFileData>> load_file_data) {
+                     const CURRENT_SUBGRID_T current_subgrid,
+                     const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
   bool success=false;
   png_image image;
 
@@ -378,14 +382,14 @@ bool load_png_as_rgb(std::string filename,
           auto zoom_out_value=file_data->zoom_out_value;
           size_t w_reduced=reduce_and_pad(width,zoom_out_value);
           size_t h_reduced=reduce_and_pad(height,zoom_out_value);
-          file_data->rgb_wpixel=w_reduced;
-          file_data->rgb_hpixel=h_reduced;
+          file_data->rgb_wpixel[current_subgrid]=w_reduced;
+          file_data->rgb_hpixel[current_subgrid]=h_reduced;
           size_t npixel_reduced=w_reduced*h_reduced;
-          file_data->rgb_data=new unsigned char[npixel_reduced*3];
+          file_data->rgb_data[current_subgrid]=new unsigned char[npixel_reduced*3];
           buffer_copy_reduce_generic((unsigned char *)raster,width,height,
-                                         0, 0,
-                                         file_data->rgb_data,w_reduced,h_reduced,
-                                         zoom_out_value);
+                                     0, 0,
+                                     file_data->rgb_data[current_subgrid],w_reduced,h_reduced,
+                                     zoom_out_value);
           success=true;
         }
       }
@@ -438,7 +442,7 @@ void load_image_grid_from_text (std::string text_file,
   // regex to parse text files, this is a fairly rigid for now since
   // it is autogenerated by a Python script but will probably be
   // superceded by XML
-  std::regex regex_text_file_line("^([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) (/.*)$",std::regex_constants::ECMAScript | std::regex_constants::icase);
+  std::regex regex_text_file_line("^([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([^ ]+)$",std::regex_constants::ECMAScript | std::regex_constants::icase);
   // open the text file
   std::ifstream text_fh(text_file);
   // read line by line
@@ -454,7 +458,7 @@ void load_image_grid_from_text (std::string text_file,
       auto filename=matched_line.str(5);
       // add to our filedata structure
       auto current_grid=std::pair<INT_T,INT_T>(grid_x,grid_y);
-      auto current_subgrid=std::pair<INT_T,INT_T>(subgrid_x,subgrid_y);
+      auto current_subgrid=CURRENT_SUBGRID_T(subgrid_x,subgrid_y);
       // updates
       file_data[current_grid][current_subgrid]=filename;
     }

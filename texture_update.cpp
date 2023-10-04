@@ -54,10 +54,9 @@ void TextureUpdate::load_new_textures(INT_T i,
     if (zoom_index != max_zoom_index && zoom_index != current_zoom_index) {
       continue;
     }
-    auto upper_zoom=ViewPortTransferState::find_zoom_upper(zoom_index);
     auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index].get();
     auto load_all=(zoom_index == max_zoom_index);
-    if (load_all || _grid_square_visible(i,j,texture_grid,viewport_current_state,upper_zoom)) {
+    if (load_all || _grid_square_visible(i,j,viewport_current_state)) {
       auto load_index=zoom_index;
       bool texture_copy_successful=false;
       do {
@@ -102,9 +101,8 @@ void TextureUpdate::clear_textures(INT_T i,
   // never clear out top level index
   for (INT_T zoom_index=0L; zoom_index < max_zoom_index-1; zoom_index++) {
     if (!keep_running) { break; }
-    auto upper_zoom=ViewPortTransferState::find_zoom_upper(zoom_index);
     auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index].get();
-    if (!_grid_square_visible(i,j,texture_grid,viewport_current_state,upper_zoom)) {
+    if (!_grid_square_visible(i,j,viewport_current_state)) {
       // unload anything not visible that is loadable or displayable
       if (dest_square->is_loaded || dest_square->is_displayable) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
@@ -129,12 +127,11 @@ void TextureUpdate::add_filler_textures(INT_T i,
     if (zoom_index != max_zoom_index && zoom_index != current_zoom_index) {
       continue;
     }
-    auto upper_zoom=ViewPortTransferState::find_zoom_upper(zoom_index);
     auto load_all=(zoom_index == max_zoom_index);
     auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index].get();
     // take all the precautions for setting a texture as filler as
     // when we used to copy
-    if (load_all || _grid_square_visible(i,j,texture_grid,viewport_current_state,upper_zoom)) {
+    if (load_all || _grid_square_visible(i,j,viewport_current_state)) {
       if (!dest_square->is_displayable) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
         if (display_lock.try_lock()) {
@@ -150,9 +147,7 @@ void TextureUpdate::add_filler_textures(INT_T i,
 
 
 bool TextureUpdate::_grid_square_visible(INT_T i, INT_T j,
-                                         const TextureGrid* const texture_grid,
-                                         const ViewPortCurrentState& viewport_current_state,
-                                         FLOAT_T zoom) {
+                                         const ViewPortCurrentState& viewport_current_state) {
   auto xgrid=viewport_current_state.current_grid_coordinate().xgrid();
   auto ygrid=viewport_current_state.current_grid_coordinate().ygrid();
   auto return_value=(ViewPortTransferState::grid_index_visible(i, j,
