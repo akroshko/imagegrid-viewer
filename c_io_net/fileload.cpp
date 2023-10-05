@@ -228,6 +228,7 @@ bool load_tiff_as_rgb(const std::string filename,
     // do a trial first to see if we can use the cached file
     // it is ironic this is in PNG...
     auto can_cache=true;
+    // TODO: test for empty string here, just in case
     if (!std::filesystem::exists(cached_filename)) {
       can_cache=false;
       MSG("Cached file does not exist: " << cached_filename);

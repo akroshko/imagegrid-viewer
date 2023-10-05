@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
   scaled_rect.y=0;
   scaled_rect.w=texture_wpixel;
   scaled_rect.h=texture_hpixel;
-  SDL_BlitScaled(display_texture, NULL, sdl_app->screen_surface, &scaled_rect);
-  SDL_UpdateWindowSurface(sdl_app->window);
+  SDL_BlitScaled(display_texture, NULL, sdl_app->_screen_surface, &scaled_rect);
+  SDL_UpdateWindowSurface(sdl_app->window());
   SDL_Delay(8192);
 }

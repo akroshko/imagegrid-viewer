@@ -19,6 +19,9 @@
 class TextureUpdate {
 public:
   TextureUpdate()=delete;
+  /**
+   * @param The object that transfers viewport state
+   */
   TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update);
   ~TextureUpdate()=default;
   TextureUpdate(const TextureUpdate&)=delete;
@@ -28,6 +31,8 @@ public:
   /**
    * Find the textures needed to render the current viewport
    *
+   * @param grid The image grid.
+   * @param texture_grid The texture grid.
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */

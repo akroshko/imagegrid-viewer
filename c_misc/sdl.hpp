@@ -19,9 +19,10 @@ public:
   /**
    * Call an SDL delay function for the end of the main loop.
    */
-  void delay();
+  void delay() const;
   /**
    * Update the various parameters ViewPort needs based on SDL inputs.
+   * TODO: add docs when I update terminology
    *
    * @param current_speed_x
    * @param current_speed_y
@@ -45,14 +46,15 @@ public:
    * @return the processed value, generally with deadzones for now.
    */
   Sint16 get_jaxis(Sint16 jaxis_original);
-  /**
-   * Check whether app was successful
-   */
+  /** @return Whether the app was successfully initialized. */
   bool successful() const;
-  SDL_Window* window;
-  SDL_PixelFormat* format;
-  SDL_Surface* screen_surface;
+  /** @return The SDL_Window for the app. */
+  SDL_Window* window() const;
+  /** @return The SDL_PixelFormat for the app. */
+  SDL_PixelFormat* format() const;
 private:
+  SDL_Window* _window;
+  SDL_PixelFormat* _format;
   bool _successful=true;
   bool _joystick_enabled;
   SDL_Renderer* _renderer;
@@ -82,11 +84,7 @@ class SDLDisplayTextureWrapper {
 public:
   SDLDisplayTextureWrapper()=default;
   ~SDLDisplayTextureWrapper();
-  /**
-   * Is the texture currently valid?
-   *
-   * @return Is the texture valid?
-   */
+  /** @return Is the wrapped texture currently valid? */
   bool is_valid() const;
   /**
    * Create a new surface.

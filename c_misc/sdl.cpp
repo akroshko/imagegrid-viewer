@@ -11,13 +11,13 @@
 SDLApp::SDLApp() {
   // auto rendererFlags=SDL_RENDERER_ACCELERATED;
   int windowFlags=SDL_WINDOW_RESIZABLE;
-  this->format=SDL_AllocFormat(SDL_PIXELFORMAT_RGB24);
+  this->_format=SDL_AllocFormat(SDL_PIXELFORMAT_RGB24);
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
     ERROR("Couldn't initialize SDL:" << SDL_GetError());
     this->_successful=false;
   } else {
-    this->window=SDL_CreateWindow("Image Grid Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_HEIGHT, windowFlags);
-    if (!this->window) {
+    this->_window=SDL_CreateWindow("Image Grid Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_HEIGHT, windowFlags);
+    if (!this->_window) {
       ERROR("Failed to open %d " << INITIAL_SCREEN_WIDTH << "x" << INITIAL_SCREEN_HEIGHT << " window: " << SDL_GetError());
       this->_successful=false;
     } else {
@@ -32,9 +32,10 @@ SDLApp::SDLApp() {
 }
 
 SDLApp::~SDLApp() {
-  SDL_FreeSurface(this->screen_surface);
-  SDL_DestroyWindow(this->window);
-  window=nullptr;
+  if (this->_window) {
+    SDL_DestroyWindow(this->_window);
+    this->_window=nullptr;
+  }
   SDL_Quit();
 }
 
@@ -73,7 +74,7 @@ bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
       case SDL_WINDOWEVENT_MAXIMIZED:
         int window_w_get;
         int window_h_get;
-        SDL_GetWindowSize(this->window, &window_w_get, &window_h_get);
+        SDL_GetWindowSize(this->_window, &window_w_get, &window_h_get);
         window_w=window_w_get;
         window_h=window_h_get;
         break;
@@ -134,7 +135,7 @@ bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
   return keep_going;
 }
 
-void SDLApp::delay() {
+void SDLApp::delay() const {
   // SDL_Delay(SDL_DELAY);
   SDL_Delay(64);
 }
@@ -143,20 +144,28 @@ bool SDLApp::successful() const {
   return this->_successful;
 }
 
+SDL_Window* SDLApp::window() const {
+  return this->_window;
+}
+
+SDL_PixelFormat* SDLApp::format() const {
+  return this->_format;
+}
+
 SDLDrawableSurface::SDLDrawableSurface(SDLApp* const sdl_app,
                                        const ViewportPixelSize &viewport_pixel_size) {
   this->_sdl_app=sdl_app;
-  this->_screen_surface=SDL_GetWindowSurface(sdl_app->window);
+  this->_screen_surface=SDL_GetWindowSurface(sdl_app->window());
   SDL_Rect screen_rect;
   screen_rect.x=0;
   screen_rect.y=0;
   screen_rect.w=viewport_pixel_size.wpixel();
   screen_rect.h=viewport_pixel_size.hpixel();
-  SDL_FillRect(this->_screen_surface, &screen_rect, SDL_MapRGB(sdl_app->format,0,0,0));
+  SDL_FillRect(this->_screen_surface, &screen_rect, SDL_MapRGB(sdl_app->format(),0,0,0));
 }
 
 SDLDrawableSurface::~SDLDrawableSurface() {
-  SDL_UpdateWindowSurface(this->_sdl_app->window);
+  SDL_UpdateWindowSurface(this->_sdl_app->window());
   SDL_FreeSurface(this->_screen_surface);
 }
 
@@ -165,18 +174,18 @@ SDL_Surface* SDLDrawableSurface::screen_surface() {
 }
 
 bool SDLDisplayTextureWrapper::is_valid () const {
-  return (this->_display_texture != nullptr);
+  return (this->_display_texture);
 }
 
 SDLDisplayTextureWrapper::~SDLDisplayTextureWrapper () {
-  if (this->_display_texture != nullptr) {
+  if (this->_display_texture) {
     SDL_FreeSurface(this->_display_texture);
     this->_display_texture=nullptr;
   }
 }
 
 void SDLDisplayTextureWrapper::create_surface(INT_T wpixel, INT_T hpixel) {
-  if (this->_display_texture != nullptr) {
+  if (this->_display_texture) {
     this->unlock_surface();
   }
   this->_display_texture=SDL_CreateRGBSurfaceWithFormat(0,wpixel,hpixel,24,SDL_PIXELFORMAT_RGB24);
@@ -196,7 +205,7 @@ bool SDLDisplayTextureWrapper::lock_surface () {
 }
 
 void SDLDisplayTextureWrapper::unlock_surface () {
-  if (this->_display_texture != nullptr) {
+  if (this->_display_texture) {
     SDL_UnlockSurface(this->_display_texture);
   }
 }

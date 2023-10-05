@@ -23,12 +23,24 @@ class ImageGrid;
 
 /**
  * An individual square on the grid at a particular zoom level.
- *
  */
 class ImageGridSquareZoomLevel {
 public:
   ImageGridSquareZoomLevel()=delete;
-  ImageGridSquareZoomLevel(INT_T zoom_level);
+  /**
+   * TODO: update this doctring when I update terminology and notation
+   *
+   * @param zoom_level
+   * @param max_subgrid_wpixel
+   * @param max_subgrid_hpixel
+   * @param subgrid_height
+   * @param subgrid_width
+   */
+  ImageGridSquareZoomLevel(INT_T zoom_level,
+                           INT_T max_subgrid_wpixel,
+                           INT_T max_subgrid_hpixel,
+                           INT_T subgrid_height,
+                           INT_T subgrid_width);
   ~ImageGridSquareZoomLevel();
   ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&)=delete;
   ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&&)=delete;
@@ -39,13 +51,20 @@ public:
   /**
    * Load a file and fill out squares.
    *
-   * @param filename The filename to load.
+   * @param square_data The data for this grid square.
    * @param use_cache Whether to use the cache for initial loading.
    * @param dest_square A vector of this class to be loaded.
+   * @return If loading the square was successful.
    */
   static bool load_square(SQUARE_DATA_T square_data,
                           bool use_cache,
                           std::vector<ImageGridSquareZoomLevel*> dest_square);
+  /**
+   * Create the cached filename from the real filename.
+   *
+   * @param The filename to use to create the cached filename.
+   * @return The cached filename.
+   */
   static std::string create_cache_filename(std::string filename);
   /** Unload and free memory from a loaded file */
   void unload_square();
@@ -93,8 +112,13 @@ private:
   // now I want this freedom
   std::unique_ptr<std::unique_ptr<size_t[]>[]> _rgb_wpixel;
   std::unique_ptr<std::unique_ptr<size_t[]>[]> _rgb_hpixel;
-  size_t _w_subgrid=1;
-  size_t _h_subgrid=1;
+  // TODO:  currently unused???
+  size_t _w_subgrid=-1;
+  size_t _h_subgrid=-1;
+  // not scaled, but they need to be here for now
+  INT_T _max_subgrid_wpixel=-1;
+  INT_T _max_subgrid_hpixel=-1;
+  // the origin foreach
   std::unique_ptr<std::unique_ptr<INT_T[]>[]> _rgb_xpixel_origin;
   std::unique_ptr<std::unique_ptr<INT_T[]>[]> _rgb_ypixel_origin;
   INT_T _zoom_out_value;
@@ -106,6 +130,9 @@ private:
 class ImageGridSquare {
 public:
   ImageGridSquare()=delete;
+  /**
+   * @param square_data The data for this grid square.
+   */
   ImageGridSquare(SQUARE_DATA_T square_data);
   ~ImageGridSquare()=default;
   ImageGridSquare(const ImageGridSquare&)=delete;
@@ -121,6 +148,11 @@ private:
   INT_T _zoom_step_number;
   INT_T _image_wpixel;
   INT_T _image_hpixel;
+  INT_T _subgrid_width;
+  INT_T _subgrid_height;
+  INT_T _max_subgrid_wpixel;
+  INT_T _max_subgrid_hpixel;
+
   /**
    * Read in a the file cooresponing to this square.
    *
@@ -225,9 +257,9 @@ private:
    *
    * @param i The index along the width of the grid.
    * @param j The index along the height of the grid.
-   * @param filename The filename to cache.
+   * @param square_data The data for this grid square.
    */
-  bool _write_cache(INT_T i, INT_T j, std::string filename);
+  void _write_cache(INT_T i, INT_T j, SQUARE_DATA_T square_data);
   /** Store the size of the images */
   GridImageSize _grid_image_size;
   /** Maximum size of images loaded into the grid. */

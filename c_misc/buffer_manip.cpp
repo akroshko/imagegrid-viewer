@@ -46,15 +46,13 @@ void buffer_copy_reduce_tiff (uint32_t* source_buffer, uint32_t w, uint32_t h,
   }
 }
 
+// TODO: finish looping over only necessary pixels
 void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t h,
                                      INT_T x_origin, INT_T y_origin,
                                      unsigned char* dest_buffer, size_t w_reduced, size_t h_reduced,
                                      INT_T zoom_index) {
   // TODO: zoom_index is not the index, since index is power of two
   //       fix!!!
-
-  // since I am compiling in C++ 2017+, this truncates towards zero,
-  // which is what I want for pixels that start at zero origin
 
   // di:=destination i
   // dj:=destination j
@@ -97,7 +95,7 @@ void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t 
         }
       }
     }
-    for (size_t di=0; di < w_reduced; di++) {
+    for (size_t di=x_origin/zoom_index; di < w_reduced; di++) {
       if (di < w_reduced && dj < h_reduced) {
         auto dest_pixel=dj*w_reduced+di;
         // TODO: possibly assert instead of testing for overflow

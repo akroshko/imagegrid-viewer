@@ -38,7 +38,6 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
                            this->_do_cache, this->_use_cache, this->_successful,
                            this->_path_value, this->_filenames, this->_text_filename);
   if (this->_text_filename.length() != 0) {
-    // TODO: get rid of command line argument
     this->_grid_image_size=GridImageSize(wimage,himage);
     load_image_grid_from_text(this->_text_filename,this->_file_data);
     this->_successful=true;
@@ -52,7 +51,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       ERROR("Number of filenames " << this->_filenames.size() << " does not match grid size " << grid_size);
       return;
     }
-    // load number images if this is appropriate
+    // load images numbered in directory if this is appropriate
     if (this->_path_value.length() != 0) {
       this->_filenames=load_numbered_images(this->_path_value);
     }

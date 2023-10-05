@@ -161,8 +161,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                   const ImageGridSquareZoomLevel* const source_square,
                                   INT_T zoom_index,
                                   GridPixelSize texture_pixel_size) {
-  INT_T subimages_w=1;
-  INT_T subimages_h=1;
+  INT_T subimages_w=source_square->w_subgrid();
+  INT_T subimages_h=source_square->h_subgrid();
   auto successful=true;
   auto texture_zoom_reduction=((INT_T)pow(2,zoom_index));
   auto dest_wpixel=texture_pixel_size.wpixel()/texture_zoom_reduction;
@@ -174,28 +174,40 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
   if (dest_square->display_texture_wrapper()->is_valid()) {
     auto lock_surface_return=dest_square->display_texture_wrapper()->lock_surface();
     if (lock_surface_return == 0) {
+      auto dest_array=dest_square->display_texture_wrapper()->pixels();
+      bool no_data=true;
+      // TODO: do I need this?
+      for (INT_T i_sub=0; i_sub < subimages_w; i_sub++) {
+        for (INT_T j_sub=0; j_sub < subimages_h; j_sub++) {
+          auto source_data=source_square->get_rgb_data(i_sub,j_sub);
+          if (dest_array && source_data) {
+            no_data=false;
+          }
+        }
+      }
+      if (dest_array && no_data) {
+        std::memset((void*)dest_array,0,dest_wpixel*dest_hpixel*3);
+      }
       // everything is read, loop over
       for (INT_T i_sub=0; i_sub < subimages_w; i_sub++) {
         for (INT_T j_sub=0; j_sub < subimages_h; j_sub++) {
+          auto source_data=source_square->get_rgb_data(i_sub,j_sub);
           auto source_wpixel=(INT_T)source_square->rgb_wpixel(i_sub, j_sub);
           auto source_hpixel=(INT_T)source_square->rgb_hpixel(i_sub, j_sub);
-          auto source_data=source_square->get_rgb_data(i_sub,j_sub);
           auto source_data_origin_x=source_square->rgb_xpixel_origin(i_sub, j_sub);
           auto source_data_origin_y=source_square->rgb_ypixel_origin(i_sub, j_sub);
-          auto dest_array=dest_square->display_texture_wrapper()->pixels();
           // do the things we are copying exist?
-          if (dest_array != nullptr && source_data != nullptr) {
+          if (dest_array && source_data) {
             // these should only be powers of 2, add an assert
             auto source_zoom_out_value=source_square->zoom_out_value();
             auto dest_zoom_index=texture_zoom_reduction;
             // TODO: move out once I restructure code appropriately
-            std::memset((void*)dest_array,0,dest_wpixel*dest_hpixel*3);
             if (source_zoom_out_value <= dest_zoom_index) {
               auto skip=dest_zoom_index/source_zoom_out_value;
               buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
-                                             source_data_origin_x, source_data_origin_y,
-                                             (unsigned char*)dest_array,dest_wpixel,dest_hpixel,
-                                             skip);
+                                         source_data_origin_x, source_data_origin_y,
+                                         (unsigned char*)dest_array,dest_wpixel,dest_hpixel,
+                                         skip);
             } else {
               auto skip=source_zoom_out_value/dest_zoom_index;
               buffer_copy_expand_generic(source_data,source_wpixel,source_hpixel,
