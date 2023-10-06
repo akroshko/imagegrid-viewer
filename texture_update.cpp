@@ -176,7 +176,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
     if (lock_surface_return == 0) {
       auto dest_array=dest_square->display_texture_wrapper()->pixels();
       bool no_data=true;
-      // TODO: do I need this?
+      // see if this square should be grayed out
       for (INT_T i_sub=0; i_sub < subimages_w; i_sub++) {
         for (INT_T j_sub=0; j_sub < subimages_h; j_sub++) {
           auto source_data=source_square->get_rgb_data(i_sub,j_sub);
@@ -186,16 +186,16 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
         }
       }
       if (dest_array && no_data) {
-        std::memset((void*)dest_array,0,dest_wpixel*dest_hpixel*3);
+        std::memset((void*)dest_array,0,sizeof(char)*dest_wpixel*dest_hpixel*3);
       }
       // everything is read, loop over
       for (INT_T i_sub=0; i_sub < subimages_w; i_sub++) {
         for (INT_T j_sub=0; j_sub < subimages_h; j_sub++) {
           auto source_data=source_square->get_rgb_data(i_sub,j_sub);
-          auto source_wpixel=(INT_T)source_square->rgb_wpixel(i_sub, j_sub);
-          auto source_hpixel=(INT_T)source_square->rgb_hpixel(i_sub, j_sub);
-          auto source_data_origin_x=source_square->rgb_xpixel_origin(i_sub, j_sub);
-          auto source_data_origin_y=source_square->rgb_ypixel_origin(i_sub, j_sub);
+          auto source_wpixel=(INT_T)source_square->rgb_wpixel(i_sub,j_sub);
+          auto source_hpixel=(INT_T)source_square->rgb_hpixel(i_sub,j_sub);
+          auto source_data_origin_x=source_square->rgb_xpixel_origin(i_sub,j_sub);
+          auto source_data_origin_y=source_square->rgb_ypixel_origin(i_sub,j_sub);
           // do the things we are copying exist?
           if (dest_array && source_data) {
             // these should only be powers of 2, add an assert

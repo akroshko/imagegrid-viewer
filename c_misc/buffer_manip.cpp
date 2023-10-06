@@ -48,9 +48,9 @@ void buffer_copy_reduce_tiff (uint32_t* source_buffer, uint32_t w, uint32_t h,
 
 // TODO: finish looping over only necessary pixels
 void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t h,
-                                     INT_T x_origin, INT_T y_origin,
-                                     unsigned char* dest_buffer, size_t w_reduced, size_t h_reduced,
-                                     INT_T zoom_index) {
+                                 INT_T x_origin, INT_T y_origin,
+                                 unsigned char* dest_buffer, size_t w_reduced, size_t h_reduced,
+                                 INT_T zoom_index) {
   // TODO: zoom_index is not the index, since index is power of two
   //       fix!!!
 
@@ -65,7 +65,6 @@ void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t 
   // row buffer to copy to
   // TODO: may wish to figure out an appropriate reduced size since 64
   // bit integers are probably overkill for any forseeable need
-
   auto row_buffer=std::make_unique<INT_T[]>(w_reduced*3);
 
   // TODO: this can probably be further optimized by passing in the
@@ -80,6 +79,10 @@ void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t 
        bsj+=zoom_index, dj++) {
     // zero out the row buffer each one of these
     std::memset((void*)row_buffer.get(),0,sizeof(INT_T)*w_reduced*3);
+    // for testing
+    // for (INT_T i=0; i < w_reduced*3; i++) {
+    //   row_buffer[i]=0;
+    // }
     for (size_t sj=bsj; sj < bsj+zoom_index; sj++) {
       for (size_t bsi=0; bsi < w; bsi+=zoom_index) {
         for (size_t si=bsi; si < bsi+zoom_index; si++) {
@@ -96,14 +99,12 @@ void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t 
       }
     }
     for (size_t di=x_origin/zoom_index; di < w_reduced; di++) {
+      // TODO: possibly assert instead of testing for overflow
       if (di < w_reduced && dj < h_reduced) {
         auto dest_pixel=dj*w_reduced+di;
-        // TODO: possibly assert instead of testing for overflow
-        if (dj < h_reduced) {
-          dest_buffer[dest_pixel*3]=(unsigned char)(row_buffer[di*3] >> block_average_shift);
-          dest_buffer[dest_pixel*3+1]=(unsigned char)(row_buffer[di*3+1] >> block_average_shift);
-          dest_buffer[dest_pixel*3+2]=(unsigned char)(row_buffer[di*3+2] >> block_average_shift);
-        }
+        dest_buffer[dest_pixel*3]=(unsigned char)(row_buffer[di*3] >> block_average_shift);
+        dest_buffer[dest_pixel*3+1]=(unsigned char)(row_buffer[di*3+1] >> block_average_shift);
+        dest_buffer[dest_pixel*3+2]=(unsigned char)(row_buffer[di*3+2] >> block_average_shift);
       }
     }
   }

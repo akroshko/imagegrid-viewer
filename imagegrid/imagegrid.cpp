@@ -51,9 +51,9 @@ ImageGridSquareZoomLevel::ImageGridSquareZoomLevel(INT_T zoom_out_value,
     this->_rgb_ypixel_origin[i]=std::make_unique<INT_T[]>(subgrid_height);
   }
   // the rgb data itself
-  this->rgb_data=std::make_unique<std::unique_ptr<unsigned char*[]>[]>(subgrid_width);
+  this->_rgb_data=std::make_unique<std::unique_ptr<unsigned char*[]>[]>(subgrid_width);
   for (INT_T i=0L; i < subgrid_width; i++) {
-    this->rgb_data[i]=std::make_unique<unsigned char*[]>(subgrid_height);
+    this->_rgb_data[i]=std::make_unique<unsigned char*[]>(subgrid_height);
   }
 }
 
@@ -115,14 +115,14 @@ bool ImageGridSquareZoomLevel::load_square(SQUARE_DATA_T square_data,
       for (auto& subgrid_square_kv : square_data) {
         auto sub_i=subgrid_square_kv.first.first;
         auto sub_j=subgrid_square_kv.first.second;
-        const INT_T origin_x=sub_i*data_pair.first->_max_subgrid_wpixel;
-        const INT_T origin_y=sub_j*data_pair.first->_max_subgrid_hpixel;
+        auto origin_x=sub_i*(data_pair.first->_max_subgrid_wpixel);
+        auto origin_y=sub_j*(data_pair.first->_max_subgrid_hpixel);
         CURRENT_SUBGRID_T current_subgrid(sub_i,sub_j);
         data_pair.first->_rgb_wpixel[sub_i][sub_j]=data_pair.second->rgb_wpixel[current_subgrid];
         data_pair.first->_rgb_hpixel[sub_i][sub_j]=data_pair.second->rgb_hpixel[current_subgrid];
         data_pair.first->_rgb_xpixel_origin[sub_i][sub_j]=origin_x;
         data_pair.first->_rgb_ypixel_origin[sub_i][sub_j]=origin_y;
-        data_pair.first->rgb_data[sub_i][sub_j]=data_pair.second->rgb_data[current_subgrid];
+        data_pair.first->_rgb_data[sub_i][sub_j]=data_pair.second->rgb_data[current_subgrid];
       }
       data_pair.first->is_loaded=true;
     }
@@ -148,8 +148,8 @@ void ImageGridSquareZoomLevel::unload_square() {
     std::lock_guard<std::mutex> guard(this->load_mutex);
     for (int i=0; i < this->_w_subgrid; i++) {
       for (int j=0; j < this->_h_subgrid; j++) {
-        delete[] this->rgb_data[i][j];
-        this->rgb_data[i][j]=nullptr;
+        delete[] this->_rgb_data[i][j];
+        this->_rgb_data[i][j]=nullptr;
 
       }
     }
@@ -186,7 +186,7 @@ INT_T ImageGridSquareZoomLevel::rgb_ypixel_origin(INT_T w_index, INT_T h_index) 
 }
 
 unsigned char* ImageGridSquareZoomLevel::get_rgb_data(INT_T w_index, INT_T h_index) const {
-  return this->rgb_data[w_index][h_index];
+  return this->_rgb_data[w_index][h_index];
 }
 
 ImageGridSquare::ImageGridSquare(SQUARE_DATA_T square_data) {
@@ -412,7 +412,7 @@ void ImageGrid::_write_cache(INT_T i, INT_T j, SQUARE_DATA_T square_data) {
       auto filename_new=ImageGridSquareZoomLevel::create_cache_filename(filename);
       MSG("Trying to writing cache filename: " << filename_new << " for " << filename << " at zoom index " << k << " i: " << i << " j: " << j << "i_sub: " << i_sub << " j_sub: " << j_sub);
       if (wpixel < CACHE_MAX_PIXEL_SIZE && hpixel < CACHE_MAX_PIXEL_SIZE) {
-        loaded_512=write_png(filename_new, wpixel, hpixel, dest_square->rgb_data[i_sub][j_sub]);
+        loaded_512=write_png(filename_new, wpixel, hpixel, dest_square->_rgb_data[i_sub][j_sub]);
         MSG("Cache tried with return: " << loaded_512);
        }
     }

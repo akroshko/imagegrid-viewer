@@ -37,7 +37,7 @@
 #include "viewport.hpp"
 #include "viewport_current_state.hpp"
 // C compatible headers
-#include "c_misc/sdl.hpp"
+#include "c_sdl/sdl.hpp"
 // C++ headers
 #include <atomic>
 #include <memory>
@@ -52,6 +52,7 @@
  */
 class ImageGridViewerContext {
 public:
+  ImageGridViewerContext()=delete;
   /**
    * Intialize the image grid using a subclass of the GridSetup class.
    *
@@ -64,7 +65,6 @@ public:
    *                   as map coorindates, configuration files, or the
    *                   input from GUI could be considered.
    */
-  ImageGridViewerContext()=delete;
   ImageGridViewerContext(const GridSetup* const grid_setup);
   ImageGridViewerContext(const ImageGridViewerContext&)=delete;
   ImageGridViewerContext(const ImageGridViewerContext&&)=delete;

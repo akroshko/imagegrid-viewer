@@ -4,7 +4,7 @@
 #include "viewport.hpp"
 #include "viewport_current_state.hpp"
 // C compatible headers
-#include "c_misc/sdl.hpp"
+#include "c_sdl/sdl.hpp"
 // C++ headers
 #include <vector>
 // C headers

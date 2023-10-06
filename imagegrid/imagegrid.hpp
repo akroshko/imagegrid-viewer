@@ -107,7 +107,7 @@ public:
 private:
   friend class ImageGrid;
   /** The actual RGB data for this square and zoom level */
-  std::unique_ptr<std::unique_ptr<unsigned char*[]>[]> rgb_data;
+  std::unique_ptr<std::unique_ptr<unsigned char*[]>[]> _rgb_data;
   // TOOD: will eventually use an object from coordinates.hpp, but for
   // now I want this freedom
   std::unique_ptr<std::unique_ptr<size_t[]>[]> _rgb_wpixel;

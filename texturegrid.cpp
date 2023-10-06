@@ -8,7 +8,7 @@
 #include "imagegrid/gridsetup.hpp"
 #include "texturegrid.hpp"
 // C compatible headers
-#include "c_misc/sdl.hpp"
+#include "c_sdl/sdl.hpp"
 // C++ headers
 #include <atomic>
 // C headers
@@ -60,21 +60,20 @@ TextureGridSquare::TextureGridSquare (INT_T zoom_index_length) {
   for (auto i=0L; i < zoom_index_length; i++) {
     this->texture_array[i]=std::make_unique<TextureGridSquareZoomLevel>();
   }
-
 }
 
 TextureGrid::TextureGrid (const GridSetup* const grid_setup,
                           INT_T zoom_index_length) {
   this->_grid_image_size=GridImageSize(grid_setup->grid_image_size());
   this->_zoom_index_length=zoom_index_length;
-  this->squares=std::make_unique<TextureGridSquare**[]>(grid_setup->grid_image_size().wimage());
+  this->squares=std::make_unique<std::unique_ptr<std::unique_ptr<TextureGridSquare>[]>[]>(grid_setup->grid_image_size().wimage());
   for (INT_T i=0L; i < grid_setup->grid_image_size().wimage(); i++) {
-    this->squares[i]=new TextureGridSquare*[grid_setup->grid_image_size().himage()];
+    this->squares[i]=std::make_unique<std::unique_ptr<TextureGridSquare>[]>(grid_setup->grid_image_size().himage());
     for (INT_T j=0L; j < grid_setup->grid_image_size().himage(); j++) {
-      this->squares[i][j]=new TextureGridSquare(zoom_index_length);
+      this->squares[i][j]=std::make_unique<TextureGridSquare>(zoom_index_length);
     }
   }
-  this->filler_squares=std::make_unique<SDLDisplayTextureWrapper*[]>(zoom_index_length);
+  this->filler_squares=std::make_unique<std::unique_ptr<SDLDisplayTextureWrapper>[]>(zoom_index_length);
 }
 
 void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
@@ -88,7 +87,7 @@ void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
     auto texture_zoom_reduction=((INT_T)pow(2,zoom_index));
     auto dest_wpixel=grid_pixel_size.wpixel()/texture_zoom_reduction;
     auto dest_hpixel=grid_pixel_size.hpixel()/texture_zoom_reduction;
-    this->filler_squares[zoom_index] = new SDLDisplayTextureWrapper();
+    this->filler_squares[zoom_index] = std::make_unique<SDLDisplayTextureWrapper>();
     this->filler_squares[zoom_index]->create_surface(dest_wpixel, dest_hpixel);
     auto lock_surface_return=this->filler_squares[zoom_index]->lock_surface();
     if (lock_surface_return == 0) {
@@ -108,18 +107,9 @@ void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
   for (INT_T zoom_index=0L; zoom_index < zoom_index_length; zoom_index++) {
     for (INT_T i=0L; i < grid_setup->grid_image_size().wimage(); i++) {
       for (INT_T j=0L; j < grid_setup->grid_image_size().himage(); j++) {
-        this->squares[i][j]->texture_array[zoom_index]->_filler_texture_wrapper=this->filler_squares[zoom_index];
+        this->squares[i][j]->texture_array[zoom_index]->_filler_texture_wrapper=this->filler_squares[zoom_index].get();
       }
     }
-  }
-}
-
-TextureGrid::~TextureGrid() {
-  for (auto i=0L; i < this->_grid_image_size.wimage(); i++) {
-    for (INT_T j=0L; j < this->grid_image_size().himage(); j++) {
-      DELETE_IF_NOT_NULLPTR(this->squares[i][j]);
-    }
-    DELETE_ARRAY_IF_NOT_NULLPTR(this->squares[i]);
   }
 }
 

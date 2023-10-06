@@ -14,6 +14,4 @@ INT_T pad (INT_T x, INT_T pad_size);
 
 void sleep_thread();
 
-#define DELETE_IF_NOT_NULLPTR(A) if((A) != nullptr) {delete (A); A=nullptr;}
-#define DELETE_ARRAY_IF_NOT_NULLPTR(A) if((A) != nullptr) {delete[] (A); A=nullptr;}
 #endif

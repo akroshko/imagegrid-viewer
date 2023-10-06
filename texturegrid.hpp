@@ -7,7 +7,7 @@
 #include "common.hpp"
 #include "coordinates.hpp"
 #include "imagegrid/gridsetup.hpp"
-#include "c_misc/sdl.hpp"
+#include "c_sdl/sdl.hpp"
 // C++ headers
 #include <atomic>
 #include <memory>
@@ -108,20 +108,15 @@ public:
    */
   TextureGrid(const GridSetup* grid_setup,
               INT_T zoom_index_length);
-  ~TextureGrid();
+  ~TextureGrid()=default;
   TextureGrid(const TextureGrid&)=delete;
   TextureGrid(const TextureGrid&&)=delete;
   TextureGrid& operator=(const TextureGrid&)=delete;
   TextureGrid& operator=(const TextureGrid&&)=delete;
-  // TODO: may need this comment for the future
-  // /**
-  //  * Initialize the maximum size of each texture and the maximum zoom,
-  //  * generally has to be done after all imagesquare loaded.
-  //  */
   /** the individual squares */
-  std::unique_ptr<TextureGridSquare**[]> squares;
+  std::unique_ptr<std::unique_ptr<std::unique_ptr<TextureGridSquare>[]>[]> squares;
   /** fillers for the individual squares. */
-  std::unique_ptr<SDLDisplayTextureWrapper*[]> filler_squares;
+  std::unique_ptr<std::unique_ptr<SDLDisplayTextureWrapper>[]> filler_squares;
   /** @return The size of the grid in images. */
   GridImageSize grid_image_size() const;
   /** @return The length of texture zoom array. */
