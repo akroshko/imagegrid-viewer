@@ -163,7 +163,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                   GridPixelSize texture_pixel_size) {
   INT_T subimages_w=source_square->w_subgrid();
   INT_T subimages_h=source_square->h_subgrid();
-  auto successful=true;
+  // TODO: change how this notifies about valid/invalid textures
+  bool any_successful=false;
   auto texture_zoom_reduction=((INT_T)pow(2,zoom_index));
   auto dest_wpixel=texture_pixel_size.wpixel()/texture_zoom_reduction;
   auto dest_hpixel=texture_pixel_size.hpixel()/texture_zoom_reduction;
@@ -215,20 +216,15 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                          (unsigned char*)dest_array,dest_wpixel,dest_hpixel,
                                          skip);
             }
-          } else {
-            dest_square->display_texture_wrapper()->unlock_surface();
-            dest_square->unload_texture();
-            successful=false;
+            any_successful=true;
           }
         }
       }
       dest_square->display_texture_wrapper()->unlock_surface();
-    } else {
-      dest_square->unload_texture();
-      successful=false;
     }
-  } else {
-    successful=false;
+    if (!any_successful) {
+      dest_square->unload_texture();
+    }
   }
-  return successful;
+  return any_successful;
 }

@@ -148,9 +148,10 @@ void ImageGridSquareZoomLevel::unload_square() {
     std::lock_guard<std::mutex> guard(this->load_mutex);
     for (int i=0; i < this->_w_subgrid; i++) {
       for (int j=0; j < this->_h_subgrid; j++) {
-        delete[] this->_rgb_data[i][j];
-        this->_rgb_data[i][j]=nullptr;
-
+        if (this->_rgb_data[i][j]) {
+          delete[] this->_rgb_data[i][j];
+          this->_rgb_data[i][j]=nullptr;
+        }
       }
     }
     this->is_loaded=false;

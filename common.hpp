@@ -120,15 +120,15 @@ const FLOAT_T JOY_MAX=32768;
 const int SDL_DELAY=16;
 const INT_T TEXTURE_ALIGNMENT=4;
 
-const double INITIAL_ZOOM=1.0;
+const double INITIAL_ZOOM=0.025;
 
 const double INITIAL_ZOOM_SPEED=1.0;
 const double INITIAL_CURRENT_ZOOM_SPEED=0.0;
 
 const double INITIAL_X_Y_SPEED=0.0;
 
-const double INITIAL_X=1.0;
-const double INITIAL_Y=1.0;
+const double INITIAL_X=1.5;
+const double INITIAL_Y=1.5;
 // const double INITIAL_X=5.0;
 // const double INITIAL_Y=5.0;
 

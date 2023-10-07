@@ -201,7 +201,12 @@ void* SDLDisplayTextureWrapper::pixels () {
 }
 
 bool SDLDisplayTextureWrapper::lock_surface () {
+  // TODO: want a check if this is not initialized
+  // if (this->_display_texture) {
   return SDL_LockSurface(this->_display_texture);
+  // } else {
+  //   return 1;
+  // }
 }
 
 void SDLDisplayTextureWrapper::unlock_surface () {
