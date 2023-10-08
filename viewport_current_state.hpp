@@ -17,8 +17,7 @@ public:
   ViewPortCurrentState(GridCoordinate current_grid_coordinate,
                        GridPixelSize max_image_size,
                        FLOAT_T zoom,
-                       ViewportPixelSize screen_size,
-                       bool valid_update);
+                       ViewportPixelSize screen_size);
   // these are enabled because this class is used for data transfer
   // and created and returned from a function
   ViewPortCurrentState(ViewPortCurrentState&)=default;
@@ -32,15 +31,12 @@ public:
   FLOAT_T zoom() const;
   /** @return The current screen size. */
   ViewportPixelSize screen_size() const;
-  /** @return Is this a valid update of the viewport. */
-  bool valid_update() const;
 private:
   friend class ViewPortTransferState;
   GridCoordinate _current_grid_coordinate;
   GridPixelSize _max_image_size;
   FLOAT_T _zoom;
   ViewportPixelSize _screen_size;
-  bool _valid_update;
 };
 
 /**
@@ -134,9 +130,7 @@ private:
   FLOAT_T _zoom=NAN;
   GridCoordinate _grid;
   GridPixelSize _max_image_size;
-  FLOAT_T _zoom_last=NAN;
   GridCoordinate _grid_last;
-  bool _been_updated=false;
   ViewportPixelSize _screen_size;
   std::mutex _using_mutex;
 };

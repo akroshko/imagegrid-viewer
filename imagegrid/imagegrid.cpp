@@ -344,7 +344,7 @@ bool ImageGrid::_check_load(const ViewPortCurrentState& viewport_current_state,
   auto viewport_current_state_new=ViewPortCurrentState(GridCoordinate(current_grid_x,current_grid_y),
                                                        GridPixelSize(this->_image_max_size.wpixel(), this->_image_max_size.hpixel()),
                                                        ViewPortTransferState::find_zoom_upper(zoom_index),
-                                                       ViewportPixelSize(screen_width,screen_height), true);
+                                                       ViewportPixelSize(screen_width,screen_height));
   auto return_value=((zoom_index == this->_zoom_index_length-1 ||
                       (zoom_index >= zoom_index_lower_limit &&
                        ViewPortTransferState::grid_index_visible(i,j,
@@ -528,8 +528,7 @@ void ImageGrid::setup_grid_cache(const GridSetup* grid_setup) {
       this->_load_square(ViewPortCurrentState(GridCoordinate(0.0,0.0),
                                               GridPixelSize(0,0),
                                               0.0,
-                                              ViewportPixelSize(0,0),
-                                              true),
+                                              ViewportPixelSize(0,0)),
                          i,j,
                          0L,true,grid_setup);
       // TODO: eventually cache this out as tiles that fit in 128x128 and 512x512

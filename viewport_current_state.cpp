@@ -10,13 +10,11 @@
 ViewPortCurrentState::ViewPortCurrentState(GridCoordinate current_grid_coordinate,
                                            GridPixelSize max_image_size,
                                            FLOAT_T zoom,
-                                           ViewportPixelSize screen_size,
-                                           bool valid_update) {
+                                           ViewportPixelSize screen_size) {
   this->_current_grid_coordinate=current_grid_coordinate;
   this->_max_image_size=max_image_size;
   this->_zoom=zoom;
   this->_screen_size=screen_size;
-  this->_valid_update=valid_update;
 }
 
 GridCoordinate ViewPortCurrentState::current_grid_coordinate () const {
@@ -35,14 +33,8 @@ ViewportPixelSize ViewPortCurrentState::screen_size () const {
   return this->_screen_size;
 }
 
-bool ViewPortCurrentState::valid_update () const {
-  return this->_valid_update;
-}
-
 ViewPortTransferState::ViewPortTransferState () {
   this->_zoom=NAN;
-  this->_zoom_last=NAN;
-  this->_been_updated=false;
 }
 
 void ViewPortTransferState::UpdateGridValues(FLOAT_T zoom,
@@ -50,15 +42,11 @@ void ViewPortTransferState::UpdateGridValues(FLOAT_T zoom,
                                              const GridPixelSize &max_image_size,
                                              const ViewportPixelSize &screen_size) {
   std::lock_guard<std::mutex> guard(this->_using_mutex);
-  if (std::isnan(this->_zoom_last) || (this->_grid_last.invalid()) || (zoom != this->_zoom_last) || (gridarg.xgrid() != this->_grid_last.xgrid()) || (gridarg.ygrid() != this->_grid_last.ygrid())) {
-    this->_zoom=zoom;
-    this->_grid=GridCoordinate(gridarg);
-    this->_max_image_size=GridPixelSize(max_image_size);
-    this->_zoom_last=zoom;
-    this->_grid_last=GridCoordinate(gridarg);
-    this->_screen_size=ViewportPixelSize(screen_size);
-    this->_been_updated=true;
-  }
+  this->_zoom=zoom;
+  this->_grid=GridCoordinate(gridarg);
+  this->_max_image_size=GridPixelSize(max_image_size);
+  this->_grid_last=GridCoordinate(gridarg);
+  this->_screen_size=ViewportPixelSize(screen_size);
 }
 
 ViewPortCurrentState ViewPortTransferState::GetGridValues() {
@@ -66,8 +54,7 @@ ViewPortCurrentState ViewPortTransferState::GetGridValues() {
   auto viewport_current_state=ViewPortCurrentState(GridCoordinate(this->_grid),
                                                    GridPixelSize(this->_max_image_size),
                                                    this->_zoom,
-                                                   this->_screen_size=ViewportPixelSize(_screen_size),
-                                                   this->_been_updated);
+                                                   this->_screen_size=ViewportPixelSize(_screen_size));
   return viewport_current_state;
 }
 
