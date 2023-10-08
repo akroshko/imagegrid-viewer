@@ -52,6 +52,10 @@ struct LoadSquareData {
   SUBGRID_DATA_T rgb_data;
   SUBGRID_SIZE_T rgb_wpixel;
   SUBGRID_SIZE_T rgb_hpixel;
+  INT_T w_sub=1;
+  INT_T h_sub=1;
+  INT_T max_wpixel_sub=INT_MIN;
+  INT_T max_hpixel_sub=INT_MIN;
   INT_T zoom_out_value=INT_MIN;
 };
 

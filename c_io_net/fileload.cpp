@@ -233,28 +233,38 @@ bool load_tiff_as_rgb(const std::string filename,
       can_cache=false;
       MSG("Cached file does not exist: " << cached_filename);
     }
+    // TODO: this assumes consistency among this value
+    auto w_sub=1;
+    auto h_sub=1;
     if (can_cache) {
       MSG("Cached file exists: " << cached_filename);
       for (auto & file_data : load_file_data) {
-        auto zoom_out_value=file_data->zoom_out_value;
-        size_t width_reduced=reduce_and_pad(tiff_width,zoom_out_value);
-        size_t height_reduced=reduce_and_pad(tiff_height,zoom_out_value);
-        MSG("Testing cache");
-        MSG("w: " << width_reduced);
-        MSG("h: " << height_reduced);
-        if (width_reduced > CACHE_MAX_PIXEL_SIZE || height_reduced > CACHE_MAX_PIXEL_SIZE) {
+        // auto zoom_out_value=file_data->zoom_out_value;
+        w_sub=file_data->w_sub;
+        h_sub=file_data->h_sub;
+        auto max_wpixel=w_sub*file_data->max_wpixel_sub;
+        auto max_hpixel=h_sub*file_data->max_hpixel_sub;
+        if (max_wpixel >= CACHE_MAX_PIXEL_SIZE || max_hpixel >= CACHE_MAX_PIXEL_SIZE) {
           MSG("cached failed to be useful");
           can_cache=false;
+          // TODO: need better way to get w_sub/h_sub than in a loop
+          break;
         }
       }
     }
     if (can_cache) {
       MSG("Using cached file: " << cached_filename);
       INT_T cached_zoom_out_value=1;
+      // TODO: this could be a problem amongst wildly varying image sizes
+      //       solutions are to:
+      //           store max width/max height vs zoom_out
+      //           calculate the value in different places with similar functions
       auto width_test=tiff_width;
       auto height_test=tiff_height;
-      // this can probably be optimized out of a while loop
-      while (width_test > CACHE_MAX_PIXEL_SIZE || height_test > CACHE_MAX_PIXEL_SIZE) {
+      // TODO: this duplicates the calculation in
+      // ImageGrid::_write_cache, there should be a better way once
+      // the data structures are revised
+      while (w_sub*width_test >= CACHE_MAX_PIXEL_SIZE || h_sub*height_test >= CACHE_MAX_PIXEL_SIZE) {
         cached_zoom_out_value*=ZOOM_STEP;
         width_test=reduce_and_pad(tiff_width,cached_zoom_out_value);
         height_test=reduce_and_pad(tiff_height,cached_zoom_out_value);

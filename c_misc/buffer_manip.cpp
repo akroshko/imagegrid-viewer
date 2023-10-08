@@ -118,7 +118,7 @@ void buffer_copy_expand_generic (unsigned char* source_buffer, size_t w, size_t 
   auto dest_i_beg=x_origin*zoom_skip;
   auto dest_j_beg=y_origin*zoom_skip;
   auto dest_i_end=(x_origin+w)*zoom_skip;
-  auto dest_j_end=(x_origin+w)*zoom_skip;
+  auto dest_j_end=(y_origin+h)*zoom_skip;
   for (size_t bdj=dest_j_beg, sj=0;
        (bdj < h_expanded && bdj < dest_j_end);
        bdj+=zoom_skip, sj++) {

@@ -72,6 +72,10 @@ bool ImageGridSquareZoomLevel::load_square(SQUARE_DATA_T square_data,
     data_pairs.emplace_back(std::pair<ImageGridSquareZoomLevel* const,
                             std::shared_ptr<LoadSquareData>>(dest_square,std::make_shared<LoadSquareData>()));
     data_pairs.back().second->zoom_out_value=dest_square->zoom_out_value();
+    data_pairs.back().second->w_sub=dest_square->_w_subgrid;
+    data_pairs.back().second->h_sub=dest_square->_h_subgrid;
+    data_pairs.back().second->max_hpixel_sub=dest_square->_max_subgrid_hpixel;
+    data_pairs.back().second->max_wpixel_sub=dest_square->_max_subgrid_wpixel;
     data_read.emplace_back(data_pairs.back().second);
   }
   // block until things load
@@ -83,9 +87,9 @@ bool ImageGridSquareZoomLevel::load_square(SQUARE_DATA_T square_data,
       auto sub_i=subgrid_square_kv.first.first;
       auto sub_j=subgrid_square_kv.first.second;
       CURRENT_SUBGRID_T current_subgrid(sub_i,sub_j);
+      data_read_temp->rgb_data[current_subgrid]=nullptr;
       data_read_temp->rgb_wpixel[current_subgrid]=INT_MIN;
       data_read_temp->rgb_hpixel[current_subgrid]=INT_MIN;
-      data_read_temp->rgb_data[current_subgrid]=nullptr;
     }
   }
   for (auto& subgrid_square_kv : square_data) {
@@ -146,8 +150,8 @@ std::string ImageGridSquareZoomLevel::create_cache_filename(std::string filename
 void ImageGridSquareZoomLevel::unload_square() {
   if (this->is_loaded) {
     std::lock_guard<std::mutex> guard(this->load_mutex);
-    for (int i=0; i < this->_w_subgrid; i++) {
-      for (int j=0; j < this->_h_subgrid; j++) {
+    for (INT_T i=0; i < this->_w_subgrid; i++) {
+      for (INT_T j=0; j < this->_h_subgrid; j++) {
         if (this->_rgb_data[i][j]) {
           delete[] this->_rgb_data[i][j];
           this->_rgb_data[i][j]=nullptr;
@@ -380,7 +384,6 @@ bool ImageGrid::_load_square(const ViewPortCurrentState& viewport_current_state,
       auto file_data=grid_setup->file_data();
       std::string cached_file;
       tried_load=true;
-      // TODO: this might go funny for half-empty squares
       auto load_successful_temp=ImageGridSquareZoomLevel::load_square(file_data[grid_pair],
                                                                       grid_setup->use_cache(),
                                                                       dest_squares);
@@ -393,29 +396,34 @@ bool ImageGrid::_load_square(const ViewPortCurrentState& viewport_current_state,
   return (tried_load && never_false);
 }
 
-// TODO: This probably won't work for certain squres, need to take into account zoom for whole thing
 void ImageGrid::_write_cache(INT_T i, INT_T j, SQUARE_DATA_T square_data) {
-  // TODO: this kind of individually probably won't work longterm
   for (auto& subgrid_square_kv : square_data) {
-    bool loaded_512=false;
+    bool loaded_cache_size=false;
     auto i_sub=subgrid_square_kv.first.first;
     auto j_sub=subgrid_square_kv.first.second;
     auto filename=subgrid_square_kv.second;
     for (INT_T k=0L; k<this->_zoom_index_length; k++) {
-      if (loaded_512) {
+      if (loaded_cache_size) {
         break;
       }
       auto dest_square=this->squares[i][j]->image_array[k].get();
       // find current size
       auto wpixel=dest_square->rgb_wpixel(i_sub,j_sub);
       auto hpixel=dest_square->rgb_hpixel(i_sub,j_sub);
+      auto w_sub=this->squares[i][j]->_subgrid_width;
+      auto h_sub=this->squares[i][j]->_subgrid_height;
+      // auto w_max_pixel=w_sub*dest_square->_max_subgrid_wpixel;
+      // auto h_max_pixel=h_sub*dest_square->_max_subgrid_hpixel;
       // TODO: check size of filename_new here
       auto filename_new=ImageGridSquareZoomLevel::create_cache_filename(filename);
-      MSG("Trying to writing cache filename: " << filename_new << " for " << filename << " at zoom index " << k << " i: " << i << " j: " << j << "i_sub: " << i_sub << " j_sub: " << j_sub);
-      if (wpixel < CACHE_MAX_PIXEL_SIZE && hpixel < CACHE_MAX_PIXEL_SIZE) {
-        loaded_512=write_png(filename_new, wpixel, hpixel, dest_square->_rgb_data[i_sub][j_sub]);
-        MSG("Cache tried with return: " << loaded_512);
-       }
+      MSG("Trying to writing cache filename: " << filename_new << " for " << filename << " at zoom index " << k << " i: " << i << " j: " << j << " i_sub: " << i_sub << " j_sub: " << j_sub);
+      if (w_sub*wpixel < CACHE_MAX_PIXEL_SIZE && h_sub*hpixel < CACHE_MAX_PIXEL_SIZE) {
+        loaded_cache_size=write_png(filename_new, wpixel, hpixel, dest_square->_rgb_data[i_sub][j_sub]);
+        MSG("Cache tried with return: " << loaded_cache_size);
+        if (loaded_cache_size) {
+          MSG("Cached worked with w:" << wpixel << " h:" << hpixel);
+        }
+      }
     }
   }
 }

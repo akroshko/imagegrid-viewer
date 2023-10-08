@@ -323,7 +323,7 @@ int main(int argc, char* argv[]) {
   // The main loop continues as long as this is true.
   auto continue_flag=true;
 #ifdef DEBUG_MESSAGES
-  int loop_count=0;
+  INT_T loop_count=0;
 #endif
   // read the command line arguments to fine out what our grid looks
   // like and where the images come from
