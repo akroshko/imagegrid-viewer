@@ -12,6 +12,19 @@
 #include <utility>
 #include <vector>
 
+const std::string HELP_STRING=
+  "Usage: imagegrid-viewer [-c|-d] -w WIDTH -h HEIGHT IMAGES...\n"
+  "       imagegrid-viewer [-c|-d] -f TEXT_FILE\n"
+  "\n"
+  "  -c        create cache\n"
+  "  -d        use cache\n"
+  "\n"
+  "  -w        width of grid in images\n"
+  "  -h        height of grid in images\n"
+  "\n"
+  "  -f        text file with each line in the format:\n"
+  "            X_INDEX Y_INDEX X_SUBGRID_INDEX Y_SUBGRID_INDEX FILENAME\n";
+
 bool GridSetup::successful() const {
   return this->_successful;
 }
@@ -37,9 +50,18 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
   parse_standard_arguments(argc, argv, wimage, himage,
                            this->_do_cache, this->_use_cache, this->_successful,
                            this->_path_value, this->_filenames, this->_text_filename);
+  if (!this->_successful) {
+    MSG("Error parsing arguments");
+    std::cout << HELP_STRING << std::endl;
+    return;
+  }
   if (this->_text_filename.length() != 0) {
+    INT_T max_i,max_j;
+    load_image_grid_from_text(this->_text_filename,this->_file_data,
+                              max_i,max_j);
+    wimage=max_i+1;
+    himage=max_j+1;
     this->_grid_image_size=GridImageSize(wimage,himage);
-    load_image_grid_from_text(this->_text_filename,this->_file_data);
     this->_successful=true;
   } else {
     this->_grid_image_size=GridImageSize(wimage,himage);

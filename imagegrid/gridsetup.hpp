@@ -47,7 +47,7 @@ public:
    */
   bool use_cache() const;
 protected:
-  bool _successful=false;
+  bool _successful;
   GridImageSize _grid_image_size;
   std::vector<std::string> _filenames;
   std::string _text_filename;

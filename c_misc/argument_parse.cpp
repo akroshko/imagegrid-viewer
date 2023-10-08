@@ -15,6 +15,8 @@ void parse_standard_arguments(int argc, char* const* argv,
                               std::string &text_filename) {
   int opt;
   char *end;
+  bool size_arg=false;
+  bool file_arg=false;
   // char path_value_local[PATH_BUFFER_SIZE]={ 0 };
   // get options
   while((opt=getopt(argc ,argv, "w:h:p:f:cd")) != -1) {
@@ -22,10 +24,12 @@ void parse_standard_arguments(int argc, char* const* argv,
     case 'w':
       // width in images
       wimage=strtol(optarg,&end,10);
+      size_arg=true;
       break;
     case 'h':
       // height in images in images
       himage=strtol(optarg,&end,10);
+      size_arg=true;
       break;
     case 'p':
       // get numbered images from path
@@ -34,6 +38,7 @@ void parse_standard_arguments(int argc, char* const* argv,
       break;
     case 'f':
       text_filename=std::string(optarg);
+      file_arg=true;
       break;
     case 'c':
       // only cache images
@@ -58,6 +63,13 @@ void parse_standard_arguments(int argc, char* const* argv,
       successful=false;
       return;
     }
+  }
+  // test for error conditions such as mutually exclusive arguments
+  if (size_arg && file_arg) {
+    successful=false;
+    return;
+  } else {
+    successful=true;
   }
   path_value=std::string(path_value);
   // get any files on the end

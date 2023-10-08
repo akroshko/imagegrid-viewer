@@ -174,7 +174,10 @@ bool check_empty(std::string filename);
  *
  * @param text_file The text file to load from.
  * @param file_data A container that holds the grid/file information.
+ * @param max_i Set to the maximum width index found.
+ * @param max_j Set to the maximum height index found.
  */
-void load_image_grid_from_text (std::string text_file, FILE_DATA_T& file_data);
+void load_image_grid_from_text (std::string text_file, FILE_DATA_T& file_data,
+                                INT_T& max_i,INT_T& max_j);
 
 #endif
