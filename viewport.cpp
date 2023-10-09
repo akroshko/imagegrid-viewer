@@ -43,7 +43,6 @@ void ViewPort::set_image_max_size(const GridPixelSize& image_max_size) {
 }
 
 void ViewPort::find_viewport_blit(TextureGrid* const texture_grid, SDLApp* const sdl_app) {
-  INT_T blit_count=0;
   // locking the textures
   // std::vector<std::unique_lock<std::mutex>> mutex_vector{};
   std::vector<TextureGridSquareZoomLevel*> texture_square_vector{};
@@ -75,30 +74,17 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid, SDLApp* const
       // TODO: this is where I chose zoom
       auto actual_zoom=zoom_index;
       // for testing max zoom
-      // int actual_zoom=texture_grid->textures_max_zoom_index-1;
-      auto lock_succeeded=false;
-      auto try_loaded=true;
       bool texture_loaded=false;
       do {
-        lock_succeeded=false;
-        texture_loaded=false;
-        // go through loop again
-        if (try_loaded && !(actual_zoom <= max_zoom_index)) {
-          actual_zoom=zoom_index;
-          try_loaded=false;
-        }
         auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[actual_zoom].get();
-        std::unique_lock<std::mutex> texture_square_lock(texture_square_zoom->display_mutex,std::defer_lock);
-        if ((try_loaded &&
-             texture_square_zoom->is_loaded &&
-             texture_square_zoom->is_displayable) ||
-            (!try_loaded && texture_square_zoom->is_displayable)) {
-          // mutex_vector.emplace_back(std::unique_lock<std::mutex>{texture_square_zoom->display_mutex,std::defer_lock});
-          if (texture_square_lock.try_lock()) {
-            lock_succeeded=true;
-            if (texture_grid->squares[i][j]->texture_array[actual_zoom]->display_texture_wrapper()->is_valid() ||
-                (texture_grid->squares[i][j]->texture_array[actual_zoom]->get_image_filler() &&
-                 texture_grid->squares[i][j]->texture_array[actual_zoom]->filler_texture_wrapper()->is_valid())) {
+        // filler should never get past here
+        if (texture_square_zoom->is_loaded &&
+            texture_square_zoom->is_displayable) {
+          // TODO: would like more RAII way of dealing with this mutex
+          if (texture_square_zoom->display_mutex.try_lock()) {
+            if (texture_square_zoom->is_loaded &&
+                texture_square_zoom->is_displayable &&
+                texture_square_zoom->display_texture_wrapper()->is_valid()) {
               texture_loaded=true;
               auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.wpixel()*this->_zoom),
                                                             (int)round(this->_image_max_size.hpixel()*this->_zoom));
@@ -108,14 +94,41 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid, SDLApp* const
                                                             grid_image_size_zoomed);
               blititems.push_back(std::move(new_blit_item));
             } else {
+              texture_square_zoom->display_mutex.unlock();
+              MSG("Couldn't lock normal: " << i << " " << j);
               texture_loaded=false;
             }
           }
         }
         // TODO: else raise error if things are terrible
         actual_zoom++;
-      } while ((actual_zoom <= max_zoom_index || try_loaded) && (!lock_succeeded || !texture_loaded));
-      blit_count++;
+      } while ((actual_zoom <= max_zoom_index) && !texture_loaded);
+      // texture didn't load load so do filler
+      if (!texture_loaded) {
+        // go through loop again
+        auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[zoom_index].get();
+        if (texture_square_zoom->get_image_filler()) {
+          // TODO: would like more RAII way of dealing with this mutex
+          if (texture_square_zoom->display_mutex.try_lock()) {
+            if (texture_square_zoom->get_image_filler() &&
+                texture_square_zoom->filler_texture_wrapper()->is_valid()) {
+              auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.wpixel()*this->_zoom),
+                                                            (int)round(this->_image_max_size.hpixel()*this->_zoom));
+              auto new_blit_item=std::make_unique<BlitItem>(texture_square_zoom,
+                                                            gi,
+                                                            viewport_pixel_coordinate,
+                                                            grid_image_size_zoomed);
+              blititems.push_back(std::move(new_blit_item));
+            } else {
+              texture_square_zoom->display_mutex.unlock();
+            }
+          } else {
+            // TODO: this should never happen, so this error is in here while I investigate
+            MSG("Couldn't lock filler: " << i << " " << j);
+          }
+
+        }
+      }
     }
   }
   // blit blitables
@@ -123,6 +136,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid, SDLApp* const
   std::unique_ptr<SDLDrawableSurface> drawable_surface=std::make_unique<SDLDrawableSurface>(sdl_app,viewport_pixel_size);
   for (size_t i=0; i < blititems.size(); i++) {
     blititems[i]->blit_this(drawable_surface.get());
+    blititems[i]->blit_square->display_mutex.unlock();
   }
 }
 

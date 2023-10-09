@@ -16,6 +16,8 @@
 #include <climits>
 
 class TextureGrid;
+class TextureGridSquare;
+class TextureGridSquareZoomLevel;
 
 /**
  * An individual square at a particular zoom level in the texture
@@ -23,7 +25,8 @@ class TextureGrid;
  */
 class TextureGridSquareZoomLevel {
 public:
-  TextureGridSquareZoomLevel();
+  TextureGridSquareZoomLevel()=delete;
+  TextureGridSquareZoomLevel(TextureGridSquare* parent_square);
   ~TextureGridSquareZoomLevel();
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&)=delete;
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&&)=delete;
@@ -63,6 +66,8 @@ public:
   SDLDisplayTextureWrapper* filler_texture_wrapper();
 private:
   friend class TextureGrid;
+  friend class TextureGridSquare;
+  TextureGridSquare* _parent_square;
   // the actual display texture
   std::unique_ptr<SDLDisplayTextureWrapper> _display_texture_wrapper;
   // the filler texture
@@ -74,7 +79,8 @@ private:
  */
 class TextureGridSquare {
 public:
-  TextureGridSquare(INT_T zoom_index_length);
+  TextureGridSquare()=delete;
+  TextureGridSquare(TextureGrid* parent_grid,INT_T zoom_index_length);
   ~TextureGridSquare()=default;
   TextureGridSquare(const TextureGridSquare&)=delete;
   TextureGridSquare(const TextureGridSquare&&)=delete;
@@ -86,7 +92,12 @@ public:
    * each reduced by a factor of 2.
    */
   std::unique_ptr<std::unique_ptr<TextureGridSquareZoomLevel>[]> texture_array;
+  /** @return The parent texture grid.*/
+  TextureGrid* parent_grid() const;
 private:
+  friend class TextureGrid;
+  friend class TextureGridSquareZoomLevel;
+  TextureGrid* _parent_grid;
   INT_T _zoom_index_length;
 };
 

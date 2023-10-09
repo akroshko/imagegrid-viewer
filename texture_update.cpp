@@ -22,27 +22,35 @@ void TextureUpdate::find_current_textures (const ImageGrid* const grid,
                                            std::atomic<bool> &keep_running) {
   INT_T texture_copy_count=0;
   auto viewport_current_state=this->_viewport_current_state_texturegrid_update->GetGridValues();
-  // if (view_changed) {
   // don't do anything here if viewport_current_state hasn't been initialized
   if (!viewport_current_state.current_grid_coordinate().invalid()) {
     for (INT_T j=0L; j < texture_grid->grid_image_size().himage(); j++) {
       for (INT_T i=0L; i < texture_grid->grid_image_size().wimage(); i++) {
-        this->load_new_textures(i,j,viewport_current_state,grid,texture_grid,texture_copy_count,keep_running);
-        this->clear_textures(i,j,viewport_current_state,texture_grid,keep_running);
-        this->add_filler_textures(i,j,viewport_current_state,texture_grid,keep_running);
+        auto grid_square_visible=this->_grid_square_visible(i,j,viewport_current_state);
+        auto current_texture_grid_square=texture_grid->squares[i][j].get();
+        this->load_new_textures(grid_square_visible,viewport_current_state,
+                                grid->squares[i][j].get(),
+                                current_texture_grid_square,
+                                texture_copy_count,keep_running);
+        this->clear_textures(grid_square_visible,
+                             current_texture_grid_square,
+                             keep_running);
+        this->add_filler_textures(grid_square_visible,
+                                  viewport_current_state,
+                                  current_texture_grid_square,
+                                  keep_running);
       }
     }
   }
 }
 
-void TextureUpdate::load_new_textures(INT_T i,
-                                      INT_T j,
+void TextureUpdate::load_new_textures(bool grid_square_visible,
                                       const ViewPortCurrentState& viewport_current_state,
-                                      const ImageGrid* const grid,
-                                      TextureGrid* const texture_grid,
+                                      const ImageGridSquare* const grid_square,
+                                      TextureGridSquare* const texture_grid_square,
                                       INT_T &texture_copy_count,
                                       std::atomic<bool> &keep_running) {
-  auto max_zoom_index=texture_grid->textures_zoom_index_length()-1;
+  auto max_zoom_index=texture_grid_square->parent_grid()->textures_zoom_index_length()-1;
   auto current_zoom_index=ViewPortTransferState::find_zoom_index_bounded(viewport_current_state.zoom(),0,max_zoom_index);
   for (INT_T zoom_index=0; zoom_index <= max_zoom_index; zoom_index++) {
     if (!keep_running ||
@@ -54,13 +62,13 @@ void TextureUpdate::load_new_textures(INT_T i,
     if (zoom_index != max_zoom_index && zoom_index != current_zoom_index) {
       continue;
     }
-    auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index].get();
+    auto dest_square=texture_grid_square->texture_array[zoom_index].get();
     auto load_all=(zoom_index == max_zoom_index);
-    if (load_all || _grid_square_visible(i,j,viewport_current_state)) {
+    if (load_all || grid_square_visible) {
       auto load_index=zoom_index;
       bool texture_copy_successful=false;
       do {
-        auto image_square=grid->squares[i][j]->image_array[load_index].get();
+        auto image_square=grid_square->image_array[load_index].get();
         if (image_square->is_loaded &&
             (!dest_square->is_loaded ||
              dest_square->last_load_index>load_index)) {
@@ -87,24 +95,23 @@ void TextureUpdate::load_new_textures(INT_T i,
           }
         }
         load_index++;
-      } while (!texture_copy_successful && load_index < grid->zoom_index_length());
+      } while (!texture_copy_successful && load_index < grid_square->parent_grid()->zoom_index_length());
     }
   }
 }
 
-void TextureUpdate::clear_textures(INT_T i,
-                                   INT_T j,
-                                   const ViewPortCurrentState& viewport_current_state,
-                                   TextureGrid* const texture_grid,
+void TextureUpdate::clear_textures(bool grid_square_visible,
+                                   TextureGridSquare* const texture_grid_square,
                                    std::atomic<bool> &keep_running) {
-  auto max_zoom_index=texture_grid->textures_zoom_index_length()-1;
+  auto max_zoom_index=texture_grid_square->parent_grid()->textures_zoom_index_length()-1;
   // never clear out top level index
-  for (INT_T zoom_index=0L; zoom_index < max_zoom_index-1; zoom_index++) {
+  for (INT_T zoom_index=0L; zoom_index < max_zoom_index; zoom_index++) {
     if (!keep_running) { break; }
-    auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index].get();
-    if (!_grid_square_visible(i,j,viewport_current_state)) {
+    auto dest_square=texture_grid_square->texture_array[zoom_index].get();
+    if (!grid_square_visible) {
       // unload anything not visible that is loadable or displayable
-      if (dest_square->is_loaded || dest_square->is_displayable) {
+      // if (dest_square->is_loaded || dest_square->is_displayable) {
+      if (dest_square->is_loaded) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
         if (display_lock.try_lock()) {
           dest_square->unload_texture();
@@ -115,12 +122,11 @@ void TextureUpdate::clear_textures(INT_T i,
   }
 }
 
-void TextureUpdate::add_filler_textures(INT_T i,
-                                        INT_T j,
+void TextureUpdate::add_filler_textures(bool grid_square_visible,
                                         const ViewPortCurrentState& viewport_current_state,
-                                        TextureGrid* const texture_grid,
+                                        TextureGridSquare* const texture_grid_square,
                                         std::atomic<bool> &keep_running) {
-  auto max_zoom_index=texture_grid->textures_zoom_index_length()-1;
+  auto max_zoom_index=texture_grid_square->parent_grid()->textures_zoom_index_length()-1;
   auto current_zoom_index=ViewPortTransferState::find_zoom_index_bounded(viewport_current_state.zoom(),0,max_zoom_index);
   for (INT_T zoom_index=max_zoom_index; zoom_index >= 0L; zoom_index--) {
     if (!keep_running) { break; }
@@ -128,16 +134,15 @@ void TextureUpdate::add_filler_textures(INT_T i,
       continue;
     }
     auto load_all=(zoom_index == max_zoom_index);
-    auto dest_square=texture_grid->squares[i][j]->texture_array[zoom_index].get();
+    auto dest_square=texture_grid_square->texture_array[zoom_index].get();
     // take all the precautions for setting a texture as filler as
     // when we used to copy
-    if (load_all || _grid_square_visible(i,j,viewport_current_state)) {
-      if (!dest_square->is_displayable) {
+    if (load_all || grid_square_visible) {
+      // TODO: check this carefully after more testing
+      if (!dest_square->is_loaded && !dest_square->get_image_filler()) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
         if (display_lock.try_lock()) {
-          if (!dest_square->is_displayable) {
-            dest_square->set_image_filler();
-          }
+          dest_square->set_image_filler();
           display_lock.unlock();
         }
       }
@@ -161,8 +166,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                   const ImageGridSquareZoomLevel* const source_square,
                                   INT_T zoom_index,
                                   GridPixelSize texture_pixel_size) {
-  INT_T subimages_w=source_square->w_subgrid();
-  INT_T subimages_h=source_square->h_subgrid();
+  INT_T subimages_w=source_square->parent_square()->subgrid_width();
+  INT_T subimages_h=source_square->parent_square()->subgrid_height();
   // TODO: change how this notifies about valid/invalid textures
   bool any_successful=false;
   auto texture_zoom_reduction=((INT_T)pow(2,zoom_index));

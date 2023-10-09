@@ -42,49 +42,43 @@ public:
   /**
    * Load textures based on the current coordinates and zoom level.
    *
-   * @param i The index along the width of the grid.
-   * @param j The index along the height of the grid.
+   * @param grid_square_visible Is the current square visible?
    * @param zoom The current zoom.
-   * @param grid The image grid.
-   * @param texture_grid The texture grid.
+   * @param grid_square The grid square.
+   * @param texture_grid_square The texture grid square.
    * @param texture_copy_count Keeps track of numbers of textures.
    *                           copied
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */
-  void load_new_textures(INT_T i,
-                         INT_T j,
+  void load_new_textures(bool grid_square_visible,
                          const ViewPortCurrentState& viewport_current_state,
-                         const ImageGrid* const grid,
-                         TextureGrid* const texture_grid,
+                         const ImageGridSquare* const grid_square,
+                         TextureGridSquare* const texture_grid_square,
                          INT_T &texture_copy_count,
                          std::atomic<bool> &keep_running);
   /**
    * Clear textures based on the current coordinates.
    *
-   * @param i The index along the width of the grid.
-   * @param j The index along the height of the grid.
-   * @param texture_grid The texture grid.
+   * @param grid_square_visible Is the current square visible?
+   * @param texture_grid_square The texture grid square.
    * @param keeping_running flag to stop what's happening, generally to indicate program exit
    */
-  void clear_textures(INT_T i,
-                      INT_T j,
-                      const ViewPortCurrentState& viewport_current_state,
-                      TextureGrid* const texture_grid,
+  void clear_textures(bool grid_square_visible,
+                      TextureGridSquare* const texture_grid_square,
                       std::atomic<bool> &keep_running);
   /**
    * Add filler textures where nothing can be loaded.
    *
-   * @param i The index along the width of the grid.
-   * @param j The index along the height of the grid.
-   * @param texture_grid The texture grid.
+   * @param grid_square_visible Is the current square visible?
+   * @param viewport_current_state The current state of the viewport.
+   * @param texture_grid_square The texture grid square.
    * @param keeping_runnin Set true to stop what's happening,
    *                       generally to indicate program exit.
    */
-  void add_filler_textures(INT_T i,
-                           INT_T j,
+  void add_filler_textures(bool grid_square_visible,
                            const ViewPortCurrentState& viewport_current_state,
-                           TextureGrid* const texture_grid,
+                           TextureGridSquare* const texture_grid_square,
                            std::atomic<bool> &keep_running);
   /**
    * Load a texture.

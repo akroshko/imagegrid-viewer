@@ -135,8 +135,6 @@ const double INITIAL_Y=1.5;
 // maximum minimum size of scaled images
 const INT_T MAX_MIN_SCALED_IMAGE_SIZE=32;
 
-const auto THREAD_SLEEP=std::chrono::milliseconds(1);
-
 // some placeholder values
 // rather than zero, this should make sure that any use of initialized class members becomes obvious
 // TODO: will replace with assert or an exception

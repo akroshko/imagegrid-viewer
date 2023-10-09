@@ -20,6 +20,8 @@
 #include <vector>
 
 class ImageGrid;
+class ImageGridSquare;
+class ImageGridSquareZoomLevel;
 
 /**
  * An individual square on the grid at a particular zoom level.
@@ -30,17 +32,11 @@ public:
   /**
    * TODO: update this doctring when I update terminology and notation
    *
+   * @param parent_square
    * @param zoom_level
-   * @param max_subgrid_wpixel
-   * @param max_subgrid_hpixel
-   * @param subgrid_height
-   * @param subgrid_width
    */
-  ImageGridSquareZoomLevel(INT_T zoom_level,
-                           INT_T max_subgrid_wpixel,
-                           INT_T max_subgrid_hpixel,
-                           INT_T subgrid_height,
-                           INT_T subgrid_width);
+  ImageGridSquareZoomLevel(ImageGridSquare* parent_square,
+                           INT_T zoom_level);
   ~ImageGridSquareZoomLevel();
   ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&)=delete;
   ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&&)=delete;
@@ -82,10 +78,6 @@ public:
    * @return The height in pixels.
    */
   size_t rgb_hpixel(INT_T w_index, INT_T h_index) const;
-  /** @return The number of subgrid images in width. */
-  size_t w_subgrid() const;
-  /** @return The number of subgrid images in height. */
-  size_t h_subgrid() const;
   /**
    * @param w_index
    * @param h_index
@@ -104,17 +96,18 @@ public:
    * @return A pointer to the RGB data.
    */
   unsigned char* get_rgb_data(INT_T w_index, INT_T h_index) const;
+  /** @return The parent square. */
+  ImageGridSquare* parent_square() const;
 private:
   friend class ImageGrid;
+  friend class ImageGridSquare;
+  ImageGridSquare* _parent_square;
   /** The actual RGB data for this square and zoom level */
   std::unique_ptr<std::unique_ptr<unsigned char*[]>[]> _rgb_data;
   // TOOD: will eventually use an object from coordinates.hpp, but for
   // now I want this freedom
   std::unique_ptr<std::unique_ptr<size_t[]>[]> _rgb_wpixel;
   std::unique_ptr<std::unique_ptr<size_t[]>[]> _rgb_hpixel;
-  // TODO:  currently unused???
-  size_t _w_subgrid=-1;
-  size_t _h_subgrid=-1;
   // not scaled, but they need to be here for now
   INT_T _max_subgrid_wpixel=-1;
   INT_T _max_subgrid_hpixel=-1;
@@ -133,15 +126,24 @@ public:
   /**
    * @param square_data The data for this grid square.
    */
-  ImageGridSquare(SQUARE_DATA_T square_data);
+  ImageGridSquare(ImageGrid* parent_grid,
+                  SQUARE_DATA_T square_data);
   ~ImageGridSquare()=default;
   ImageGridSquare(const ImageGridSquare&)=delete;
   ImageGridSquare(const ImageGridSquare&&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
   std::unique_ptr<std::unique_ptr<ImageGridSquareZoomLevel>[]> image_array;
+  /** @return The subgrid width. */
+  INT_T subgrid_width();
+  /** @return The subgrid height. */
+  INT_T subgrid_height();
+  /** @return The parent image grid. */
+  ImageGrid* parent_grid() const;
 private:
   friend class ImageGrid;
+  friend class  ImageGridSquareZoomLevel;
+  ImageGrid* _parent_grid;
   /**
    * How many steps each zoom takes, power of 2.
    */
@@ -274,6 +276,8 @@ private:
    * How many steps each zoom takes, power of 2.
    */
   INT_T _zoom_index_length;
+  // temporary local variable
+  std::pair<INT_T,INT_T> _grid_pair;
 };
 
 #endif

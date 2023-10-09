@@ -52,5 +52,5 @@ void sleep_thread () {
   // do a minisleep after each file is unloaded to make sure other
   // things can happen
   std::this_thread::yield();
-  std::this_thread::sleep_for(THREAD_SLEEP);
+  std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }

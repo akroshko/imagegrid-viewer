@@ -14,8 +14,9 @@
 // C headers
 #include <cmath>
 
-TextureGridSquareZoomLevel::TextureGridSquareZoomLevel () {
+TextureGridSquareZoomLevel::TextureGridSquareZoomLevel (TextureGridSquare* parent_square) {
   this->_display_texture_wrapper=std::make_unique<SDLDisplayTextureWrapper>();
+  this->_parent_square=parent_square;
 }
 
 TextureGridSquareZoomLevel::~TextureGridSquareZoomLevel () {
@@ -54,12 +55,17 @@ SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::filler_texture_wrapper() {
   return this->_filler_texture_wrapper;
 }
 
-TextureGridSquare::TextureGridSquare (INT_T zoom_index_length) {
+TextureGridSquare::TextureGridSquare (TextureGrid* parent_grid,INT_T zoom_index_length) {
+  this->_parent_grid=parent_grid;
   this->_zoom_index_length=zoom_index_length;
   this->texture_array=std::make_unique<std::unique_ptr<TextureGridSquareZoomLevel>[]>(zoom_index_length);
   for (auto i=0L; i < zoom_index_length; i++) {
-    this->texture_array[i]=std::make_unique<TextureGridSquareZoomLevel>();
+    this->texture_array[i]=std::make_unique<TextureGridSquareZoomLevel>(this);
   }
+}
+
+TextureGrid* TextureGridSquare::parent_grid () const {
+  return this->_parent_grid;
 }
 
 TextureGrid::TextureGrid (const GridSetup* const grid_setup,
@@ -70,7 +76,7 @@ TextureGrid::TextureGrid (const GridSetup* const grid_setup,
   for (INT_T i=0L; i < grid_setup->grid_image_size().wimage(); i++) {
     this->squares[i]=std::make_unique<std::unique_ptr<TextureGridSquare>[]>(grid_setup->grid_image_size().himage());
     for (INT_T j=0L; j < grid_setup->grid_image_size().himage(); j++) {
-      this->squares[i][j]=std::make_unique<TextureGridSquare>(zoom_index_length);
+      this->squares[i][j]=std::make_unique<TextureGridSquare>(this,zoom_index_length);
     }
   }
   this->filler_squares=std::make_unique<std::unique_ptr<SDLDisplayTextureWrapper>[]>(zoom_index_length);
