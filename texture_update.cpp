@@ -26,10 +26,11 @@ void TextureUpdate::find_current_textures (const ImageGrid* const grid,
   if (!viewport_current_state.current_grid_coordinate().invalid()) {
     for (INT_T j=0L; j < texture_grid->grid_image_size().himage(); j++) {
       for (INT_T i=0L; i < texture_grid->grid_image_size().wimage(); i++) {
+        auto grid_index=GridIndex(i,j);
         auto grid_square_visible=this->_grid_square_visible(i,j,viewport_current_state);
         auto current_texture_grid_square=texture_grid->squares[i][j].get();
         this->load_new_textures(grid_square_visible,viewport_current_state,
-                                grid->squares[i][j].get(),
+                                grid->squares(grid_index),
                                 current_texture_grid_square,
                                 texture_copy_count,keep_running);
         this->clear_textures(grid_square_visible,
@@ -58,7 +59,6 @@ void TextureUpdate::load_new_textures(bool grid_square_visible,
       break;
     }
     // only load/update current zoom and max_zoom
-    // TODO: want this to be initial, but then fill out textures in background
     if (zoom_index != max_zoom_index && zoom_index != current_zoom_index) {
       continue;
     }
@@ -110,7 +110,6 @@ void TextureUpdate::clear_textures(bool grid_square_visible,
     auto dest_square=texture_grid_square->texture_array[zoom_index].get();
     if (!grid_square_visible) {
       // unload anything not visible that is loadable or displayable
-      // if (dest_square->is_loaded || dest_square->is_displayable) {
       if (dest_square->is_loaded) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
         if (display_lock.try_lock()) {
@@ -135,10 +134,7 @@ void TextureUpdate::add_filler_textures(bool grid_square_visible,
     }
     auto load_all=(zoom_index == max_zoom_index);
     auto dest_square=texture_grid_square->texture_array[zoom_index].get();
-    // take all the precautions for setting a texture as filler as
-    // when we used to copy
     if (load_all || grid_square_visible) {
-      // TODO: check this carefully after more testing
       if (!dest_square->is_loaded && !dest_square->get_image_filler()) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
         if (display_lock.try_lock()) {
@@ -166,8 +162,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                   const ImageGridSquareZoomLevel* const source_square,
                                   INT_T zoom_index,
                                   GridPixelSize texture_pixel_size) {
-  INT_T subimages_w=source_square->parent_square()->subgrid_width();
-  INT_T subimages_h=source_square->parent_square()->subgrid_height();
+  INT_T subimages_w=source_square->subgrid_width();
+  INT_T subimages_h=source_square->subgrid_height();
   // TODO: change how this notifies about valid/invalid textures
   bool any_successful=false;
   auto texture_zoom_reduction=((INT_T)pow(2,zoom_index));
@@ -185,7 +181,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
       // see if this square should be grayed out
       for (INT_T i_sub=0; i_sub < subimages_w; i_sub++) {
         for (INT_T j_sub=0; j_sub < subimages_h; j_sub++) {
-          auto source_data=source_square->get_rgb_data(i_sub,j_sub);
+          auto subgrid_index=SubGridIndex(i_sub,j_sub);
+          auto source_data=source_square->get_rgb_data(subgrid_index);
           if (dest_array && source_data) {
             no_data=false;
           }
@@ -197,11 +194,12 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
       // everything is read, loop over
       for (INT_T i_sub=0; i_sub < subimages_w; i_sub++) {
         for (INT_T j_sub=0; j_sub < subimages_h; j_sub++) {
-          auto source_data=source_square->get_rgb_data(i_sub,j_sub);
-          auto source_wpixel=(INT_T)source_square->rgb_wpixel(i_sub,j_sub);
-          auto source_hpixel=(INT_T)source_square->rgb_hpixel(i_sub,j_sub);
-          auto source_data_origin_x=source_square->rgb_xpixel_origin(i_sub,j_sub);
-          auto source_data_origin_y=source_square->rgb_ypixel_origin(i_sub,j_sub);
+          auto subgrid_index=SubGridIndex(i_sub,j_sub);
+          auto source_data=source_square->get_rgb_data(subgrid_index);
+          auto source_wpixel=(INT_T)source_square->rgb_wpixel(subgrid_index);
+          auto source_hpixel=(INT_T)source_square->rgb_hpixel(subgrid_index);
+          auto source_data_origin_x=source_square->rgb_xpixel_origin(subgrid_index);
+          auto source_data_origin_y=source_square->rgb_ypixel_origin(subgrid_index);
           // do the things we are copying exist?
           if (dest_array && source_data) {
             // these should only be powers of 2, add an assert

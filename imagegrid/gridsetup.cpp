@@ -45,6 +45,46 @@ bool GridSetup::use_cache() const {
   return this->_use_cache;
 }
 
+INT_T GridSetup::grid_w() const {
+  return _grid_image_size.himage();
+}
+
+INT_T GridSetup::grid_h() const {
+  return _grid_image_size.wimage();
+}
+
+bool GridSetup::square_has_data(const GridIndex& grid_index) const {
+  // TODO: check bounds
+  return _existing[grid_index.i_grid()][grid_index.j_grid()];
+}
+
+INT_T GridSetup::subgrid_w(const GridIndex& grid_index) const {
+  // TODO: this has to be changed
+  std::pair<INT_T,INT_T> grid_pair(grid_index.i_grid(),grid_index.j_grid());
+  return this->_subgrid_width[grid_index.i_grid()][grid_index.j_grid()];
+}
+
+INT_T GridSetup::subgrid_h(const GridIndex& grid_index) const {
+  // TODO: this has to be changed
+  std::pair<INT_T,INT_T> grid_pair(grid_index.i_grid(),grid_index.j_grid());
+  return this->_subgrid_height[grid_index.i_grid()][grid_index.j_grid()];
+}
+
+bool GridSetup::subgrid_has_data(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const {
+  std::pair<INT_T,INT_T> grid_pair(grid_index.i_grid(),grid_index.j_grid());
+  std::pair<INT_T,INT_T> subgrid_pair(subgrid_index.i_subgrid(),subgrid_index.j_subgrid());
+  auto file_data=this->_file_data;
+  return (file_data[grid_pair].count(subgrid_pair) > 0);
+}
+
+std::string GridSetup::get_filename(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const {
+  std::pair<INT_T,INT_T> grid_pair(grid_index.i_grid(),grid_index.j_grid());
+  std::pair<INT_T,INT_T> subgrid_pair(subgrid_index.i_subgrid(),subgrid_index.j_subgrid());
+  auto file_data=this->_file_data;
+  return file_data[grid_pair][subgrid_pair];
+};
+
+
 GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) {
   INT_T wimage, himage;
   parse_standard_arguments(argc, argv, wimage, himage,
@@ -63,6 +103,59 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
     himage=max_j+1;
     this->_grid_image_size=GridImageSize(wimage,himage);
     this->_successful=true;
+    // TODO: this code should be updated
+    //       better way to initialize or data structures
+    // initialize whether grid exists
+    this->_existing.reserve(wimage);
+    for (INT_T i=0; i<wimage; i++) {
+      std::vector<bool> temp_row;
+      temp_row.reserve(himage);
+      for (INT_T j=0; j<himage; j++) {
+        // TODO: this is likely inefficient but only exists in
+        // one-time setup code
+        std::pair<INT_T,INT_T> grid_pair(i,j);
+        temp_row.push_back((this->_file_data[grid_pair].size() > 0));
+      }
+      this->_existing.push_back(temp_row);
+    }
+    // initialize subgrid width and height
+    this->_subgrid_height.reserve(wimage);
+    this->_subgrid_width.reserve(wimage);
+    for (INT_T i=0; i<wimage; i++) {
+      std::vector<INT_T> temp_row_subgrid_height;
+      temp_row_subgrid_height.reserve(himage);
+      std::vector<INT_T> temp_row_subgrid_width;
+      temp_row_subgrid_width.reserve(himage);
+      for (INT_T j=0; j<himage; j++) {
+        // TODO: this is likely inefficient but only exists in
+        // one-time setup code
+        std::pair<INT_T,INT_T> grid_pair(i,j);
+        if (this->_existing[i][j]) {
+          INT_T subgrid_width=1;
+          INT_T subgrid_height=1;
+          auto file_data=this->_file_data[grid_pair];
+          for (auto& subgrid_kv_pair : file_data) {
+            auto sub_i=subgrid_kv_pair.first.first;
+            auto sub_j=subgrid_kv_pair.first.second;
+            if ((sub_i+1) > subgrid_width) {
+              subgrid_width=(sub_i+1);
+            }
+            if ((sub_j+1) > subgrid_height) {
+              subgrid_height=(sub_j+1);
+            }
+          }
+          // TODO: this is temporary, to bridge existing code to new code
+          temp_row_subgrid_width.push_back(subgrid_width);
+          temp_row_subgrid_height.push_back(subgrid_height);
+        } else {
+          // TODO: this is what is assumed for empty squares
+          temp_row_subgrid_height.push_back(1);
+          temp_row_subgrid_width.push_back(1);
+        }
+      }
+      this->_subgrid_width.push_back(temp_row_subgrid_width);
+      this->_subgrid_height.push_back(temp_row_subgrid_height);
+    }
   } else {
     this->_grid_image_size=GridImageSize(wimage,himage);
     ////////////////////////////////////////////////////////////////////////////////

@@ -65,7 +65,7 @@ public:
    *                   as map coorindates, configuration files, or the
    *                   input from GUI could be considered.
    */
-  ImageGridViewerContext(const GridSetup* const grid_setup);
+  ImageGridViewerContext(GridSetup* const grid_setup);
   ImageGridViewerContext(const ImageGridViewerContext&)=delete;
   ImageGridViewerContext(const ImageGridViewerContext&&)=delete;
   ImageGridViewerContext& operator=(const ImageGridViewerContext&)=delete;
@@ -148,7 +148,7 @@ public:
  *                   could be used to setup the command line
  *                   arguments.
  */
-ImageGridViewerContext::ImageGridViewerContext(const GridSetup* const grid_setup) {
+ImageGridViewerContext::ImageGridViewerContext(GridSetup* const grid_setup) {
   this->sdl_app=std::make_unique<SDLApp>();
   this->viewport_current_state_texturegrid_update=std::make_shared<ViewPortTransferState>();
   this->viewport_current_state_imagegrid_update=std::make_shared<ViewPortTransferState>();

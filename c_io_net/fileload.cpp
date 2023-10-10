@@ -240,10 +240,10 @@ bool load_tiff_as_rgb(const std::string filename,
       MSG("Cached file exists: " << cached_filename);
       for (auto & file_data : load_file_data) {
         // auto zoom_out_value=file_data->zoom_out_value;
-        w_sub=file_data->w_sub;
-        h_sub=file_data->h_sub;
-        auto max_wpixel=w_sub*file_data->max_wpixel_sub;
-        auto max_hpixel=h_sub*file_data->max_hpixel_sub;
+        w_sub=file_data->subgrid_width;
+        h_sub=file_data->subgrid_height;
+        auto max_wpixel=w_sub*file_data->max_subgrid_wpixel;
+        auto max_hpixel=h_sub*file_data->max_subgrid_hpixel;
         if (max_wpixel >= CACHE_MAX_PIXEL_SIZE || max_hpixel >= CACHE_MAX_PIXEL_SIZE) {
           MSG("cached failed to be useful");
           can_cache=false;
@@ -484,4 +484,17 @@ void load_image_grid_from_text (std::string text_file,
       file_data[current_grid][current_subgrid]=filename;
     }
   }
+}
+
+std::string create_cache_filename(std::string filename) {
+  std::filesystem::path filename_path{filename};
+  auto filename_parent=filename_path.parent_path();
+  auto filename_base=filename_path.filename();
+  auto filename_stem=filename_base.stem();
+  auto filename_new=filename_parent;
+  filename_new/="__imagegrid__cache__";
+  std::filesystem::create_directories(filename_new);
+  filename_new/=filename_stem;
+  filename_new+=".png";
+  return filename_new.string();
 }

@@ -83,6 +83,55 @@ private:
 };
 
 /**
+ * Represents indices a grid of images with the origin in the top-left
+ * corner.
+ */
+class GridIndex {
+public:
+  GridIndex();
+  GridIndex(const GridIndex &grid_index);
+  GridIndex(const INT_T igrid, INT_T jgrid);
+  GridIndex& operator=(const GridIndex &grid_index);
+  /** @return The i coordinate. */
+  INT_T i_grid() const;
+  /** @return The j coordinate. */
+  INT_T j_grid() const;
+  // /** @return If values are valid. */
+  // bool invalid() const;
+private:
+  INT_T _igrid;
+  INT_T _jgrid;
+};
+
+/**
+ * Represents coordinates with a grid, i.e., subgrid with the origin
+ * at the top-right corner.
+ *
+ * Subgrids are generally used when the logical grid squares need
+ * partitioning either because of the nature of the data (see
+ * (E)ast/(W)est maps in the 50K Canadian NTS system) or for
+ * performance reasons (grid squares larger than 16384x16384 that
+ * makes sense for textures).
+ *
+ */
+class SubGridIndex {
+public:
+  SubGridIndex();
+  SubGridIndex(const SubGridIndex &subgrid_index);
+  SubGridIndex(const INT_T igrid, INT_T jgrid);
+  SubGridIndex& operator=(const SubGridIndex &subgrid_index);
+  /** @return The i coordinate. */
+  INT_T i_subgrid() const;
+  /** @return The j coordinate. */
+  INT_T j_subgrid() const;
+  /** @return If values are valid. */
+  bool invalid() const;
+private:
+  INT_T _i_subgrid;
+  INT_T _j_subgrid;
+};
+
+/**
  * Represents a size on the image grid in pixels.  For instance if
  * each image was 4000x2500 pixels, a rectangle represented by
  * GridCoordinateSize of 3.2x2.7 would be 12800x6750.

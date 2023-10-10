@@ -52,7 +52,6 @@ typedef double FLOAT_T;
 typedef uint64_t UINT_T;
 typedef int64_t INT_T;
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // more complex types
 
@@ -76,10 +75,6 @@ typedef std::unordered_map<std::pair<INT_T,INT_T>,
                                               std::string,
                                               hash_pair>,
                            hash_pair> FILE_DATA_T;
-
-typedef std::unordered_map<std::pair<INT_T,INT_T>,
-                           std::string,
-                           hash_pair> SQUARE_DATA_T;
 
 typedef std::unordered_map<std::pair<INT_T,INT_T>,
                            size_t,

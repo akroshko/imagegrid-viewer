@@ -52,10 +52,10 @@ struct LoadSquareData {
   SUBGRID_DATA_T rgb_data;
   SUBGRID_SIZE_T rgb_wpixel;
   SUBGRID_SIZE_T rgb_hpixel;
-  INT_T w_sub=1;
-  INT_T h_sub=1;
-  INT_T max_wpixel_sub=INT_MIN;
-  INT_T max_hpixel_sub=INT_MIN;
+  INT_T subgrid_width=1;
+  INT_T subgrid_height=1;
+  INT_T max_subgrid_wpixel=INT_MIN;
+  INT_T max_subgrid_hpixel=INT_MIN;
   INT_T zoom_out_value=INT_MIN;
 };
 
@@ -179,5 +179,14 @@ bool check_empty(std::string filename);
  */
 void load_image_grid_from_text (std::string text_file, FILE_DATA_T& file_data,
                                 INT_T& max_i,INT_T& max_j);
+
+/**
+ * Create the cached filename from the real filename.
+ *
+ * @param The filename to use to create the cached filename.
+ * @return The cached filename.
+ */
+std::string create_cache_filename(std::string filename);
+
 
 #endif

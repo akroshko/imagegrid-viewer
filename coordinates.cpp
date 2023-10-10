@@ -101,6 +101,64 @@ bool GridCoordinate::invalid() const {
   return (std::isnan(this->_xgrid) || std::isnan(this->_ygrid));
 }
 
+GridIndex::GridIndex() {
+  this->_igrid=INVALID_PIXEL_VALUE;
+  this->_jgrid=INVALID_PIXEL_VALUE;
+}
+
+GridIndex::GridIndex(const INT_T igrid, INT_T jgrid) {
+  this->_igrid=igrid;
+  this->_jgrid=jgrid;
+}
+
+GridIndex::GridIndex(const GridIndex &grid_index) {
+  this->_igrid=grid_index._igrid;
+  this->_jgrid=grid_index._jgrid;
+}
+
+GridIndex& GridIndex::operator=(const GridIndex &grid_index) {
+  this->_igrid=grid_index._igrid;
+  this->_jgrid=grid_index._jgrid;
+  return *this;
+}
+
+INT_T GridIndex::i_grid() const {
+  return this->_igrid;
+}
+
+INT_T GridIndex::j_grid() const {
+  return this->_jgrid;
+}
+
+SubGridIndex::SubGridIndex() {
+  this->_i_subgrid=INVALID_PIXEL_VALUE;
+  this->_j_subgrid=INVALID_PIXEL_VALUE;
+}
+
+SubGridIndex::SubGridIndex(const INT_T igrid, INT_T jgrid) {
+  this->_i_subgrid=igrid;
+  this->_j_subgrid=jgrid;
+}
+
+SubGridIndex::SubGridIndex(const SubGridIndex &grid_index) {
+  this->_i_subgrid=grid_index._i_subgrid;
+  this->_j_subgrid=grid_index._j_subgrid;
+}
+
+SubGridIndex& SubGridIndex::operator=(const SubGridIndex &subgrid_index) {
+  this->_i_subgrid=subgrid_index._i_subgrid;
+  this->_j_subgrid=subgrid_index._j_subgrid;
+  return *this;
+}
+
+INT_T SubGridIndex::i_subgrid() const {
+  return this->_i_subgrid;
+}
+
+INT_T SubGridIndex::j_subgrid() const {
+  return this->_j_subgrid;
+}
+
 GridPixelSize::GridPixelSize() {
   this->_wpixel=INVALID_PIXEL_VALUE;
   this->_hpixel=INVALID_PIXEL_VALUE;

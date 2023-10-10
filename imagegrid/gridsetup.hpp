@@ -46,6 +46,18 @@ public:
    * @return Whether to try to use cached images.
    */
   bool use_cache() const;
+  /**
+   * TODO: test code
+   */
+  std::vector<std::vector<bool>> _existing;
+  // The items allow access to the underlying data.
+  INT_T grid_w() const;
+  INT_T grid_h() const;
+  bool square_has_data(const GridIndex& grid_index) const;
+  INT_T subgrid_w(const GridIndex& grid_index) const;
+  INT_T subgrid_h(const GridIndex& grid_index) const;
+  bool subgrid_has_data(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const;
+  std::string get_filename(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const;
 protected:
   bool _successful;
   GridImageSize _grid_image_size;
@@ -59,6 +71,9 @@ protected:
   // char _data_set[PATH_BUFFER_SIZE]={ 0 };
   bool _do_cache=false;
   bool _use_cache=false;
+  // some underlying data
+  std::vector<std::vector<INT_T>> _subgrid_width;
+  std::vector<std::vector<INT_T>> _subgrid_height;
 };
 
 /**
