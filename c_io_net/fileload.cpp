@@ -8,6 +8,7 @@
 #include "../utility.hpp"
 #include "fileload.hpp"
 #include "../c_misc/buffer_manip.hpp"
+#include "../coordinates.hpp"
 // C++ headers
 // #include <exception>
 #include <filesystem>
@@ -134,6 +135,13 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// data structures
+
+LoadSquareData::LoadSquareData() {
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // general file functions
 
 void read_data(std::string filename,
@@ -160,7 +168,7 @@ void read_data(std::string filename,
 
 bool load_data_as_rgb(const std::string filename,
                       const std::string cached_filename,
-                      const CURRENT_SUBGRID_T current_subgrid,
+                      SubGridIndex& current_subgrid,
                       const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
   bool load_successful=false;
   if (check_tiff(filename)) {
@@ -214,8 +222,10 @@ bool read_tiff_data(std::string filename,
 
 bool load_tiff_as_rgb(const std::string filename,
                       const std::string cached_filename,
-                      const CURRENT_SUBGRID_T current_subgrid,
+                      SubGridIndex& current_subgrid,
                       const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
+  auto sub_i=current_subgrid.i_subgrid();
+  auto sub_j=current_subgrid.j_subgrid();
   auto success=false;
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
   if (!tif) {
@@ -298,13 +308,13 @@ bool load_tiff_as_rgb(const std::string filename,
               // TODO: might want to add an assert here but should be safe due to earlier check
               size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
               size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
-              file_data->rgb_wpixel[current_subgrid]=w_reduced;
-              file_data->rgb_hpixel[current_subgrid]=h_reduced;
+              file_data->rgb_wpixel[sub_i][sub_j]=w_reduced;
+              file_data->rgb_hpixel[sub_i][sub_j]=h_reduced;
               size_t npixel_reduced=w_reduced*h_reduced;
-              file_data->rgb_data[current_subgrid]=new unsigned char[npixel_reduced*3];
+              file_data->rgb_data[sub_i][sub_j]=new unsigned char[npixel_reduced*3];
               buffer_copy_reduce_generic((unsigned char *)png_raster,png_width,png_height,
                                          0, 0,
-                                         file_data->rgb_data[current_subgrid],w_reduced,h_reduced,
+                                         file_data->rgb_data[sub_i][sub_j],w_reduced,h_reduced,
                                          actual_zoom_out_value);
             }
           }
@@ -329,12 +339,12 @@ bool load_tiff_as_rgb(const std::string filename,
             auto zoom_out_value=file_data->zoom_out_value;
             size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
             size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
-            file_data->rgb_wpixel[current_subgrid]=w_reduced;
-            file_data->rgb_hpixel[current_subgrid]=h_reduced;
+            file_data->rgb_wpixel[sub_i][sub_j]=w_reduced;
+            file_data->rgb_hpixel[sub_i][sub_j]=h_reduced;
             auto npixels_reduced=w_reduced*h_reduced;
-            file_data->rgb_data[current_subgrid]=new unsigned char[npixels_reduced*3];
+            file_data->rgb_data[sub_i][sub_j]=new unsigned char[npixels_reduced*3];
             buffer_copy_reduce_tiff(raster,tiff_width,tiff_height,
-                                    file_data->rgb_data[current_subgrid],w_reduced,h_reduced,
+                                    file_data->rgb_data[sub_i][sub_j],w_reduced,h_reduced,
                                     zoom_out_value);
           }
           success=true;
@@ -365,8 +375,10 @@ bool read_png_data(std::string filename,
 }
 
 bool load_png_as_rgb(std::string filename,
-                     const CURRENT_SUBGRID_T current_subgrid,
+                     SubGridIndex& current_subgrid,
                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
+  auto sub_i=current_subgrid.i_subgrid();
+  auto sub_j=current_subgrid.j_subgrid();
   bool success=false;
   png_image image;
 
@@ -393,13 +405,13 @@ bool load_png_as_rgb(std::string filename,
           auto zoom_out_value=file_data->zoom_out_value;
           size_t w_reduced=reduce_and_pad(width,zoom_out_value);
           size_t h_reduced=reduce_and_pad(height,zoom_out_value);
-          file_data->rgb_wpixel[current_subgrid]=w_reduced;
-          file_data->rgb_hpixel[current_subgrid]=h_reduced;
+          file_data->rgb_wpixel[sub_i][sub_j]=w_reduced;
+          file_data->rgb_hpixel[sub_i][sub_j]=h_reduced;
           size_t npixel_reduced=w_reduced*h_reduced;
-          file_data->rgb_data[current_subgrid]=new unsigned char[npixel_reduced*3];
+          file_data->rgb_data[sub_i][sub_j]=new unsigned char[npixel_reduced*3];
           buffer_copy_reduce_generic((unsigned char *)raster,width,height,
                                      0, 0,
-                                     file_data->rgb_data[current_subgrid],w_reduced,h_reduced,
+                                     file_data->rgb_data[sub_i][sub_j],w_reduced,h_reduced,
                                      zoom_out_value);
           success=true;
         }
@@ -449,7 +461,7 @@ bool check_empty(std::string filename) {
 }
 
 void load_image_grid_from_text (std::string text_file,
-                                FILE_DATA_T& file_data,
+                                std::list<GridSetupFile>& read_data,
                                 INT_T& max_i,
                                 INT_T& max_j) {
   // regex to parse text files, this is a fairly rigid for now since
@@ -466,22 +478,25 @@ void load_image_grid_from_text (std::string text_file,
     std::smatch matched_line;
     // ignore nonmatching lines for now
     if (std::regex_search(line,matched_line,regex_text_file_line)) {
-      auto grid_x=std::stoi(matched_line.str(1));
-      auto grid_y=std::stoi(matched_line.str(2));
-      auto subgrid_x=std::stoi(matched_line.str(3));
-      auto subgrid_y=std::stoi(matched_line.str(4));
+      auto grid_i=std::stoi(matched_line.str(1));
+      auto grid_j=std::stoi(matched_line.str(2));
+      auto subgrid_i=std::stoi(matched_line.str(3));
+      auto subgrid_j=std::stoi(matched_line.str(4));
       auto filename=matched_line.str(5);
-      if (grid_x > max_i) {
-        max_i=grid_x;
+      // add to new data structure
+      GridSetupFile data_entry;
+      data_entry.grid_i=grid_i;
+      data_entry.grid_j=grid_j;
+      data_entry.subgrid_i=subgrid_i;
+      data_entry.subgrid_j=subgrid_j;
+      data_entry.filename=filename;
+      read_data.push_back(data_entry);
+      if (grid_i > max_i) {
+        max_i=grid_i;
       }
-      if (grid_y > max_j) {
-        max_j=grid_y;
+      if (grid_j > max_j) {
+        max_j=grid_j;
       }
-      // add to our filedata structure
-      auto current_grid=std::pair<INT_T,INT_T>(grid_x,grid_y);
-      auto current_subgrid=CURRENT_SUBGRID_T(subgrid_x,subgrid_y);
-      // updates
-      file_data[current_grid][current_subgrid]=filename;
     }
   }
 }

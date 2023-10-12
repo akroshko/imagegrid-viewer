@@ -68,15 +68,22 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
 
   // need a more automatic solution to initialization like this
   for (auto& data_read_temp : data_read) {
+    data_read_temp->rgb_data=std::make_unique<std::unique_ptr<unsigned char*[]>[]>(data_read_temp->subgrid_width);
+    data_read_temp->rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_width);
+    data_read_temp->rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_width);
+    for (INT_T sub_i=0; sub_i < data_read_temp->subgrid_width; sub_i++) {
+      data_read_temp->rgb_data[sub_i]=std::make_unique<unsigned char*[]>(data_read_temp->subgrid_height);
+      data_read_temp->rgb_wpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_height);
+      data_read_temp->rgb_hpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_height);
+    }
     for (INT_T sub_i=0; sub_i < data_read_temp->subgrid_width; sub_i++) {
       for (INT_T sub_j=0; sub_j < data_read_temp->subgrid_height; sub_j++) {
         auto subgrid_index=SubGridIndex(sub_i,sub_j);
         if (grid_square->grid_setup()->subgrid_has_data(grid_square->_grid_index,
                                                         subgrid_index)) {
-          CURRENT_SUBGRID_T current_subgrid(sub_i,sub_j);
-          data_read_temp->rgb_data[current_subgrid]=nullptr;
-          data_read_temp->rgb_wpixel[current_subgrid]=INT_MIN;
-          data_read_temp->rgb_hpixel[current_subgrid]=INT_MIN;
+          data_read_temp->rgb_data[sub_i][sub_j]=nullptr;
+          data_read_temp->rgb_wpixel[sub_i][sub_j]=INT_MIN;
+          data_read_temp->rgb_hpixel[sub_i][sub_j]=INT_MIN;
         }
       }
     }
@@ -94,7 +101,7 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
           // TODO: something better for invalid cached filename
           cached_filename="";
         }
-        CURRENT_SUBGRID_T current_subgrid(sub_i,sub_j);
+        auto current_subgrid=SubGridIndex(sub_i,sub_j);
         auto load_successful_temp=load_data_as_rgb(filename,
                                                    cached_filename,
                                                    current_subgrid,
@@ -119,12 +126,11 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
                                                           subgrid_index)) {
             auto origin_x=sub_i*(data_pair.first->_max_subgrid_wpixel);
             auto origin_y=sub_j*(data_pair.first->_max_subgrid_hpixel);
-            CURRENT_SUBGRID_T current_subgrid(sub_i,sub_j);
-            data_pair.first->_rgb_wpixel[sub_i][sub_j]=data_pair.second->rgb_wpixel[current_subgrid];
-            data_pair.first->_rgb_hpixel[sub_i][sub_j]=data_pair.second->rgb_hpixel[current_subgrid];
+            data_pair.first->_rgb_wpixel[sub_i][sub_j]=data_pair.second->rgb_wpixel[sub_i][sub_j];
+            data_pair.first->_rgb_hpixel[sub_i][sub_j]=data_pair.second->rgb_hpixel[sub_i][sub_j];
             data_pair.first->_rgb_xpixel_origin[sub_i][sub_j]=origin_x;
             data_pair.first->_rgb_ypixel_origin[sub_i][sub_j]=origin_y;
-            data_pair.first->_rgb_data[sub_i][sub_j]=data_pair.second->rgb_data[current_subgrid];
+            data_pair.first->_rgb_data[sub_i][sub_j]=data_pair.second->rgb_data[sub_i][sub_j];
           }
         }
       }
@@ -198,10 +204,6 @@ ImageGridSquare::ImageGridSquare(GridSetup* grid_setup,
 }
 
 void ImageGridSquare::_read_data() {
-  std::vector<INT_T> column_max;
-  std::vector<INT_T> row_max;
-
-  // TODO: right now the code works best for sparse/empty if these default to one
   INT_T max_subgrid_pixel_width=1;
   INT_T max_subgrid_pixel_height=1;
 
@@ -344,7 +346,6 @@ bool ImageGrid::_check_load(const ViewPortCurrentState& viewport_current_state,
   auto current_grid_y=viewport_current_state.current_grid_coordinate().ygrid();
   auto screen_width=viewport_current_state.screen_size().hpixel();
   auto screen_height=viewport_current_state.screen_size().wpixel();
-  // TODO: don't like this so need to keep working on transferring calculations
   auto viewport_current_state_new=ViewPortCurrentState(GridCoordinate(current_grid_x,current_grid_y),
                                                        GridPixelSize(this->_image_max_size.wpixel(), this->_image_max_size.hpixel()),
                                                        ViewPortTransferState::find_zoom_upper(zoom_index),
@@ -412,7 +413,6 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
         // find current size
         auto wpixel=dest_square->rgb_wpixel(subgrid_index);
         auto hpixel=dest_square->rgb_hpixel(subgrid_index);
-        // TODO: check size of filename_new here
         auto filename=this->grid_setup()->get_filename(grid_index,subgrid_index);
         auto filename_new=create_cache_filename(filename);
         MSG("Trying to writing cache filename: " <<
@@ -465,7 +465,6 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &
   INT_T load_count=0;
   auto iterator_visible=ImageGridIteratorVisible(this->grid_image_size().wimage(),this->grid_image_size().himage(),
                                                  viewport_current_state);
-  // TODO need a good iterator class for this type of work load what
   // we are looking at if things are not loaded
   while (keep_trying) {
     keep_trying=iterator_visible.get_next(i,j);
@@ -550,7 +549,6 @@ void ImageGrid::setup_grid_cache(GridSetup* const grid_setup) {
                          grid_index,
                          0L,true,grid_setup);
       // TODO: eventually cache this out as tiles that fit in 128x128 and 512x512
-      auto file_data=grid_setup->file_data();
       this->_write_cache(grid_index);
       // unload
       for (auto k=this->_zoom_index_length-1; k >= 0L; k--) {

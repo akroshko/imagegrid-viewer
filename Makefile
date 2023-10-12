@@ -102,11 +102,3 @@ $(OBJ_CSDL): $(SRC_CSDL) $(HEADERS)
 .PHONY: clean
 clean:
 	rm -f $(OBJ)
-
-# TODO: disabling debug build for now
-# .PHONY: debug
-# debug: imagegrid-viewer-debug
-#
-# imagegrid-viewer-debug: CXXFLAGS += -DDEBUG_MESSAGES -DDEBUG_IO -fsanitize=thread,undefined -g3 -O0
-# imagegrid-viewer-debug: $(OBJ_MAIN) imagegrid-viewer.o
-# 	$(CC) -o $@ $^ $(LDFLAGS)

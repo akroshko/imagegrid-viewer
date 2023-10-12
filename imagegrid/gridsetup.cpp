@@ -33,10 +33,6 @@ GridImageSize GridSetup::grid_image_size() const {
   return this->_grid_image_size;
 }
 
-const FILE_DATA_T& GridSetup::file_data() const {
-  return this->_file_data;
-}
-
 bool GridSetup::do_cache() const {
   return this->_do_cache;
 }
@@ -46,44 +42,59 @@ bool GridSetup::use_cache() const {
 }
 
 INT_T GridSetup::grid_w() const {
-  return _grid_image_size.himage();
-}
-
-INT_T GridSetup::grid_h() const {
   return _grid_image_size.wimage();
 }
 
+INT_T GridSetup::grid_h() const {
+  return _grid_image_size.himage();
+}
+
+INT_T GridSetup::_get_grid_index(INT_T i, INT_T j) const {
+  return j*this->grid_w()+i;
+}
+
+INT_T GridSetup::_get_grid_index(const GridIndex& grid_index) const {
+  auto i=grid_index.i_grid();
+  auto j=grid_index.j_grid();
+  return j*this->grid_w()+i;
+}
+
+INT_T GridSetup::_get_subgrid_index(INT_T sub_i, INT_T sub_j, INT_T sub_w) const {
+  return sub_j*sub_w+sub_i;
+}
+
+INT_T GridSetup::_get_subgrid_index(const SubGridIndex& subgrid_index, INT_T sub_w) const {
+  auto sub_i=subgrid_index.i_subgrid();
+  auto sub_j=subgrid_index.j_subgrid();
+  return sub_j*sub_w+sub_i;
+}
+
 bool GridSetup::square_has_data(const GridIndex& grid_index) const {
-  // TODO: check bounds
-  return _existing[grid_index.i_grid()][grid_index.j_grid()];
+  auto local_grid_index=this->_get_grid_index(grid_index);
+  return this->_existing[local_grid_index];
 }
 
 INT_T GridSetup::subgrid_w(const GridIndex& grid_index) const {
-  // TODO: this has to be changed
-  std::pair<INT_T,INT_T> grid_pair(grid_index.i_grid(),grid_index.j_grid());
-  return this->_subgrid_width[grid_index.i_grid()][grid_index.j_grid()];
+  auto local_grid_index=this->_get_grid_index(grid_index);
+  return this->_subgrid_width[local_grid_index];
 }
 
 INT_T GridSetup::subgrid_h(const GridIndex& grid_index) const {
-  // TODO: this has to be changed
-  std::pair<INT_T,INT_T> grid_pair(grid_index.i_grid(),grid_index.j_grid());
-  return this->_subgrid_height[grid_index.i_grid()][grid_index.j_grid()];
+  auto local_grid_index=this->_get_grid_index(grid_index);
+  return this->_subgrid_height[local_grid_index];
 }
 
 bool GridSetup::subgrid_has_data(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const {
-  std::pair<INT_T,INT_T> grid_pair(grid_index.i_grid(),grid_index.j_grid());
-  std::pair<INT_T,INT_T> subgrid_pair(subgrid_index.i_subgrid(),subgrid_index.j_subgrid());
-  auto file_data=this->_file_data;
-  return (file_data[grid_pair].count(subgrid_pair) > 0);
+  auto str=this->get_filename(grid_index,subgrid_index);
+  return (!(str == ""));
 }
 
 std::string GridSetup::get_filename(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const {
-  std::pair<INT_T,INT_T> grid_pair(grid_index.i_grid(),grid_index.j_grid());
-  std::pair<INT_T,INT_T> subgrid_pair(subgrid_index.i_subgrid(),subgrid_index.j_subgrid());
-  auto file_data=this->_file_data;
-  return file_data[grid_pair][subgrid_pair];
+  auto local_grid_index=this->_get_grid_index(grid_index);
+  auto sub_w=this->_subgrid_width[local_grid_index];
+  auto local_subgrid_index=this->_get_subgrid_index(subgrid_index,sub_w);
+  return this->_new_file_data[local_grid_index][local_subgrid_index];
 };
-
 
 GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) {
   INT_T wimage, himage;
@@ -97,64 +108,72 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
   }
   if (this->_text_filename.length() != 0) {
     INT_T max_i,max_j;
-    load_image_grid_from_text(this->_text_filename,this->_file_data,
+    load_image_grid_from_text(this->_text_filename,
+                              this->_read_data,
                               max_i,max_j);
     wimage=max_i+1;
     himage=max_j+1;
     this->_grid_image_size=GridImageSize(wimage,himage);
     this->_successful=true;
-    // TODO: this code should be updated
-    //       better way to initialize or data structures
-    // initialize whether grid exists
-    this->_existing.reserve(wimage);
-    for (INT_T i=0; i<wimage; i++) {
-      std::vector<bool> temp_row;
-      temp_row.reserve(himage);
-      for (INT_T j=0; j<himage; j++) {
-        // TODO: this is likely inefficient but only exists in
-        // one-time setup code
-        std::pair<INT_T,INT_T> grid_pair(i,j);
-        temp_row.push_back((this->_file_data[grid_pair].size() > 0));
+    // initial allocation
+    this->_existing=std::make_unique<bool[]>(wimage*himage);
+    this->_subgrid_width=std::make_unique<INT_T[]>(wimage*himage);
+    this->_subgrid_height=std::make_unique<INT_T[]>(wimage*himage);
+    for (INT_T j=0; j < himage; j++) {
+      for (INT_T i=0; i < wimage; i++) {
+        auto grid_index=this->_get_grid_index(i, j);
+        this->_existing[grid_index]=false;
+        this->_subgrid_width[grid_index]=1;
+        this->_subgrid_height[grid_index]=1;
       }
-      this->_existing.push_back(temp_row);
     }
-    // initialize subgrid width and height
-    this->_subgrid_height.reserve(wimage);
-    this->_subgrid_width.reserve(wimage);
-    for (INT_T i=0; i<wimage; i++) {
-      std::vector<INT_T> temp_row_subgrid_height;
-      temp_row_subgrid_height.reserve(himage);
-      std::vector<INT_T> temp_row_subgrid_width;
-      temp_row_subgrid_width.reserve(himage);
-      for (INT_T j=0; j<himage; j++) {
-        // TODO: this is likely inefficient but only exists in
-        // one-time setup code
-        std::pair<INT_T,INT_T> grid_pair(i,j);
-        if (this->_existing[i][j]) {
-          INT_T subgrid_width=1;
-          INT_T subgrid_height=1;
-          auto file_data=this->_file_data[grid_pair];
-          for (auto& subgrid_kv_pair : file_data) {
-            auto sub_i=subgrid_kv_pair.first.first;
-            auto sub_j=subgrid_kv_pair.first.second;
-            if ((sub_i+1) > subgrid_width) {
-              subgrid_width=(sub_i+1);
-            }
-            if ((sub_j+1) > subgrid_height) {
-              subgrid_height=(sub_j+1);
-            }
+    // iterate to get subgrid width and height and existing
+    for (std::list<GridSetupFile>::iterator it = this->_read_data.begin(); it !=this->_read_data.end(); ++it) {
+      auto i=it->grid_i;
+      auto j=it->grid_j;
+      auto sub_i=it->subgrid_i;
+      auto sub_j=it->subgrid_j;
+      auto grid_index=this->_get_grid_index(i, j);
+      auto sub_w_current=this->_subgrid_width[grid_index];
+      auto sub_h_current=this->_subgrid_height[grid_index];
+      if ((sub_i+1) > sub_w_current) {
+        this->_subgrid_width[grid_index]=(sub_i+1);
+      }
+      if ((sub_j+1) > sub_h_current) {
+        this->_subgrid_height[grid_index]=(sub_j+1);
+      }
+      this->_existing[grid_index]=true;
+    }
+    // setup the new data structure
+    this->_new_file_data=std::make_unique<std::unique_ptr<std::string[]>[]>(wimage*himage);
+    for (INT_T j=0; j < himage; j++) {
+      for (INT_T i=0; i < wimage; i++) {
+        auto grid_index=this->_get_grid_index(i, j);
+        auto sub_w=this->_subgrid_width[grid_index];
+        auto sub_h=this->_subgrid_height[grid_index];
+        this->_new_file_data[grid_index]=std::make_unique<std::string[]>(sub_w*sub_h);
+        // initialize to empty
+        for (INT_T sub_j=0; sub_j < sub_h; sub_j++) {
+          for (INT_T sub_i=0; sub_i < sub_w; sub_i++) {
+            auto subgrid_index=this->_get_subgrid_index(sub_i, sub_j, sub_w);
+            this->_new_file_data[grid_index][subgrid_index]="";
           }
-          // TODO: this is temporary, to bridge existing code to new code
-          temp_row_subgrid_width.push_back(subgrid_width);
-          temp_row_subgrid_height.push_back(subgrid_height);
-        } else {
-          // TODO: this is what is assumed for empty squares
-          temp_row_subgrid_height.push_back(1);
-          temp_row_subgrid_width.push_back(1);
         }
       }
-      this->_subgrid_width.push_back(temp_row_subgrid_width);
-      this->_subgrid_height.push_back(temp_row_subgrid_height);
+    }
+    // now load from the deque to the data structure
+    while (!this->_read_data.empty()) {
+      auto data=this->_read_data.back();
+      auto i=data.grid_i;
+      auto j=data.grid_j;
+      auto sub_i=data.subgrid_i;
+      auto sub_j=data.subgrid_j;
+      auto grid_index=this->_get_grid_index(i, j);
+      auto sub_w=this->_subgrid_width[grid_index];
+      auto subgrid_index=this->_get_subgrid_index(sub_i, sub_j, sub_w);
+      // TODO: avoid this copy
+      this->_new_file_data[grid_index][subgrid_index]=std::string(data.filename);
+      this->_read_data.pop_back();
     }
   } else {
     this->_grid_image_size=GridImageSize(wimage,himage);
@@ -174,8 +193,8 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       INT_T x=i%wimage;
       INT_T y=i/wimage;
       auto current_grid=std::pair<INT_T,INT_T>(x,y);
-      auto current_subgrid=CURRENT_SUBGRID_T(0,0);
-      this->_file_data[current_grid][current_subgrid]=this->_filenames[i];
+      // auto current_subgrid=CURRENT_SUBGRID_T(0,0);
+      // this->_file_data[current_grid][current_subgrid]=this->_filenames[i];
     }
     this->_successful=true;
   }

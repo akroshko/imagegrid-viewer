@@ -70,21 +70,16 @@ struct hash_pair {
   }
 };
 
-typedef std::unordered_map<std::pair<INT_T,INT_T>,
-                           std::unordered_map<std::pair<INT_T,INT_T>,
-                                              std::string,
-                                              hash_pair>,
-                           hash_pair> FILE_DATA_T;
-
-typedef std::unordered_map<std::pair<INT_T,INT_T>,
-                           size_t,
-                           hash_pair> SUBGRID_SIZE_T;
-
-typedef std::unordered_map<std::pair<INT_T,INT_T>,
-                           unsigned char *,
-                           hash_pair> SUBGRID_DATA_T;
-
-typedef std::pair<INT_T,INT_T> CURRENT_SUBGRID_T;
+////////////////////////////////////////////////////////////////////////////////
+// special data structure to help setup grid
+// TODO: put here to avoid circular import, restructure to avoid this
+struct GridSetupFile {
+  INT_T grid_i;
+  INT_T grid_j;
+  INT_T subgrid_i;
+  INT_T subgrid_j;
+  std::string filename;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Contains some default values.  Many of these are placeholders for

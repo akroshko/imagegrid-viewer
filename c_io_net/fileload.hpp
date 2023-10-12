@@ -8,7 +8,9 @@
 
 //local includes
 #include "../common.hpp"
+#include "../coordinates.hpp"
 // C++ headers
+#include <list>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -47,13 +49,15 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
  * May not be permanent, members correspond to those in
  * ImageGridSquareZoomLevel.
  */
-struct LoadSquareData {
+class LoadSquareData {
+public:
+  LoadSquareData();
   std::string filename;
-  SUBGRID_DATA_T rgb_data;
-  SUBGRID_SIZE_T rgb_wpixel;
-  SUBGRID_SIZE_T rgb_hpixel;
-  INT_T subgrid_width=1;
-  INT_T subgrid_height=1;
+  std::unique_ptr<std::unique_ptr<unsigned char *[]>[]> rgb_data;
+  std::unique_ptr<std::unique_ptr<size_t[]>[]> rgb_wpixel;
+  std::unique_ptr<std::unique_ptr<size_t[]>[]> rgb_hpixel;
+  INT_T subgrid_width=INT_MIN;
+  INT_T subgrid_height=INT_MIN;
   INT_T max_subgrid_wpixel=INT_MIN;
   INT_T max_subgrid_hpixel=INT_MIN;
   INT_T zoom_out_value=INT_MIN;
@@ -80,7 +84,7 @@ void read_data(std::string filename,
  */
 bool load_data_as_rgb(const std::string filename,
                       const std::string cached_filename,
-                      const CURRENT_SUBGRID_T current_subgrid,
+                      SubGridIndex& current_subgrid,
                       const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
 
 /**
@@ -108,7 +112,7 @@ bool read_tiff_data(std::string filename, INT_T &width, INT_T &height);
  */
 bool load_tiff_as_rgb(const std::string filename,
                       const std::string cached_filename,
-                      const CURRENT_SUBGRID_T current_subgrid,
+                      SubGridIndex& current_subgrid,
                       const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
 
 /**
@@ -131,7 +135,7 @@ bool read_png_data(std::string filename, INT_T &width, INT_T &height);
  * @return If loading image was successful.
  */
 bool load_png_as_rgb(std::string filename,
-                     const CURRENT_SUBGRID_T current_subgrid,
+                     SubGridIndex& current_subgrid,
                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
 
 /**
@@ -173,12 +177,13 @@ bool check_empty(std::string filename);
  * Load image grid from a text file.
  *
  * @param text_file The text file to load from.
- * @param file_data A container that holds the grid/file information.
+ * @param read_data
  * @param max_i Set to the maximum width index found.
  * @param max_j Set to the maximum height index found.
  */
-void load_image_grid_from_text (std::string text_file, FILE_DATA_T& file_data,
-                                INT_T& max_i,INT_T& max_j);
+void load_image_grid_from_text(std::string text_file,
+                               std::list<GridSetupFile>& read_data,
+                               INT_T& max_i,INT_T& max_j);
 
 /**
  * Create the cached filename from the real filename.
