@@ -10,20 +10,22 @@
 #include "../c_misc/buffer_manip.hpp"
 #include "../coordinates.hpp"
 // C++ headers
-// #include <exception>
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 // #include <iostream>
 #include <regex>
+#include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 // C headers
 #include <cstring>
+#include <cstddef>
+#include <cstdint>
 // C library headers
 #include <png.h>
-#include <tiffio.h>
+#include <tiff.h>
 
 // regex to help find files
 std::regex regex_digits_search("([0-9]{1,4})",std::regex_constants::ECMAScript | std::regex_constants::icase);
@@ -64,7 +66,7 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
   std::vector<std::string> empty_files;
 
   // find which types of image files are availible
-  for (const std::string &image_file:image_files) {
+  for (const std::string& image_file:image_files) {
     if (std::regex_search(image_file,png_search)) {
       found_png=true;
       // if actually an extension
@@ -84,7 +86,7 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
   // TODO: deduplicate code
   std::smatch digits_match;
   if (found_png) {
-    for (const std::string &png_file:png_files) {
+    for (const std::string& png_file:png_files) {
       // find last 1-4 digit number in each file
       if (std::regex_search(png_file,digits_match,regex_digits_search)) {
         // TODO: convert to int
@@ -93,40 +95,40 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
     }
     // do they form a sequence
     // TODO: this can be more advanced
-    sort(png_digit_files.begin(),png_digit_files.end(), [](const std::pair<std::string,int> &left, const std::pair<std::string,int> &right) {
+    sort(png_digit_files.begin(),png_digit_files.end(), [](const std::pair<std::string,int>& left, const std::pair<std::string,int>& right) {
       return left.second < right.second;
     });
-    for (const std::pair<std::string,int> &thepair:png_digit_files) {
+    for (const std::pair<std::string,int>& thepair:png_digit_files) {
       png_sorted_files.push_back(thepair.first);
     }
     return png_sorted_files;
   }
   if (found_jpeg) {
-    for (const std::string &jpeg_file:jpeg_files) {
+    for (const std::string& jpeg_file:jpeg_files) {
       // find last 1-4 digit number in each file
       if (std::regex_search(jpeg_file,digits_match,regex_digits_search)) {
         jpeg_digit_files.push_back(make_pair(jpeg_file,std::stoi(digits_match.str(1))));
       }
     }
-    sort(jpeg_digit_files.begin(),jpeg_digit_files.end(), [](const std::pair<std::string,int> &left, const std::pair<std::string,int> &right) {
+    sort(jpeg_digit_files.begin(),jpeg_digit_files.end(), [](const std::pair<std::string,int>& left, const std::pair<std::string,int>& right) {
       return left.second < right.second;
     });
-    for (const std::pair<std::string,int> &thepair:jpeg_digit_files) {
+    for (const std::pair<std::string,int>& thepair:jpeg_digit_files) {
       jpeg_sorted_files.push_back(thepair.first);
     }
     return jpeg_sorted_files;
   }
   if (found_tiff) {
-    for (const std::string &tiff_file:tiff_files) {
+    for (const std::string& tiff_file:tiff_files) {
       // find last 1-4 digit number in each file
       if (std::regex_search(tiff_file,digits_match,regex_digits_search)) {
         tiff_digit_files.push_back(make_pair(tiff_file,std::stoi(digits_match.str(1))));
       }
     }
-    sort(tiff_digit_files.begin(), tiff_digit_files.end(), [](const std::pair<std::string,int> &left, const std::pair<std::string,int> &right) {
+    sort(tiff_digit_files.begin(), tiff_digit_files.end(), [](const std::pair<std::string,int>& left, const std::pair<std::string,int>& right) {
       return left.second < right.second;
     });
-    for (const std::pair<std::string,int> &thepair:jpeg_digit_files) {
+    for (const std::pair<std::string,int>& thepair:jpeg_digit_files) {
       tiff_sorted_files.push_back(thepair.first);
     }
     return tiff_sorted_files;
@@ -145,7 +147,7 @@ LoadSquareData::LoadSquareData() {
 // general file functions
 
 void read_data(std::string filename,
-               INT_T &width, INT_T &height) {
+               INT_T& width, INT_T& height) {
   if (check_tiff(filename)) {
     // TODO: check success
     read_tiff_data(filename,
@@ -200,7 +202,7 @@ bool load_data_as_rgb(const std::string filename,
 // load specific files as RGB
 
 bool read_tiff_data(std::string filename,
-                    INT_T &width, INT_T &height) {
+                    INT_T& width, INT_T& height) {
   auto success=false;
 
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
@@ -248,7 +250,7 @@ bool load_tiff_as_rgb(const std::string filename,
     auto h_sub=1;
     if (can_cache) {
       MSG("Cached file exists: " << cached_filename);
-      for (auto & file_data : load_file_data) {
+      for (auto& file_data : load_file_data) {
         // auto zoom_out_value=file_data->zoom_out_value;
         w_sub=file_data->subgrid_width;
         h_sub=file_data->subgrid_height;
@@ -302,7 +304,7 @@ bool load_tiff_as_rgb(const std::string filename,
             // TODO: test for mismatched size
             auto png_width=(size_t)png_image_local.width;
             auto png_height=(size_t)png_image_local.height;
-            for (auto & file_data : load_file_data) {
+            for (auto& file_data : load_file_data) {
               auto zoom_out_value=file_data->zoom_out_value;
               auto actual_zoom_out_value=file_data->zoom_out_value/cached_zoom_out_value;
               // TODO: might want to add an assert here but should be safe due to earlier check
@@ -335,7 +337,7 @@ bool load_tiff_as_rgb(const std::string filename,
           ERROR("Failed to read: " << filename);
         } else {
           // convert raster
-          for (auto & file_data : load_file_data) {
+          for (auto& file_data : load_file_data) {
             auto zoom_out_value=file_data->zoom_out_value;
             size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
             size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
@@ -358,7 +360,7 @@ bool load_tiff_as_rgb(const std::string filename,
 }
 
 bool read_png_data(std::string filename,
-                   INT_T &width, INT_T &height) {
+                   INT_T& width, INT_T& height) {
   bool success=false;
   png_image image;
   memset(&image, 0, (sizeof image));
@@ -401,7 +403,7 @@ bool load_png_as_rgb(std::string filename,
         // TODO: test for mismatched size
         auto width=(size_t)image.width;
         auto height=(size_t)image.height;
-        for (auto & file_data : load_file_data) {
+        for (auto& file_data : load_file_data) {
           auto zoom_out_value=file_data->zoom_out_value;
           size_t w_reduced=reduce_and_pad(width,zoom_out_value);
           size_t h_reduced=reduce_and_pad(height,zoom_out_value);

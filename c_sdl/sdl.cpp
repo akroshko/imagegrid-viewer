@@ -49,12 +49,13 @@ Sint16 SDLApp::get_jaxis(Sint16 jaxis_original) {
   }
 }
 
-bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
-                      FLOAT_T &current_speed_zoom,
-                      FLOAT_T &zoom, FLOAT_T &zoom_speed,
-                      const GridPixelSize &image_max_size,
-                      FLOAT_T &xgrid, FLOAT_T &ygrid,
-                      INT_T &window_w, INT_T &window_h) {
+bool SDLApp::do_input(FLOAT_T& current_speed_x, FLOAT_T& current_speed_y,
+                      FLOAT_T& current_speed_zoom,
+                      FLOAT_T& zoom, FLOAT_T& zoom_speed,
+                      const GridPixelSize& image_max_size,
+                      FLOAT_T& xgrid, FLOAT_T& ygrid,
+                      INT_T& mouse_x, INT_T& mouse_y,
+                      INT_T& window_w, INT_T& window_h) {
   SDL_Event e;
   auto keep_going=true;
   while(SDL_PollEvent(&e)) {
@@ -81,7 +82,6 @@ bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
       default:
         break;
       }
-
     } else if (e.type == SDL_JOYAXISMOTION) {
       // TODO: deal with dead zones
       if (e.jaxis.which == 0) {
@@ -95,6 +95,10 @@ bool SDLApp::do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
           current_speed_zoom=JOY_BASE_ZOOM*(jaxis_adjusted/JOY_MAX);
         }
       }
+    } else if (e.type == SDL_MOUSEMOTION) {
+      // TODO: probably need an e.which for multiple mice
+      mouse_x=e.motion.x;
+      mouse_y=e.motion.y;
     } else if (e.type == SDL_KEYDOWN) {
       switch(e.key.keysym.sym) {
       case SDLK_LEFT:
@@ -153,7 +157,7 @@ SDL_PixelFormat* SDLApp::format() const {
 }
 
 SDLDrawableSurface::SDLDrawableSurface(SDLApp* const sdl_app,
-                                       const ViewportPixelSize &viewport_pixel_size) {
+                                       const ViewportPixelSize& viewport_pixel_size) {
   this->_sdl_app=sdl_app;
   this->_screen_surface=SDL_GetWindowSurface(sdl_app->window());
   SDL_Rect screen_rect;
@@ -161,7 +165,7 @@ SDLDrawableSurface::SDLDrawableSurface(SDLApp* const sdl_app,
   screen_rect.y=0;
   screen_rect.w=viewport_pixel_size.wpixel();
   screen_rect.h=viewport_pixel_size.hpixel();
-  SDL_FillRect(this->_screen_surface, &screen_rect, SDL_MapRGB(sdl_app->format(),0,0,0));
+  SDL_FillRect(this->_screen_surface,& screen_rect, SDL_MapRGB(sdl_app->format(),0,0,0));
 }
 
 SDLDrawableSurface::~SDLDrawableSurface() {
@@ -216,12 +220,12 @@ void SDLDisplayTextureWrapper::unlock_surface () {
 }
 
 void SDLDisplayTextureWrapper::blit_texture(SDLDrawableSurface* drawable_surface,
-                                            ViewportPixelCoordinate &viewport_pixel_coordinate,
-                                            ViewportPixelSize &image_pixel_size_viewport) {
+                                            ViewportPixelCoordinate& viewport_pixel_coordinate,
+                                            ViewportPixelSize& image_pixel_size_viewport) {
   SDL_Rect scaled_rect;
   scaled_rect.x=viewport_pixel_coordinate.xpixel();
   scaled_rect.y=viewport_pixel_coordinate.ypixel();
   scaled_rect.w=image_pixel_size_viewport.wpixel();
   scaled_rect.h=image_pixel_size_viewport.hpixel();
-  SDL_BlitScaled(this->_display_texture, NULL, drawable_surface->screen_surface(), &scaled_rect);
+  SDL_BlitScaled(this->_display_texture, NULL, drawable_surface->screen_surface(),& scaled_rect);
 }

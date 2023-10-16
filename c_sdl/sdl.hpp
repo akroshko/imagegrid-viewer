@@ -24,21 +24,29 @@ public:
    * Update the various parameters ViewPort needs based on SDL inputs.
    * TODO: add docs when I update terminology
    *
-   * @param current_speed_x
-   * @param current_speed_y
-   * @param current_speed_zoom
-   * @param zoom_speed
-   * @param image_max_size
-   * @param xgrid
-   * @param ygrid
-   * @param window_w
-   * @param window_h
+   * @param current_speed_x The current x speed for the joystick,
+   *                        generally a multiplier for an internal
+   *                        constant.  @param current_speed_y The
+   *                        current y speed for the joystick,
+   *                        generally a multiplier for an internal
+   *                        constant.
+   * @param current_speed_zoom Current speed things are being zoomed
+   *                           for the joystick, generally a
+   *                           multiplier for an interal constant.
+   # @param zoom The current zoom.
+   * @param zoom_speed The speed things are being zoomed when keyboard is pressed.
+   * @param image_max_size The maximum pixel size of each image.
+   * @param xgrid The x coordinate on the image grid.
+   * @param ygrid The y coordinate on the image grid.
+   * @param window_w The width of the window.
+   * @param window_h The height of the window.
    * @return Whether to keep going or to quit.
    */
-  bool do_input(FLOAT_T &current_speed_x, FLOAT_T &current_speed_y,
-                FLOAT_T &current_speed_zoom, FLOAT_T &zoom_speed, FLOAT_T &zoom,
-                const GridPixelSize &image_max_size, FLOAT_T &xgrid, FLOAT_T &ygrid,
-                INT_T &window_w, INT_T &window_h);
+  bool do_input(FLOAT_T& current_speed_x, FLOAT_T& current_speed_y,
+                FLOAT_T& current_speed_zoom, FLOAT_T& zoom, FLOAT_T& zoom_speed,
+                const GridPixelSize& image_max_size, FLOAT_T& xgrid, FLOAT_T& ygrid,
+                INT_T& mouse_x, INT_T& mouse_y,
+                INT_T& window_w, INT_T& window_h);
   /**
    * Process raw joystick values.
    *
@@ -68,7 +76,7 @@ private:
 class SDLDrawableSurface {
 public:
   SDLDrawableSurface(SDLApp* const sdl_app,
-                     const ViewportPixelSize &viewport_pixel_size);
+                     const ViewportPixelSize& viewport_pixel_size);
   ~SDLDrawableSurface();
   /** @return The drawable screen surface. */
   SDL_Surface* screen_surface();
@@ -124,8 +132,8 @@ public:
    * @param image_pixel_size_viewport The size of the texture on the viewport.
    */
   void blit_texture(SDLDrawableSurface* drawable_surface,
-                    ViewportPixelCoordinate &viewport_pixel_coordinate,
-                    ViewportPixelSize &image_pixel_size_viewport);
+                    ViewportPixelCoordinate& viewport_pixel_coordinate,
+                    ViewportPixelSize& image_pixel_size_viewport);
 private:
   SDL_Surface* _display_texture=nullptr;
 };

@@ -10,14 +10,12 @@
 #include "gridsetup.hpp"
 #include "../viewport_current_state.hpp"
 // C++ headers
-#include <array>
 #include <atomic>
-#include <iostream>
 #include <memory>
 #include <mutex>
-#include <queue>
-#include <string>
 #include <vector>
+// C headers
+#include <cstddef>
 
 class ImageGrid;
 class ImageGridSquare;
@@ -179,7 +177,7 @@ public:
    *                   size.
    * @param keep_running Toggled when this is shutting down.
    */
-  void load_grid(const GridSetup* grid_setup, std::atomic<bool> &keep_running);
+  void load_grid(const GridSetup* grid_setup, std::atomic<bool>& keep_running);
   void setup_grid_cache(GridSetup* const grid_setup);
   GridPixelSize get_image_max_pixel_size() const;
   ImageGridSquare* squares(const GridIndex& grid_index) const;

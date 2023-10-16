@@ -1,18 +1,18 @@
 #include "../common.hpp"
 // C++ headers
+#include <ostream>
 #include <string>
 #include <vector>
 // C headers
-#include <cstring>
 #include <cstdlib>
 // C library headers
 #include <getopt.h>
 
 void parse_standard_arguments(int argc, char* const* argv,
-                              INT_T &wimage, INT_T &himage,
-                              bool &do_cache, bool &use_cache, bool &successful,
-                              std::string &path_value, std::vector<std::string> &filenames,
-                              std::string &text_filename) {
+                              INT_T& wimage, INT_T& himage,
+                              bool& do_cache, bool& use_cache, bool& successful,
+                              std::string& path_value, std::vector<std::string>& filenames,
+                              std::string& text_filename) {
   int opt;
   char *end;
   bool size_arg=false;

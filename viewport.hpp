@@ -7,6 +7,7 @@
 // local headers
 #include "common.hpp"
 #include "imagegrid/gridsetup.hpp"
+#include "texture_overlay.hpp"
 #include "texturegrid.hpp"
 #include "coordinates.hpp"
 #include  "viewport_current_state.hpp"
@@ -14,14 +15,16 @@
 #include "c_sdl/sdl.hpp"
 // C++ headers
 #include <memory>
+// C headers
+#include <SDL2/SDL_ttf.h>
 
  /** Class that stores an item that ready to be blit to the screen. */
 class BlitItem {
 public:
   BlitItem()=delete;
   BlitItem(TextureGridSquareZoomLevel* square, INT_T count,
-           const ViewportPixelCoordinate &viewport_pixel_coordinate,
-           const ViewportPixelSize &grid_image_size_zoomed);
+           const ViewportPixelCoordinate& viewport_pixel_coordinate,
+           const ViewportPixelSize& grid_image_size_zoomed);
   ~BlitItem()=default;
   // BlitItem(const BlitItem&)=delete;
   BlitItem(const BlitItem&)=default;
@@ -67,7 +70,9 @@ public:
   ViewPort(const ViewPort&&)=delete;
   ViewPort& operator=(const ViewPort&)=delete;
   ViewPort& operator=(const ViewPort&&)=delete;
-  void find_viewport_blit(TextureGrid* texture_grid, SDLApp* sdl_app);
+  void find_viewport_blit(TextureGrid* texture_grid,
+                          TextureOverlay* const texture_overlay,
+                          SDLApp* sdl_app);
   /** update the values in this class with current keyboard/joystick/etc. input */
   bool do_input(SDLApp* sdl_app);
   /**
@@ -87,7 +92,7 @@ public:
    *
    * @param image_max_size The maximum size of images.
    */
-  void set_image_max_size(const GridPixelSize &image_max_size);
+  void set_image_max_size(const GridPixelSize& image_max_size);
 private:
   GridPixelSize _image_max_size;
   /** The current size of the window in pixels. */
@@ -108,8 +113,15 @@ private:
   INT_T _current_window_w=INITIAL_SCREEN_WIDTH;
   /** The window height in pixels */
   INT_T _current_window_h=INITIAL_SCREEN_HEIGHT;
-  /** object for transfering the state of the viewport in a threadsafe manner */
+  /** The current mouse cursor x coordinate */
+  INT_T _current_mouse_xpixel=0;
+  /** The current mouse cursor y coordinate */
+  INT_T _current_mouse_ypixel=0;
+  /** object for transfering the state of the viewport to the
+   * texturegrid_update thread in a threadsafe manner */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;
+  /** object for transfering the state of the viewport to the
+   * imagegrid_updte thead in a threadsafe manner */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_imagegrid_update;
 };
 

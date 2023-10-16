@@ -4,7 +4,6 @@
  */
 // local headers
 #include "common.hpp"
-#include "utility.hpp"
 #include "imagegrid/gridsetup.hpp"
 #include "texturegrid.hpp"
 // C compatible headers

@@ -140,6 +140,13 @@ const unsigned char FILLER_LEVEL=64;
 // max cache pixel size
 const INT_T CACHE_MAX_PIXEL_SIZE=512;
 
+// where to put the overlay
+const INT_T OVERLAY_X=10;
+const INT_T OVERLAY_Y=10;
+
+// overlay font path
+const char OVERLAY_FONT_PATH[]="/usr/share/fonts/truetype/freefont/FreeSans.ttf";
+
 // zoom step
 // I don't see myself moving away from powers of two, but it's nice to
 // have it visible where I make this assumption

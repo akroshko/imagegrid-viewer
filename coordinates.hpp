@@ -6,10 +6,16 @@
 
 #include "common.hpp"
 
+// forward declaring everything
+class GridImageSize;
+class GridCoordinateSize;
 class GridCoordinate;
-class GridPixelCoordinate;
-class ViewportPixelCoordinate;
+class GridIndex;
+class SubGridIndex;
+class GridPixelSize;
+class ImagePixelCoordinate;
 class ViewportPixelSize;
+class ViewportPixelCoordinate;
 
 /**
  * Represents the size of the grid in integer units of images.
@@ -20,13 +26,13 @@ class ViewportPixelSize;
 class GridImageSize {
 public:
   GridImageSize();
-  GridImageSize(const GridImageSize &grid_image_size);
+  GridImageSize(const GridImageSize& grid_image_size);
   /**
    * @param wimage
    * @param himage
    */
   GridImageSize(const INT_T wimage, const INT_T himage);
-  GridImageSize& operator=(const GridImageSize &grid_image_size);
+  GridImageSize& operator=(const GridImageSize& grid_image_size);
   /** @return The width. */
   INT_T wimage() const;
   /** @return The height. */
@@ -46,9 +52,9 @@ private:
 class GridCoordinateSize {
 public:
   GridCoordinateSize();
-  GridCoordinateSize(const GridCoordinateSize &grid_coordinate_size);
+  GridCoordinateSize(const GridCoordinateSize& grid_coordinate_size);
   GridCoordinateSize(const FLOAT_T wgrid, const FLOAT_T hgrid);
-  GridCoordinateSize& operator=(const GridCoordinateSize &grid_coordinate_size);
+  GridCoordinateSize& operator=(const GridCoordinateSize& grid_coordinate_size);
   /** @return The width. */
   FLOAT_T wgrid() const;
   /** @return The height. */
@@ -68,9 +74,14 @@ private:
 class GridCoordinate {
 public:
   GridCoordinate();
-  GridCoordinate(const GridCoordinate &grid_coordinate);
+  GridCoordinate(const GridCoordinate& grid_coordinate);
   GridCoordinate(const FLOAT_T xgrid, FLOAT_T ygrid);
-  GridCoordinate& operator=(const GridCoordinate &grid_coordinate);
+  GridCoordinate(ViewportPixelCoordinate& viewport_pixel_coordinate,
+                 FLOAT_T zoom,
+                 ViewportPixelSize& viewport_pixel_size,
+                 GridCoordinate& viewport_grid_coordinate,
+                 GridPixelSize& max_image_pixel_size);
+  GridCoordinate& operator=(const GridCoordinate& grid_coordinate);
   /** @return The x coordinate. */
   FLOAT_T xgrid() const;
   /** @return The y coordinate. */
@@ -89,9 +100,10 @@ private:
 class GridIndex {
 public:
   GridIndex();
-  GridIndex(const GridIndex &grid_index);
+  GridIndex(const GridIndex& grid_index);
   GridIndex(const INT_T igrid, INT_T jgrid);
-  GridIndex& operator=(const GridIndex &grid_index);
+  GridIndex(ViewportPixelCoordinate& viewport_pixel_coordinate);
+  GridIndex& operator=(const GridIndex& grid_index);
   /** @return The i coordinate. */
   INT_T i_grid() const;
   /** @return The j coordinate. */
@@ -117,9 +129,9 @@ private:
 class SubGridIndex {
 public:
   SubGridIndex();
-  SubGridIndex(const SubGridIndex &subgrid_index);
+  SubGridIndex(const SubGridIndex& subgrid_index);
   SubGridIndex(const INT_T igrid, INT_T jgrid);
-  SubGridIndex& operator=(const SubGridIndex &subgrid_index);
+  SubGridIndex& operator=(const SubGridIndex& subgrid_index);
   /** @return The i coordinate. */
   INT_T i_subgrid() const;
   /** @return The j coordinate. */
@@ -139,9 +151,9 @@ private:
 class GridPixelSize {
 public:
   GridPixelSize();
-  GridPixelSize(const GridPixelSize &grid_pixel_size);
+  GridPixelSize(const GridPixelSize& grid_pixel_size);
   GridPixelSize(INT_T wpixel, INT_T hpixel);
-  GridPixelSize& operator=(const GridPixelSize &grid_pixel_size);
+  GridPixelSize& operator=(const GridPixelSize& grid_pixel_size);
   /** @return The width. */
   INT_T wpixel() const;
   /** @return The height. */
@@ -152,14 +164,24 @@ private:
 };
 
 /**
- * Represents a coorindate on the image grid in pixels.  For instance
+ * Represents a coorindate on an image in pixels.  For instance
  * if each image on the grid was 2000x1500 pixels.  The coordinate
- * represented by GridCoordinate of (2.4,1.6) would be 4800x2400.
+ * represented by GridCoordinate of (2.4,1.6) would be 800x900.
  */
-class GridPixelCoordinate {
+class ImagePixelCoordinate {
 public:
-  GridPixelCoordinate(const GridPixelCoordinate &grid_pixel_coordinate);
-  GridPixelCoordinate(INT_T xpixel, INT_T ypixel);
+  ImagePixelCoordinate();
+  ImagePixelCoordinate(const ImagePixelCoordinate& grid_pixel_coordinate);
+  ImagePixelCoordinate(INT_T xpixel, INT_T ypixel);
+  /**
+   * Initialize a pixel coordinate on an image with an image grid coordinate.
+   *
+   * @param grid_coordinate The coordinate on the grid.
+   * @param grid_pixel_size The pixel size of the images on the grid.
+   */
+  ImagePixelCoordinate(GridCoordinate& grid_coordinate,
+                       GridPixelSize& grid_pixel_size);
+  ImagePixelCoordinate& operator=(const ImagePixelCoordinate& grid_pixel_coordinate);
   /** @return The x coordinate. */
   INT_T xpixel() const;
   /** @return The y coordinate. */
@@ -175,9 +197,9 @@ private:
 class ViewportPixelSize {
 public:
   ViewportPixelSize();
-  ViewportPixelSize(const ViewportPixelSize &viewport_pixel_size);
+  ViewportPixelSize(const ViewportPixelSize& viewport_pixel_size);
   ViewportPixelSize(INT_T wpixel, INT_T xpixel);
-  ViewportPixelSize& operator= (const ViewportPixelSize &viewport_pixel_size);
+  ViewportPixelSize& operator= (const ViewportPixelSize& viewport_pixel_size);
   /** @return The width. */
   INT_T wpixel() const;
   /** @return The height. */
@@ -194,9 +216,8 @@ private:
 class ViewportPixelCoordinate {
 public:
   ViewportPixelCoordinate();
-  ViewportPixelCoordinate(const ViewportPixelCoordinate &viewport_pixel_coordinate);
+  ViewportPixelCoordinate(const ViewportPixelCoordinate& viewport_pixel_coordinate);
   ViewportPixelCoordinate(INT_T xpixel, INT_T ypixel);
-  ViewportPixelCoordinate(const GridPixelCoordinate &grid_pixel_coordinate);
   /**
    * Convert a grid coordinate to a viewport pixel coordinate.
    *
@@ -207,8 +228,11 @@ public:
    *                                of the viewport.
    * @param viewport_pixel_size The size of the viewport in pixels.
    */
-  ViewportPixelCoordinate(GridCoordinate &grid_coordinate, FLOAT_T zoom, GridCoordinate &grid_coordinate_pixel_0, const ViewportPixelSize &viewport_pixel_size);
-  ViewportPixelCoordinate& operator=(const ViewportPixelCoordinate &viewport_pixel_coordinate);
+  ViewportPixelCoordinate(GridCoordinate& grid_coordinate,
+                          FLOAT_T zoom,
+                          GridCoordinate& grid_coordinate_pixel_0,
+                          ViewportPixelSize& viewport_pixel_size);
+  ViewportPixelCoordinate& operator=(const ViewportPixelCoordinate& viewport_pixel_coordinate);
   /** @return The x coordinate. */
   INT_T xpixel() const;
   /** @return The y coordinate. */

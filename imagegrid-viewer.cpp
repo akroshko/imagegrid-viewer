@@ -32,6 +32,7 @@
 #include "utility.hpp"
 #include "imagegrid/gridsetup.hpp"
 #include "imagegrid/imagegrid.hpp"
+#include "texture_overlay.hpp"
 #include "texturegrid.hpp"
 #include "texture_update.hpp"
 #include "viewport.hpp"
@@ -113,6 +114,11 @@ public:
    */
   std::unique_ptr<TextureGrid> texture_grid;
   /**
+   * Stores textures that form an overlay to the viewport.
+   *
+   */
+  std::unique_ptr<TextureOverlay> texture_overlay;
+  /**
    * Class to the textures based on the current state of the viewport.
    *
    * The TextureUpdate class performs the update of the TextureGrid
@@ -164,6 +170,7 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup* const grid_setup) {
     this->viewport->set_image_max_size(this->grid->get_image_max_pixel_size());
     this->texture_grid=std::make_unique<TextureGrid>(grid_setup,
                                                      this->grid->zoom_index_length());
+    this->texture_overlay=std::make_unique<TextureOverlay>();
     this->texture_grid->init_filler_squares(grid_setup,
                                             this->grid->zoom_index_length(),
                                             this->grid->get_image_max_pixel_size());
@@ -262,15 +269,18 @@ public:
    *                       run.
    * @param grid The ImageGrid class this thread will get images from.
    * @param texture_grid The TextureGrid class that will hold the
-   *                     scaled texture.
+   *                     scaled textures.
+   * @param texture_overlay The TextureOverlay class that will hold the
+   *                        overlay textures.
    */
   UpdateTextureThread(TextureUpdate* const texture_update,
                       ImageGrid* const grid,
-                      TextureGrid* const texture_grid) {
+                      TextureGrid* const texture_grid,
+                      TextureOverlay* const texture_overlay) {
     this->_texture_update=texture_update;
     this->_grid=grid;
     this->_texture_grid=texture_grid;
-
+    this->_texture_overlay=texture_overlay;
   }
   UpdateTextureThread(const UpdateTextureThread&)=delete;
   UpdateTextureThread(const UpdateTextureThread&&)=delete;
@@ -300,6 +310,7 @@ private:
     while (this->_keep_running) {
       this->_texture_update->find_current_textures(this->_grid,
                                                    this->_texture_grid,
+                                                   this->_texture_overlay,
                                                    this->_keep_running);
       sleep_thread();
     }
@@ -311,6 +322,7 @@ private:
   TextureUpdate* _texture_update;
   ImageGrid* _grid;
   TextureGrid* _texture_grid;
+  TextureOverlay* _texture_overlay;
 };
 
 /**
@@ -361,7 +373,8 @@ int main(int argc, char* argv[]) {
     auto update_texture_thread_class=std::make_unique<UpdateTextureThread>(
       imagegrid_viewer_context->texture_update.get(),
       imagegrid_viewer_context->grid.get(),
-      imagegrid_viewer_context->texture_grid.get());
+      imagegrid_viewer_context->texture_grid.get(),
+      imagegrid_viewer_context->texture_overlay.get());
     auto update_texture_thread=update_texture_thread_class->start();
     while (continue_flag) {
       // read input, this also adjusts the coordinates of the viewport
@@ -370,6 +383,7 @@ int main(int argc, char* argv[]) {
       // if the textures haven't been loaded, a smaller unzoomed version is used
       imagegrid_viewer_context->viewport->find_viewport_blit(
         imagegrid_viewer_context->texture_grid.get(),
+        imagegrid_viewer_context->texture_overlay.get(),
         imagegrid_viewer_context->sdl_app.get());
       // update the screen and delay before starting the loop again
       imagegrid_viewer_context->delay();

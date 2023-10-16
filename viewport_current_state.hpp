@@ -15,9 +15,11 @@
 class ViewPortCurrentState {
 public:
   ViewPortCurrentState(GridCoordinate current_grid_coordinate,
-                       GridPixelSize max_image_size,
+                       GridPixelSize image_max_size,
                        FLOAT_T zoom,
-                       ViewportPixelSize screen_size);
+                       ViewportPixelSize screen_size,
+                       ViewportPixelCoordinate pointer_pixel_coordinate,
+                       ViewportPixelCoordinate center_pixel_coordinate);
   // these are enabled because this class is used for data transfer
   // and created and returned from a function
   ViewPortCurrentState(ViewPortCurrentState&)=default;
@@ -26,17 +28,21 @@ public:
   ViewPortCurrentState& operator=(ViewPortCurrentState&&)=delete;
   GridCoordinate current_grid_coordinate() const;
   /** @return The maximum image size. */
-  GridPixelSize max_image_size() const;
+  GridPixelSize image_max_size() const;
   /** @return The current zoom. */
   FLOAT_T zoom() const;
   /** @return The current screen size. */
   ViewportPixelSize screen_size() const;
+  ViewportPixelCoordinate pointer() const;
+  ViewportPixelCoordinate center() const;
 private:
   friend class ViewPortTransferState;
   GridCoordinate _current_grid_coordinate;
-  GridPixelSize _max_image_size;
+  GridPixelSize _image_max_size;
   FLOAT_T _zoom;
   ViewportPixelSize _screen_size;
+  ViewportPixelCoordinate _pointer_pixel_coordinate;
+  ViewportPixelCoordinate _center_pixel_coordinate;
 };
 
 /**
@@ -54,9 +60,11 @@ public:
   ViewPortTransferState& operator=(const ViewPortTransferState&)=delete;
   ViewPortTransferState& operator=(const ViewPortTransferState&&)=delete;
   void UpdateGridValues(FLOAT_T zoom,
-                        const GridCoordinate &grid,
-                        const GridPixelSize &max_image_size,
-                        const ViewportPixelSize &screen_size);
+                        const GridCoordinate& grid,
+                        const GridPixelSize& max_image_size,
+                        const ViewportPixelSize& screen_size,
+                        const ViewportPixelCoordinate& pointer_pixel_coordinate,
+                        const ViewportPixelCoordinate& center_pixel_coordinate);
   ViewPortCurrentState GetGridValues();
   /**
    * Find zoom index from a zoom value.
@@ -129,9 +137,11 @@ private:
   static FLOAT_T _find_max_zoom(FLOAT_T zoom_index);
   FLOAT_T _zoom=NAN;
   GridCoordinate _grid;
-  GridPixelSize _max_image_size;
+  GridPixelSize _image_max_size;
   GridCoordinate _grid_last;
   ViewportPixelSize _screen_size;
+  ViewportPixelCoordinate _pointer_pixel_coordinate;
+  ViewportPixelCoordinate _center_pixel_coordinate;
   std::mutex _using_mutex;
 };
 

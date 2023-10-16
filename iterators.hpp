@@ -2,6 +2,7 @@
 #define ITERATORS_HPP
 
 #include "common.hpp"
+#include "coordinates.hpp"
 #include "viewport_current_state.hpp"
 // C++ headers
 #include <array>
@@ -22,7 +23,7 @@ public:
    * @param j The next index along a column.
    * @return Whether to continue.
    */
-  virtual bool get_next(INT_T &i, INT_T &j);
+  virtual bool get_next(INT_T& i, INT_T& j);
 protected:
   INT_T _w;
   INT_T _h;

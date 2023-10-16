@@ -5,6 +5,7 @@
 // C headers
 #include <cmath>
 #include <cstring>
+#include <cstdint>
 // C library headers
 #include <tiffio.h>
 

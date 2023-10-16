@@ -1,9 +1,13 @@
 #include "common.hpp"
+#include "coordinates.hpp"
 #include "iterators.hpp"
 #include "viewport_current_state.hpp"
+// C++ headers
+#include <algorithm>
+// C headers
+#include <cmath>
 
-
-bool ImageGridIterator::get_next(INT_T &i, INT_T &j) {
+bool ImageGridIterator::get_next(INT_T& i, INT_T& j) {
   if (this->_index_values.size() > 0) {
     auto popped_array=this->_index_values.front();
     this->_index_values.pop();

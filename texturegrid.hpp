@@ -114,8 +114,6 @@ public:
    *                   size.
    * @param zoom_index_length The length of the array holding
    *                          progressively zoomed out images.
-   * @param image_max_pixel_size The maximum size in pixels of the
-   *                             images on the grid.
    */
   TextureGrid(const GridSetup* grid_setup,
               INT_T zoom_index_length);

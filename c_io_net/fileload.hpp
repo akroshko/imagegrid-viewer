@@ -13,11 +13,11 @@
 #include <list>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 #include <utility>
 // C headers
 #include <climits>
+#include <cstddef>
 
 enum IMAGEDIRECTION {tl_horiz_reset,tl_horiz_follow};
 
@@ -29,7 +29,7 @@ enum IMAGEDIRECTION {tl_horiz_reset,tl_horiz_follow};
  * TODO: add a direction
  */
 std::vector<std::string> load_numbered_images(std::string images_path// , IMAGEDIRECTION direction
-                                    );
+  );
 
 /**
  * From a set of image file, find a sequential set of images.
@@ -71,7 +71,7 @@ public:
  * @return If reading image data was successful.
  */
 void read_data(std::string filename,
-               INT_T &width, INT_T &height);
+               INT_T& width, INT_T& height);
 
 /**
  * Load data as RGB.
@@ -96,7 +96,7 @@ bool load_data_as_rgb(const std::string filename,
  * @param height Set as the height of the image in pixels.
  * @return If reading image data was successful.
  */
-bool read_tiff_data(std::string filename, INT_T &width, INT_T &height);
+bool read_tiff_data(std::string filename, INT_T& width, INT_T& height);
 
 /**
  * Load a tiff file using libtiff,based off of
@@ -123,7 +123,7 @@ bool load_tiff_as_rgb(const std::string filename,
  * @param height Set as the height of the image in pixels.
  * @return If reading image data was successful.
  */
-bool read_png_data(std::string filename, INT_T &width, INT_T &height);
+bool read_png_data(std::string filename, INT_T& width, INT_T& height);
 
 /**
  * Load a png file using libpng.

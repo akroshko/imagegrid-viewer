@@ -7,6 +7,7 @@
 #include "common.hpp"
 #include "coordinates.hpp"
 #include "imagegrid/imagegrid.hpp"
+#include "texture_overlay.hpp"
 #include "texturegrid.hpp"
 #include "viewport_current_state.hpp"
 // C++ headers
@@ -14,13 +15,13 @@
 #include <memory>
 
 /**
- * This class updates the currently loaded textures
+ * This class updates the currently loaded textures in the grid.
  */
 class TextureUpdate {
 public:
   TextureUpdate()=delete;
   /**
-   * @param The object that transfers viewport state
+   * @param The object that transfers viewport state.
    */
   TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update);
   ~TextureUpdate()=default;
@@ -38,7 +39,8 @@ public:
    */
   void find_current_textures(const ImageGrid* grid,
                              TextureGrid* texture_grid,
-                             std::atomic<bool> &keep_running);
+                             TextureOverlay* texture_overlay,
+                             std::atomic<bool>& keep_running);
   /**
    * Load textures based on the current coordinates and zoom level.
    *
@@ -55,8 +57,8 @@ public:
                          const ViewPortCurrentState& viewport_current_state,
                          const ImageGridSquare* const grid_square,
                          TextureGridSquare* const texture_grid_square,
-                         INT_T &texture_copy_count,
-                         std::atomic<bool> &keep_running);
+                         INT_T& texture_copy_count,
+                         std::atomic<bool>& keep_running);
   /**
    * Clear textures based on the current coordinates.
    *
@@ -66,7 +68,7 @@ public:
    */
   void clear_textures(bool grid_square_visible,
                       TextureGridSquare* const texture_grid_square,
-                      std::atomic<bool> &keep_running);
+                      std::atomic<bool>& keep_running);
   /**
    * Add filler textures where nothing can be loaded.
    *
@@ -79,7 +81,7 @@ public:
   void add_filler_textures(bool grid_square_visible,
                            const ViewPortCurrentState& viewport_current_state,
                            TextureGridSquare* const texture_grid_square,
-                           std::atomic<bool> &keep_running);
+                           std::atomic<bool>& keep_running);
   /**
    * Load a texture.
    *

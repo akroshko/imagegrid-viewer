@@ -7,9 +7,8 @@
 #include "../c_io_net/fileload.hpp"
 #include "../c_misc/argument_parse.hpp"
 // C++ headers
+#include <iostream>
 #include <string>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 const std::string HELP_STRING=
@@ -192,7 +191,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
     for (INT_T i=0;i < this->_filenames.size();i++) {
       INT_T x=i%wimage;
       INT_T y=i/wimage;
-      auto current_grid=std::pair<INT_T,INT_T>(x,y);
+      // auto current_grid=std::pair<INT_T,INT_T>(x,y);
       // auto current_subgrid=CURRENT_SUBGRID_T(0,0);
       // this->_file_data[current_grid][current_subgrid]=this->_filenames[i];
     }

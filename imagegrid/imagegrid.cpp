@@ -4,23 +4,23 @@
  */
 // local headers
 #include "../common.hpp"
-#include "../utility.hpp"
+#include "../coordinates.hpp"
 #include "gridsetup.hpp"
 #include "imagegrid.hpp"
 #include "../iterators.hpp"
+#include "../viewport_current_state.hpp"
 // C compatible headers
 #include "../c_io_net/fileload.hpp"
 // C++ headers
-#include <array>
 #include <atomic>
-#include <filesystem>
 #include <iostream>
 #include <string>
-#include <thread>
 #include <utility>
 #include <vector>
 // C headers
 #include <cmath>
+#include <climits>
+
 
 ImageGridSquareZoomLevel::ImageGridSquareZoomLevel(ImageGridSquare* parent_square,
                                                    INT_T zoom_out_value) {
@@ -214,7 +214,6 @@ void ImageGridSquare::_read_data() {
     for (INT_T sub_j=0; sub_j < subgrid_height; sub_j++) {
       INT_T image_wpixel;
       INT_T image_hpixel;
-      // auto filename=square_data[subgrid_kv_pair.first];
       auto subgrid_index=SubGridIndex(sub_i,sub_j);
       if (this->grid_setup()->subgrid_has_data(this->_grid_index,
                                                subgrid_index)) {
@@ -347,9 +346,12 @@ bool ImageGrid::_check_load(const ViewPortCurrentState& viewport_current_state,
   auto screen_width=viewport_current_state.screen_size().hpixel();
   auto screen_height=viewport_current_state.screen_size().wpixel();
   auto viewport_current_state_new=ViewPortCurrentState(GridCoordinate(current_grid_x,current_grid_y),
-                                                       GridPixelSize(this->_image_max_size.wpixel(), this->_image_max_size.hpixel()),
+                                                       GridPixelSize(this->_image_max_size.wpixel(),
+                                                                     this->_image_max_size.hpixel()),
                                                        ViewPortTransferState::find_zoom_upper(zoom_index),
-                                                       ViewportPixelSize(screen_width,screen_height));
+                                                       ViewportPixelSize(screen_width,screen_height),
+                                                       ViewportPixelCoordinate(0,0),
+                                                       ViewportPixelCoordinate(0,0));
   auto return_value=((zoom_index == this->_zoom_index_length-1 ||
                       (zoom_index >= zoom_index_lower_limit &&
                        ViewPortTransferState::grid_index_visible(i,j,
@@ -383,7 +385,7 @@ bool ImageGrid::_load_square(const ViewPortCurrentState& viewport_current_state,
     }
     if (zoom_index_list.size() > 0) {
       auto dest_squares=std::vector<ImageGridSquareZoomLevel*>{};
-      for (auto & zoom_index : zoom_index_list) {
+      for (auto& zoom_index : zoom_index_list) {
         dest_squares.push_back(this->squares(grid_index)->image_array[zoom_index].get());
       }
       tried_load=true;
@@ -431,7 +433,7 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
   }
 }
 
-void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool> &keep_running) {
+void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& keep_running) {
   auto keep_trying=true;
   // get information on viewport
   auto viewport_current_state=this->_viewport_current_state_imagegrid_update->GetGridValues();
@@ -545,7 +547,9 @@ void ImageGrid::setup_grid_cache(GridSetup* const grid_setup) {
       this->_load_square(ViewPortCurrentState(GridCoordinate(0.0,0.0),
                                               GridPixelSize(0,0),
                                               0.0,
-                                              ViewportPixelSize(0,0)),
+                                              ViewportPixelSize(0,0),
+                                              ViewportPixelCoordinate(0,0),
+                                              ViewportPixelCoordinate(0,0)),
                          grid_index,
                          0L,true,grid_setup);
       // TODO: eventually cache this out as tiles that fit in 128x128 and 512x512
