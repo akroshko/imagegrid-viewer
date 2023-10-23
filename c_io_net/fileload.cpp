@@ -25,7 +25,11 @@
 #include <cstdint>
 // C library headers
 #include <png.h>
+#include <stdlib.h>
 #include <tiff.h>
+#include <tiffio.h>
+#include <unistd.h>
+#include <zip.h>
 
 // regex to help find files
 std::regex regex_digits_search("([0-9]{1,4})",std::regex_constants::ECMAScript | std::regex_constants::icase);
@@ -34,6 +38,7 @@ std::regex regex_digits_search("([0-9]{1,4})",std::regex_constants::ECMAScript |
 // give an empty file descriptor
 std::regex empty_search("^\\[\\[EMPTY\\]\\]$",std::regex_constants::ECMAScript | std::regex_constants::icase);
 std::regex jpeg_search("\\.jpeg$|\\.jpg$",std::regex_constants::ECMAScript | std::regex_constants::icase);
+std::regex nts_search("\\.zip",std::regex_constants::ECMAScript | std::regex_constants::icase);
 std::regex png_search("\\.png$",std::regex_constants::ECMAScript | std::regex_constants::icase);
 std::regex tiff_search("\\.tiff|\\.tif$",std::regex_constants::ECMAScript | std::regex_constants::icase);
 
@@ -158,6 +163,24 @@ void read_data(std::string filename,
     read_png_data(filename,
                   width,
                   height);
+  } else if (check_nts(filename)) {
+    // get temporary tiff
+    std::string temp_filename;
+    // dummy variable
+    std::string cache_filename;
+    int tiff_fd=-1;
+    get_tiff_from_nts_file(filename,
+                           temp_filename,
+                           cache_filename,
+                           tiff_fd);
+    read_tiff_data(temp_filename,
+                   width,
+                   height);
+    if (tiff_fd >= 0) {
+      close(tiff_fd);
+      MSG("Unlinking: " << temp_filename);
+      unlink(temp_filename.c_str());
+    }
   } else if (check_empty(filename)) {
     // think that 0 is a reasonable non-image for these values
     // TODO: other values may be good
@@ -180,7 +203,6 @@ bool load_data_as_rgb(const std::string filename,
                      cached_filename,
                      current_subgrid,
                      load_file_data);
-    // printing pointer here
     MSG("Done TIFF: " << filename);
     load_successful=true;
   } else if (check_png(filename)) {
@@ -191,6 +213,29 @@ bool load_data_as_rgb(const std::string filename,
                       load_file_data);
       MSG("Done PNG: " << filename);
       load_successful=true;
+  } else if (check_nts(filename)) {
+    // get temporary tiff
+    std::string temp_filename;
+    // dummy variable
+    std::string cached_temp_filename;
+    int tiff_fd=-1;
+    MSG("Loading NTS: " << filename);
+    get_tiff_from_nts_file(filename,
+                           temp_filename,
+                           cached_temp_filename,
+                           tiff_fd);
+    MSG("Loading TIFF: " << temp_filename);
+    load_tiff_as_rgb(temp_filename,
+                     cached_temp_filename,
+                     current_subgrid,
+                     load_file_data);
+    if (tiff_fd >= 0) {
+      close(tiff_fd);
+      MSG("Unlinking: " << temp_filename);
+      unlink(temp_filename.c_str());
+    }
+    MSG("Done NTS: " << filename);
+    load_successful=true;
   } else if (check_empty(filename)) {
   } else {
     ERROR("load_data_as_rgb can't load: " << filename);
@@ -200,7 +245,6 @@ bool load_data_as_rgb(const std::string filename,
 
 ////////////////////////////////////////////////////////////////////////////////
 // load specific files as RGB
-
 bool read_tiff_data(std::string filename,
                     INT_T& width, INT_T& height) {
   auto success=false;
@@ -433,7 +477,8 @@ bool write_png(std::string filename_new, INT_T wpixel, INT_T hpixel, unsigned ch
    if (c_size < PATH_BUFFER_SIZE) {
      strncpy(new_filename,c_str,c_size);
    } else {
-     throw std::runtime_error("Invalid filename size.");
+     // TODO: make sure this is handled
+     return false;
    }
    // write a PNG
    // TODO: put this elsewhere
@@ -456,6 +501,11 @@ bool check_tiff(std::string filename) {
 
 bool check_png(std::string filename) {
   return std::regex_search(filename,png_search);
+}
+
+bool check_nts(std::string filename) {
+  // TODO: this is going to have to be a more complicated search
+  return std::regex_search(filename,nts_search);
 }
 
 bool check_empty(std::string filename) {
@@ -503,15 +553,140 @@ void load_image_grid_from_text (std::string text_file,
   }
 }
 
-std::string create_cache_filename(std::string filename) {
+std::string create_cache_filename(std::string filename,
+                                  std::string prefix) {
   std::filesystem::path filename_path{filename};
   auto filename_parent=filename_path.parent_path();
   auto filename_base=filename_path.filename();
   auto filename_stem=filename_base.stem();
   auto filename_new=filename_parent;
+  filename_stem=std::filesystem::path(prefix + filename_stem.string() + ".png");
   filename_new/="__imagegrid__cache__";
   std::filesystem::create_directories(filename_new);
   filename_new/=filename_stem;
-  filename_new+=".png";
+  // filename_new.insert(0,prefix);
   return filename_new.string();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// more complex filetypes
+
+bool get_tiff_from_nts_file(const std::string filename,
+                            std::string& temp_filename,
+                            std::string& cached_filename,
+                            int& tiff_fd) {
+  // this flips to true when an appropriate file is fond
+  bool found=false;
+  // this flips to false on error
+  bool success=true;
+  int zip_error;
+  zip_t* zip_struct=NULL;
+  const char* zip_name=filename.c_str();
+  char zip_internal_name[PATH_BUFFER_SIZE];
+  char zip_tiff_name[PATH_BUFFER_SIZE];
+  char tiff_temp_filename[PATH_BUFFER_SIZE];
+  // TODO: I need to find the best way to get a temp path
+  strncpy(tiff_temp_filename,TEMP_TEMPLATE_TIF,PATH_BUFFER_SIZE);
+  if (!(zip_struct=zip_open(zip_name,ZIP_RDONLY,&zip_error))) {
+    zip_error_t error;
+    zip_error_init_with_code(&error, zip_error);
+    ERROR("zip_open error: '%s': %s\n" << zip_name << zip_error_strerror(&error));
+    zip_error_fini(&error);
+    success=false;
+  }
+  zip_int64_t num_entries;
+  if ((num_entries=zip_get_num_entries(zip_struct,0)) < 0) {
+    ERROR("No entries in: " << filename);
+    success=false;
+  }
+  // TODO: currently only two entries are available but search could lean a little more heavily on libzip functions
+  //       also assuming only one tiff file for now
+  //       handling more than one will need a way to identify "correct" tif file
+  if (success) {
+    for (int i=0; i < num_entries; i++) {
+      const char* zip_internal_name_temp;
+      zip_internal_name_temp=zip_get_name(zip_struct,i,0);
+      if (zip_internal_name_temp) {
+        strncpy(zip_internal_name,zip_internal_name_temp,PATH_BUFFER_SIZE);
+        int zip_internal_name_length=strnlen(zip_internal_name,PATH_BUFFER_SIZE);
+        const char* suffix="tif";
+        const unsigned int suffix_length=strlen(suffix);
+        char* suffix_substring=strstr(zip_internal_name,suffix);
+        if (suffix_substring &&
+            strnlen(suffix_substring,
+                    PATH_BUFFER_SIZE-zip_internal_name_length+suffix_length)
+            == suffix_length) {
+          found=true;
+          strncpy(zip_tiff_name,zip_internal_name,PATH_BUFFER_SIZE);
+          zip_stat_t tiff_stat;
+          zip_stat_init(&tiff_stat);
+          if (zip_stat(zip_struct,zip_internal_name,0,&tiff_stat) < 0) {
+            ERROR("zip_stat error: " << filename);
+            success=false;
+          } else {
+            zip_uint64_t tiff_size;
+            void* tiff_buff=NULL;
+            // get size of tiff
+            tiff_size=tiff_stat.size;
+            // TODO: check memory allocation
+            if ((tiff_buff=malloc(tiff_size))) {
+              zip_file* zip_file_struct;
+              if (!(zip_file_struct=zip_fopen(zip_struct,zip_internal_name,0))) {
+                ERROR("zip_fopen: " << filename);
+                free(tiff_buff);
+                success=false;
+              } else {
+                // TODO: check number of bytes actually read
+                if (zip_fread(zip_file_struct,tiff_buff,tiff_size) < 0) {
+                  ERROR("zip_fread: " << filename);
+                  free(tiff_buff);
+                  zip_fclose(zip_file_struct);
+                  success=false;
+                } else {
+                  if (zip_fclose(zip_file_struct) < 0) {
+                    ERROR("zip_fclose: " << filename);
+                    free(tiff_buff);
+                    success=false;
+                  } else {
+                    // now write the tiff data to a temp file
+                    // this file stays open beyond the life of this function if successful
+                    if ((tiff_fd=mkstemps(tiff_temp_filename,4)) < 0) {
+                      ERROR("tiff_fd: " << filename);
+                      free(tiff_buff);
+                      success=false;
+                    } else {
+                      if (write(tiff_fd,tiff_buff,tiff_size) < 0) {
+                        ERROR("write: " << filename);
+                        free(tiff_buff);
+                        close(tiff_fd);
+                        tiff_fd=-1;
+                        success=false;
+                      };
+                      if (tiff_buff) { free(tiff_buff); }
+                      if (lseek(tiff_fd,0,SEEK_SET) < 0) {
+                        ERROR("lseek: " << filename);
+                        close(tiff_fd);
+                        tiff_fd=-1;
+                        success=false;
+                      }
+                    }
+                  }
+                }
+              }
+            } else {
+              ERROR("malloc: " << filename);
+              success=false;
+            }
+          }
+        }
+      }
+    }
+  }
+  zip_close(zip_struct);
+  // now set the new file and temp file
+  if (found && success) {
+    temp_filename=std::string(tiff_temp_filename);
+    cached_filename=create_cache_filename(zip_tiff_name,"nts__");
+  }
+  return found && success;
 }

@@ -16,10 +16,10 @@ SRC_TEST = $(filter-out $(wildcard imagegrid-viewer.cpp),$(SRC_PROG))
 OBJ_MAIN = $(SRC_MAIN:.cpp=.o)
 OBJ_TEST = $(SRC_TEST:.cpp=.o)
 
-LDFLAGS = -flto=auto -lstdc++ -lstdc++fs -lm -lpng -ltiff -lSDL2 -lSDL2_ttf -pthread
-CXXFLAGS_ALWAYS = -std=c++17 -Wall -Wextra -Wshadow -Wundef
+LDFLAGS = -flto=auto -lstdc++ -lstdc++fs -lm -lpng -lSDL2 -lSDL2_ttf -ltiff -lzip -pthread
+CXXFLAGS_ALWAYS = -std=c++17 -fno-exceptions -Wall -Wextra -Wshadow -Wundef
 CXXFLAGS_SAFE = $(CXXFLAGS_ALWAYS) -Wpedantic
-CXXFLAGS_UNSAFE = $(CXXFLAGS_ALWAYS)
+CXXFLAGS_UNSAFE = $(CXXFLAGS_ALWAYS) -fno-rtti
 CXXFLAGS_SDL = $(CXXFLAGS_ALWAYS)
 # -Wconversion -Wsign-conversion
 # specific CFLAGS

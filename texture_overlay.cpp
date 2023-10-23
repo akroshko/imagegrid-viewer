@@ -17,6 +17,9 @@ TextureOverlay::~TextureOverlay () {
   if (this->_overlay_message_surface != nullptr) {
     SDL_FreeSurface(this->_overlay_message_surface);
   }
+  if (this->_sdl_current_font != nullptr) {
+    TTF_CloseFont(this->_sdl_current_font);
+  }
   TTF_Quit();
 }
 

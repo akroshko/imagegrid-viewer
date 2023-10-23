@@ -96,7 +96,7 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
         auto filename=grid_square->grid_setup()->get_filename(grid_square->_grid_index,subgrid_index);
         std::string cached_filename;
         if (use_cache) {
-          cached_filename=create_cache_filename(filename);
+          cached_filename=create_cache_filename(filename,"");
         } else {
           // TODO: something better for invalid cached filename
           cached_filename="";
@@ -416,7 +416,7 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
         auto wpixel=dest_square->rgb_wpixel(subgrid_index);
         auto hpixel=dest_square->rgb_hpixel(subgrid_index);
         auto filename=this->grid_setup()->get_filename(grid_index,subgrid_index);
-        auto filename_new=create_cache_filename(filename);
+        auto filename_new=create_cache_filename(filename,"");
         MSG("Trying to writing cache filename: " <<
             filename_new << " for " << filename << " at zoom index " << k <<
             " i: " << grid_index.i_grid() << " j: " << grid_index.j_grid() <<

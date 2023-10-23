@@ -155,6 +155,9 @@ const INT_T ZOOM_STEP=2;
 // placeholder in command line arguments for empty file
 const std::string EMPTY_FILE_PLACEHOLDER="[[EMPTY]]";
 
+// stuff that needs to be crossplatformed later
+const char TEMP_TEMPLATE_TIF[]="/tmp/imagegrid_temp_XXXXXX.tif";
+
 // size of joystick deadzone
 // SDL assumes joystick is -32768 to 32768
 // TODO: range may be off by one

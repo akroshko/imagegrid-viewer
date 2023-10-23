@@ -166,6 +166,18 @@ bool check_tiff(std::string filename);
 bool check_png(std::string filename);
 
 /**
+ * Check if a file is part of the Canadian National Topographic System
+ * (NTS).
+ *
+ * This just checks for a zip file for now, will obviously have to be
+ * expanded.
+ *
+ * @param filename The filname to check.
+ * @return If the file is part of the NTS system.
+ */
+bool check_nts(std::string filename);
+
+/**
  * Check if a file is an empty file placeholder.
  *
  * @param filename The filname to check.
@@ -188,10 +200,25 @@ void load_image_grid_from_text(std::string text_file,
 /**
  * Create the cached filename from the real filename.
  *
- * @param The filename to use to create the cached filename.
+ * @param filename The filename to use to create the cached filename.
+ * @param prefix A prefix to add to the cached filename.
  * @return The cached filename.
  */
-std::string create_cache_filename(std::string filename);
+std::string create_cache_filename(std::string filename,
+                                  std::string prefix);
 
+/**
+ * Get a temporary tiff file from the Canadian national topographic system.
+ *
+ * @param filename The filenam of the NTS zip file.
+ * @param temp_filename The filename of the temp tiff file.
+ * @param cached_filename A cached filename.
+ * @param tiff_fd The file descriptor for the temp tiff file.
+ * @return If loading was successful.
+ */
+bool get_tiff_from_nts_file(const std::string filename,
+                            std::string& temp_filename,
+                            std::string& cached_filename,
+                            int& tiff_fd);
 
 #endif
