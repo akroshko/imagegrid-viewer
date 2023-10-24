@@ -26,16 +26,16 @@ GridImageSize& GridImageSize::operator=(const GridImageSize& grid_image_size) {
 };
 
 
-GridImageSize::GridImageSize(const INT_T wimage, const INT_T himage) {
+GridImageSize::GridImageSize(const INT64 wimage, const INT64 himage) {
   this->_wimage=wimage;
   this->_himage=himage;
 };
 
-INT_T GridImageSize::wimage() const {
+INT64 GridImageSize::wimage() const {
   return this->_wimage;
 }
 
-INT_T GridImageSize::himage() const {
+INT64 GridImageSize::himage() const {
   return this->_himage;
 }
 
@@ -55,16 +55,16 @@ GridCoordinateSize& GridCoordinateSize::operator=(const GridCoordinateSize& grid
   return *this;
 }
 
-GridCoordinateSize::GridCoordinateSize(FLOAT_T wgrid, FLOAT_T hgrid) {
+GridCoordinateSize::GridCoordinateSize(FLOAT64 wgrid, FLOAT64 hgrid) {
   this->_wgrid=wgrid;
   this->_hgrid=hgrid;
 }
 
-FLOAT_T GridCoordinateSize::wgrid() const {
+FLOAT64 GridCoordinateSize::wgrid() const {
   return this->_wgrid;
 }
 
-FLOAT_T GridCoordinateSize::hgrid() const {
+FLOAT64 GridCoordinateSize::hgrid() const {
   return this->_hgrid;
 }
 
@@ -84,13 +84,13 @@ GridCoordinate& GridCoordinate::operator=(const GridCoordinate& grid_coordinate)
   return *this;
 }
 
-GridCoordinate::GridCoordinate(FLOAT_T xgrid, FLOAT_T ygrid) {
+GridCoordinate::GridCoordinate(FLOAT64 xgrid, FLOAT64 ygrid) {
   this->_xgrid=xgrid;
   this->_ygrid=ygrid;
 }
 
 GridCoordinate::GridCoordinate(ViewportPixelCoordinate& viewport_pixel_coordinate,
-                               FLOAT_T zoom,
+                               FLOAT64 zoom,
                                ViewportPixelSize& viewport_pixel_size,
                                GridCoordinate& viewport_grid_coordinate,
                                GridPixelSize& max_image_pixel_size) {
@@ -100,20 +100,20 @@ GridCoordinate::GridCoordinate(ViewportPixelCoordinate& viewport_pixel_coordinat
   auto max_image_hpixel=max_image_pixel_size.hpixel();
   auto half_width=viewport_pixel_size.wpixel()/2.0;
   auto half_height=viewport_pixel_size.hpixel()/2.0;
-  auto viewport_horizontal_distance_grid=(half_width/(FLOAT_T)max_image_wpixel/zoom);
-  auto viewport_vertical_distance_grid=(half_height/(FLOAT_T)max_image_hpixel/zoom);
+  auto viewport_horizontal_distance_grid=(half_width/(FLOAT64)max_image_wpixel/zoom);
+  auto viewport_vertical_distance_grid=(half_height/(FLOAT64)max_image_hpixel/zoom);
   auto viewport_left_grid=viewport_x-viewport_horizontal_distance_grid;
   auto viewport_top_grid=viewport_y-viewport_vertical_distance_grid;
-  this->_xgrid=(viewport_left_grid+((FLOAT_T)viewport_pixel_coordinate.xpixel()/(FLOAT_T)max_image_wpixel/zoom));
-  this->_ygrid=(viewport_top_grid+((FLOAT_T)viewport_pixel_coordinate.ypixel()/(FLOAT_T)max_image_hpixel/zoom));
+  this->_xgrid=(viewport_left_grid+((FLOAT64)viewport_pixel_coordinate.xpixel()/(FLOAT64)max_image_wpixel/zoom));
+  this->_ygrid=(viewport_top_grid+((FLOAT64)viewport_pixel_coordinate.ypixel()/(FLOAT64)max_image_hpixel/zoom));
 }
 
 
-FLOAT_T GridCoordinate::xgrid() const {
+FLOAT64 GridCoordinate::xgrid() const {
   return this->_xgrid;
 }
 
-FLOAT_T GridCoordinate::ygrid() const {
+FLOAT64 GridCoordinate::ygrid() const {
   return this->_ygrid;
 }
 
@@ -126,7 +126,7 @@ GridIndex::GridIndex() {
   this->_jgrid=INVALID_PIXEL_VALUE;
 }
 
-GridIndex::GridIndex(const INT_T igrid, INT_T jgrid) {
+GridIndex::GridIndex(const INT64 igrid, INT64 jgrid) {
   this->_igrid=igrid;
   this->_jgrid=jgrid;
 }
@@ -142,11 +142,11 @@ GridIndex& GridIndex::operator=(const GridIndex& grid_index) {
   return *this;
 }
 
-INT_T GridIndex::i_grid() const {
+INT64 GridIndex::i_grid() const {
   return this->_igrid;
 }
 
-INT_T GridIndex::j_grid() const {
+INT64 GridIndex::j_grid() const {
   return this->_jgrid;
 }
 
@@ -155,7 +155,7 @@ SubGridIndex::SubGridIndex() {
   this->_j_subgrid=INVALID_PIXEL_VALUE;
 }
 
-SubGridIndex::SubGridIndex(const INT_T igrid, INT_T jgrid) {
+SubGridIndex::SubGridIndex(const INT64 igrid, INT64 jgrid) {
   this->_i_subgrid=igrid;
   this->_j_subgrid=jgrid;
 }
@@ -171,11 +171,11 @@ SubGridIndex& SubGridIndex::operator=(const SubGridIndex& subgrid_index) {
   return *this;
 }
 
-INT_T SubGridIndex::i_subgrid() const {
+INT64 SubGridIndex::i_subgrid() const {
   return this->_i_subgrid;
 }
 
-INT_T SubGridIndex::j_subgrid() const {
+INT64 SubGridIndex::j_subgrid() const {
   return this->_j_subgrid;
 }
 
@@ -195,15 +195,15 @@ GridPixelSize& GridPixelSize::operator=(const GridPixelSize& grid_pixel_size) {
   return *this;
 }
 
-GridPixelSize::GridPixelSize(INT_T wpixel, INT_T hpixel) {
+GridPixelSize::GridPixelSize(INT64 wpixel, INT64 hpixel) {
   this->_wpixel=wpixel;
   this->_hpixel=hpixel;
 };
 
-INT_T GridPixelSize::wpixel() const {
+INT64 GridPixelSize::wpixel() const {
   return this->_wpixel;
 }
-INT_T GridPixelSize::hpixel() const {
+INT64 GridPixelSize::hpixel() const {
   return this->_hpixel;
 }
 
@@ -217,7 +217,7 @@ ImagePixelCoordinate::ImagePixelCoordinate(const ImagePixelCoordinate& grid_pixe
   this->_ypixel=grid_pixel_coordinate.ypixel();
 }
 
-ImagePixelCoordinate::ImagePixelCoordinate(INT_T xpixel, INT_T ypixel) {
+ImagePixelCoordinate::ImagePixelCoordinate(INT64 xpixel, INT64 ypixel) {
   this->_xpixel=xpixel;
   this->_ypixel=ypixel;
 }
@@ -234,11 +234,11 @@ ImagePixelCoordinate& ImagePixelCoordinate::operator=(const ImagePixelCoordinate
   return *this;
 }
 
-INT_T ImagePixelCoordinate::xpixel() const {
+INT64 ImagePixelCoordinate::xpixel() const {
   return this->_xpixel;
 }
 
-INT_T ImagePixelCoordinate::ypixel() const {
+INT64 ImagePixelCoordinate::ypixel() const {
   return this->_ypixel;
 }
 
@@ -258,23 +258,23 @@ ViewportPixelCoordinate& ViewportPixelCoordinate::operator=(const ViewportPixelC
   return *this;
 }
 
-ViewportPixelCoordinate:: ViewportPixelCoordinate(INT_T xpixel, INT_T ypixel) {
+ViewportPixelCoordinate:: ViewportPixelCoordinate(INT64 xpixel, INT64 ypixel) {
   this->_xpixel=xpixel;
   this->_ypixel=ypixel;
 }
 
-ViewportPixelCoordinate::ViewportPixelCoordinate(GridCoordinate& grid_coordinate, FLOAT_T zoom,
+ViewportPixelCoordinate::ViewportPixelCoordinate(GridCoordinate& grid_coordinate, FLOAT64 zoom,
                                                  GridCoordinate& grid_coordinate_pixel_0,
                                                  ViewportPixelSize& viewport_pixel_size) {
-  this->_xpixel=(INT_T)round((grid_coordinate.xgrid() - grid_coordinate_pixel_0.xgrid())*viewport_pixel_size.wpixel()*zoom);
-  this->_ypixel=(INT_T)round((grid_coordinate.ygrid() - grid_coordinate_pixel_0.ygrid())*viewport_pixel_size.hpixel()*zoom);
+  this->_xpixel=(INT64)round((grid_coordinate.xgrid() - grid_coordinate_pixel_0.xgrid())*viewport_pixel_size.wpixel()*zoom);
+  this->_ypixel=(INT64)round((grid_coordinate.ygrid() - grid_coordinate_pixel_0.ygrid())*viewport_pixel_size.hpixel()*zoom);
 }
 
-INT_T ViewportPixelCoordinate::xpixel() const {
+INT64 ViewportPixelCoordinate::xpixel() const {
   return this->_xpixel;
 }
 
-INT_T ViewportPixelCoordinate::ypixel() const {
+INT64 ViewportPixelCoordinate::ypixel() const {
   return this->_ypixel;
 }
 
@@ -294,15 +294,15 @@ ViewportPixelSize& ViewportPixelSize::operator=(const ViewportPixelSize& viewpor
   return *this;
 }
 
-ViewportPixelSize::ViewportPixelSize(INT_T wpixel, INT_T hpixel) {
+ViewportPixelSize::ViewportPixelSize(INT64 wpixel, INT64 hpixel) {
   this->_wpixel=wpixel;
   this->_hpixel=hpixel;
 }
 
-INT_T ViewportPixelSize::wpixel() const {
+INT64 ViewportPixelSize::wpixel() const {
   return this->_wpixel;
 }
 
-INT_T ViewportPixelSize::hpixel() const {
+INT64 ViewportPixelSize::hpixel() const {
   return this->_hpixel;
 }

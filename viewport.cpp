@@ -18,7 +18,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
-BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT_T count,
+BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT64 count,
                    const ViewportPixelCoordinate &l_viewport_pixel_coordinate,
                    const ViewportPixelSize& grid_image_size_zoomed) {
   this->_blit_index=count;
@@ -58,7 +58,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
   std::vector<std::unique_ptr<BlitItem>> blititems;
   // lifted out of the old find_viewport_extents_grid function since it's only called from here
   // will be put into function eventually, but I wanted to use new data structures
-  // I don't use objects for some things because I want to use FLOAT_T for intermediate calculations
+  // I don't use objects for some things because I want to use FLOAT64 for intermediate calculations
 
   auto max_zoom_index=texture_grid->textures_zoom_index_length()-1;
   // TODO refactor this out
@@ -70,8 +70,8 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
   // TODO: for now don't display if I can't get it
   std::unique_lock<std::mutex> overlay_lock(texture_overlay->display_mutex, std::defer_lock);
   if (overlay_lock.try_lock()) {
-    for (INT_T i=0L; i < texture_grid->grid_image_size().wimage(); i++) {
-      for (INT_T j=0L; j < texture_grid->grid_image_size().himage(); j++) {
+    for (INT64 i=0L; i < texture_grid->grid_image_size().wimage(); i++) {
+      for (INT64 j=0L; j < texture_grid->grid_image_size().himage(); j++) {
         auto gi=j*texture_grid->grid_image_size().wimage()+i;
         auto upperleft_gridsquare=GridCoordinate(i,j);
         // auto viewport_pixel_0_grid=GridCoordinate(viewport_left_grid,viewport_top_grid);
@@ -178,7 +178,7 @@ bool ViewPort::do_input(SDLApp* const sdl_app) {
   return keep_going;
 }
 
-void ViewPort::update_viewport_info(FLOAT_T xgrid, FLOAT_T ygrid) {
+void ViewPort::update_viewport_info(FLOAT64 xgrid, FLOAT64 ygrid) {
   this->_viewport_grid=GridCoordinate(xgrid,ygrid);
   this->_viewport_pixel_size=ViewportPixelSize(this->_current_window_w,this->_current_window_h);
   // update the viewport
@@ -204,7 +204,7 @@ void ViewPort::update_viewport_info(FLOAT_T xgrid, FLOAT_T ygrid) {
 
 void ViewPort::adjust_initial_location(const GridSetup* const grid_setup) {
   // adjust initial position for small grids
-  FLOAT_T new_xgrid,new_ygrid;
+  FLOAT64 new_xgrid,new_ygrid;
   if (grid_setup->grid_image_size().wimage() == 1) {
     new_xgrid=0.5;
   } else {

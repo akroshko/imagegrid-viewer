@@ -9,7 +9,7 @@
 #include <getopt.h>
 
 void parse_standard_arguments(int argc, char* const* argv,
-                              INT_T& wimage, INT_T& himage,
+                              INT64& wimage, INT64& himage,
                               bool& do_cache, bool& use_cache, bool& successful,
                               std::string& path_value, std::vector<std::string>& filenames,
                               std::string& text_filename) {

@@ -13,19 +13,19 @@ typedef unsigned char (*rgb_extract)(unsigned char);
 
 void buffer_copy_reduce_tiff (uint32_t* source_buffer, uint32_t w, uint32_t h,
                               unsigned char* dest_buffer, size_t w_reduced, size_t h_reduced,
-                              INT_T zoom_index) {
+                              INT64 zoom_index) {
   // the loops in this function ensure memory is accessed sequentially
   // TODO: may wish to figure out an appropriate reduced size
   //       since 64 bit integers may be overkill
-  auto row_buffer=std::make_unique<INT_T[]>(w_reduced*3);
+  auto row_buffer=std::make_unique<INT64[]>(w_reduced*3);
 
   // TODO: this can probably be further optimized by passing in the
   // precomputed shift from elsewhere in the program
-  INT_T block_average_shift=2*floor(log2(zoom_index));
+  INT64 block_average_shift=2*floor(log2(zoom_index));
 
 
   for (size_t j=0; j < h_reduced; j++) {
-    std::memset((void*)row_buffer.get(),0,sizeof(INT_T)*w_reduced*3);
+    std::memset((void*)row_buffer.get(),0,sizeof(INT64)*w_reduced*3);
     for (size_t tj=j*zoom_index; tj < (j+1)*zoom_index; tj++) {
       for (size_t i=0; i < w_reduced; i++) {
         for (size_t ti=i*zoom_index; ti < (i+1)*zoom_index; ti++) {
@@ -49,9 +49,9 @@ void buffer_copy_reduce_tiff (uint32_t* source_buffer, uint32_t w, uint32_t h,
 
 // TODO: finish looping over only necessary pixels
 void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t h,
-                                 INT_T x_origin, INT_T y_origin,
+                                 INT64 x_origin, INT64 y_origin,
                                  unsigned char* dest_buffer, size_t w_reduced, size_t h_reduced,
-                                 INT_T zoom_index) {
+                                 INT64 zoom_index) {
   // TODO: zoom_index is not the index, since index is power of two
   //       fix!!!
 
@@ -66,11 +66,11 @@ void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t 
   // row buffer to copy to
   // TODO: may wish to figure out an appropriate reduced size since 64
   // bit integers are probably overkill for any forseeable need
-  auto row_buffer=std::make_unique<INT_T[]>(w_reduced*3);
+  auto row_buffer=std::make_unique<INT64[]>(w_reduced*3);
 
   // TODO: this can probably be further optimized by passing in the
   // precomputed shift from elsewhere in the program
-  INT_T block_average_shift=2*floor(log2(zoom_index));
+  INT64 block_average_shift=2*floor(log2(zoom_index));
 
   // the loops in this function ensure memory is accessed sequentially
   // TODO: want to make sure I hit last one
@@ -79,9 +79,9 @@ void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t 
        bsj < h;
        bsj+=zoom_index, dj++) {
     // zero out the row buffer each one of these
-    std::memset((void*)row_buffer.get(),0,sizeof(INT_T)*w_reduced*3);
+    std::memset((void*)row_buffer.get(),0,sizeof(INT64)*w_reduced*3);
     // for testing
-    // for (INT_T i=0; i < w_reduced*3; i++) {
+    // for (INT64 i=0; i < w_reduced*3; i++) {
     //   row_buffer[i]=0;
     // }
     for (size_t sj=bsj; sj < bsj+zoom_index; sj++) {
@@ -112,9 +112,9 @@ void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t 
 }
 
 void buffer_copy_expand_generic (unsigned char* source_buffer, size_t w, size_t h,
-                                 INT_T x_origin, INT_T y_origin,
+                                 INT64 x_origin, INT64 y_origin,
                                  unsigned char* dest_buffer, size_t w_expanded, size_t h_expanded,
-                                 INT_T zoom_index) {
+                                 INT64 zoom_index) {
   auto zoom_skip=zoom_index;
   auto dest_i_beg=x_origin*zoom_skip;
   auto dest_j_beg=y_origin*zoom_skip;

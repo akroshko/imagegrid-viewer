@@ -22,7 +22,7 @@
 class BlitItem {
 public:
   BlitItem()=delete;
-  BlitItem(TextureGridSquareZoomLevel* square, INT_T count,
+  BlitItem(TextureGridSquareZoomLevel* square, INT64 count,
            const ViewportPixelCoordinate& viewport_pixel_coordinate,
            const ViewportPixelSize& grid_image_size_zoomed);
   ~BlitItem()=default;
@@ -78,7 +78,7 @@ public:
   /**
    * Update the information and observors for the current state of the viewport.
    */
-  void update_viewport_info(FLOAT_T xgrid, FLOAT_T ygrid);
+  void update_viewport_info(FLOAT64 xgrid, FLOAT64 ygrid);
   /**
    * Adjust initial location.
    *
@@ -100,23 +100,23 @@ private:
   /** the grid coordinates of the center of the viewport */
   GridCoordinate _viewport_grid;
   /** the zoom level, 1.0 indicates all pixels are 1:1, 0.5 indicates zoomed out by a factor of 2 */
-  FLOAT_T _zoom=INITIAL_ZOOM;
+  FLOAT64 _zoom=INITIAL_ZOOM;
   /** a zoom speed per SDL frame */
-  FLOAT_T _zoom_speed=INITIAL_ZOOM_SPEED;
+  FLOAT64 _zoom_speed=INITIAL_ZOOM_SPEED;
   /** the current x speed of movement per SDL frame */
-  FLOAT_T _current_speed_x=INITIAL_X_Y_SPEED;
+  FLOAT64 _current_speed_x=INITIAL_X_Y_SPEED;
   /** the current y speed of movement per SDL frame */
-  FLOAT_T _current_speed_y=INITIAL_X_Y_SPEED;
+  FLOAT64 _current_speed_y=INITIAL_X_Y_SPEED;
   /** the current speed of zoom per SDL frame */
-  FLOAT_T _current_speed_zoom=INITIAL_CURRENT_ZOOM_SPEED;
+  FLOAT64 _current_speed_zoom=INITIAL_CURRENT_ZOOM_SPEED;
   /** The window width in pixels */
-  INT_T _current_window_w=INITIAL_SCREEN_WIDTH;
+  INT64 _current_window_w=INITIAL_SCREEN_WIDTH;
   /** The window height in pixels */
-  INT_T _current_window_h=INITIAL_SCREEN_HEIGHT;
+  INT64 _current_window_h=INITIAL_SCREEN_HEIGHT;
   /** The current mouse cursor x coordinate */
-  INT_T _current_mouse_xpixel=0;
+  INT64 _current_mouse_xpixel=0;
   /** The current mouse cursor y coordinate */
-  INT_T _current_mouse_ypixel=0;
+  INT64 _current_mouse_ypixel=0;
   /** object for transfering the state of the viewport to the
    * texturegrid_update thread in a threadsafe manner */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;

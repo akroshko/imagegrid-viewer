@@ -23,13 +23,13 @@ public:
    * @param j The next index along a column.
    * @return Whether to continue.
    */
-  virtual bool get_next(INT_T& i, INT_T& j);
+  virtual bool get_next(INT64& i, INT64& j);
 protected:
-  INT_T _w;
-  INT_T _h;
-  INT_T _x_current;
-  INT_T _y_current;
-  std::queue<std::array<INT_T,2>> _index_values;
+  INT64 _w;
+  INT64 _h;
+  INT64 _x_current;
+  INT64 _y_current;
+  std::queue<std::array<INT64,2>> _index_values;
 };
 
 /**
@@ -47,7 +47,7 @@ public:
    * @param h_image_grid Height of the image grid in images.
    * @param viewport_current_state The current state of the viewport.
    */
-  ImageGridIteratorFull(INT_T w_image_grid, INT_T h_image_grid,
+  ImageGridIteratorFull(INT64 w_image_grid, INT64 h_image_grid,
                         const ViewPortCurrentState& viewport_current_state);
   ~ImageGridIteratorFull()=default;
 };
@@ -63,7 +63,7 @@ public:
    * @param h_image_grid Height of the image grid in images.
    * @param viewport_current_state The current state of the viewport.
    */
-  ImageGridIteratorVisible(INT_T w_image_grid, INT_T h_image_grid,
+  ImageGridIteratorVisible(INT64 w_image_grid, INT64 h_image_grid,
                            const ViewPortCurrentState& viewport_current_state);
   ~ImageGridIteratorVisible()=default;
 };

@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
   SDL_Surface* display_texture=nullptr;
   display_texture=SDL_CreateRGBSurfaceWithFormat(0,texture_wpixel,texture_hpixel,24,SDL_PIXELFORMAT_RGB24);
   SDL_LockSurface(display_texture);
-  INT_T index=0;
+  INT64 index=0;
   for (auto i=0ul; i < square->rgb_wpixel(index,index); i++) {
     for (auto j=0ul; j < square->rgb_wpixel(index,index); j++) {
       auto rgb_index=(i*square->rgb_wpixel(index,index)+j)*3;

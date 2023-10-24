@@ -42,11 +42,11 @@ public:
    * @param window_h The height of the window.
    * @return Whether to keep going or to quit.
    */
-  bool do_input(FLOAT_T& current_speed_x, FLOAT_T& current_speed_y,
-                FLOAT_T& current_speed_zoom, FLOAT_T& zoom, FLOAT_T& zoom_speed,
-                const GridPixelSize& image_max_size, FLOAT_T& xgrid, FLOAT_T& ygrid,
-                INT_T& mouse_x, INT_T& mouse_y,
-                INT_T& window_w, INT_T& window_h);
+  bool do_input(FLOAT64& current_speed_x, FLOAT64& current_speed_y,
+                FLOAT64& current_speed_zoom, FLOAT64& zoom, FLOAT64& zoom_speed,
+                const GridPixelSize& image_max_size, FLOAT64& xgrid, FLOAT64& ygrid,
+                INT64& mouse_x, INT64& mouse_y,
+                INT64& window_w, INT64& window_h);
   /**
    * Process raw joystick values.
    *
@@ -103,7 +103,7 @@ public:
    * @param hpixel The height of the surface.
    * @return The new surface.
    */
-  void create_surface(INT_T wpixel, INT_T hpixel);
+  void create_surface(INT64 wpixel, INT64 hpixel);
   /**
    * Unload the surface if it is loaded.
    */

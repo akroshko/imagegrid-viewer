@@ -49,13 +49,13 @@ Sint16 SDLApp::get_jaxis(Sint16 jaxis_original) {
   }
 }
 
-bool SDLApp::do_input(FLOAT_T& current_speed_x, FLOAT_T& current_speed_y,
-                      FLOAT_T& current_speed_zoom,
-                      FLOAT_T& zoom, FLOAT_T& zoom_speed,
+bool SDLApp::do_input(FLOAT64& current_speed_x, FLOAT64& current_speed_y,
+                      FLOAT64& current_speed_zoom,
+                      FLOAT64& zoom, FLOAT64& zoom_speed,
                       const GridPixelSize& image_max_size,
-                      FLOAT_T& xgrid, FLOAT_T& ygrid,
-                      INT_T& mouse_x, INT_T& mouse_y,
-                      INT_T& window_w, INT_T& window_h) {
+                      FLOAT64& xgrid, FLOAT64& ygrid,
+                      INT64& mouse_x, INT64& mouse_y,
+                      INT64& window_w, INT64& window_h) {
   SDL_Event e;
   auto keep_going=true;
   while(SDL_PollEvent(&e)) {
@@ -188,7 +188,7 @@ SDLDisplayTextureWrapper::~SDLDisplayTextureWrapper () {
   }
 }
 
-void SDLDisplayTextureWrapper::create_surface(INT_T wpixel, INT_T hpixel) {
+void SDLDisplayTextureWrapper::create_surface(INT64 wpixel, INT64 hpixel) {
   if (this->_display_texture) {
     this->unlock_surface();
   }

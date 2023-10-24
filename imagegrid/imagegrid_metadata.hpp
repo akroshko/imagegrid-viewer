@@ -22,8 +22,8 @@ public:
   /** The corresponding pixel coordinate of the queried metadata. */
   ImagePixelCoordinate pixel_coordinate;
   // TODO: haven't implemented real-world coordinates yet
-  FLOAT_T real_world_x;
-  FLOAT_T real_world_y;
+  FLOAT64 real_world_x;
+  FLOAT64 real_world_y;
 };
 
 class ImageGridMetadata {

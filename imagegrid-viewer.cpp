@@ -335,7 +335,7 @@ int main(int argc, char* argv[]) {
   // The main loop continues as long as this is true.
   auto continue_flag=true;
 #ifdef DEBUG_MESSAGES
-  INT_T loop_count=0;
+  INT64 loop_count=0;
 #endif
   // read the command line arguments to fine out what our grid looks
   // like and where the images come from
@@ -343,16 +343,17 @@ int main(int argc, char* argv[]) {
   if (!grid_setup->successful()) {
     return 1;
   }
-  // run as a command line if we are just caching images
+  // set up whole program even when doing cache do to dependencies among objects
+  auto imagegrid_viewer_context=std::make_unique<ImageGridViewerContext>(grid_setup.get());
   if (grid_setup->do_cache()) {
     // we just need an ImageGrid object for this
-    auto grid=std::make_unique<ImageGrid>();
+    // auto grid=std::make_unique<ImageGrid>();
     // now run the cache
     MSG("Starting cache!");
-    grid->setup_grid_cache(grid_setup.get());
+    imagegrid_viewer_context->grid->setup_grid_cache(grid_setup.get());
+    // grid->setup_grid_cache(grid_setup.get());
     return 0;
   } else {
-    auto imagegrid_viewer_context=std::make_unique<ImageGridViewerContext>(grid_setup.get());
     // initialize SDL
     if (!imagegrid_viewer_context->sdl_app->successful()) {
       ERROR("Failed to SDL app initialize properly");

@@ -6,11 +6,11 @@
 
 #include "common.hpp"
 
-INT_T round_down_positive_power_of_2(FLOAT_T x);
+INT64 round_down_positive_power_of_2(FLOAT64 x);
 
-INT_T reduce_and_pad(INT_T x, INT_T reduction_factor);
+INT64 reduce_and_pad(INT64 x, INT64 reduction_factor);
 
-INT_T pad (INT_T x, INT_T pad_size);
+INT64 pad (INT64 x, INT64 pad_size);
 
 void sleep_thread();
 

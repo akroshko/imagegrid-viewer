@@ -15,11 +15,11 @@
  * @param reduction_factor The factor to reduce the number by.
  * @return The reduced and padded value.
  */
-INT_T reduce_and_pad(INT_T x, INT_T reduction_factor) {
+INT64 reduce_and_pad(INT64 x, INT64 reduction_factor) {
   auto padded_x=pad(x, reduction_factor);
   // TODO: figure out where these zeros are coming from
   //       but generally I want no change
-  INT_T reduced_x;
+  INT64 reduced_x;
   if (reduction_factor == 0) {
     reduced_x=padded_x;
   } else {
@@ -36,7 +36,7 @@ INT_T reduce_and_pad(INT_T x, INT_T reduction_factor) {
  *                 of this.
  * @return The padded value.
  */
-INT_T pad (INT_T x, INT_T pad_size) {
+INT64 pad (INT64 x, INT64 pad_size) {
   if (pad_size == 0 || x % pad_size == 0) {
     return x;
   } else {

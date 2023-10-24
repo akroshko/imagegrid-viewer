@@ -57,7 +57,7 @@ public:
                          const ViewPortCurrentState& viewport_current_state,
                          const ImageGridSquare* const grid_square,
                          TextureGridSquare* const texture_grid_square,
-                         INT_T& texture_copy_count,
+                         INT64& texture_copy_count,
                          std::atomic<bool>& keep_running);
   /**
    * Clear textures based on the current coordinates.
@@ -93,12 +93,12 @@ public:
    */
   static bool load_texture(TextureGridSquareZoomLevel* dest_square,
                            const ImageGridSquareZoomLevel* source_square,
-                           INT_T zoom_index,
+                           INT64 zoom_index,
                            GridPixelSize texture_pixel_size);
 private:
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;
-  bool _grid_square_visible(INT_T i, INT_T j,
+  bool _grid_square_visible(INT64 i, INT64 j,
                             const ViewPortCurrentState& viewport_current_state);
 };
 

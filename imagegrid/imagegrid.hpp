@@ -34,7 +34,7 @@ public:
    * @param zoom_level The zoom level of this grid square.
    */
   ImageGridSquareZoomLevel(ImageGridSquare* parent_square,
-                           INT_T zoom_level);
+                           INT64 zoom_level);
   ~ImageGridSquareZoomLevel();
   ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&)=delete;
   ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&&)=delete;
@@ -56,7 +56,7 @@ public:
   /** Unload and free memory from a loaded file */
   void unload_square();
   /** @return The amount zoomed out this class represents. */
-  INT_T zoom_out_value() const;
+  INT64 zoom_out_value() const;
   /**
    * @param subgrid_index The index of the subgrid.
    * @return The width in pixels.
@@ -71,25 +71,25 @@ public:
    * @param subgrid_index The index of the subgrid.
    * @return The x origin coordinate in pixels.
    */
-  INT_T rgb_xpixel_origin(SubGridIndex& subgrid_index) const;
+  INT64 rgb_xpixel_origin(SubGridIndex& subgrid_index) const;
   /**
    * @param subgrid_index The index of the subgrid.
    * @return The y origin coordinate in pixels.
    */
-  INT_T rgb_ypixel_origin(SubGridIndex& subgrid_index) const;
+  INT64 rgb_ypixel_origin(SubGridIndex& subgrid_index) const;
   /**
    * @param subgrid_index The index of the subgrid.
    * @return A pointer to the RGB data.
    */
   unsigned char* get_rgb_data(SubGridIndex& subgrid_index) const;
   /** @return The subgrid width of this square. */
-  INT_T subgrid_width() const;
+  INT64 subgrid_width() const;
   /** @return The subgrid height of this square. */
-  INT_T subgrid_height() const;
+  INT64 subgrid_height() const;
   /** @return The max subgrid pixel width for each image at the zoom level of this square. */
-  INT_T max_subgrid_wpixel() const;
+  INT64 max_subgrid_wpixel() const;
   /** @return The max subgrid pixel height for each image at the zoom level of this square. */
-  INT_T max_subgrid_hpixel() const;
+  INT64 max_subgrid_hpixel() const;
 private:
   friend class ImageGrid;
   friend class ImageGridSquare;
@@ -101,12 +101,12 @@ private:
   std::unique_ptr<std::unique_ptr<size_t[]>[]> _rgb_wpixel;
   std::unique_ptr<std::unique_ptr<size_t[]>[]> _rgb_hpixel;
   // not scaled, but they need to be here for now
-  INT_T _max_subgrid_wpixel=-1;
-  INT_T _max_subgrid_hpixel=-1;
+  INT64 _max_subgrid_wpixel=-1;
+  INT64 _max_subgrid_hpixel=-1;
   // the origin foreach
-  std::unique_ptr<std::unique_ptr<INT_T[]>[]> _rgb_xpixel_origin;
-  std::unique_ptr<std::unique_ptr<INT_T[]>[]> _rgb_ypixel_origin;
-  INT_T _zoom_out_value;
+  std::unique_ptr<std::unique_ptr<INT64[]>[]> _rgb_xpixel_origin;
+  std::unique_ptr<std::unique_ptr<INT64[]>[]> _rgb_ypixel_origin;
+  INT64 _zoom_out_value;
 };
 
 /**
@@ -127,9 +127,9 @@ public:
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
   std::unique_ptr<std::unique_ptr<ImageGridSquareZoomLevel>[]> image_array;
   /** @return The subgrid width. */
-  INT_T subgrid_width();
+  INT64 subgrid_width();
   /** @return The subgrid height. */
-  INT_T subgrid_height();
+  INT64 subgrid_height();
   /** @return The parent image grid. */
   ImageGrid* parent_grid() const;
   /** @return The grid setup class. */
@@ -140,10 +140,10 @@ private:
   ImageGrid* _parent_grid;
   GridSetup* _grid_setup;
   GridIndex _grid_index;
-  INT_T _image_wpixel;
-  INT_T _image_hpixel;
-  INT_T _max_subgrid_wpixel;
-  INT_T _max_subgrid_hpixel;
+  INT64 _image_wpixel;
+  INT64 _image_hpixel;
+  INT64 _max_subgrid_wpixel;
+  INT64 _max_subgrid_hpixel;
   /**
    * Read in a the file cooresponing to this square.
    */
@@ -185,7 +185,7 @@ public:
    * @return Whether read_grid_info was successful.
    */
   bool read_grid_info_successful() const;
-  INT_T zoom_index_length() const;
+  INT64 zoom_index_length() const;
   GridSetup* grid_setup() const;
   const GridImageSize grid_image_size();
 private:
@@ -210,10 +210,10 @@ private:
    * @return If file should be loaded for current conditions.
    */
   bool _check_load(const ViewPortCurrentState& viewport_current_state,
-                   INT_T zoom_index,
+                   INT64 zoom_index,
                    const GridIndex& grid_index,
-                   INT_T zoom_index_lower_limit,
-                   INT_T load_all);
+                   INT64 zoom_index_lower_limit,
+                   INT64 load_all);
   /**
    * Actually load the square.
    *
@@ -230,8 +230,8 @@ private:
    */
   bool _load_square(const ViewPortCurrentState& viewport_current_state,
                     const GridIndex& grid_index,
-                    INT_T zoom_index_lower_limit,
-                    INT_T load_all,
+                    INT64 zoom_index_lower_limit,
+                    INT64 load_all,
                     const GridSetup* grid_setup);
   /**
    * Actually read in the files to setup things.
@@ -260,7 +260,7 @@ private:
   /**
    * How many steps each zoom takes, power of 2.
    */
-  INT_T _zoom_index_length;
+  INT64 _zoom_index_length;
 };
 
 #endif

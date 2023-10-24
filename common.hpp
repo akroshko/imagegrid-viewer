@@ -48,9 +48,9 @@
 // long/short/signed/unsigned.
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef double FLOAT_T;
-typedef uint64_t UINT_T;
-typedef int64_t INT_T;
+typedef double FLOAT64;
+typedef uint64_t UINT64;
+typedef int64_t INT64;
 
 ////////////////////////////////////////////////////////////////////////////////
 // more complex types
@@ -74,10 +74,10 @@ struct hash_pair {
 // special data structure to help setup grid
 // TODO: put here to avoid circular import, restructure to avoid this
 struct GridSetupFile {
-  INT_T grid_i;
-  INT_T grid_j;
-  INT_T subgrid_i;
-  INT_T subgrid_j;
+  INT64 grid_i;
+  INT64 grid_j;
+  INT64 subgrid_i;
+  INT64 subgrid_j;
   std::string filename;
 };
 
@@ -88,27 +88,27 @@ struct GridSetupFile {
 
 // screen width
 // TODO: make dynamic and configurable
-const INT_T INITIAL_SCREEN_WIDTH=1280;
-const INT_T INITIAL_SCREEN_HEIGHT=720;
+const INT64 INITIAL_SCREEN_WIDTH=1280;
+const INT64 INITIAL_SCREEN_HEIGHT=720;
 
 // a max screen height
 // used to decide how big of images should be loaded
 // TODO: make dynamic and configurable
-const INT_T MAX_SCREEN_WIDTH=1920;
-const INT_T MAX_SCREEN_HEIGHT=1080;
+const INT64 MAX_SCREEN_WIDTH=1920;
+const INT64 MAX_SCREEN_HEIGHT=1080;
 
 const size_t PATH_BUFFER_SIZE=4096;
 
 // some constants for input/ouput configuration
-const FLOAT_T KEY_PRESS_MOVE=0.5;
-const FLOAT_T JOY_BASE_MOVE=2.0;
+const FLOAT64 KEY_PRESS_MOVE=0.5;
+const FLOAT64 JOY_BASE_MOVE=2.0;
 // used to be 0.05
-const FLOAT_T JOY_BASE_ZOOM=0.25;
-const FLOAT_T JOY_MAX=32768;
+const FLOAT64 JOY_BASE_ZOOM=0.25;
+const FLOAT64 JOY_MAX=32768;
 
 // internal configuration settings
 const int SDL_DELAY=16;
-const INT_T TEXTURE_ALIGNMENT=4;
+const INT64 TEXTURE_ALIGNMENT=4;
 
 const double INITIAL_ZOOM=0.0125;
 
@@ -123,26 +123,26 @@ const double INITIAL_Y=1.5;
 // const double INITIAL_Y=5.0;
 
 // maximum minimum size of scaled images
-const INT_T MAX_MIN_SCALED_IMAGE_SIZE=32;
+const INT64 MAX_MIN_SCALED_IMAGE_SIZE=32;
 
 // some placeholder values
 // rather than zero, this should make sure that any use of initialized class members becomes obvious
 // TODO: will replace with assert or an exception
-const INT_T INVALID_PIXEL_VALUE=INT_MIN;
+const INT64 INVALID_PIXEL_VALUE=INT_MIN;
 
 // these are things that should probably be done more smartly later
-const INT_T LOAD_FILES_BATCH=1;
-const INT_T LOAD_TEXTURES_BATCH=8;
+const INT64 LOAD_FILES_BATCH=1;
+const INT64 LOAD_TEXTURES_BATCH=8;
 
 // the filler color
 const unsigned char FILLER_LEVEL=64;
 
 // max cache pixel size
-const INT_T CACHE_MAX_PIXEL_SIZE=512;
+const INT64 CACHE_MAX_PIXEL_SIZE=512;
 
 // where to put the overlay
-const INT_T OVERLAY_X=10;
-const INT_T OVERLAY_Y=10;
+const INT64 OVERLAY_X=10;
+const INT64 OVERLAY_Y=10;
 
 // overlay font path
 const char OVERLAY_FONT_PATH[]="/usr/share/fonts/truetype/freefont/FreeSans.ttf";
@@ -150,7 +150,7 @@ const char OVERLAY_FONT_PATH[]="/usr/share/fonts/truetype/freefont/FreeSans.ttf"
 // zoom step
 // I don't see myself moving away from powers of two, but it's nice to
 // have it visible where I make this assumption
-const INT_T ZOOM_STEP=2;
+const INT64 ZOOM_STEP=2;
 
 // placeholder in command line arguments for empty file
 const std::string EMPTY_FILE_PLACEHOLDER="[[EMPTY]]";
@@ -158,9 +158,12 @@ const std::string EMPTY_FILE_PLACEHOLDER="[[EMPTY]]";
 // stuff that needs to be crossplatformed later
 const char TEMP_TEMPLATE_TIF[]="/tmp/imagegrid_temp_XXXXXX.tif";
 
+// NTS file internals
+const char NTS_TIF_INTERNAL_EXTENSION[]="tif";
+
 // size of joystick deadzone
 // SDL assumes joystick is -32768 to 32768
 // TODO: range may be off by one
-const INT_T JOY_DEADZONE=2048;
+const INT64 JOY_DEADZONE=2048;
 
 #endif

@@ -18,7 +18,7 @@
  */
 void buffer_copy_reduce_tiff (uint32_t* source_buffer, uint32_t w, uint32_t h,
                               unsigned char* dest_buffer, size_t w_reduced, size_t h_reduced,
-                              INT_T zoom_index);
+                              INT64 zoom_index);
 
 /**
  * Copy and reduce size of generic RGB buffer.
@@ -35,9 +35,9 @@ void buffer_copy_reduce_tiff (uint32_t* source_buffer, uint32_t w, uint32_t h,
  *                   power of 2.
  */
 void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t h,
-                                     INT_T x_origin, INT_T y_origin,
+                                     INT64 x_origin, INT64 y_origin,
                                      unsigned char* dest_buffer, size_t w_reduced, size_t h_reduced,
-                                     INT_T zoom_index);
+                                     INT64 zoom_index);
 
 /**
  * Copy and expand size of generic RGB buffer.
@@ -54,8 +54,8 @@ void buffer_copy_reduce_generic (unsigned char* source_buffer, size_t w, size_t 
  *                   power of 2.
  */
 void buffer_copy_expand_generic (unsigned char* source_buffer, size_t w, size_t h,
-                                 INT_T x_origin, INT_T y_origin,
+                                 INT64 x_origin, INT64 y_origin,
                                  unsigned char* dest_buffer, size_t w_expanded, size_t h_expanded,
-                                 INT_T zoom_index);
+                                 INT64 zoom_index);
 
 #endif

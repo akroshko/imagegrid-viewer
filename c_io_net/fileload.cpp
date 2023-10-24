@@ -151,8 +151,8 @@ LoadSquareData::LoadSquareData() {
 ////////////////////////////////////////////////////////////////////////////////
 // general file functions
 
-void read_data(std::string filename,
-               INT_T& width, INT_T& height) {
+void read_data(const std::string& filename,
+               INT64& width, INT64& height) {
   if (check_tiff(filename)) {
     // TODO: check success
     read_tiff_data(filename,
@@ -166,12 +166,9 @@ void read_data(std::string filename,
   } else if (check_nts(filename)) {
     // get temporary tiff
     std::string temp_filename;
-    // dummy variable
-    std::string cache_filename;
     int tiff_fd=-1;
     get_tiff_from_nts_file(filename,
                            temp_filename,
-                           cache_filename,
                            tiff_fd);
     read_tiff_data(temp_filename,
                    width,
@@ -182,8 +179,7 @@ void read_data(std::string filename,
       unlink(temp_filename.c_str());
     }
   } else if (check_empty(filename)) {
-    // think that 0 is a reasonable non-image for these values
-    // TODO: other values may be good
+    // TODO: find way to not use these as sentinel values
     width=0;
     height=0;
   } else {
@@ -191,8 +187,8 @@ void read_data(std::string filename,
   }
 }
 
-bool load_data_as_rgb(const std::string filename,
-                      const std::string cached_filename,
+bool load_data_as_rgb(const std::string& filename,
+                      const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
                       const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
   bool load_successful=false;
@@ -209,6 +205,7 @@ bool load_data_as_rgb(const std::string filename,
       MSG("Loading PNG: " << filename);
       // TODO: check success
       load_png_as_rgb(filename,
+                      cached_filename,
                       current_subgrid,
                       load_file_data);
       MSG("Done PNG: " << filename);
@@ -216,17 +213,14 @@ bool load_data_as_rgb(const std::string filename,
   } else if (check_nts(filename)) {
     // get temporary tiff
     std::string temp_filename;
-    // dummy variable
-    std::string cached_temp_filename;
     int tiff_fd=-1;
     MSG("Loading NTS: " << filename);
     get_tiff_from_nts_file(filename,
                            temp_filename,
-                           cached_temp_filename,
                            tiff_fd);
     MSG("Loading TIFF: " << temp_filename);
     load_tiff_as_rgb(temp_filename,
-                     cached_temp_filename,
+                     cached_filename,
                      current_subgrid,
                      load_file_data);
     if (tiff_fd >= 0) {
@@ -245,8 +239,8 @@ bool load_data_as_rgb(const std::string filename,
 
 ////////////////////////////////////////////////////////////////////////////////
 // load specific files as RGB
-bool read_tiff_data(std::string filename,
-                    INT_T& width, INT_T& height) {
+bool read_tiff_data(const std::string& filename,
+                    INT64& width, INT64& height) {
   auto success=false;
 
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
@@ -266,8 +260,8 @@ bool read_tiff_data(std::string filename,
   return success;
 }
 
-bool load_tiff_as_rgb(const std::string filename,
-                      const std::string cached_filename,
+bool load_tiff_as_rgb(const std::string& filename,
+                      const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
                       const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
   auto sub_i=current_subgrid.i_subgrid();
@@ -310,7 +304,7 @@ bool load_tiff_as_rgb(const std::string filename,
     }
     if (can_cache) {
       MSG("Using cached file: " << cached_filename);
-      INT_T cached_zoom_out_value=1;
+      INT64 cached_zoom_out_value=1;
       // TODO: this could be a problem amongst wildly varying image sizes
       //       solutions are to:
       //           store max width/max height vs zoom_out
@@ -403,8 +397,8 @@ bool load_tiff_as_rgb(const std::string filename,
   return success;
 }
 
-bool read_png_data(std::string filename,
-                   INT_T& width, INT_T& height) {
+bool read_png_data(const std::string& filename,
+                   INT64& width, INT64& height) {
   bool success=false;
   png_image image;
   memset(&image, 0, (sizeof image));
@@ -420,7 +414,8 @@ bool read_png_data(std::string filename,
   return success;
 }
 
-bool load_png_as_rgb(std::string filename,
+bool load_png_as_rgb(const std::string& filename,
+                     const std::string& cached_filename,
                      SubGridIndex& current_subgrid,
                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
   auto sub_i=current_subgrid.i_subgrid();
@@ -469,7 +464,7 @@ bool load_png_as_rgb(std::string filename,
   return success;
 }
 
-bool write_png(std::string filename_new, INT_T wpixel, INT_T hpixel, unsigned char* rgb_data) {
+bool write_png(std::string filename_new, INT64 wpixel, INT64 hpixel, unsigned char* rgb_data) {
    char new_filename[PATH_BUFFER_SIZE]="";
    // TODO: catch exception for overly long filenames once exceptions are handled
    auto c_str=filename_new.c_str();
@@ -495,27 +490,27 @@ bool write_png(std::string filename_new, INT_T wpixel, INT_T hpixel, unsigned ch
    return true;
 }
 
-bool check_tiff(std::string filename) {
+bool check_tiff(const std::string& filename) {
   return std::regex_search(filename,tiff_search);
 }
 
-bool check_png(std::string filename) {
+bool check_png(const std::string& filename) {
   return std::regex_search(filename,png_search);
 }
 
-bool check_nts(std::string filename) {
+bool check_nts(const std::string& filename) {
   // TODO: this is going to have to be a more complicated search
   return std::regex_search(filename,nts_search);
 }
 
-bool check_empty(std::string filename) {
+bool check_empty(const std::string& filename) {
   return std::regex_search(filename,empty_search);
 }
 
 void load_image_grid_from_text (std::string text_file,
                                 std::list<GridSetupFile>& read_data,
-                                INT_T& max_i,
-                                INT_T& max_j) {
+                                INT64& max_i,
+                                INT64& max_j) {
   // regex to parse text files, this is a fairly rigid for now since
   // it is autogenerated by a Python script but will probably be
   // superceded by XML
@@ -553,27 +548,28 @@ void load_image_grid_from_text (std::string text_file,
   }
 }
 
-std::string create_cache_filename(std::string filename,
-                                  std::string prefix) {
+std::string create_cache_filename(const std::string& filename) {
+  // TODO: this really needs to be both profiled and called less
   std::filesystem::path filename_path{filename};
   auto filename_parent=filename_path.parent_path();
   auto filename_base=filename_path.filename();
+  auto filename_ext=filename_path.extension();
   auto filename_stem=filename_base.stem();
   auto filename_new=filename_parent;
-  filename_stem=std::filesystem::path(prefix + filename_stem.string() + ".png");
+  // add extension to beginning to distinguish among otherwise
+  // identically named files
+  filename_stem=std::filesystem::path(filename_ext.string().substr(1) + "_" + filename_stem.string() + ".png");
   filename_new/="__imagegrid__cache__";
   std::filesystem::create_directories(filename_new);
   filename_new/=filename_stem;
-  // filename_new.insert(0,prefix);
   return filename_new.string();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // more complex filetypes
 
-bool get_tiff_from_nts_file(const std::string filename,
+bool get_tiff_from_nts_file(const std::string& filename,
                             std::string& temp_filename,
-                            std::string& cached_filename,
                             int& tiff_fd) {
   // this flips to true when an appropriate file is fond
   bool found=false;
@@ -609,7 +605,7 @@ bool get_tiff_from_nts_file(const std::string filename,
       if (zip_internal_name_temp) {
         strncpy(zip_internal_name,zip_internal_name_temp,PATH_BUFFER_SIZE);
         int zip_internal_name_length=strnlen(zip_internal_name,PATH_BUFFER_SIZE);
-        const char* suffix="tif";
+        const char* suffix=NTS_TIF_INTERNAL_EXTENSION;
         const unsigned int suffix_length=strlen(suffix);
         char* suffix_substring=strstr(zip_internal_name,suffix);
         if (suffix_substring &&
@@ -682,11 +678,7 @@ bool get_tiff_from_nts_file(const std::string filename,
       }
     }
   }
+  temp_filename=std::string(tiff_temp_filename);
   zip_close(zip_struct);
-  // now set the new file and temp file
-  if (found && success) {
-    temp_filename=std::string(tiff_temp_filename);
-    cached_filename=create_cache_filename(zip_tiff_name,"nts__");
-  }
   return found && success;
 }
