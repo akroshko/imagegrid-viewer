@@ -166,4 +166,20 @@ const char NTS_TIF_INTERNAL_EXTENSION[]="tif";
 // TODO: range may be off by one
 const INT64 JOY_DEADZONE=2048;
 
+////////////////////////////////////////////////////////////////////////////////
+// Strings for user interaction
+
+const std::string HELP_STRING=
+  "Usage: imagegrid-viewer [-c|-d] -w WIDTH -h HEIGHT IMAGES...\n"
+  "       imagegrid-viewer [-c|-d] -f TEXT_FILE\n"
+  "\n"
+  "  -c        create cache\n"
+  "  -d        use cache\n"
+  "\n"
+  "  -w        width of grid in images\n"
+  "  -h        height of grid in images\n"
+  "\n"
+  "  -f        text file with each line in the format:\n"
+  "            X_INDEX Y_INDEX X_SUBGRID_INDEX Y_SUBGRID_INDEX FILENAME\n";
+
 #endif

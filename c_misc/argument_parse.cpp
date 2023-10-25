@@ -33,7 +33,6 @@ void parse_standard_arguments(int argc, char* const* argv,
       break;
     case 'p':
       // get numbered images from path
-      // strncpy(path_value_local,optarg,PATH_BUFFER_SIZE);
       path_value=std::string(optarg);
       break;
     case 'f':
@@ -47,9 +46,6 @@ void parse_standard_arguments(int argc, char* const* argv,
     case 'd':
       // use database
       use_cache=true;
-      // future consideration
-      // dataset identifier ("dataset" identifier is the path where thinga re cached)
-      // strncpy(this->_data_set,optarg,PATH_BUFFER_SIZE);
       break;
     case '?':
       if (optopt == 'w' || optopt == 'h' || optopt == 'p' || optopt == 'd') {

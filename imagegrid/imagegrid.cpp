@@ -5,6 +5,7 @@
 // local headers
 #include "../common.hpp"
 #include "../coordinates.hpp"
+#include "../utility.hpp"
 #include "gridsetup.hpp"
 #include "imagegrid.hpp"
 #include "../iterators.hpp"
@@ -417,16 +418,19 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
         auto wpixel=dest_square->rgb_wpixel(subgrid_index);
         auto hpixel=dest_square->rgb_hpixel(subgrid_index);
         auto filename=this->grid_setup()->get_filename(grid_index,subgrid_index);
-        auto filename_new=create_cache_filename(filename);
-        MSG("Trying to writing cache filename: " <<
-            filename_new << " for " << filename << " at zoom index " << k <<
-            " i: " << grid_index.i_grid() << " j: " << grid_index.j_grid() <<
-            " sub_i: " << sub_i << " sub_j: " << sub_j);
-        if (w_sub*wpixel < CACHE_MAX_PIXEL_SIZE && h_sub*hpixel < CACHE_MAX_PIXEL_SIZE) {
-          loaded_cache_size=write_png(filename_new, wpixel, hpixel, dest_square->_rgb_data[sub_i][sub_j]);
-          MSG("Cache tried with return: " << loaded_cache_size);
-          if (loaded_cache_size) {
-            MSG("Cached worked with w: " << wpixel << " h: " << hpixel);
+        // don't cache empty filenames
+        if (check_valid_filename("")) {
+          auto filename_new=create_cache_filename(filename);
+          MSG("Trying to writing cache filename: " <<
+              filename_new << " for " << filename << " at zoom index " << k <<
+              " i: " << grid_index.i_grid() << " j: " << grid_index.j_grid() <<
+              " sub_i: " << sub_i << " sub_j: " << sub_j);
+          if (w_sub*wpixel < CACHE_MAX_PIXEL_SIZE && h_sub*hpixel < CACHE_MAX_PIXEL_SIZE) {
+            loaded_cache_size=write_png(filename_new, wpixel, hpixel, dest_square->_rgb_data[sub_i][sub_j]);
+            MSG("Cache tried with return: " << loaded_cache_size);
+            if (loaded_cache_size) {
+              MSG("Cached worked with w: " << wpixel << " h: " << hpixel);
+            }
           }
         }
       }

@@ -153,6 +153,7 @@ LoadSquareData::LoadSquareData() {
 
 void read_data(const std::string& filename,
                INT64& width, INT64& height) {
+  MSG("Reading: " << filename);
   if (check_tiff(filename)) {
     // TODO: check success
     read_tiff_data(filename,
@@ -191,45 +192,47 @@ bool load_data_as_rgb(const std::string& filename,
                       const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
                       const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
+  // TODO: update error checking and propogation, not loading a known
+  //       filename because of an error is serious but should not
+  //       cause program crash, whereas this is also where the check
+  //       for empty squares take place
   bool load_successful=false;
   if (check_tiff(filename)) {
     MSG("Loading TIFF: " << filename);
-    // TODO: check success
-    load_tiff_as_rgb(filename,
-                     cached_filename,
-                     current_subgrid,
-                     load_file_data);
+    load_successful=load_tiff_as_rgb(filename,
+                                     cached_filename,
+                                     current_subgrid,
+                                     load_file_data);
     MSG("Done TIFF: " << filename);
-    load_successful=true;
   } else if (check_png(filename)) {
       MSG("Loading PNG: " << filename);
       // TODO: check success
-      load_png_as_rgb(filename,
-                      cached_filename,
-                      current_subgrid,
-                      load_file_data);
+      load_successful=load_png_as_rgb(filename,
+                                      cached_filename,
+                                      current_subgrid,
+                                      load_file_data);
       MSG("Done PNG: " << filename);
-      load_successful=true;
   } else if (check_nts(filename)) {
     // get temporary tiff
     std::string temp_filename;
     int tiff_fd=-1;
     MSG("Loading NTS: " << filename);
-    get_tiff_from_nts_file(filename,
-                           temp_filename,
-                           tiff_fd);
-    MSG("Loading TIFF: " << temp_filename);
-    load_tiff_as_rgb(temp_filename,
-                     cached_filename,
-                     current_subgrid,
-                     load_file_data);
-    if (tiff_fd >= 0) {
-      close(tiff_fd);
-      MSG("Unlinking: " << temp_filename);
-      unlink(temp_filename.c_str());
+    load_successful=get_tiff_from_nts_file(filename,
+                                           temp_filename,
+                                           tiff_fd);
+    if (load_successful) {
+      MSG("Loading TIFF: " << temp_filename);
+      load_successful=load_tiff_as_rgb(temp_filename,
+                                       cached_filename,
+                                       current_subgrid,
+                       load_file_data);
+      if (tiff_fd >= 0) {
+        close(tiff_fd);
+        MSG("Unlinking: " << temp_filename);
+        unlink(temp_filename.c_str());
+      }
     }
     MSG("Done NTS: " << filename);
-    load_successful=true;
   } else if (check_empty(filename)) {
   } else {
     ERROR("load_data_as_rgb can't load: " << filename);
@@ -359,6 +362,7 @@ bool load_tiff_as_rgb(const std::string& filename,
             }
           }
           delete[] png_raster;
+          success=true;
           return success;
         }
       }

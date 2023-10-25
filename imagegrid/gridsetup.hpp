@@ -73,7 +73,7 @@ protected:
   std::unique_ptr<INT64[]> _subgrid_height;
   std::unique_ptr<bool[]> _existing;
   std::list<GridSetupFile> _read_data;
-  std::unique_ptr<std::unique_ptr<std::string[]>[]> _new_file_data;
+  std::unique_ptr<std::unique_ptr<std::string[]>[]> _file_data;
 };
 
 /**
