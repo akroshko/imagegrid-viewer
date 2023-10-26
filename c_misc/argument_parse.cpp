@@ -10,7 +10,7 @@
 
 void parse_standard_arguments(int argc, char* const* argv,
                               INT64& wimage, INT64& himage,
-                              bool& do_cache, bool& use_cache, bool& successful,
+                              bool& write_cache, bool& use_cache, bool& successful,
                               std::string& path_value, std::vector<std::string>& filenames,
                               std::string& text_filename) {
   int opt;
@@ -41,7 +41,7 @@ void parse_standard_arguments(int argc, char* const* argv,
       break;
     case 'c':
       // only cache images
-      do_cache=true;
+      write_cache=true;
       break;
     case 'd':
       // use database

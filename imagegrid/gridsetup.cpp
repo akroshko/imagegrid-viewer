@@ -20,8 +20,8 @@ GridImageSize GridSetup::grid_image_size() const {
   return this->_grid_image_size;
 }
 
-bool GridSetup::do_cache() const {
-  return this->_do_cache;
+bool GridSetup::setup_cache() const {
+  return this->_setup_cache;
 }
 
 bool GridSetup::use_cache() const {
@@ -86,7 +86,7 @@ std::string GridSetup::get_filename(const GridIndex& grid_index, const SubGridIn
 GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) {
   INT64 wimage, himage;
   parse_standard_arguments(argc, argv, wimage, himage,
-                           this->_do_cache, this->_use_cache, this->_successful,
+                           this->_setup_cache, this->_use_cache, this->_successful,
                            this->_path_value, this->_filenames, this->_text_filename);
   if (!this->_successful) {
     MSG("Error parsing arguments");

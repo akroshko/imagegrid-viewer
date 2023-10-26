@@ -38,7 +38,7 @@ public:
    *
    * @return Whether to cache images.
    */
-  bool do_cache() const;
+  bool setup_cache() const;
   /** Indicate whether to try to use cached images.
    *
    * @return Whether to try to use cached images.
@@ -66,7 +66,7 @@ protected:
   std::string _path_value;
   /** For future expansion. */
   // char _data_set[PATH_BUFFER_SIZE]={ 0 };
-  bool _do_cache=false;
+  bool _setup_cache=false;
   bool _use_cache=false;
   // some underlying data
   std::unique_ptr<INT64[]> _subgrid_width;

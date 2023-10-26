@@ -152,39 +152,58 @@ LoadSquareData::LoadSquareData() {
 // general file functions
 
 void read_data(const std::string& filename,
+               bool use_cache,
                INT64& width, INT64& height) {
   MSG("Reading: " << filename);
-  if (check_tiff(filename)) {
-    // TODO: check success
-    read_tiff_data(filename,
-                   width,
-                   height);
-  } else if (check_png(filename)) {
-    // TODO: check success
-    read_png_data(filename,
-                  width,
-                  height);
-  } else if (check_nts(filename)) {
-    // get temporary tiff
-    std::string temp_filename;
-    int tiff_fd=-1;
-    get_tiff_from_nts_file(filename,
-                           temp_filename,
-                           tiff_fd);
-    read_tiff_data(temp_filename,
-                   width,
-                   height);
-    if (tiff_fd >= 0) {
-      close(tiff_fd);
-      MSG("Unlinking: " << temp_filename);
-      unlink(temp_filename.c_str());
+  auto cache_successful=false;
+  if (use_cache) {
+    // TODO: assuming read always successful if file opens
+    //       files are two lines for now
+    auto filename_txt=create_cache_filename(filename,"txt");
+    std::ifstream file_in_text(filename_txt);
+    if (std::filesystem::exists(filename_txt)) {
+      MSG("Using file: " << filename_txt << " as cache for: " << filename);
+      std::string line;
+      std::getline(file_in_text,line);
+      width=std::stoi(line);
+      std::getline(file_in_text,line);
+      height=std::stoi(line);
+      cache_successful=true;
     }
-  } else if (check_empty(filename)) {
-    // TODO: find way to not use these as sentinel values
-    width=0;
-    height=0;
-  } else {
-    ERROR("read_data can't read: " << filename);
+  }
+  if (!cache_successful) {
+    if (check_tiff(filename)) {
+      // TODO: check success
+      read_tiff_data(filename,
+                     width,
+                     height);
+    } else if (check_png(filename)) {
+      // TODO: check success
+      read_png_data(filename,
+                    width,
+                    height);
+    } else if (check_nts(filename)) {
+      // get temporary tiff
+      std::string temp_filename;
+      int tiff_fd=-1;
+      get_tiff_from_nts_file(filename,
+                             temp_filename,
+                             tiff_fd);
+      read_tiff_data(temp_filename,
+                     width,
+                     height);
+      if (tiff_fd >= 0) {
+        close(tiff_fd);
+        MSG("Unlinking: " << temp_filename);
+        unlink(temp_filename.c_str());
+      }
+    } else if (check_empty(filename)) {
+      // TODO: find way to not use these as sentinel values
+      width=0;
+      height=0;
+    } else {
+      ERROR("read_data can't read: " << filename);
+    }
   }
 }
 
@@ -199,10 +218,14 @@ bool load_data_as_rgb(const std::string& filename,
   bool load_successful=false;
   if (check_tiff(filename)) {
     MSG("Loading TIFF: " << filename);
-    load_successful=load_tiff_as_rgb(filename,
-                                     cached_filename,
-                                     current_subgrid,
-                                     load_file_data);
+    load_successful=load_tiff_as_rgb_cached(cached_filename,
+                                            current_subgrid,
+                                            load_file_data);
+    if (!load_successful) {
+      load_successful=load_tiff_as_rgb(filename,
+                                       current_subgrid,
+                                       load_file_data);
+    }
     MSG("Done TIFF: " << filename);
   } else if (check_png(filename)) {
       MSG("Loading PNG: " << filename);
@@ -217,20 +240,24 @@ bool load_data_as_rgb(const std::string& filename,
     std::string temp_filename;
     int tiff_fd=-1;
     MSG("Loading NTS: " << filename);
-    load_successful=get_tiff_from_nts_file(filename,
-                                           temp_filename,
-                                           tiff_fd);
-    if (load_successful) {
-      MSG("Loading TIFF: " << temp_filename);
-      load_successful=load_tiff_as_rgb(temp_filename,
-                                       cached_filename,
-                                       current_subgrid,
-                       load_file_data);
-      if (tiff_fd >= 0) {
-        close(tiff_fd);
-        MSG("Unlinking: " << temp_filename);
-        unlink(temp_filename.c_str());
-      }
+    load_successful=load_tiff_as_rgb_cached(cached_filename,
+                                            current_subgrid,
+                                            load_file_data);
+    if (!load_successful) {
+       load_successful=get_tiff_from_nts_file(filename,
+                                              temp_filename,
+                                              tiff_fd);
+       if (load_successful) {
+         MSG("Loading TIFF: " << temp_filename);
+         load_successful=load_tiff_as_rgb(temp_filename,
+                                          current_subgrid,
+                                          load_file_data);
+         if (tiff_fd >= 0) {
+           close(tiff_fd);
+           MSG("Unlinking: " << temp_filename);
+           unlink(temp_filename.c_str());
+         }
+       }
     }
     MSG("Done NTS: " << filename);
   } else if (check_empty(filename)) {
@@ -263,8 +290,121 @@ bool read_tiff_data(const std::string& filename,
   return success;
 }
 
+bool test_tiff_cache(const std::string& cached_filename,
+                     const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
+  // cache this data somewhere...
+  // do a trial first to see if we can use the cached file
+  auto can_cache=true;
+  // TODO: test for empty string here, just in case
+  if (!std::filesystem::exists(cached_filename)) {
+    can_cache=false;
+    MSG("Cached file does not exist: " << cached_filename);
+  }
+  // TODO: this assumes consistency among this value
+  auto w_sub=1;
+  auto h_sub=1;
+  if (can_cache) {
+    MSG("Cached file exists: " << cached_filename);
+    for (auto& file_data : load_file_data) {
+      // auto zoom_out_value=file_data->zoom_out_value;
+      w_sub=file_data->subgrid_width;
+      h_sub=file_data->subgrid_height;
+      auto max_wpixel=w_sub*file_data->max_subgrid_wpixel;
+      auto max_hpixel=h_sub*file_data->max_subgrid_hpixel;
+      if (max_wpixel >= CACHE_MAX_PIXEL_SIZE || max_hpixel >= CACHE_MAX_PIXEL_SIZE) {
+        MSG("cached failed to be useful");
+        can_cache=false;
+        // TODO: need better way to get w_sub/h_sub than in a loop
+        break;
+      }
+    }
+  }
+  return can_cache;
+}
+
+bool load_tiff_as_rgb_cached(const std::string& cached_filename,
+                             SubGridIndex& current_subgrid,
+                             const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
+  auto sub_i=current_subgrid.i_subgrid();
+  auto sub_j=current_subgrid.j_subgrid();
+  auto success=false;
+  // TODO: these should be same, but move this data elsewhere
+  INT64 w_sub=1;
+  INT64 h_sub=1;
+  INT64 original_width=1;
+  INT64 original_height=1;
+  for (auto& file_data : load_file_data) {
+      w_sub=file_data->subgrid_width;
+      h_sub=file_data->subgrid_height;
+      original_width=file_data->original_rgb_wpixel[current_subgrid.i_subgrid()][current_subgrid.j_subgrid()];
+      original_height=file_data->original_rgb_hpixel[current_subgrid.i_subgrid()][current_subgrid.j_subgrid()];
+  }
+  auto can_cache=test_tiff_cache(cached_filename,
+                                 load_file_data);
+  if (can_cache) {
+    MSG("Using cached file: " << cached_filename);
+    INT64 cached_zoom_out_value=1;
+    // TODO: this could be a problem amongst wildly varying image sizes
+    //       solutions are to:
+    //           store max width/max height vs zoom_out
+    //           calculate the value in different places with similar functions
+    auto width_test=original_width;
+    auto height_test=original_height;
+    // TODO: this duplicates the calculation in
+    // ImageGrid::_write_cache, there should be a better way once
+    // the data structures are revised
+    while (w_sub*width_test >= CACHE_MAX_PIXEL_SIZE || h_sub*height_test >= CACHE_MAX_PIXEL_SIZE) {
+      cached_zoom_out_value*=ZOOM_STEP;
+      width_test=reduce_and_pad(original_width,cached_zoom_out_value);
+      height_test=reduce_and_pad(original_height,cached_zoom_out_value);
+    }
+    png_image png_image_local;
+    memset(&png_image_local, 0, (sizeof png_image_local));
+    png_image_local.version=PNG_IMAGE_VERSION;
+    if (png_image_begin_read_from_file(&png_image_local, cached_filename.c_str()) == 0) {
+      ERROR("load_tiff_as_rgb() failed to read from png file: " << cached_filename);
+      can_cache=false;
+    } else {
+      png_bytep png_raster;
+      png_image_local.format=PNG_FORMAT_RGB;
+      png_raster=new unsigned char[PNG_IMAGE_SIZE(png_image_local)];
+      if (png_raster == NULL) {
+        ERROR("load_tiff_as_rgb() failed to allocate png buffer!");
+        can_cache=false;
+      } else {
+        if (png_image_finish_read(&png_image_local, NULL, png_raster, 0, NULL) == 0) {
+          ERROR("load_tiff_as_rgb() failed to read full png image!");
+          can_cache=false;
+        } else {
+          // TODO: test for mismatched size
+          auto png_width=(size_t)png_image_local.width;
+          auto png_height=(size_t)png_image_local.height;
+          for (auto& file_data : load_file_data) {
+            auto zoom_out_value=file_data->zoom_out_value;
+            auto actual_zoom_out_value=file_data->zoom_out_value/cached_zoom_out_value;
+            // TODO: might want to add an assert here but should be safe due to earlier check
+            size_t w_reduced=reduce_and_pad(original_width,zoom_out_value);
+            size_t h_reduced=reduce_and_pad(original_height,zoom_out_value);
+            file_data->rgb_wpixel[sub_i][sub_j]=w_reduced;
+            file_data->rgb_hpixel[sub_i][sub_j]=h_reduced;
+            size_t npixel_reduced=w_reduced*h_reduced;
+            file_data->rgb_data[sub_i][sub_j]=new unsigned char[npixel_reduced*3];
+            buffer_copy_reduce_generic((unsigned char *)png_raster,png_width,png_height,
+                                       0, 0,
+                                       file_data->rgb_data[sub_i][sub_j],w_reduced,h_reduced,
+                                       actual_zoom_out_value);
+          }
+        }
+        delete[] png_raster;
+        success=true;
+        return success;
+      }
+    }
+  }
+  return success;
+}
+
 bool load_tiff_as_rgb(const std::string& filename,
-                      const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
                       const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
   auto sub_i=current_subgrid.i_subgrid();
@@ -277,126 +417,34 @@ bool load_tiff_as_rgb(const std::string& filename,
     uint32_t tiff_width,tiff_height;
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &tiff_width);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &tiff_height);
-    // cache this data somewhere...
-    // do a trial first to see if we can use the cached file
-    // it is ironic this is in PNG...
-    auto can_cache=true;
-    // TODO: test for empty string here, just in case
-    if (!std::filesystem::exists(cached_filename)) {
-      can_cache=false;
-      MSG("Cached file does not exist: " << cached_filename);
-    }
-    // TODO: this assumes consistency among this value
-    auto w_sub=1;
-    auto h_sub=1;
-    if (can_cache) {
-      MSG("Cached file exists: " << cached_filename);
-      for (auto& file_data : load_file_data) {
-        // auto zoom_out_value=file_data->zoom_out_value;
-        w_sub=file_data->subgrid_width;
-        h_sub=file_data->subgrid_height;
-        auto max_wpixel=w_sub*file_data->max_subgrid_wpixel;
-        auto max_hpixel=h_sub*file_data->max_subgrid_hpixel;
-        if (max_wpixel >= CACHE_MAX_PIXEL_SIZE || max_hpixel >= CACHE_MAX_PIXEL_SIZE) {
-          MSG("cached failed to be useful");
-          can_cache=false;
-          // TODO: need better way to get w_sub/h_sub than in a loop
-          break;
-        }
-      }
-    }
-    if (can_cache) {
-      MSG("Using cached file: " << cached_filename);
-      INT64 cached_zoom_out_value=1;
-      // TODO: this could be a problem amongst wildly varying image sizes
-      //       solutions are to:
-      //           store max width/max height vs zoom_out
-      //           calculate the value in different places with similar functions
-      auto width_test=tiff_width;
-      auto height_test=tiff_height;
-      // TODO: this duplicates the calculation in
-      // ImageGrid::_write_cache, there should be a better way once
-      // the data structures are revised
-      while (w_sub*width_test >= CACHE_MAX_PIXEL_SIZE || h_sub*height_test >= CACHE_MAX_PIXEL_SIZE) {
-        cached_zoom_out_value*=ZOOM_STEP;
-        width_test=reduce_and_pad(tiff_width,cached_zoom_out_value);
-        height_test=reduce_and_pad(tiff_height,cached_zoom_out_value);
-      }
-      png_image png_image_local;
-      // TODO: check libpng library, may not want this
-      memset(&png_image_local, 0, (sizeof png_image_local));
-      png_image_local.version=PNG_IMAGE_VERSION;
-      if (png_image_begin_read_from_file(&png_image_local, cached_filename.c_str()) == 0) {
-        ERROR("load_tiff_as_rgb() failed to read from png file: " << cached_filename);
-        can_cache=false;
+    size_t npixels;
+    uint32_t* raster;
+    npixels=tiff_width*tiff_height;
+    raster=(uint32_t*) _TIFFmalloc(npixels * sizeof (uint32_t));
+    if (raster == NULL) {
+      ERROR("Failed to allocate raster for: " << filename);
+    } else {
+      if (!TIFFReadRGBAImageOriented(tif, tiff_width, tiff_height, raster, ORIENTATION_TOPLEFT, 0)) {
+        ERROR("Failed to read: " << filename);
       } else {
-        TIFFClose(tif);
-        png_bytep png_raster;
-        png_image_local.format=PNG_FORMAT_RGB;
-        png_raster=new unsigned char[PNG_IMAGE_SIZE(png_image_local)];
-        if (png_raster == NULL) {
-          ERROR("load_tiff_as_rgb() failed to allocate png buffer!");
-          can_cache=false;
-        } else {
-          if (png_image_finish_read(&png_image_local, NULL, png_raster, 0, NULL) == 0) {
-            ERROR("load_tiff_as_rgb() failed to read full png image!");
-            can_cache=false;
-          } else {
-            // TODO: test for mismatched size
-            auto png_width=(size_t)png_image_local.width;
-            auto png_height=(size_t)png_image_local.height;
-            for (auto& file_data : load_file_data) {
-              auto zoom_out_value=file_data->zoom_out_value;
-              auto actual_zoom_out_value=file_data->zoom_out_value/cached_zoom_out_value;
-              // TODO: might want to add an assert here but should be safe due to earlier check
-              size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
-              size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
-              file_data->rgb_wpixel[sub_i][sub_j]=w_reduced;
-              file_data->rgb_hpixel[sub_i][sub_j]=h_reduced;
-              size_t npixel_reduced=w_reduced*h_reduced;
-              file_data->rgb_data[sub_i][sub_j]=new unsigned char[npixel_reduced*3];
-              buffer_copy_reduce_generic((unsigned char *)png_raster,png_width,png_height,
-                                         0, 0,
-                                         file_data->rgb_data[sub_i][sub_j],w_reduced,h_reduced,
-                                         actual_zoom_out_value);
-            }
-          }
-          delete[] png_raster;
-          success=true;
-          return success;
+        // convert raster
+        for (auto& file_data : load_file_data) {
+          auto zoom_out_value=file_data->zoom_out_value;
+          size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
+          size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
+          file_data->rgb_wpixel[sub_i][sub_j]=w_reduced;
+          file_data->rgb_hpixel[sub_i][sub_j]=h_reduced;
+          auto npixels_reduced=w_reduced*h_reduced;
+          file_data->rgb_data[sub_i][sub_j]=new unsigned char[npixels_reduced*3];
+          buffer_copy_reduce_tiff(raster,tiff_width,tiff_height,
+                                  file_data->rgb_data[sub_i][sub_j],w_reduced,h_reduced,
+                                  zoom_out_value);
         }
+        success=true;
       }
+      _TIFFfree(raster);
     }
-    if (!can_cache) {
-      size_t npixels;
-      uint32_t* raster;
-      npixels=tiff_width*tiff_height;
-      raster=(uint32_t*) _TIFFmalloc(npixels * sizeof (uint32_t));
-      if (raster == NULL) {
-        ERROR("Failed to allocate raster for: " << filename);
-      } else {
-        if (!TIFFReadRGBAImageOriented(tif, tiff_width, tiff_height, raster, ORIENTATION_TOPLEFT, 0)) {
-          ERROR("Failed to read: " << filename);
-        } else {
-          // convert raster
-          for (auto& file_data : load_file_data) {
-            auto zoom_out_value=file_data->zoom_out_value;
-            size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
-            size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
-            file_data->rgb_wpixel[sub_i][sub_j]=w_reduced;
-            file_data->rgb_hpixel[sub_i][sub_j]=h_reduced;
-            auto npixels_reduced=w_reduced*h_reduced;
-            file_data->rgb_data[sub_i][sub_j]=new unsigned char[npixels_reduced*3];
-            buffer_copy_reduce_tiff(raster,tiff_width,tiff_height,
-                                    file_data->rgb_data[sub_i][sub_j],w_reduced,h_reduced,
-                                    zoom_out_value);
-          }
-          success=true;
-        }
-        _TIFFfree(raster);
-      }
-      TIFFClose(tif);
-    }
+    TIFFClose(tif);
   }
   return success;
 }
@@ -468,11 +516,15 @@ bool load_png_as_rgb(const std::string& filename,
   return success;
 }
 
-bool write_png(std::string filename_new, INT64 wpixel, INT64 hpixel, unsigned char* rgb_data) {
+bool write_png_text(std::string filename_png,
+                    std::string filename_text,
+                    INT64 wpixel, INT64 hpixel,
+                    INT64 full_wpixel, INT64 full_hpixel,
+                    unsigned char* rgb_data) {
    char new_filename[PATH_BUFFER_SIZE]="";
-   // TODO: catch exception for overly long filenames once exceptions are handled
-   auto c_str=filename_new.c_str();
-   auto c_size=filename_new.size();
+
+   auto c_str=filename_png.c_str();
+   auto c_size=filename_png.size();
    if (c_size < PATH_BUFFER_SIZE) {
      strncpy(new_filename,c_str,c_size);
    } else {
@@ -480,7 +532,7 @@ bool write_png(std::string filename_new, INT64 wpixel, INT64 hpixel, unsigned ch
      return false;
    }
    // write a PNG
-   // TODO: put this elsewhere
+   // TODO: encapsulate this writing elsewhere
    png_image image;
    memset(&image, 0, (sizeof image));
    image.version=PNG_IMAGE_VERSION;
@@ -491,6 +543,12 @@ bool write_png(std::string filename_new, INT64 wpixel, INT64 hpixel, unsigned ch
    image.flags=0;
    image.colormap_entries=0;
    png_image_write_to_file(&image, new_filename, 0, (void*)rgb_data, 0, 0);
+   // finally write out a text file with vital information
+   std::ofstream file_out_text;
+   file_out_text.open(filename_text,std::ios::trunc);
+   file_out_text << full_wpixel << std::endl << full_hpixel << std::endl;
+   file_out_text.close();
+   // TODO: add error checking
    return true;
 }
 
@@ -552,7 +610,7 @@ void load_image_grid_from_text (std::string text_file,
   }
 }
 
-std::string create_cache_filename(const std::string& filename) {
+std::string create_cache_filename(const std::string& filename, const std::string extension) {
   // TODO: this really needs to be both profiled and called less
   std::filesystem::path filename_path{filename};
   auto filename_parent=filename_path.parent_path();
@@ -562,7 +620,7 @@ std::string create_cache_filename(const std::string& filename) {
   auto filename_new=filename_parent;
   // add extension to beginning to distinguish among otherwise
   // identically named files
-  filename_stem=std::filesystem::path(filename_ext.string().substr(1) + "_" + filename_stem.string() + ".png");
+  filename_stem=std::filesystem::path(filename_ext.string().substr(1) + "_" + filename_stem.string() + "." + extension);
   filename_new/="__imagegrid__cache__";
   std::filesystem::create_directories(filename_new);
   filename_new/=filename_stem;

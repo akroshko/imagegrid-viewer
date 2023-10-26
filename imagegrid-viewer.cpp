@@ -345,7 +345,7 @@ int main(int argc, char* argv[]) {
   }
   // set up whole program even when doing cache do to dependencies among objects
   auto imagegrid_viewer_context=std::make_unique<ImageGridViewerContext>(grid_setup.get());
-  if (grid_setup->do_cache()) {
+  if (grid_setup->setup_cache()) {
     // we just need an ImageGrid object for this
     // auto grid=std::make_unique<ImageGrid>();
     // now run the cache

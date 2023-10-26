@@ -56,6 +56,8 @@ public:
   std::unique_ptr<std::unique_ptr<unsigned char *[]>[]> rgb_data;
   std::unique_ptr<std::unique_ptr<size_t[]>[]> rgb_wpixel;
   std::unique_ptr<std::unique_ptr<size_t[]>[]> rgb_hpixel;
+  std::unique_ptr<std::unique_ptr<size_t[]>[]> original_rgb_wpixel;
+  std::unique_ptr<std::unique_ptr<size_t[]>[]> original_rgb_hpixel;
   INT64 subgrid_width=INT_MIN;
   INT64 subgrid_height=INT_MIN;
   INT64 max_subgrid_wpixel=INT_MIN;
@@ -67,11 +69,13 @@ public:
  * Read data from a filename.
  *
  * @param filename The filename to load.
+ * @param use_cache Whether to use cache for reading the file data.
  * @param width Set as the width of the image in pixels.
  * @param height Set as the height of the image in pixels.
  * @return If reading image data was successful.
  */
 void read_data(const std::string& filename,
+               bool use_cache,
                INT64& width, INT64& height);
 
 /**
@@ -101,12 +105,23 @@ bool load_data_as_rgb(const std::string& filename,
  */
 bool read_tiff_data(const std::string& filename, INT64& width, INT64& height);
 
-/**
- * Load a tiff file using libtiff.
+
+/** Test if caching makes sense for this tiff file.
  *
  * Based off of http://www.libtiff.org/libtiff.html
  *
- * @param filename The filename to load.
+ * @param cached_filename The filename that cached the parts of the
+ *                        image fitting in 512x512.
+ * @param load_file_data A vector structs to be updated with data as
+ *                       it is loaded.
+ * @return If loading image was successful.
+ */
+bool test_tiff_cache(const std::string& cached_filename,
+                     const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
+
+/**
+ * Load a tiff file using cached value.
+ *
  * @param cached_filename The filename that cached the parts of the
  *                        image fitting in 512x512.
  * @param current_subgrid The current subgrid to load.
@@ -114,8 +129,22 @@ bool read_tiff_data(const std::string& filename, INT64& width, INT64& height);
  *                       it is loaded.
  * @return If loading image was successful.
  */
+bool load_tiff_as_rgb_cached(const std::string& cached_filename,
+                             SubGridIndex& current_subgrid,
+                             const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
+
+/**
+ * Load a tiff file using libtiff.
+ *
+ * Based off of http://www.libtiff.org/libtiff.html
+ *
+ * @param filename The filename to load.
+ * @param current_subgrid The current subgrid to load.
+ * @param load_file_data A vector structs to be updated with data as
+ *                       it is loaded.
+ * @return If loading image was successful.
+ */
 bool load_tiff_as_rgb(const std::string& filename,
-                      const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
                       const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
 
@@ -148,13 +177,20 @@ bool load_png_as_rgb(const std::string& filename,
 /**
  * Write a png file using libpng.
  *
- * @param filename_new The filename to write.
+ * @param filename_png The png filename to write.
+ * @param filename_text The text filename to write containing data about the image within.
  * @param wpixel The width in pixels.
  * @param hpixel The height in pixels.
+ * @param full_wpixel The full width in pixels to write to text file.
+ * @param full_hpixel The full height in pixels to write to text file.
+
  * @param rgb_data The rgb data.
  * @return If writing image was successful.
  */
-bool write_png(std::string filename_new, INT64 wpixel, INT64 hpixel, unsigned char* rgb_data);
+bool write_png_text(std::string filename_png, std::string filename_text,
+                    INT64 wpixel, INT64 hpixel,
+                    INT64 full_wpixel, INT64 full_hpixel,
+                    unsigned char* rgb_data);
 
 /**
  * Check if a file is a tiff file.
@@ -205,12 +241,13 @@ void load_image_grid_from_text(std::string text_file,
                                INT64& max_i,INT64& max_j);
 
 /**
- * Create the cached filename from the real filename.
+ * Create the cached filename with png extension from the real filename.
  *
  * @param filename The filename to use to create the cached filename.
+ * @param extension The extension to create.
  * @return The cached filename.
  */
-std::string create_cache_filename(const std::string& filename);
+std::string create_cache_filename(const std::string& filename, const std::string extension);
 
 /**
  * Get a temporary tiff file from the Canadian national topographic system.

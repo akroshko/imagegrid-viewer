@@ -14,6 +14,8 @@
 #include "../c_io_net/fileload.hpp"
 // C++ headers
 #include <atomic>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <utility>
@@ -69,13 +71,18 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
 
   // need a more automatic solution to initialization like this
   for (auto& data_read_temp : data_read) {
+    // TODO: starting to feel like this stuff needs a better routine
     data_read_temp->rgb_data=std::make_unique<std::unique_ptr<unsigned char*[]>[]>(data_read_temp->subgrid_width);
     data_read_temp->rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_width);
     data_read_temp->rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_width);
+    data_read_temp->original_rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_width);
+    data_read_temp->original_rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_width);
     for (INT64 sub_i=0; sub_i < data_read_temp->subgrid_width; sub_i++) {
       data_read_temp->rgb_data[sub_i]=std::make_unique<unsigned char*[]>(data_read_temp->subgrid_height);
       data_read_temp->rgb_wpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_height);
       data_read_temp->rgb_hpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_height);
+      data_read_temp->original_rgb_wpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_height);
+      data_read_temp->original_rgb_hpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_height);
     }
     for (INT64 sub_i=0; sub_i < data_read_temp->subgrid_width; sub_i++) {
       for (INT64 sub_j=0; sub_j < data_read_temp->subgrid_height; sub_j++) {
@@ -85,6 +92,8 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
           data_read_temp->rgb_data[sub_i][sub_j]=nullptr;
           data_read_temp->rgb_wpixel[sub_i][sub_j]=INT_MIN;
           data_read_temp->rgb_hpixel[sub_i][sub_j]=INT_MIN;
+          data_read_temp->original_rgb_wpixel[sub_i][sub_j]=grid_square->_image_wpixel;
+          data_read_temp->original_rgb_hpixel[sub_i][sub_j]=grid_square->_image_hpixel;
         }
       }
     }
@@ -98,7 +107,7 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
         // TODO: probably don't create this every iteration
         std::string cached_filename;
         if (use_cache) {
-          cached_filename=create_cache_filename(filename);
+          cached_filename=create_cache_filename(filename,"png");
         } else {
           // TODO: something better for invalid cached filename
           cached_filename="";
@@ -221,7 +230,9 @@ void ImageGridSquare::_read_data() {
                                                subgrid_index)) {
         auto filename=this->_grid_setup->get_filename(this->_grid_index,
                                                       subgrid_index);
+        // read raw data if no cache or cache unsuccessful
         read_data(filename,
+                  this->grid_setup()->use_cache(),
                   image_wpixel,
                   image_hpixel);
         if (image_wpixel > max_subgrid_pixel_width) {
@@ -409,6 +420,10 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
     for (INT64 sub_j=0; sub_j < h_sub; sub_j++) {
       auto subgrid_index=SubGridIndex(sub_i,sub_j);
       bool loaded_cache_size=false;
+      // TODO: probaby not optimal place to find this
+      auto dest_square_zero=this->squares(grid_index)->image_array[0].get();
+      auto full_wpixel=dest_square_zero->rgb_wpixel(subgrid_index);
+      auto full_hpixel=dest_square_zero->rgb_hpixel(subgrid_index);
       for (INT64 k=0L; k<this->_zoom_index_length; k++) {
         if (loaded_cache_size) {
           break;
@@ -419,14 +434,20 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
         auto hpixel=dest_square->rgb_hpixel(subgrid_index);
         auto filename=this->grid_setup()->get_filename(grid_index,subgrid_index);
         // don't cache empty filenames
-        if (check_valid_filename("")) {
-          auto filename_new=create_cache_filename(filename);
-          MSG("Trying to writing cache filename: " <<
-              filename_new << " for " << filename << " at zoom index " << k <<
+        if (check_valid_filename(filename)) {
+          // TODO: combine these
+          auto filename_png=create_cache_filename(filename,"png");
+          auto filename_txt=create_cache_filename(filename,"txt");
+          MSG("Trying to writing cache filenames: " <<
+              filename_png << " " <<  " " << filename_txt <<
+              " for " << filename << " at zoom index " << k <<
               " i: " << grid_index.i_grid() << " j: " << grid_index.j_grid() <<
               " sub_i: " << sub_i << " sub_j: " << sub_j);
           if (w_sub*wpixel < CACHE_MAX_PIXEL_SIZE && h_sub*hpixel < CACHE_MAX_PIXEL_SIZE) {
-            loaded_cache_size=write_png(filename_new, wpixel, hpixel, dest_square->_rgb_data[sub_i][sub_j]);
+            loaded_cache_size=write_png_text(filename_png, filename_txt,
+                                             wpixel, hpixel,
+                                             full_wpixel, full_hpixel,
+                                             dest_square->_rgb_data[sub_i][sub_j]);
             MSG("Cache tried with return: " << loaded_cache_size);
             if (loaded_cache_size) {
               MSG("Cached worked with w: " << wpixel << " h: " << hpixel);
