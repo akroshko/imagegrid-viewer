@@ -11,12 +11,12 @@
 #include "../coordinates.hpp"
 // C++ headers
 #include <list>
-#include <memory>
 #include <string>
 #include <vector>
-// C headers
-#include <climits>
-#include <cstddef>
+
+// don't like these forward declarations
+class LoadFileDataTransfer;
+class LoadFileZoomLevelData;
 
 enum IMAGEDIRECTION {tl_horiz_reset,tl_horiz_follow};
 
@@ -42,29 +42,6 @@ std::vector<std::string> load_numbered_images(std::string images_path// , IMAGED
 std::vector<std::string> find_sequential_images(std::vector<std::string> image_files);
 
 /**
- * Contains loaded file data in preparation to be transferred to
- * ImageGridSquareZoomLevel.
- *
- * May not be permanent, members correspond to those in
- * ImageGridSquareZoomLevel.
- */
-class LoadSquareData {
-public:
-  LoadSquareData();
-  std::string filename;
-  std::unique_ptr<std::unique_ptr<unsigned char *[]>[]> rgb_data;
-  std::unique_ptr<std::unique_ptr<size_t[]>[]> rgb_wpixel;
-  std::unique_ptr<std::unique_ptr<size_t[]>[]> rgb_hpixel;
-  std::unique_ptr<std::unique_ptr<size_t[]>[]> original_rgb_wpixel;
-  std::unique_ptr<std::unique_ptr<size_t[]>[]> original_rgb_hpixel;
-  INT64 subgrid_w=INT_MIN;
-  INT64 subgrid_h=INT_MIN;
-  INT64 max_subgrid_wpixel=INT_MIN;
-  INT64 max_subgrid_hpixel=INT_MIN;
-  INT64 zoom_out_value=INT_MIN;
-};
-
-/**
  * Read data from a filename.
  *
  * @param filename The filename to load.
@@ -84,13 +61,15 @@ bool read_data(const std::string& filename,
  * @param cached_filename The filename that cached the parts of the
  *                        image fitting in 512x512.
  * @param current_subgrid The current subgrid to load.
- * @param load_file_data The filedata to load.
+ * @param data_transfer The filedata to load.
  * @return If reading image data was successful.
  */
 bool load_data_as_rgb(const std::string& filename,
                       const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
-                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
+                      LoadFileDataTransfer& data_transfer
+                      // const std::vector<std::shared_ptr<LoadFileZoomLevelData>> data_transfer
+  );
 
 /**
  * Read data about a tiff file using libtiff
@@ -107,16 +86,13 @@ bool read_tiff_data(const std::string& filename, INT64& width, INT64& height);
 
 /** Test if caching makes sense for this tiff file.
  *
- * Based off of http://www.libtiff.org/libtiff.html
- *
  * @param cached_filename The filename that cached the parts of the
  *                        image fitting in 512x512.
- * @param load_file_data A vector structs to be updated with data as
- *                       it is loaded.
+ * @param data_transfer
  * @return If loading image was successful.
  */
 bool test_tiff_cache(const std::string& cached_filename,
-                     const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
+                     LoadFileDataTransfer& data_transfer);
 
 /**
  * Load a tiff file using cached value.
@@ -124,13 +100,12 @@ bool test_tiff_cache(const std::string& cached_filename,
  * @param cached_filename The filename that cached the parts of the
  *                        image fitting in 512x512.
  * @param current_subgrid The current subgrid to load.
- * @param load_file_data A vector structs to be updated with data as
- *                       it is loaded.
+ * @param data_transfer
  * @return If loading image was successful.
  */
 bool load_tiff_as_rgb_cached(const std::string& cached_filename,
                              SubGridIndex& current_subgrid,
-                             const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
+                             LoadFileDataTransfer& data_transfer);
 
 /**
  * Load a tiff file using libtiff.
@@ -139,13 +114,12 @@ bool load_tiff_as_rgb_cached(const std::string& cached_filename,
  *
  * @param filename The filename to load.
  * @param current_subgrid The current subgrid to load.
- * @param load_file_data A vector structs to be updated with data as
- *                       it is loaded.
+ * @param data_transfer
  * @return If loading image was successful.
  */
 bool load_tiff_as_rgb(const std::string& filename,
                       SubGridIndex& current_subgrid,
-                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
+                      LoadFileDataTransfer& data_transfer);
 
 /**
  * Read data about a png file using libpng.
@@ -164,14 +138,13 @@ bool read_png_data(const std::string& filename, INT64& width, INT64& height);
  * @param cached_filename The filename that cached the parts of the
  *                        image fitting in 512x512.
  * @param current_subgrid The current subgrid to load.
- * @param load_file_data A vector structs to be updated with data as
- *                       it is loaded.
+ * @param data_transfer
  * @return If loading image was successful.
  */
 bool load_png_as_rgb(const std::string& filename,
                      const std::string& cached_filename,
                      SubGridIndex& current_subgrid,
-                     const std::vector<std::shared_ptr<LoadSquareData>> load_file_data);
+                     LoadFileDataTransfer& data_transfer);
 
 /**
  * Write a png file using libpng.
@@ -182,7 +155,6 @@ bool load_png_as_rgb(const std::string& filename,
  * @param hpixel The height in pixels.
  * @param full_wpixel The full width in pixels to write to text file.
  * @param full_hpixel The full height in pixels to write to text file.
-
  * @param rgb_data The rgb data.
  * @return If writing image was successful.
  */

@@ -9,10 +9,13 @@
 #include "fileload.hpp"
 #include "../c_misc/buffer_manip.hpp"
 #include "../coordinates.hpp"
+// don't really like this here, but it is here for now
+#include "../imagegrid/imagegrid_load_file_data.hpp"
 // C++ headers
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 // #include <iostream>
 #include <regex>
 #include <string>
@@ -142,13 +145,6 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// data structures
-
-LoadSquareData::LoadSquareData() {
-
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // general file functions
 
 bool read_data(const std::string& filename,
@@ -213,7 +209,7 @@ bool read_data(const std::string& filename,
 bool load_data_as_rgb(const std::string& filename,
                       const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
-                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
+                      LoadFileDataTransfer& data_transfer) {
   // TODO: update error checking and propogation, not loading a known
   //       filename because of an error is serious but should not
   //       cause program crash, whereas this is also where the check
@@ -223,11 +219,11 @@ bool load_data_as_rgb(const std::string& filename,
     MSG("Loading TIFF: " << filename);
     load_successful=load_tiff_as_rgb_cached(cached_filename,
                                             current_subgrid,
-                                            load_file_data);
+                                            data_transfer);
     if (!load_successful) {
       load_successful=load_tiff_as_rgb(filename,
                                        current_subgrid,
-                                       load_file_data);
+                                       data_transfer);
     }
     MSG("Done TIFF: " << filename);
   } else if (check_png(filename)) {
@@ -236,7 +232,7 @@ bool load_data_as_rgb(const std::string& filename,
       load_successful=load_png_as_rgb(filename,
                                       cached_filename,
                                       current_subgrid,
-                                      load_file_data);
+                                      data_transfer);
       MSG("Done PNG: " << filename);
   } else if (check_nts(filename)) {
     // get temporary tiff
@@ -245,7 +241,7 @@ bool load_data_as_rgb(const std::string& filename,
     MSG("Loading NTS: " << filename);
     load_successful=load_tiff_as_rgb_cached(cached_filename,
                                             current_subgrid,
-                                            load_file_data);
+                                            data_transfer);
     if (!load_successful) {
        load_successful=get_tiff_from_nts_file(filename,
                                               temp_filename,
@@ -254,7 +250,7 @@ bool load_data_as_rgb(const std::string& filename,
          MSG("Loading TIFF: " << temp_filename);
          load_successful=load_tiff_as_rgb(temp_filename,
                                           current_subgrid,
-                                          load_file_data);
+                                          data_transfer);
          if (tiff_fd >= 0) {
            close(tiff_fd);
            MSG("Unlinking: " << temp_filename);
@@ -294,30 +290,22 @@ bool read_tiff_data(const std::string& filename,
 }
 
 bool test_tiff_cache(const std::string& cached_filename,
-                     const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
-  // cache this data somewhere...
-  // do a trial first to see if we can use the cached file
+                     LoadFileDataTransfer& data_transfer) {
   auto can_cache=true;
-  // TODO: test for empty string here, just in case
-  if (!std::filesystem::exists(cached_filename)) {
+  if (check_valid_filename(cached_filename) && !std::filesystem::exists(cached_filename)) {
     can_cache=false;
     MSG("Cached file does not exist: " << cached_filename);
   }
-  // TODO: this assumes consistency among this value
-  auto w_sub=1;
-  auto h_sub=1;
+  auto w_sub=data_transfer.subgrid_w;
+  auto h_sub=data_transfer.subgrid_h;
   if (can_cache) {
     MSG("Cached file exists: " << cached_filename);
-    for (auto& file_data : load_file_data) {
-      // auto zoom_out_value=file_data->zoom_out_value;
-      w_sub=file_data->subgrid_w;
-      h_sub=file_data->subgrid_h;
+    for (auto& file_data : data_transfer.data_transfer) {
       auto max_wpixel=w_sub*file_data->max_subgrid_wpixel;
       auto max_hpixel=h_sub*file_data->max_subgrid_hpixel;
       if (max_wpixel >= CACHE_MAX_PIXEL_SIZE || max_hpixel >= CACHE_MAX_PIXEL_SIZE) {
         MSG("cached failed to be useful");
         can_cache=false;
-        // TODO: need better way to get w_sub/h_sub than in a loop
         break;
       }
     }
@@ -327,23 +315,16 @@ bool test_tiff_cache(const std::string& cached_filename,
 
 bool load_tiff_as_rgb_cached(const std::string& cached_filename,
                              SubGridIndex& current_subgrid,
-                             const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
+                             LoadFileDataTransfer& data_transfer) {
   auto sub_i=current_subgrid.subgrid_i();
   auto sub_j=current_subgrid.subgrid_j();
   auto successful=false;
-  // TODO: these should be same, but move this data elsewhere
-  INT64 w_sub=1;
-  INT64 h_sub=1;
-  INT64 original_width=1;
-  INT64 original_height=1;
-  for (auto& file_data : load_file_data) {
-      w_sub=file_data->subgrid_w;
-      h_sub=file_data->subgrid_h;
-      original_width=file_data->original_rgb_wpixel[sub_i][sub_j];
-      original_height=file_data->original_rgb_hpixel[sub_i][sub_j];
-  }
+  auto w_sub=data_transfer.subgrid_w;
+  auto h_sub=data_transfer.subgrid_h;
+  auto original_width=data_transfer.original_rgb_wpixel[sub_i][sub_j];
+  auto original_height=data_transfer.original_rgb_hpixel[sub_i][sub_j];
   auto can_cache=test_tiff_cache(cached_filename,
-                                 load_file_data);
+                                 data_transfer);
   if (can_cache) {
     MSG("Using cached file: " << cached_filename);
     INT64 cached_zoom_out_value=1;
@@ -382,7 +363,7 @@ bool load_tiff_as_rgb_cached(const std::string& cached_filename,
           // TODO: test for mismatched size
           auto png_width=(size_t)png_image_local.width;
           auto png_height=(size_t)png_image_local.height;
-          for (auto& file_data : load_file_data) {
+          for (auto& file_data : data_transfer.data_transfer) {
             auto zoom_out_value=file_data->zoom_out_value;
             auto actual_zoom_out_value=file_data->zoom_out_value/cached_zoom_out_value;
             // TODO: might want to add an assert here but should be safe due to earlier check
@@ -409,7 +390,7 @@ bool load_tiff_as_rgb_cached(const std::string& cached_filename,
 
 bool load_tiff_as_rgb(const std::string& filename,
                       SubGridIndex& current_subgrid,
-                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
+                      LoadFileDataTransfer& data_transfer) {
   auto sub_i=current_subgrid.subgrid_i();
   auto sub_j=current_subgrid.subgrid_j();
   auto success=false;
@@ -431,7 +412,7 @@ bool load_tiff_as_rgb(const std::string& filename,
         ERROR("Failed to read: " << filename);
       } else {
         // convert raster
-        for (auto& file_data : load_file_data) {
+        for (auto& file_data : data_transfer.data_transfer) {
           auto zoom_out_value=file_data->zoom_out_value;
           size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
           size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
@@ -472,7 +453,7 @@ bool read_png_data(const std::string& filename,
 bool load_png_as_rgb(const std::string& filename,
                      const std::string& cached_filename,
                      SubGridIndex& current_subgrid,
-                     const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
+                     LoadFileDataTransfer& data_transfer) {
   auto sub_i=current_subgrid.subgrid_i();
   auto sub_j=current_subgrid.subgrid_j();
   bool success=false;
@@ -496,7 +477,7 @@ bool load_png_as_rgb(const std::string& filename,
         // TODO: test for mismatched size
         auto width=(size_t)image.width;
         auto height=(size_t)image.height;
-        for (auto& file_data : load_file_data) {
+        for (auto& file_data : data_transfer.data_transfer) {
           auto zoom_out_value=file_data->zoom_out_value;
           size_t w_reduced=reduce_and_pad(width,zoom_out_value);
           size_t h_reduced=reduce_and_pad(height,zoom_out_value);
@@ -689,7 +670,6 @@ bool get_tiff_from_nts_file(const std::string& filename,
             void* tiff_buff=NULL;
             // get size of tiff
             tiff_size=tiff_stat.size;
-            // TODO: check memory allocation
             if ((tiff_buff=malloc(tiff_size))) {
               zip_file* zip_file_struct;
               if (!(zip_file_struct=zip_fopen(zip_struct,zip_internal_name,0))) {

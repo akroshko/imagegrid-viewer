@@ -10,6 +10,7 @@
 #include "imagegrid.hpp"
 #include "../iterators.hpp"
 #include "../viewport_current_state.hpp"
+#include "imagegrid_load_file_data.hpp"
 // C compatible headers
 #include "../c_io_net/fileload.hpp"
 // C++ headers
@@ -21,7 +22,6 @@
 // C headers
 #include <cmath>
 #include <climits>
-
 
 ImageGridSquareZoomLevel::ImageGridSquareZoomLevel(ImageGridSquare* parent_square,
                                                    INT64 zoom_out_value) {
@@ -52,52 +52,60 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
                                            std::vector<ImageGridSquareZoomLevel*> dest_squares) {
   bool load_successful=true;
   // iterate over square data
-  std::vector<std::pair<ImageGridSquareZoomLevel* const,std::shared_ptr<LoadSquareData>>> data_pairs;
-  std::vector<std::shared_ptr<LoadSquareData>> data_read;
-  for (auto& dest_square : dest_squares) {
-    data_pairs.emplace_back(std::pair<ImageGridSquareZoomLevel* const,
-                            std::shared_ptr<LoadSquareData>>(dest_square,std::make_shared<LoadSquareData>()));
-    data_pairs.back().second->zoom_out_value=dest_square->zoom_out_value();
-    data_pairs.back().second->subgrid_w=dest_square->subgrid_w();
-    data_pairs.back().second->subgrid_h=dest_square->subgrid_h();
-    data_pairs.back().second->max_subgrid_wpixel=dest_square->max_subgrid_wpixel();
-    data_pairs.back().second->max_subgrid_hpixel=dest_square->max_subgrid_hpixel();
-    data_read.emplace_back(data_pairs.back().second);
+  LoadFileData file_data;
+  LoadFileDataTransfer data_transfer;
+  auto sub_w=grid_square->subgrid_w();
+  auto sub_h=grid_square->subgrid_h();
+  data_transfer.subgrid_h=sub_w;
+  data_transfer.subgrid_w=sub_h;
+  data_transfer.original_rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(sub_w);
+  data_transfer.original_rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(sub_w);
+  for (INT64 sub_i=0; sub_i < sub_w; sub_i++) {
+    data_transfer.original_rgb_wpixel[sub_i]=std::make_unique<size_t[]>(sub_h);
+    data_transfer.original_rgb_hpixel[sub_i]=std::make_unique<size_t[]>(sub_h);
   }
-  // block until things load
-  // only block things actually being loaded
-
-  // need a more automatic solution to initialization like this
-  for (auto& data_read_temp : data_read) {
-    // TODO: starting to feel like this stuff needs a better routine
-    data_read_temp->rgb_data=std::make_unique<std::unique_ptr<unsigned char*[]>[]>(data_read_temp->subgrid_w);
-    data_read_temp->rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_w);
-    data_read_temp->rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_w);
-    data_read_temp->original_rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_w);
-    data_read_temp->original_rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_w);
-    for (INT64 sub_i=0; sub_i < data_read_temp->subgrid_w; sub_i++) {
-      data_read_temp->rgb_data[sub_i]=std::make_unique<unsigned char*[]>(data_read_temp->subgrid_h);
-      data_read_temp->rgb_wpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_h);
-      data_read_temp->rgb_hpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_h);
-      data_read_temp->original_rgb_wpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_h);
-      data_read_temp->original_rgb_hpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_h);
+  for (INT64 sub_i=0; sub_i < sub_w; sub_i++) {
+    for (INT64 sub_j=0; sub_j < sub_h; sub_j++) {
+      data_transfer.original_rgb_wpixel[sub_i][sub_j]=grid_square->_subimages_wpixel[sub_i][sub_j];
+      data_transfer.original_rgb_hpixel[sub_i][sub_j]=grid_square->_subimages_hpixel[sub_i][sub_j];
     }
-    for (INT64 sub_i=0; sub_i < data_read_temp->subgrid_w; sub_i++) {
-      for (INT64 sub_j=0; sub_j < data_read_temp->subgrid_h; sub_j++) {
+  }
+  for (auto& dest_square : dest_squares) {
+    file_data.data_pairs.emplace_back(std::pair<ImageGridSquareZoomLevel* const,
+                                      std::shared_ptr<LoadFileZoomLevelData>>(dest_square,std::make_shared<LoadFileZoomLevelData>()));
+    file_data.data_pairs.back().second->zoom_out_value=dest_square->zoom_out_value();
+    file_data.data_pairs.back().second->max_subgrid_wpixel=dest_square->max_subgrid_wpixel();
+    file_data.data_pairs.back().second->max_subgrid_hpixel=dest_square->max_subgrid_hpixel();
+    data_transfer.data_transfer.emplace_back(file_data.data_pairs.back().second);
+  }
+  // TODO: need a more automatic solution to initialization like this
+  //       these constructions are necessary because I want to load
+  //       all data for a square before transfering
+  // TODO: since these are fixed size, I could just allocate a
+  //       transfer structure per square
+  for (auto& data_transfer_temp : data_transfer.data_transfer) {
+    data_transfer_temp->rgb_data=std::make_unique<std::unique_ptr<unsigned char*[]>[]>(sub_w);
+    data_transfer_temp->rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(sub_w);
+    data_transfer_temp->rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(sub_w);
+    for (INT64 sub_i=0; sub_i < sub_w; sub_i++) {
+      data_transfer_temp->rgb_data[sub_i]=std::make_unique<unsigned char*[]>(sub_h);
+      data_transfer_temp->rgb_wpixel[sub_i]=std::make_unique<size_t[]>(sub_h);
+      data_transfer_temp->rgb_hpixel[sub_i]=std::make_unique<size_t[]>(sub_h);
+    }
+    for (INT64 sub_i=0; sub_i < sub_w; sub_i++) {
+      for (INT64 sub_j=0; sub_j < sub_h; sub_j++) {
         auto subgrid_index=SubGridIndex(sub_i,sub_j);
         if (grid_square->grid_setup()->subgrid_has_data(grid_square->_grid_index,
                                                         subgrid_index)) {
-          data_read_temp->rgb_data[sub_i][sub_j]=nullptr;
-          data_read_temp->rgb_wpixel[sub_i][sub_j]=INT_MIN;
-          data_read_temp->rgb_hpixel[sub_i][sub_j]=INT_MIN;
-          data_read_temp->original_rgb_wpixel[sub_i][sub_j]=grid_square->_subimages_wpixel[sub_i][sub_j];
-          data_read_temp->original_rgb_hpixel[sub_i][sub_j]=grid_square->_subimages_hpixel[sub_i][sub_j];
+          data_transfer_temp->rgb_data[sub_i][sub_j]=nullptr;
+          data_transfer_temp->rgb_wpixel[sub_i][sub_j]=INT_MIN;
+          data_transfer_temp->rgb_hpixel[sub_i][sub_j]=INT_MIN;
         }
       }
     }
   }
-  for (INT64 sub_i=0; sub_i < grid_square->subgrid_w(); sub_i++) {
-    for (INT64 sub_j=0; sub_j < grid_square->subgrid_h(); sub_j++) {
+  for (INT64 sub_i=0; sub_i < sub_w; sub_i++) {
+    for (INT64 sub_j=0; sub_j < sub_h; sub_j++) {
       auto subgrid_index=SubGridIndex(sub_i,sub_j);
       if (grid_square->grid_setup()->subgrid_has_data(grid_square->_grid_index,
                                                       subgrid_index)) {
@@ -114,7 +122,7 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
         auto load_successful_temp=load_data_as_rgb(filename,
                                                    cached_filename,
                                                    current_subgrid,
-                                                   data_read);
+                                                   data_transfer);
         // TODO: what happens if one part loads succesfully and
         // another does not? Not loading when I think it should load
         // is also pretty severe, this is probably a fatal error
@@ -126,10 +134,10 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
   }
   // TODO: change this once error handling is better
   if (load_successful) {
-    for (auto& data_pair : data_pairs) {
+    for (auto& data_pair : file_data.data_pairs) {
       std::lock_guard<std::mutex> guard(data_pair.first->load_mutex);
-      for (INT64 sub_i=0; sub_i < grid_square->subgrid_w(); sub_i++) {
-        for (INT64 sub_j=0; sub_j < grid_square->subgrid_h(); sub_j++) {
+      for (INT64 sub_i=0; sub_i < sub_w; sub_i++) {
+        for (INT64 sub_j=0; sub_j < sub_h; sub_j++) {
           auto subgrid_index=SubGridIndex(sub_i,sub_j);
           if (grid_square->grid_setup()->subgrid_has_data(grid_square->_grid_index,
                                                           subgrid_index)) {
@@ -219,9 +227,9 @@ ImageGridSquare::ImageGridSquare(GridSetup* grid_setup,
 }
 
 void ImageGridSquare::_read_data() {
+  // default is 1x1 unless otherwise read
   INT64 max_subgrid_wpixel=1;
   INT64 max_subgrid_hpixel=1;
-
   INT64 subgrid_w=this->_grid_setup->subgrid_w(this->_grid_index);
   INT64 subgrid_h=this->_grid_setup->subgrid_h(this->_grid_index);
 
@@ -440,7 +448,6 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
         auto wpixel=dest_square->rgb_wpixel(subgrid_index);
         auto hpixel=dest_square->rgb_hpixel(subgrid_index);
         auto filename=this->grid_setup()->get_filename(grid_index,subgrid_index);
-        // don't cache empty filenames
         if (check_valid_filename(filename)) {
           // TODO: combine these
           auto filename_png=create_cache_filename(filename,"png");

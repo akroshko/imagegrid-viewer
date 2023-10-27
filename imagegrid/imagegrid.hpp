@@ -9,6 +9,8 @@
 #include "../coordinates.hpp"
 #include "gridsetup.hpp"
 #include "../viewport_current_state.hpp"
+// C compatible headers
+#include "../c_io_net/fileload.hpp"
 // C++ headers
 #include <atomic>
 #include <memory>
