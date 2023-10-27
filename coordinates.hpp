@@ -133,9 +133,9 @@ public:
   SubGridIndex(const INT64 igrid, INT64 jgrid);
   SubGridIndex& operator=(const SubGridIndex& subgrid_index);
   /** @return The i coordinate. */
-  INT64 i_subgrid() const;
+  INT64 subgrid_i() const;
   /** @return The j coordinate. */
-  INT64 j_subgrid() const;
+  INT64 subgrid_j() const;
   /** @return If values are valid. */
   bool invalid() const;
 private:

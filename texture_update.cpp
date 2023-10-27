@@ -10,6 +10,7 @@
 #include "viewport_current_state.hpp"
 // C compatible headers
 #include "c_misc/buffer_manip.hpp"
+#include "c_sdl/sdl.hpp"
 // C++ headers
 #include <mutex>
 #include <string>
@@ -204,8 +205,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                   const ImageGridSquareZoomLevel* const source_square,
                                   INT64 zoom_index,
                                   GridPixelSize texture_pixel_size) {
-  INT64 subimages_w=source_square->subgrid_width();
-  INT64 subimages_h=source_square->subgrid_height();
+  INT64 subimages_w=source_square->subgrid_w();
+  INT64 subimages_h=source_square->subgrid_h();
   // TODO: change how this notifies about valid/invalid textures
   bool any_successful=false;
   auto texture_zoom_reduction=((INT64)pow(2,zoom_index));

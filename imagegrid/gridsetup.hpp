@@ -69,8 +69,8 @@ protected:
   bool _setup_cache=false;
   bool _use_cache=false;
   // some underlying data
-  std::unique_ptr<INT64[]> _subgrid_width;
-  std::unique_ptr<INT64[]> _subgrid_height;
+  std::unique_ptr<INT64[]> _subgrid_w;
+  std::unique_ptr<INT64[]> _subgrid_h;
   std::unique_ptr<bool[]> _existing;
   std::list<GridSetupFile> _read_data;
   std::unique_ptr<std::unique_ptr<std::string[]>[]> _file_data;

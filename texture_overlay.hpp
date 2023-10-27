@@ -7,6 +7,7 @@
 #include "common.hpp"
 #include "c_sdl/sdl.hpp"
 // C++ headers
+#include <string>
 #include <mutex>
 // C headers
 #include <SDL2/SDL.h>

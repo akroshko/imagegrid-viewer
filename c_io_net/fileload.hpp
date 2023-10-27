@@ -14,7 +14,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <utility>
 // C headers
 #include <climits>
 #include <cstddef>
@@ -35,8 +34,8 @@ std::vector<std::string> load_numbered_images(std::string images_path// , IMAGED
  * From a set of image file, find a sequential set of images.
  *
  * TODO: This is a very fragile function that tends to favor one type
- *       of file file over another, not sure if this will only be used
- *       for testing or if it's a more permanent way to load images.
+ *       of file over another, not sure if this will only be used for
+ *       testing or if it's a more permanent way to load images.
  *
  * @param images_files Vector of image files to find a sequence in.
  */
@@ -58,8 +57,8 @@ public:
   std::unique_ptr<std::unique_ptr<size_t[]>[]> rgb_hpixel;
   std::unique_ptr<std::unique_ptr<size_t[]>[]> original_rgb_wpixel;
   std::unique_ptr<std::unique_ptr<size_t[]>[]> original_rgb_hpixel;
-  INT64 subgrid_width=INT_MIN;
-  INT64 subgrid_height=INT_MIN;
+  INT64 subgrid_w=INT_MIN;
+  INT64 subgrid_h=INT_MIN;
   INT64 max_subgrid_wpixel=INT_MIN;
   INT64 max_subgrid_hpixel=INT_MIN;
   INT64 zoom_out_value=INT_MIN;
@@ -74,7 +73,7 @@ public:
  * @param height Set as the height of the image in pixels.
  * @return If reading image data was successful.
  */
-void read_data(const std::string& filename,
+bool read_data(const std::string& filename,
                bool use_cache,
                INT64& width, INT64& height);
 
@@ -247,7 +246,8 @@ void load_image_grid_from_text(std::string text_file,
  * @param extension The extension to create.
  * @return The cached filename.
  */
-std::string create_cache_filename(const std::string& filename, const std::string extension);
+std::string create_cache_filename(const std::string& filename,
+                                  const std::string extension);
 
 /**
  * Get a temporary tiff file from the Canadian national topographic system.

@@ -171,11 +171,11 @@ SubGridIndex& SubGridIndex::operator=(const SubGridIndex& subgrid_index) {
   return *this;
 }
 
-INT64 SubGridIndex::i_subgrid() const {
+INT64 SubGridIndex::subgrid_i() const {
   return this->_i_subgrid;
 }
 
-INT64 SubGridIndex::j_subgrid() const {
+INT64 SubGridIndex::subgrid_j() const {
   return this->_j_subgrid;
 }
 

@@ -83,9 +83,9 @@ public:
    */
   unsigned char* get_rgb_data(SubGridIndex& subgrid_index) const;
   /** @return The subgrid width of this square. */
-  INT64 subgrid_width() const;
+  INT64 subgrid_w() const;
   /** @return The subgrid height of this square. */
-  INT64 subgrid_height() const;
+  INT64 subgrid_h() const;
   /** @return The max subgrid pixel width for each image at the zoom level of this square. */
   INT64 max_subgrid_wpixel() const;
   /** @return The max subgrid pixel height for each image at the zoom level of this square. */
@@ -127,9 +127,9 @@ public:
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
   std::unique_ptr<std::unique_ptr<ImageGridSquareZoomLevel>[]> image_array;
   /** @return The subgrid width. */
-  INT64 subgrid_width();
+  INT64 subgrid_w();
   /** @return The subgrid height. */
-  INT64 subgrid_height();
+  INT64 subgrid_h();
   /** @return The parent image grid. */
   ImageGrid* parent_grid() const;
   /** @return The grid setup class. */
@@ -142,6 +142,8 @@ private:
   GridIndex _grid_index;
   INT64 _image_wpixel;
   INT64 _image_hpixel;
+  std::unique_ptr<std::unique_ptr<INT64[]>[]> _subimages_wpixel;
+  std::unique_ptr<std::unique_ptr<INT64[]>[]> _subimages_hpixel;
   INT64 _max_subgrid_wpixel;
   INT64 _max_subgrid_hpixel;
   /**

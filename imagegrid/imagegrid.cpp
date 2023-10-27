@@ -14,9 +14,7 @@
 #include "../c_io_net/fileload.hpp"
 // C++ headers
 #include <atomic>
-#include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -31,17 +29,17 @@ ImageGridSquareZoomLevel::ImageGridSquareZoomLevel(ImageGridSquare* parent_squar
   this->_max_subgrid_wpixel=this->_parent_square->_max_subgrid_wpixel/zoom_out_value;
   this->_max_subgrid_hpixel=this->_parent_square->_max_subgrid_hpixel/zoom_out_value;
   this->_zoom_out_value=zoom_out_value;
-  this->_rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(this->subgrid_width());
-  this->_rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(this->subgrid_width());
-  this->_rgb_xpixel_origin=std::make_unique<std::unique_ptr<INT64[]>[]>(this->subgrid_width());
-  this->_rgb_ypixel_origin=std::make_unique<std::unique_ptr<INT64[]>[]>(this->subgrid_width());
-  this->_rgb_data=std::make_unique<std::unique_ptr<unsigned char*[]>[]>(this->subgrid_width());
-  for (INT64 i=0L; i < this->subgrid_width(); i++) {
-    this->_rgb_wpixel[i]=std::make_unique<size_t[]>(this->subgrid_height());
-    this->_rgb_hpixel[i]=std::make_unique<size_t[]>(this->subgrid_height());
-    this->_rgb_xpixel_origin[i]=std::make_unique<INT64[]>(this->subgrid_height());
-    this->_rgb_ypixel_origin[i]=std::make_unique<INT64[]>(this->subgrid_height());
-    this->_rgb_data[i]=std::make_unique<unsigned char*[]>(this->subgrid_height());
+  this->_rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(this->subgrid_w());
+  this->_rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(this->subgrid_w());
+  this->_rgb_xpixel_origin=std::make_unique<std::unique_ptr<INT64[]>[]>(this->subgrid_w());
+  this->_rgb_ypixel_origin=std::make_unique<std::unique_ptr<INT64[]>[]>(this->subgrid_w());
+  this->_rgb_data=std::make_unique<std::unique_ptr<unsigned char*[]>[]>(this->subgrid_w());
+  for (INT64 i=0L; i < this->subgrid_w(); i++) {
+    this->_rgb_wpixel[i]=std::make_unique<size_t[]>(this->subgrid_h());
+    this->_rgb_hpixel[i]=std::make_unique<size_t[]>(this->subgrid_h());
+    this->_rgb_xpixel_origin[i]=std::make_unique<INT64[]>(this->subgrid_h());
+    this->_rgb_ypixel_origin[i]=std::make_unique<INT64[]>(this->subgrid_h());
+    this->_rgb_data[i]=std::make_unique<unsigned char*[]>(this->subgrid_h());
   }
 }
 
@@ -60,10 +58,10 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
     data_pairs.emplace_back(std::pair<ImageGridSquareZoomLevel* const,
                             std::shared_ptr<LoadSquareData>>(dest_square,std::make_shared<LoadSquareData>()));
     data_pairs.back().second->zoom_out_value=dest_square->zoom_out_value();
-    data_pairs.back().second->subgrid_width=dest_square->subgrid_width();
-    data_pairs.back().second->subgrid_height=dest_square->subgrid_height();
-    data_pairs.back().second->max_subgrid_wpixel=dest_square->max_subgrid_hpixel();
-    data_pairs.back().second->max_subgrid_hpixel=dest_square->max_subgrid_wpixel();
+    data_pairs.back().second->subgrid_w=dest_square->subgrid_w();
+    data_pairs.back().second->subgrid_h=dest_square->subgrid_h();
+    data_pairs.back().second->max_subgrid_wpixel=dest_square->max_subgrid_wpixel();
+    data_pairs.back().second->max_subgrid_hpixel=dest_square->max_subgrid_hpixel();
     data_read.emplace_back(data_pairs.back().second);
   }
   // block until things load
@@ -72,34 +70,34 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
   // need a more automatic solution to initialization like this
   for (auto& data_read_temp : data_read) {
     // TODO: starting to feel like this stuff needs a better routine
-    data_read_temp->rgb_data=std::make_unique<std::unique_ptr<unsigned char*[]>[]>(data_read_temp->subgrid_width);
-    data_read_temp->rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_width);
-    data_read_temp->rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_width);
-    data_read_temp->original_rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_width);
-    data_read_temp->original_rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_width);
-    for (INT64 sub_i=0; sub_i < data_read_temp->subgrid_width; sub_i++) {
-      data_read_temp->rgb_data[sub_i]=std::make_unique<unsigned char*[]>(data_read_temp->subgrid_height);
-      data_read_temp->rgb_wpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_height);
-      data_read_temp->rgb_hpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_height);
-      data_read_temp->original_rgb_wpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_height);
-      data_read_temp->original_rgb_hpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_height);
+    data_read_temp->rgb_data=std::make_unique<std::unique_ptr<unsigned char*[]>[]>(data_read_temp->subgrid_w);
+    data_read_temp->rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_w);
+    data_read_temp->rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_w);
+    data_read_temp->original_rgb_wpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_w);
+    data_read_temp->original_rgb_hpixel=std::make_unique<std::unique_ptr<size_t[]>[]>(data_read_temp->subgrid_w);
+    for (INT64 sub_i=0; sub_i < data_read_temp->subgrid_w; sub_i++) {
+      data_read_temp->rgb_data[sub_i]=std::make_unique<unsigned char*[]>(data_read_temp->subgrid_h);
+      data_read_temp->rgb_wpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_h);
+      data_read_temp->rgb_hpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_h);
+      data_read_temp->original_rgb_wpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_h);
+      data_read_temp->original_rgb_hpixel[sub_i]=std::make_unique<size_t[]>(data_read_temp->subgrid_h);
     }
-    for (INT64 sub_i=0; sub_i < data_read_temp->subgrid_width; sub_i++) {
-      for (INT64 sub_j=0; sub_j < data_read_temp->subgrid_height; sub_j++) {
+    for (INT64 sub_i=0; sub_i < data_read_temp->subgrid_w; sub_i++) {
+      for (INT64 sub_j=0; sub_j < data_read_temp->subgrid_h; sub_j++) {
         auto subgrid_index=SubGridIndex(sub_i,sub_j);
         if (grid_square->grid_setup()->subgrid_has_data(grid_square->_grid_index,
                                                         subgrid_index)) {
           data_read_temp->rgb_data[sub_i][sub_j]=nullptr;
           data_read_temp->rgb_wpixel[sub_i][sub_j]=INT_MIN;
           data_read_temp->rgb_hpixel[sub_i][sub_j]=INT_MIN;
-          data_read_temp->original_rgb_wpixel[sub_i][sub_j]=grid_square->_image_wpixel;
-          data_read_temp->original_rgb_hpixel[sub_i][sub_j]=grid_square->_image_hpixel;
+          data_read_temp->original_rgb_wpixel[sub_i][sub_j]=grid_square->_subimages_wpixel[sub_i][sub_j];
+          data_read_temp->original_rgb_hpixel[sub_i][sub_j]=grid_square->_subimages_hpixel[sub_i][sub_j];
         }
       }
     }
   }
-  for (INT64 sub_i=0; sub_i < grid_square->subgrid_width(); sub_i++) {
-    for (INT64 sub_j=0; sub_j < grid_square->subgrid_height(); sub_j++) {
+  for (INT64 sub_i=0; sub_i < grid_square->subgrid_w(); sub_i++) {
+    for (INT64 sub_j=0; sub_j < grid_square->subgrid_h(); sub_j++) {
       auto subgrid_index=SubGridIndex(sub_i,sub_j);
       if (grid_square->grid_setup()->subgrid_has_data(grid_square->_grid_index,
                                                       subgrid_index)) {
@@ -130,8 +128,8 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
   if (load_successful) {
     for (auto& data_pair : data_pairs) {
       std::lock_guard<std::mutex> guard(data_pair.first->load_mutex);
-      for (INT64 sub_i=0; sub_i < grid_square->subgrid_width(); sub_i++) {
-        for (INT64 sub_j=0; sub_j < grid_square->subgrid_height(); sub_j++) {
+      for (INT64 sub_i=0; sub_i < grid_square->subgrid_w(); sub_i++) {
+        for (INT64 sub_j=0; sub_j < grid_square->subgrid_h(); sub_j++) {
           auto subgrid_index=SubGridIndex(sub_i,sub_j);
           if (grid_square->grid_setup()->subgrid_has_data(grid_square->_grid_index,
                                                           subgrid_index)) {
@@ -155,8 +153,8 @@ void ImageGridSquareZoomLevel::unload_square() {
   if (this->is_loaded) {
     std::lock_guard<std::mutex> guard(this->load_mutex);
     this->is_loaded=false;
-    for (INT64 i=0; i < this->_parent_square->subgrid_width(); i++) {
-      for (INT64 j=0; j < this->_parent_square->subgrid_height(); j++) {
+    for (INT64 i=0; i < this->_parent_square->subgrid_w(); i++) {
+      for (INT64 j=0; j < this->_parent_square->subgrid_h(); j++) {
         if (this->_rgb_data[i][j]) {
           delete[] this->_rgb_data[i][j];
           this->_rgb_data[i][j]=nullptr;
@@ -171,31 +169,31 @@ INT64 ImageGridSquareZoomLevel::zoom_out_value() const {
 }
 
 size_t ImageGridSquareZoomLevel::rgb_wpixel(SubGridIndex& subgrid_index) const {
-  return this->_rgb_wpixel[subgrid_index.i_subgrid()][subgrid_index.j_subgrid()];
+  return this->_rgb_wpixel[subgrid_index.subgrid_i()][subgrid_index.subgrid_j()];
 }
 
 size_t ImageGridSquareZoomLevel::rgb_hpixel(SubGridIndex& subgrid_index) const {
-  return this->_rgb_hpixel[subgrid_index.i_subgrid()][subgrid_index.j_subgrid()];
+  return this->_rgb_hpixel[subgrid_index.subgrid_i()][subgrid_index.subgrid_j()];
 }
 
 INT64 ImageGridSquareZoomLevel::rgb_xpixel_origin(SubGridIndex& subgrid_index) const {
-  return this->_rgb_xpixel_origin[subgrid_index.i_subgrid()][subgrid_index.j_subgrid()];
+  return this->_rgb_xpixel_origin[subgrid_index.subgrid_i()][subgrid_index.subgrid_j()];
 }
 
 INT64 ImageGridSquareZoomLevel::rgb_ypixel_origin(SubGridIndex& subgrid_index) const {
-  return this->_rgb_ypixel_origin[subgrid_index.i_subgrid()][subgrid_index.j_subgrid()];
+  return this->_rgb_ypixel_origin[subgrid_index.subgrid_i()][subgrid_index.subgrid_j()];
 }
 
 unsigned char* ImageGridSquareZoomLevel::get_rgb_data(SubGridIndex& subgrid_index) const {
-  return this->_rgb_data[subgrid_index.i_subgrid()][subgrid_index.j_subgrid()];
+  return this->_rgb_data[subgrid_index.subgrid_i()][subgrid_index.subgrid_j()];
 }
 
-INT64 ImageGridSquareZoomLevel::subgrid_width() const {
-  return this->_parent_square->subgrid_width();
+INT64 ImageGridSquareZoomLevel::subgrid_w() const {
+  return this->_parent_square->subgrid_w();
 }
 
-INT64 ImageGridSquareZoomLevel::subgrid_height() const {
-  return this->_parent_square->subgrid_height();
+INT64 ImageGridSquareZoomLevel::subgrid_h() const {
+  return this->_parent_square->subgrid_h();
 }
 
 INT64 ImageGridSquareZoomLevel::max_subgrid_wpixel() const {
@@ -211,18 +209,24 @@ ImageGridSquare::ImageGridSquare(GridSetup* grid_setup,
   this->_grid_setup=grid_setup;
   this->_parent_grid=parent_grid;
   this->_grid_index=GridIndex(grid_index);
+  this->_subimages_wpixel=std::make_unique<std::unique_ptr<INT64[]>[]>(this->subgrid_w());
+  this->_subimages_hpixel=std::make_unique<std::unique_ptr<INT64[]>[]>(this->subgrid_w());
+  for (INT64 i=0L; i < this->subgrid_w(); i++) {
+    this->_subimages_wpixel[i]=std::make_unique<INT64[]>(this->subgrid_h());
+    this->_subimages_hpixel[i]=std::make_unique<INT64[]>(this->subgrid_h());
+  }
   this->_read_data();
 }
 
 void ImageGridSquare::_read_data() {
-  INT64 max_subgrid_pixel_width=1;
-  INT64 max_subgrid_pixel_height=1;
+  INT64 max_subgrid_wpixel=1;
+  INT64 max_subgrid_hpixel=1;
 
-  INT64 subgrid_width=this->_grid_setup->subgrid_w(this->_grid_index);
-  INT64 subgrid_height=this->_grid_setup->subgrid_h(this->_grid_index);
+  INT64 subgrid_w=this->_grid_setup->subgrid_w(this->_grid_index);
+  INT64 subgrid_h=this->_grid_setup->subgrid_h(this->_grid_index);
 
-  for (INT64 sub_i=0; sub_i < subgrid_width; sub_i++) {
-    for (INT64 sub_j=0; sub_j < subgrid_height; sub_j++) {
+  for (INT64 sub_i=0; sub_i < subgrid_w; sub_i++) {
+    for (INT64 sub_j=0; sub_j < subgrid_h; sub_j++) {
       INT64 image_wpixel;
       INT64 image_hpixel;
       auto subgrid_index=SubGridIndex(sub_i,sub_j);
@@ -231,23 +235,26 @@ void ImageGridSquare::_read_data() {
         auto filename=this->_grid_setup->get_filename(this->_grid_index,
                                                       subgrid_index);
         // read raw data if no cache or cache unsuccessful
+        // TODO: check for success
         read_data(filename,
                   this->grid_setup()->use_cache(),
                   image_wpixel,
                   image_hpixel);
-        if (image_wpixel > max_subgrid_pixel_width) {
-          max_subgrid_pixel_width=image_wpixel;
+        this->_subimages_wpixel[sub_i][sub_j]=image_wpixel;
+        this->_subimages_hpixel[sub_i][sub_j]=image_hpixel;
+        if (image_wpixel > max_subgrid_wpixel) {
+          max_subgrid_wpixel=image_wpixel;
         }
-        if (image_hpixel > max_subgrid_pixel_height) {
-          max_subgrid_pixel_height=image_hpixel;
+        if (image_hpixel > max_subgrid_hpixel) {
+          max_subgrid_hpixel=image_hpixel;
         }
       }
     }
   }
-  this->_image_wpixel=max_subgrid_pixel_width*subgrid_width;
-  this->_image_hpixel=max_subgrid_pixel_height*subgrid_height;
-  this->_max_subgrid_wpixel=max_subgrid_pixel_width;
-  this->_max_subgrid_hpixel=max_subgrid_pixel_height;
+  this->_image_wpixel=max_subgrid_wpixel*subgrid_w;
+  this->_image_hpixel=max_subgrid_hpixel*subgrid_h;
+  this->_max_subgrid_wpixel=max_subgrid_wpixel;
+  this->_max_subgrid_hpixel=max_subgrid_hpixel;
 }
 
 void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
@@ -302,7 +309,7 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
       INT64 zoom_out_value=1;
       for (auto k=0L; k < this->_zoom_index_length; k++) {
         this->_squares[i][j]->image_array[k]=std::make_unique<ImageGridSquareZoomLevel>(this->_squares[i][j].get(),
-                                                                                       zoom_out_value);
+                                                                                        zoom_out_value);
         zoom_out_value*=zoom_step;
       }
     }
@@ -313,11 +320,11 @@ GridSetup* ImageGridSquare::grid_setup() const {
   return this->_grid_setup;
 }
 
-INT64 ImageGridSquare::subgrid_width() {
+INT64 ImageGridSquare::subgrid_w() {
   return this->grid_setup()->subgrid_w(this->_grid_index);
 }
 
-INT64 ImageGridSquare::subgrid_height() {
+INT64 ImageGridSquare::subgrid_h() {
   return this->grid_setup()->subgrid_h(this->_grid_index);
 }
 

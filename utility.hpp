@@ -5,6 +5,8 @@
 #define UTILITY_HPP
 
 #include "common.hpp"
+// CPP headers
+#include <string>
 
 /**
  * Pad a number and then reduce by a factor.

@@ -15,7 +15,6 @@
 #include <fstream>
 // #include <iostream>
 #include <regex>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -25,6 +24,7 @@
 #include <cstdint>
 // C library headers
 #include <png.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <tiff.h>
 #include <tiffio.h>
@@ -151,11 +151,12 @@ LoadSquareData::LoadSquareData() {
 ////////////////////////////////////////////////////////////////////////////////
 // general file functions
 
-void read_data(const std::string& filename,
+bool read_data(const std::string& filename,
                bool use_cache,
                INT64& width, INT64& height) {
   MSG("Reading: " << filename);
   auto cache_successful=false;
+  auto successful=true;
   if (use_cache) {
     // TODO: assuming read always successful if file opens
     //       files are two lines for now
@@ -169,33 +170,34 @@ void read_data(const std::string& filename,
       std::getline(file_in_text,line);
       height=std::stoi(line);
       cache_successful=true;
+      successful=true;
     }
   }
   if (!cache_successful) {
     if (check_tiff(filename)) {
-      // TODO: check success
-      read_tiff_data(filename,
-                     width,
-                     height);
+      successful=read_tiff_data(filename,
+                                width,
+                                height);
     } else if (check_png(filename)) {
-      // TODO: check success
-      read_png_data(filename,
-                    width,
-                    height);
+      successful=read_png_data(filename,
+                               width,
+                               height);
     } else if (check_nts(filename)) {
       // get temporary tiff
       std::string temp_filename;
       int tiff_fd=-1;
-      get_tiff_from_nts_file(filename,
-                             temp_filename,
-                             tiff_fd);
-      read_tiff_data(temp_filename,
-                     width,
-                     height);
-      if (tiff_fd >= 0) {
-        close(tiff_fd);
-        MSG("Unlinking: " << temp_filename);
-        unlink(temp_filename.c_str());
+      successful=get_tiff_from_nts_file(filename,
+                                        temp_filename,
+                                        tiff_fd);
+      if (successful) {
+        successful=read_tiff_data(temp_filename,
+                                  width,
+                                  height);
+        if (tiff_fd >= 0) {
+          close(tiff_fd);
+          MSG("Unlinking: " << temp_filename);
+          unlink(temp_filename.c_str());
+        }
       }
     } else if (check_empty(filename)) {
       // TODO: find way to not use these as sentinel values
@@ -205,6 +207,7 @@ void read_data(const std::string& filename,
       ERROR("read_data can't read: " << filename);
     }
   }
+  return successful;
 }
 
 bool load_data_as_rgb(const std::string& filename,
@@ -307,8 +310,8 @@ bool test_tiff_cache(const std::string& cached_filename,
     MSG("Cached file exists: " << cached_filename);
     for (auto& file_data : load_file_data) {
       // auto zoom_out_value=file_data->zoom_out_value;
-      w_sub=file_data->subgrid_width;
-      h_sub=file_data->subgrid_height;
+      w_sub=file_data->subgrid_w;
+      h_sub=file_data->subgrid_h;
       auto max_wpixel=w_sub*file_data->max_subgrid_wpixel;
       auto max_hpixel=h_sub*file_data->max_subgrid_hpixel;
       if (max_wpixel >= CACHE_MAX_PIXEL_SIZE || max_hpixel >= CACHE_MAX_PIXEL_SIZE) {
@@ -325,19 +328,19 @@ bool test_tiff_cache(const std::string& cached_filename,
 bool load_tiff_as_rgb_cached(const std::string& cached_filename,
                              SubGridIndex& current_subgrid,
                              const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
-  auto sub_i=current_subgrid.i_subgrid();
-  auto sub_j=current_subgrid.j_subgrid();
-  auto success=false;
+  auto sub_i=current_subgrid.subgrid_i();
+  auto sub_j=current_subgrid.subgrid_j();
+  auto successful=false;
   // TODO: these should be same, but move this data elsewhere
   INT64 w_sub=1;
   INT64 h_sub=1;
   INT64 original_width=1;
   INT64 original_height=1;
   for (auto& file_data : load_file_data) {
-      w_sub=file_data->subgrid_width;
-      h_sub=file_data->subgrid_height;
-      original_width=file_data->original_rgb_wpixel[current_subgrid.i_subgrid()][current_subgrid.j_subgrid()];
-      original_height=file_data->original_rgb_hpixel[current_subgrid.i_subgrid()][current_subgrid.j_subgrid()];
+      w_sub=file_data->subgrid_w;
+      h_sub=file_data->subgrid_h;
+      original_width=file_data->original_rgb_wpixel[sub_i][sub_j];
+      original_height=file_data->original_rgb_hpixel[sub_i][sub_j];
   }
   auto can_cache=test_tiff_cache(cached_filename,
                                  load_file_data);
@@ -396,19 +399,19 @@ bool load_tiff_as_rgb_cached(const std::string& cached_filename,
           }
         }
         delete[] png_raster;
-        success=true;
-        return success;
+        successful=true;
+        return successful;
       }
     }
   }
-  return success;
+  return successful;
 }
 
 bool load_tiff_as_rgb(const std::string& filename,
                       SubGridIndex& current_subgrid,
                       const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
-  auto sub_i=current_subgrid.i_subgrid();
-  auto sub_j=current_subgrid.j_subgrid();
+  auto sub_i=current_subgrid.subgrid_i();
+  auto sub_j=current_subgrid.subgrid_j();
   auto success=false;
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
   if (!tif) {
@@ -470,11 +473,10 @@ bool load_png_as_rgb(const std::string& filename,
                      const std::string& cached_filename,
                      SubGridIndex& current_subgrid,
                      const std::vector<std::shared_ptr<LoadSquareData>> load_file_data) {
-  auto sub_i=current_subgrid.i_subgrid();
-  auto sub_j=current_subgrid.j_subgrid();
+  auto sub_i=current_subgrid.subgrid_i();
+  auto sub_j=current_subgrid.subgrid_j();
   bool success=false;
   png_image image;
-
   memset(&image, 0, (sizeof image));
   // TODO: check libpng library, may not want this
   image.version=PNG_IMAGE_VERSION;
@@ -578,7 +580,8 @@ void load_image_grid_from_text (std::string text_file,
   // superceded by XML
   max_i=0;
   max_j=0;
-  std::regex regex_text_file_line("^([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([^ ]+)$",std::regex_constants::ECMAScript | std::regex_constants::icase);
+  std::regex regex_text_file_line("^([0-9]+) ([0-9]+) ([0-9]+) ([0-9]+) ([^ ]+)$",
+                                  std::regex_constants::ECMAScript | std::regex_constants::icase);
   // open the text file
   std::ifstream text_fh(text_file);
   // read line by line
