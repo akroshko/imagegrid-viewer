@@ -28,7 +28,7 @@ collections of image-like data.
 Currently *imagegrid-viewer* has only been built on Debian Linux 10
 (Buster).  The dependencies are installed by:
 
-> $ sudo apt-get install libsdl2-dev libtiff-dev libpng-dev
+> $ sudo apt-get install libpng-dev libsdl2-dev libtiff-dev libzip-dev
 
 Then run `make` in the *imagegrid-viewer* directory to build.
 
@@ -72,47 +72,46 @@ Put the image `heic0602a.tif` into the same directory as
 
 An example of viewing a set of 30 NTS maps.
 
-On Debian/Ubuntu distributions install `wget` with the command:
+On Debian/Ubuntu distributions if it is not already installed, install
+`wget` with the command:
 
 > $ sudo apt-get install wget
 
 Download a set up of NTS topographic maps by running the script
-`demo-download-canmatrix.sh` in the *imagegrid-viewer* directory with
+`test-download-canmatrix.sh` in the *imagegrid-viewer* directory with
 the command:
 
-> $ ./demo-download-canmatrix.sh
-
+> $ ./test_download_canmatrix.sh
 
 Then run the command:
 
 ```
-$ ./imagegrid-viewer -w 5 -h 5 ./canmatrix/092j06_01.tif ./canmatrix/092j07_02.tif ./canmatrix/092j08_02.tif ./canmatrix/092i05_02.tif ./canmatrix/092i06_03.tif \
-                               ./canmatrix/092j03_03.tif ./canmatrix/092j02_03.tif ./canmatrix/092j01_02.tif ./canmatrix/092i04_03.tif ./canmatrix/092i03_03.tif \
-                               ./canmatrix/092g14_03.tif ./canmatrix/092g15_03.tif ./canmatrix/092g16_03.tif ./canmatrix/092h13_02.tif ./canmatrix/092h14_02.tif \
-                               ./canmatrix/092g11_03.tif ./canmatrix/092g10_03.tif ./canmatrix/092g09_04.tif ./canmatrix/092h12_02.tif ./canmatrix/092h11_02.tif \
-                               ./canmatrix/092g06_06.tif ./canmatrix/092g07_06.tif ./canmatrix/092g08_05.tif ./canmatrix/092h05_04.tif ./canmatrix/092h06_02.tif \
-                               ./canmatrix/092g03_05.tif ./canmatrix/092g02_06.tif ./canmatrix/092g01_06.tif ./canmatrix/092h04_09.tif ./canmatrix/092h03_03.tif
+$ ./imagegrid-viewer -f test_download_canmatrix.txt
 ```
 
-The above file names were tested on July 29th, 2023.  They are subject
-to change due to the versioning of NTS maps.
+The specific filenames on the NTS ftp site were tested on October
+30th, 2023.  They are subject to change due to the versioning of NTS
+maps.  These maps represent an area around Vancouver, British
+Columbia.
 
-This area of lower mainland British Columbia that will be shown by
-*imagegrid-viewer* is given by the dark black box: ![NTS lower
-mainland example](./nts-example.png)
+A screenshot of viewing a much larger dataset of almost 4000 1:50K NTS
+topographic maps from Vancouver, British Columbia to Winnipeg,
+Manitoba in Canada is: ![Western
+Canada](screenshot_western_canada.png) These maps take up 65GB as
+compressed TIFF files, and would take up over 500GB uncompressed, but
+are viewable comfortably using half the memory of a 16GB machine.
+Some of the unreadable maps from the Government of Canada FTP server
+can be seen.
 
-A screenshot of viewing the 1:50K NTS topographic maps from Vancouver
-to Jasper in British Columbia Canada is given by: ![South BC
-example](south_bc_screenshot.png) These maps take up 5GB as compressed
-TIFF files, would take up over 50GB uncompressed, but are viewable
-comfortably using half the memory of a 16GB machine.
+A closer look at lower mainland British Columbia is given by:
+![Western Canada](screenshot_lower_mainland.png)
 
 # Features to be added
 
 ## Near future
 
-- Directly use zip files, pdf files, or other file formats images are
-  distributed in.
+- Directly use pdf files, or other file formats images are distributed
+  in.
 - Configuration settings to help work take advantage of either
   available resources or resource limitations
 - Break up large images in memory so the textures used are not much
@@ -123,8 +122,6 @@ comfortably using half the memory of a 16GB machine.
 - Have input and/or specification methods for common sources of images
   such as NTS topo maps.
 - Add GUI elements to show information or configure while running.
-- Better quality of scaling and zooming of images.
-- Deal with NTS maps that have been split up into multiple images.
 
 ## Further future
 
@@ -135,5 +132,4 @@ comfortably using half the memory of a 16GB machine.
 - Work with non-uniform or overlapping grids of images.
 - Plot tracks/trails or other interesting data such as the [Space
   Shuttle SRTM](https://www2.jpl.nasa.gov/srtm/) elevation data.
-- Points that refer to other files and/or metadata.
-- Evaluate if there are better engines than SDL.
+- Add points that refer to other files and/or metadata.
