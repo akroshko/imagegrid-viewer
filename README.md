@@ -25,8 +25,8 @@ collections of image-like data.
 
 # Building
 
-Currently *imagegrid-viewer* has only been built on Debian Linux 10
-(Buster).  The dependencies are installed by:
+Currently *imagegrid-viewer* has only been built on Debian Linux 12
+(bookworm).  The dependencies are installed by:
 
 > $ sudo apt-get install libpng-dev libsdl2-dev libtiff-dev libzip-dev
 
