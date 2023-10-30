@@ -1,21 +1,23 @@
-#include "common.hpp"
-#include "coordinates.hpp"
+#include "../common.hpp"
+#include "../coordinates.hpp"
 #include "iterators.hpp"
-#include "viewport_current_state.hpp"
+#include "../viewport_current_state.hpp"
 // C++ headers
 #include <algorithm>
+#include <memory>
 // C headers
 #include <cmath>
 
-bool ImageGridIterator::get_next(INT64& i, INT64& j) {
+std::unique_ptr<GridIndex> ImageGridIterator::get_next() {
   if (this->_index_values.size() > 0) {
     auto popped_array=this->_index_values.front();
     this->_index_values.pop();
-    i=popped_array[0];
-    j=popped_array[1];
-    return true;
+    auto i=popped_array[0];
+    auto j=popped_array[1];
+    return std::make_unique<GridIndex>(i,j);
   } else {
-    return false;
+    // this return an invalid
+    return std::make_unique<GridIndex>();
   }
 }
 

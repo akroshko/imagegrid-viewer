@@ -1,11 +1,12 @@
 #ifndef ITERATORS_HPP
 #define ITERATORS_HPP
 
-#include "common.hpp"
-#include "coordinates.hpp"
-#include "viewport_current_state.hpp"
+#include "../common.hpp"
+#include "../coordinates.hpp"
+#include "../viewport_current_state.hpp"
 // C++ headers
 #include <array>
+#include <memory>
 #include <queue>
 
 /**
@@ -17,13 +18,11 @@ protected:
 public:
   ~ImageGridIterator()=default;
   /**
-   * Get the next index of i,j.
+   * Get the next index from the iterator.
    *
-   * @param i The next index along a row.
-   * @param j The next index along a column.
    * @return Whether to continue.
    */
-  virtual bool get_next(INT64& i, INT64& j);
+  virtual std::unique_ptr<GridIndex> get_next();
 protected:
   INT64 _w;
   INT64 _h;

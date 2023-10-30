@@ -150,6 +150,10 @@ INT64 GridIndex::j_grid() const {
   return this->_jgrid;
 }
 
+bool GridIndex::invalid() const {
+  return (this->_igrid == INVALID_PIXEL_VALUE || this->_jgrid == INVALID_PIXEL_VALUE);
+}
+
 SubGridIndex::SubGridIndex() {
   this->_i_subgrid=INVALID_PIXEL_VALUE;
   this->_j_subgrid=INVALID_PIXEL_VALUE;

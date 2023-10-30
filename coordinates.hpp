@@ -108,8 +108,8 @@ public:
   INT64 i_grid() const;
   /** @return The j coordinate. */
   INT64 j_grid() const;
-  // /** @return If values are valid. */
-  // bool invalid() const;
+  /** @return If values are valid. */
+  bool invalid() const;
 private:
   INT64 _igrid;
   INT64 _jgrid;

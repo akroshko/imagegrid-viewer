@@ -8,7 +8,6 @@
 #include "../utility.hpp"
 #include "gridsetup.hpp"
 #include "imagegrid.hpp"
-#include "../iterators.hpp"
 #include "../viewport_current_state.hpp"
 #include "imagegrid_load_file_data.hpp"
 // C compatible headers
@@ -355,20 +354,20 @@ INT64 ImageGrid::zoom_index_length() const {
   return this->_zoom_index_length;
 }
 
-bool ImageGrid::_check_bounds(const GridIndex& grid_index) {
-  auto i=grid_index.i_grid();
-  auto j=grid_index.j_grid();
+bool ImageGrid::_check_bounds(const GridIndex* grid_index) const {
+  auto i=grid_index->i_grid();
+  auto j=grid_index->j_grid();
   auto return_value=(i >= 0 && i < this->grid_image_size().wimage() && j >= 0 && j < this->grid_image_size().himage());
   return return_value;
 }
 
 bool ImageGrid::_check_load(const ViewPortCurrentState& viewport_current_state,
                             INT64 zoom_index,
-                            const GridIndex& grid_index,
+                            const GridIndex* grid_index,
                             INT64 zoom_index_lower_limit,
                             INT64 load_all) {
-  auto i=grid_index.i_grid();
-  auto j=grid_index.j_grid();
+  auto i=grid_index->i_grid();
+  auto j=grid_index->j_grid();
   auto current_grid_x=viewport_current_state.current_grid_coordinate().xgrid();
   auto current_grid_y=viewport_current_state.current_grid_coordinate().ygrid();
   auto screen_width=viewport_current_state.screen_size().hpixel();
@@ -392,7 +391,7 @@ bool ImageGrid::_check_load(const ViewPortCurrentState& viewport_current_state,
 }
 
 bool ImageGrid::_load_square(const ViewPortCurrentState& viewport_current_state,
-                             const GridIndex& grid_index,
+                             const GridIndex* grid_index,
                              INT64 zoom_index_lower_limit,
                              INT64 load_all, const GridSetup* const grid_setup) {
   // always load if top level
@@ -494,7 +493,7 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
         }
         auto grid_index=GridIndex(i,j);
         if (!this->_check_load(viewport_current_state,
-                               zoom_index, grid_index, zoom_index_lower_limit,
+                               zoom_index, &grid_index, zoom_index_lower_limit,
                                load_all)) {
           this->_squares[i][j]->image_array[zoom_index]->unload_square();
           // always try and unload rest, except top level
@@ -502,21 +501,19 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
       }
     }
   }
-  INT64 i,j;
   // files actually loaded
   INT64 load_count=0;
-  auto iterator_visible=ImageGridIteratorVisible(this->grid_image_size().wimage(),this->grid_image_size().himage(),
-                                                 viewport_current_state);
+  auto iterator_visible=this->grid_setup()->get_iterator_visible(viewport_current_state);
   // we are looking at if things are not loaded
   while (keep_trying) {
-    keep_trying=iterator_visible.get_next(i,j);
+    auto grid_index=iterator_visible->get_next();
     if (!keep_running) { break; }
+    keep_trying=(!grid_index->invalid());
     if (keep_trying) {
-      auto grid_index=GridIndex(i,j);
-      if (this->_check_bounds(grid_index) && grid_setup->square_has_data(grid_index)) {
+      if (this->_check_bounds(grid_index.get()) && grid_setup->square_has_data(grid_index.get())) {
 
         auto load_successful=this->_load_square(viewport_current_state,
-                                                grid_index,
+                                                grid_index.get(),
                                                 zoom_index_lower_limit,
                                                 load_all, grid_setup);
         if (load_successful) { load_count++; }
@@ -524,21 +521,16 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
       }
     }
   }
-  auto iterator_normal=ImageGridIteratorFull(this->grid_image_size().wimage(),
-                                             this->grid_image_size().himage(),
-                                             viewport_current_state);
-  // TODO need a good iterator class for this type of work
-  // load the one we are looking at
+  auto iterator_normal=this->grid_setup()->get_iterator_full(viewport_current_state);
   keep_trying=(!(load_count >= LOAD_FILES_BATCH || !keep_running));
-
   while (keep_trying) {
-    keep_trying=iterator_normal.get_next(i,j);
+    auto grid_index=iterator_normal->get_next();
     if (!keep_running) { break; }
+    keep_trying=(!grid_index->invalid());
     if (keep_trying) {
-      auto grid_index=GridIndex(i,j);
-      if (this->_check_bounds(grid_index) && grid_setup->square_has_data(grid_index)) {
+      if (this->_check_bounds(grid_index.get()) && grid_setup->square_has_data(grid_index.get())) {
         auto load_successful=this->_load_square(viewport_current_state,
-                                                grid_index,
+                                                grid_index.get(),
                                                 zoom_index_lower_limit,
                                                 load_all, grid_setup);
         if (load_successful) { load_count++; }
@@ -574,6 +566,12 @@ ImageGridSquare* ImageGrid::squares(const GridIndex& grid_index) const {
   return this->_squares[i][j].get();
 }
 
+ImageGridSquare* ImageGrid::squares(const GridIndex* grid_index) const {
+  auto i=grid_index->i_grid();
+  auto j=grid_index->j_grid();
+  return this->_squares[i][j].get();
+}
+
 void ImageGrid::setup_grid_cache(GridSetup* const grid_setup) {
   // no read_grid_info(...) called for now
   auto grid_w=this->grid_image_size().wimage();
@@ -591,7 +589,7 @@ void ImageGrid::setup_grid_cache(GridSetup* const grid_setup) {
                                               ViewportPixelSize(0,0),
                                               ViewportPixelCoordinate(0,0),
                                               ViewportPixelCoordinate(0,0)),
-                         grid_index,
+                         &grid_index,
                          0L,true,grid_setup);
       // TODO: eventually cache this out as tiles that fit in 128x128 and 512x512
       this->_write_cache(grid_index);
@@ -608,6 +606,6 @@ GridSetup* ImageGrid::grid_setup() const {
   return this->_grid_setup;
 }
 
-const GridImageSize ImageGrid::grid_image_size() {
+const GridImageSize ImageGrid::grid_image_size() const {
   return this->_grid_setup->grid_image_size();
 }

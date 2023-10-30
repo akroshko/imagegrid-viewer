@@ -46,6 +46,12 @@ INT64 GridSetup::_get_grid_index(const GridIndex& grid_index) const {
   return j*this->grid_w()+i;
 }
 
+INT64 GridSetup::_get_grid_index(const GridIndex* grid_index) const {
+  auto i=grid_index->i_grid();
+  auto j=grid_index->j_grid();
+  return j*this->grid_w()+i;
+}
+
 INT64 GridSetup::_get_subgrid_index(INT64 sub_i, INT64 sub_j, INT64 sub_w) const {
   return sub_j*sub_w+sub_i;
 }
@@ -57,6 +63,11 @@ INT64 GridSetup::_get_subgrid_index(const SubGridIndex& subgrid_index, INT64 sub
 }
 
 bool GridSetup::square_has_data(const GridIndex& grid_index) const {
+  auto local_grid_index=this->_get_grid_index(grid_index);
+  return this->_existing[local_grid_index];
+}
+
+bool GridSetup::square_has_data(const GridIndex* grid_index) const {
   auto local_grid_index=this->_get_grid_index(grid_index);
   return this->_existing[local_grid_index];
 }
@@ -82,6 +93,18 @@ std::string GridSetup::get_filename(const GridIndex& grid_index, const SubGridIn
   auto local_subgrid_index=this->_get_subgrid_index(subgrid_index,sub_w);
   return this->_file_data[local_grid_index][local_subgrid_index];
 };
+
+std::unique_ptr<ImageGridIteratorVisible> GridSetup::get_iterator_visible(const ViewPortCurrentState& viewport_current_state) {
+  return std::make_unique<ImageGridIteratorVisible>(this->grid_image_size().wimage(),
+                                                    this->grid_image_size().himage(),
+                                                    viewport_current_state);
+}
+
+std::unique_ptr<ImageGridIteratorFull> GridSetup::get_iterator_full(const ViewPortCurrentState& viewport_current_state) {
+  return std::make_unique<ImageGridIteratorFull>(this->grid_image_size().wimage(),
+                                                 this->grid_image_size().himage(),
+                                                 viewport_current_state);
+}
 
 GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) {
   INT64 wimage, himage;

@@ -8,6 +8,8 @@
 
 #include "../common.hpp"
 #include "../coordinates.hpp"
+#include "../viewport_current_state.hpp"
+#include "iterators.hpp"
 // C++ headers
 #include <list>
 #include <memory>
@@ -48,13 +50,18 @@ public:
   INT64 grid_w() const;
   INT64 grid_h() const;
   bool square_has_data(const GridIndex& grid_index) const;
+  bool square_has_data(const GridIndex* grid_index) const;
   INT64 subgrid_w(const GridIndex& grid_index) const;
   INT64 subgrid_h(const GridIndex& grid_index) const;
   bool subgrid_has_data(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const;
   std::string get_filename(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const;
+  // getting iterators
+  std::unique_ptr<ImageGridIteratorVisible> get_iterator_visible(const ViewPortCurrentState& viewport_current_state);
+  std::unique_ptr<ImageGridIteratorFull> get_iterator_full(const ViewPortCurrentState& viewport_current_state);
 protected:
   INT64 _get_grid_index(INT64 i, INT64 j) const;
   INT64 _get_grid_index(const GridIndex& grid_index) const;
+  INT64 _get_grid_index(const GridIndex* grid_index) const;
   INT64 _get_subgrid_index(INT64 sub_i, INT64 sub_j, INT64 sub_w) const;
   INT64 _get_subgrid_index(const SubGridIndex& subgrid_index, INT64 sub_w) const;
   bool _successful;

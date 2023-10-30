@@ -185,13 +185,14 @@ public:
   void setup_grid_cache(GridSetup* const grid_setup);
   GridPixelSize get_image_max_pixel_size() const;
   ImageGridSquare* squares(const GridIndex& grid_index) const;
+  ImageGridSquare* squares(const GridIndex* grid_index) const;
   /**
    * @return Whether read_grid_info was successful.
    */
   bool read_grid_info_successful() const;
   INT64 zoom_index_length() const;
   GridSetup* grid_setup() const;
-  const GridImageSize grid_image_size();
+  const GridImageSize grid_image_size() const;
 private:
   GridSetup* _grid_setup;
   /**
@@ -199,7 +200,7 @@ private:
    *
    * @param grid_index The index of grid square to check.
    */
-  bool _check_bounds(const GridIndex& grid_index);
+  bool _check_bounds(const GridIndex* grid_index) const;
   /**
    * Check whether it is appropriate to load a file given current
    * viewport corrdinates and zoom level.
@@ -215,7 +216,7 @@ private:
    */
   bool _check_load(const ViewPortCurrentState& viewport_current_state,
                    INT64 zoom_index,
-                   const GridIndex& grid_index,
+                   const GridIndex* grid_index,
                    INT64 zoom_index_lower_limit,
                    INT64 load_all);
   /**
@@ -233,7 +234,7 @@ private:
    * @return If the file was loaded.
    */
   bool _load_square(const ViewPortCurrentState& viewport_current_state,
-                    const GridIndex& grid_index,
+                    const GridIndex* grid_index,
                     INT64 zoom_index_lower_limit,
                     INT64 load_all,
                     const GridSetup* grid_setup);
