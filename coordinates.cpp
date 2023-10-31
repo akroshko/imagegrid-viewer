@@ -169,9 +169,9 @@ SubGridIndex::SubGridIndex(const SubGridIndex& grid_index) {
   this->_j_subgrid=grid_index._j_subgrid;
 }
 
-SubGridIndex& SubGridIndex::operator=(const SubGridIndex& subgrid_index) {
-  this->_i_subgrid=subgrid_index._i_subgrid;
-  this->_j_subgrid=subgrid_index._j_subgrid;
+SubGridIndex& SubGridIndex::operator=(const SubGridIndex& sub_index) {
+  this->_i_subgrid=sub_index._i_subgrid;
+  this->_j_subgrid=sub_index._j_subgrid;
   return *this;
 }
 

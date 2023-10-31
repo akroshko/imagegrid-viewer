@@ -51,10 +51,10 @@ public:
   INT64 grid_h() const;
   bool square_has_data(const GridIndex& grid_index) const;
   bool square_has_data(const GridIndex* grid_index) const;
-  INT64 subgrid_w(const GridIndex& grid_index) const;
-  INT64 subgrid_h(const GridIndex& grid_index) const;
-  bool subgrid_has_data(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const;
-  std::string get_filename(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const;
+  INT64 sub_w(const GridIndex& grid_index) const;
+  INT64 sub_h(const GridIndex& grid_index) const;
+  bool subgrid_has_data(const GridIndex& grid_index, const SubGridIndex& sub_index) const;
+  std::string get_filename(const GridIndex& grid_index, const SubGridIndex& sub_index) const;
   // getting iterators
   std::unique_ptr<ImageGridIteratorVisible> get_iterator_visible(const ViewPortCurrentState& viewport_current_state);
   std::unique_ptr<ImageGridIteratorFull> get_iterator_full(const ViewPortCurrentState& viewport_current_state);
@@ -62,8 +62,8 @@ protected:
   INT64 _get_grid_index(INT64 i, INT64 j) const;
   INT64 _get_grid_index(const GridIndex& grid_index) const;
   INT64 _get_grid_index(const GridIndex* grid_index) const;
-  INT64 _get_subgrid_index(INT64 sub_i, INT64 sub_j, INT64 sub_w) const;
-  INT64 _get_subgrid_index(const SubGridIndex& subgrid_index, INT64 sub_w) const;
+  INT64 _get_sub_index(INT64 sub_i, INT64 sub_j, INT64 sub_w) const;
+  INT64 _get_sub_index(const SubGridIndex& sub_index, INT64 sub_w) const;
   bool _successful;
   GridImageSize _grid_image_size;
   std::vector<std::string> _filenames;
@@ -76,8 +76,8 @@ protected:
   bool _setup_cache=false;
   bool _use_cache=false;
   // some underlying data
-  std::unique_ptr<INT64[]> _subgrid_w;
-  std::unique_ptr<INT64[]> _subgrid_h;
+  std::unique_ptr<INT64[]> _sub_w;
+  std::unique_ptr<INT64[]> _sub_h;
   std::unique_ptr<bool[]> _existing;
   std::list<GridSetupFile> _read_data;
   std::unique_ptr<std::unique_ptr<std::string[]>[]> _file_data;

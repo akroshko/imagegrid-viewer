@@ -60,54 +60,56 @@ public:
   /** @return The amount zoomed out this class represents. */
   INT64 zoom_out_value() const;
   /**
-   * @param subgrid_index The index of the subgrid.
+   * @param sub_index The index of the subgrid.
    * @return The width in pixels.
    */
-  size_t rgb_wpixel(SubGridIndex& subgrid_index) const;
+  size_t rgb_wpixel(SubGridIndex& sub_index) const;
   /**
-   * @param subgrid_index The index of the subgrid.
+   * @param sub_index The index of the subgrid.
    * @return The height in pixels.
    */
-  size_t rgb_hpixel(SubGridIndex& subgrid_index) const;
+  size_t rgb_hpixel(SubGridIndex& sub_index) const;
   /**
-   * @param subgrid_index The index of the subgrid.
+   * @param sub_index The index of the subgrid.
    * @return The x origin coordinate in pixels.
    */
-  INT64 rgb_xpixel_origin(SubGridIndex& subgrid_index) const;
+  INT64 rgb_xpixel_origin(SubGridIndex& sub_index) const;
   /**
-   * @param subgrid_index The index of the subgrid.
+   * @param sub_index The index of the subgrid.
    * @return The y origin coordinate in pixels.
    */
-  INT64 rgb_ypixel_origin(SubGridIndex& subgrid_index) const;
+  INT64 rgb_ypixel_origin(SubGridIndex& sub_index) const;
   /**
-   * @param subgrid_index The index of the subgrid.
+   * @param sub_index The index of the subgrid.
    * @return A pointer to the RGB data.
    */
-  unsigned char* get_rgb_data(SubGridIndex& subgrid_index) const;
+  unsigned char* get_rgb_data(SubGridIndex& sub_index) const;
   /** @return The subgrid width of this square. */
-  INT64 subgrid_w() const;
+  INT64 sub_w() const;
   /** @return The subgrid height of this square. */
-  INT64 subgrid_h() const;
+  INT64 sub_h() const;
   /** @return The max subgrid pixel width for each image at the zoom level of this square. */
-  INT64 max_subgrid_wpixel() const;
+  INT64 max_sub_wpixel() const;
   /** @return The max subgrid pixel height for each image at the zoom level of this square. */
-  INT64 max_subgrid_hpixel() const;
+  INT64 max_sub_hpixel() const;
 private:
   friend class ImageGrid;
   friend class ImageGridSquare;
   ImageGridSquare* _parent_square;
+  INT64 _sub_i_arr(INT64 sub_i, INT64 sub_j) const;
+  INT64 _sub_i_arr(SubGridIndex& sub_index) const;
   /** The actual RGB data for this square and zoom level */
-  std::unique_ptr<std::unique_ptr<unsigned char*[]>[]> _rgb_data;
+  std::unique_ptr<unsigned char*[]> _rgb_data;
   // TOOD: will eventually use an object from coordinates.hpp, but for
   // now I want this freedom
-  std::unique_ptr<std::unique_ptr<size_t[]>[]> _rgb_wpixel;
-  std::unique_ptr<std::unique_ptr<size_t[]>[]> _rgb_hpixel;
+  std::unique_ptr<size_t[]> _rgb_wpixel;
+  std::unique_ptr<size_t[]> _rgb_hpixel;
   // not scaled, but they need to be here for now
-  INT64 _max_subgrid_wpixel=-1;
-  INT64 _max_subgrid_hpixel=-1;
+  INT64 _max_sub_wpixel=-1;
+  INT64 _max_sub_hpixel=-1;
   // the origin foreach
-  std::unique_ptr<std::unique_ptr<INT64[]>[]> _rgb_xpixel_origin;
-  std::unique_ptr<std::unique_ptr<INT64[]>[]> _rgb_ypixel_origin;
+  std::unique_ptr<INT64[]> _rgb_xpixel_origin;
+  std::unique_ptr<INT64[]> _rgb_ypixel_origin;
   INT64 _zoom_out_value;
 };
 
@@ -129,9 +131,9 @@ public:
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
   std::unique_ptr<std::unique_ptr<ImageGridSquareZoomLevel>[]> image_array;
   /** @return The subgrid width. */
-  INT64 subgrid_w();
+  INT64 sub_w();
   /** @return The subgrid height. */
-  INT64 subgrid_h();
+  INT64 sub_h();
   /** @return The parent image grid. */
   ImageGrid* parent_grid() const;
   /** @return The grid setup class. */
@@ -144,10 +146,10 @@ private:
   GridIndex _grid_index;
   INT64 _image_wpixel;
   INT64 _image_hpixel;
-  std::unique_ptr<std::unique_ptr<INT64[]>[]> _subimages_wpixel;
-  std::unique_ptr<std::unique_ptr<INT64[]>[]> _subimages_hpixel;
-  INT64 _max_subgrid_wpixel;
-  INT64 _max_subgrid_hpixel;
+  std::unique_ptr<INT64[]> _subimages_wpixel;
+  std::unique_ptr<INT64[]> _subimages_hpixel;
+  INT64 _max_sub_wpixel;
+  INT64 _max_sub_hpixel;
   /**
    * Read in a the file cooresponing to this square.
    */

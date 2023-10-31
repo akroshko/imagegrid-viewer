@@ -205,8 +205,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                   const ImageGridSquareZoomLevel* const source_square,
                                   INT64 zoom_index,
                                   GridPixelSize texture_pixel_size) {
-  INT64 subimages_w=source_square->subgrid_w();
-  INT64 subimages_h=source_square->subgrid_h();
+  INT64 subimages_w=source_square->sub_w();
+  INT64 subimages_h=source_square->sub_h();
   // TODO: change how this notifies about valid/invalid textures
   bool any_successful=false;
   auto texture_zoom_reduction=((INT64)pow(2,zoom_index));
@@ -224,8 +224,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
       // see if this square should be grayed out
       for (INT64 i_sub=0; i_sub < subimages_w; i_sub++) {
         for (INT64 j_sub=0; j_sub < subimages_h; j_sub++) {
-          auto subgrid_index=SubGridIndex(i_sub,j_sub);
-          auto source_data=source_square->get_rgb_data(subgrid_index);
+          auto sub_index=SubGridIndex(i_sub,j_sub);
+          auto source_data=source_square->get_rgb_data(sub_index);
           if (dest_array && source_data) {
             no_data=false;
           }
@@ -237,12 +237,12 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
       // everything is read, loop over
       for (INT64 i_sub=0; i_sub < subimages_w; i_sub++) {
         for (INT64 j_sub=0; j_sub < subimages_h; j_sub++) {
-          auto subgrid_index=SubGridIndex(i_sub,j_sub);
-          auto source_data=source_square->get_rgb_data(subgrid_index);
-          auto source_wpixel=(INT64)source_square->rgb_wpixel(subgrid_index);
-          auto source_hpixel=(INT64)source_square->rgb_hpixel(subgrid_index);
-          auto source_data_origin_x=source_square->rgb_xpixel_origin(subgrid_index);
-          auto source_data_origin_y=source_square->rgb_ypixel_origin(subgrid_index);
+          auto sub_index=SubGridIndex(i_sub,j_sub);
+          auto source_data=source_square->get_rgb_data(sub_index);
+          auto source_wpixel=(INT64)source_square->rgb_wpixel(sub_index);
+          auto source_hpixel=(INT64)source_square->rgb_hpixel(sub_index);
+          auto source_data_origin_x=source_square->rgb_xpixel_origin(sub_index);
+          auto source_data_origin_y=source_square->rgb_ypixel_origin(sub_index);
           // do the things we are copying exist?
           if (dest_array && source_data) {
             // these should only be powers of 2, add an assert

@@ -24,11 +24,11 @@ class LoadFileZoomLevelData {
 public:
   LoadFileZoomLevelData();
   std::string filename;
-  std::unique_ptr<std::unique_ptr<unsigned char *[]>[]> rgb_data;
-  std::unique_ptr<std::unique_ptr<size_t[]>[]> rgb_wpixel;
-  std::unique_ptr<std::unique_ptr<size_t[]>[]> rgb_hpixel;
-  INT64 max_subgrid_wpixel=INT_MIN;
-  INT64 max_subgrid_hpixel=INT_MIN;
+  std::unique_ptr<unsigned char *[]> rgb_data;
+  std::unique_ptr<size_t[]> rgb_wpixel;
+  std::unique_ptr<size_t[]> rgb_hpixel;
+  INT64 max_sub_wpixel=INT_MIN;
+  INT64 max_sub_hpixel=INT_MIN;
   INT64 zoom_out_value=INT_MIN;
 };
 
@@ -40,10 +40,10 @@ class LoadFileDataTransfer {
 public:
   LoadFileDataTransfer();
   std::vector<std::shared_ptr<LoadFileZoomLevelData>> data_transfer;
-  INT64 subgrid_w=INT_MIN;
-  INT64 subgrid_h=INT_MIN;
-  std::unique_ptr<std::unique_ptr<size_t[]>[]> original_rgb_wpixel;
-  std::unique_ptr<std::unique_ptr<size_t[]>[]> original_rgb_hpixel;
+  INT64 sub_w=INT_MIN;
+  INT64 sub_h=INT_MIN;
+  std::unique_ptr<size_t[]> original_rgb_wpixel;
+  std::unique_ptr<size_t[]> original_rgb_hpixel;
 };
 
 /**

@@ -129,9 +129,9 @@ private:
 class SubGridIndex {
 public:
   SubGridIndex();
-  SubGridIndex(const SubGridIndex& subgrid_index);
+  SubGridIndex(const SubGridIndex& sub_index);
   SubGridIndex(const INT64 igrid, INT64 jgrid);
-  SubGridIndex& operator=(const SubGridIndex& subgrid_index);
+  SubGridIndex& operator=(const SubGridIndex& sub_index);
   /** @return The i coordinate. */
   INT64 subgrid_i() const;
   /** @return The j coordinate. */
