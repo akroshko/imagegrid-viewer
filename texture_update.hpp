@@ -85,7 +85,7 @@ public:
   /**
    * Load a texture.
    *
-   * @param source_square The square containing the RGB data.
+   * @param source_square The square containing the RGBA data.
    * @param dest_square The destination square to load the texture into.
    * @param zoom_index The zoom index of the texture being loaded.
    * @param texture_pixel_size The original size of the image to be copied.

@@ -100,10 +100,8 @@ void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
       // copy over gray
       for (INT64 l=0L; l < dest_hpixel; l++) {
         for (INT64 k=0L; k < dest_wpixel; k++) {
-          auto dest_index=(l*dest_wpixel+k)*3;
-          ((unsigned char *)dest_array)[dest_index]=FILLER_LEVEL;
-          ((unsigned char *)dest_array)[dest_index+1]=FILLER_LEVEL;
-          ((unsigned char *)dest_array)[dest_index+2]=FILLER_LEVEL;
+          auto dest_index=(l*dest_wpixel+k);
+          ((PIXEL_RGBA*)dest_array)[dest_index]=FILLER_LEVEL;
         }
       }
       this->filler_squares[zoom_index]->unlock_surface();

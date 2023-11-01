@@ -11,7 +11,7 @@
 SDLApp::SDLApp() {
   // auto rendererFlags=SDL_RENDERER_ACCELERATED;
   int windowFlags=SDL_WINDOW_RESIZABLE;
-  this->_format=SDL_AllocFormat(SDL_PIXELFORMAT_RGB24);
+  this->_format=SDL_AllocFormat(SDL_PIXELFORMAT_RGBA32);
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
     ERROR("Couldn't initialize SDL:" << SDL_GetError());
     this->_successful=false;
@@ -165,7 +165,7 @@ SDLDrawableSurface::SDLDrawableSurface(SDLApp* const sdl_app,
   screen_rect.y=0;
   screen_rect.w=viewport_pixel_size.wpixel();
   screen_rect.h=viewport_pixel_size.hpixel();
-  SDL_FillRect(this->_screen_surface,& screen_rect, SDL_MapRGB(sdl_app->format(),0,0,0));
+  SDL_FillRect(this->_screen_surface,& screen_rect, SDL_MapRGBA(sdl_app->format(),0,0,0,0));
 }
 
 SDLDrawableSurface::~SDLDrawableSurface() {
@@ -192,7 +192,8 @@ void SDLDisplayTextureWrapper::create_surface(INT64 wpixel, INT64 hpixel) {
   if (this->_display_texture) {
     this->unlock_surface();
   }
-  this->_display_texture=SDL_CreateRGBSurfaceWithFormat(0,wpixel,hpixel,24,SDL_PIXELFORMAT_RGB24);
+  this->_display_texture=SDL_CreateRGBSurfaceWithFormat(0,wpixel,hpixel,32,SDL_PIXELFORMAT_RGBA32);
+
 }
 
 void SDLDisplayTextureWrapper::unload_surface() {

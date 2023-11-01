@@ -64,7 +64,7 @@ bool read_data(const std::string& filename,
  * @param data_transfer The filedata to load.
  * @return If reading image data was successful.
  */
-bool load_data_as_rgb(const std::string& filename,
+bool load_data_as_rgba(const std::string& filename,
                       const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
                       LoadFileDataTransfer& data_transfer
@@ -103,7 +103,7 @@ bool test_tiff_cache(const std::string& cached_filename,
  * @param data_transfer
  * @return If loading image was successful.
  */
-bool load_tiff_as_rgb_cached(const std::string& cached_filename,
+bool load_tiff_as_rgba_cached(const std::string& cached_filename,
                              SubGridIndex& current_subgrid,
                              LoadFileDataTransfer& data_transfer);
 
@@ -117,7 +117,7 @@ bool load_tiff_as_rgb_cached(const std::string& cached_filename,
  * @param data_transfer
  * @return If loading image was successful.
  */
-bool load_tiff_as_rgb(const std::string& filename,
+bool load_tiff_as_rgba(const std::string& filename,
                       SubGridIndex& current_subgrid,
                       LoadFileDataTransfer& data_transfer);
 
@@ -141,7 +141,7 @@ bool read_png_data(const std::string& filename, INT64& width, INT64& height);
  * @param data_transfer
  * @return If loading image was successful.
  */
-bool load_png_as_rgb(const std::string& filename,
+bool load_png_as_rgba(const std::string& filename,
                      const std::string& cached_filename,
                      SubGridIndex& current_subgrid,
                      LoadFileDataTransfer& data_transfer);
@@ -161,7 +161,7 @@ bool load_png_as_rgb(const std::string& filename,
 bool write_png_text(std::string filename_png, std::string filename_text,
                     INT64 wpixel, INT64 hpixel,
                     INT64 full_wpixel, INT64 full_hpixel,
-                    unsigned char* rgb_data);
+                    PIXEL_RGBA* rgb_data);
 
 /**
  * Check if a file is a tiff file.

@@ -63,27 +63,27 @@ public:
    * @param sub_index The index of the subgrid.
    * @return The width in pixels.
    */
-  size_t rgb_wpixel(SubGridIndex& sub_index) const;
+  size_t rgba_wpixel(SubGridIndex& sub_index) const;
   /**
    * @param sub_index The index of the subgrid.
    * @return The height in pixels.
    */
-  size_t rgb_hpixel(SubGridIndex& sub_index) const;
+  size_t rgba_hpixel(SubGridIndex& sub_index) const;
   /**
    * @param sub_index The index of the subgrid.
    * @return The x origin coordinate in pixels.
    */
-  INT64 rgb_xpixel_origin(SubGridIndex& sub_index) const;
+  INT64 rgba_xpixel_origin(SubGridIndex& sub_index) const;
   /**
    * @param sub_index The index of the subgrid.
    * @return The y origin coordinate in pixels.
    */
-  INT64 rgb_ypixel_origin(SubGridIndex& sub_index) const;
+  INT64 rgba_ypixel_orgin(SubGridIndex& sub_index) const;
   /**
    * @param sub_index The index of the subgrid.
-   * @return A pointer to the RGB data.
+   * @return A pointer to the RGBA data.
    */
-  unsigned char* get_rgb_data(SubGridIndex& sub_index) const;
+  PIXEL_RGBA* get_rgba_data(SubGridIndex& sub_index) const;
   /** @return The subgrid width of this square. */
   INT64 sub_w() const;
   /** @return The subgrid height of this square. */
@@ -98,18 +98,18 @@ private:
   ImageGridSquare* _parent_square;
   INT64 _sub_i_arr(INT64 sub_i, INT64 sub_j) const;
   INT64 _sub_i_arr(SubGridIndex& sub_index) const;
-  /** The actual RGB data for this square and zoom level */
-  std::unique_ptr<unsigned char*[]> _rgb_data;
+  /** The actual RGBA data for this square and zoom level */
+  std::unique_ptr<PIXEL_RGBA*[]> _rgba_data;
   // TOOD: will eventually use an object from coordinates.hpp, but for
   // now I want this freedom
-  std::unique_ptr<size_t[]> _rgb_wpixel;
-  std::unique_ptr<size_t[]> _rgb_hpixel;
+  std::unique_ptr<size_t[]> _rgba_wpixel;
+  std::unique_ptr<size_t[]> _rgba_hpixel;
   // not scaled, but they need to be here for now
   INT64 _max_sub_wpixel=-1;
   INT64 _max_sub_hpixel=-1;
   // the origin foreach
-  std::unique_ptr<INT64[]> _rgb_xpixel_origin;
-  std::unique_ptr<INT64[]> _rgb_ypixel_origin;
+  std::unique_ptr<INT64[]> _rgba_xpixel_origin;
+  std::unique_ptr<INT64[]> _rgba_ypixel_origin;
   INT64 _zoom_out_value;
 };
 

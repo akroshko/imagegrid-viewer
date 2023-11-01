@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
   // make a cool texture
   // now transfer the RGB data to texture and blit it
   SDL_Surface* display_texture=nullptr;
-  display_texture=SDL_CreateRGBSurfaceWithFormat(0,texture_wpixel,texture_hpixel,24,SDL_PIXELFORMAT_RGB24);
+  display_texture=SDL_CreateRGBSurfaceWithFormat(0,texture_wpixel,texture_hpixel,32,SDL_PIXELFORMAT_RGBA32);
   SDL_LockSurface(display_texture);
   INT64 index=0;
   for (auto i=0ul; i < square->rgb_wpixel(index,index); i++) {

@@ -48,9 +48,12 @@
 // long/short/signed/unsigned.
 ////////////////////////////////////////////////////////////////////////////////
 
+// types for generic operations
 typedef double FLOAT64;
 typedef uint64_t UINT64;
 typedef int64_t INT64;
+// types for pixels and other data
+typedef uint32_t PIXEL_RGBA;
 
 ////////////////////////////////////////////////////////////////////////////////
 // more complex types
@@ -135,7 +138,7 @@ const INT64 LOAD_FILES_BATCH=1;
 const INT64 LOAD_TEXTURES_BATCH=8;
 
 // the filler color
-const unsigned char FILLER_LEVEL=64;
+const PIXEL_RGBA FILLER_LEVEL=0xFF404040;
 
 // max cache pixel size
 const INT64 CACHE_MAX_PIXEL_SIZE=512;

@@ -1,7 +1,6 @@
 /**
  * The functions that in load in image files.  This file is very much
  * a preliminary work-in-progress while I work on the rest of program.
- *
  */
 // local headers
 #include "../common.hpp"
@@ -206,7 +205,7 @@ bool read_data(const std::string& filename,
   return successful;
 }
 
-bool load_data_as_rgb(const std::string& filename,
+bool load_data_as_rgba(const std::string& filename,
                       const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
                       LoadFileDataTransfer& data_transfer) {
@@ -217,11 +216,11 @@ bool load_data_as_rgb(const std::string& filename,
   bool load_successful=false;
   if (check_tiff(filename)) {
     MSG("Loading TIFF: " << filename);
-    load_successful=load_tiff_as_rgb_cached(cached_filename,
+    load_successful=load_tiff_as_rgba_cached(cached_filename,
                                             current_subgrid,
                                             data_transfer);
     if (!load_successful) {
-      load_successful=load_tiff_as_rgb(filename,
+      load_successful=load_tiff_as_rgba(filename,
                                        current_subgrid,
                                        data_transfer);
     }
@@ -229,7 +228,7 @@ bool load_data_as_rgb(const std::string& filename,
   } else if (check_png(filename)) {
       MSG("Loading PNG: " << filename);
       // TODO: check success
-      load_successful=load_png_as_rgb(filename,
+      load_successful=load_png_as_rgba(filename,
                                       cached_filename,
                                       current_subgrid,
                                       data_transfer);
@@ -239,7 +238,7 @@ bool load_data_as_rgb(const std::string& filename,
     std::string temp_filename;
     int tiff_fd=-1;
     MSG("Loading NTS: " << filename);
-    load_successful=load_tiff_as_rgb_cached(cached_filename,
+    load_successful=load_tiff_as_rgba_cached(cached_filename,
                                             current_subgrid,
                                             data_transfer);
     if (!load_successful) {
@@ -248,7 +247,7 @@ bool load_data_as_rgb(const std::string& filename,
                                               tiff_fd);
        if (load_successful) {
          MSG("Loading TIFF: " << temp_filename);
-         load_successful=load_tiff_as_rgb(temp_filename,
+         load_successful=load_tiff_as_rgba(temp_filename,
                                           current_subgrid,
                                           data_transfer);
          if (tiff_fd >= 0) {
@@ -261,7 +260,7 @@ bool load_data_as_rgb(const std::string& filename,
     MSG("Done NTS: " << filename);
   } else if (check_empty(filename)) {
   } else {
-    ERROR("load_data_as_rgb can't load: " << filename);
+    ERROR("load_data_as_rgba can't load: " << filename);
   }
   return load_successful;
 }
@@ -275,7 +274,7 @@ bool read_tiff_data(const std::string& filename,
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
 
   if (!tif) {
-    ERROR("load_tiff_as_rgb() Failed to allocate raster for: " << filename);
+    ERROR("load_tiff_as_rgba() Failed to allocate raster for: " << filename);
   } else {
     uint32_t w,h;
 
@@ -313,17 +312,17 @@ bool test_tiff_cache(const std::string& cached_filename,
   return can_cache;
 }
 
-bool load_tiff_as_rgb_cached(const std::string& cached_filename,
-                             SubGridIndex& current_subgrid,
-                             LoadFileDataTransfer& data_transfer) {
+bool load_tiff_as_rgba_cached(const std::string& cached_filename,
+                              SubGridIndex& current_subgrid,
+                              LoadFileDataTransfer& data_transfer) {
   auto sub_i=current_subgrid.subgrid_i();
   auto sub_j=current_subgrid.subgrid_j();
   auto successful=false;
   auto sub_w=data_transfer.sub_w;
   auto sub_h=data_transfer.sub_h;
   auto sub_index=sub_j*sub_w+sub_i;
-  auto original_width=data_transfer.original_rgb_wpixel[sub_index];
-  auto original_height=data_transfer.original_rgb_hpixel[sub_index];
+  auto original_width=data_transfer.original_rgba_wpixel[sub_index];
+  auto original_height=data_transfer.original_rgba_hpixel[sub_index];
   auto can_cache=test_tiff_cache(cached_filename,
                                  data_transfer);
   if (can_cache) {
@@ -347,18 +346,18 @@ bool load_tiff_as_rgb_cached(const std::string& cached_filename,
     memset(&png_image_local, 0, (sizeof png_image_local));
     png_image_local.version=PNG_IMAGE_VERSION;
     if (png_image_begin_read_from_file(&png_image_local, cached_filename.c_str()) == 0) {
-      ERROR("load_tiff_as_rgb() failed to read from png file: " << cached_filename);
+      ERROR("load_tiff_as_rgba() failed to read from png file: " << cached_filename);
       can_cache=false;
     } else {
       png_bytep png_raster;
-      png_image_local.format=PNG_FORMAT_RGB;
+      png_image_local.format=PNG_FORMAT_RGBA;
       png_raster=new unsigned char[PNG_IMAGE_SIZE(png_image_local)];
       if (png_raster == NULL) {
-        ERROR("load_tiff_as_rgb() failed to allocate png buffer!");
+        ERROR("load_tiff_as_rgba() failed to allocate png buffer!");
         can_cache=false;
       } else {
         if (png_image_finish_read(&png_image_local, NULL, png_raster, 0, NULL) == 0) {
-          ERROR("load_tiff_as_rgb() failed to read full png image!");
+          ERROR("load_tiff_as_rgba() failed to read full png image!");
           can_cache=false;
         } else {
           // TODO: test for mismatched size
@@ -371,13 +370,13 @@ bool load_tiff_as_rgb_cached(const std::string& cached_filename,
             size_t w_reduced=reduce_and_pad(original_width,zoom_out_value);
             size_t h_reduced=reduce_and_pad(original_height,zoom_out_value);
             auto sub_index_arr=sub_j*sub_w+sub_i;
-            file_data->rgb_wpixel[sub_index_arr]=w_reduced;
-            file_data->rgb_hpixel[sub_index_arr]=h_reduced;
+            file_data->rgba_wpixel[sub_index_arr]=w_reduced;
+            file_data->rgba_hpixel[sub_index_arr]=h_reduced;
             size_t npixel_reduced=w_reduced*h_reduced;
-            file_data->rgb_data[sub_index_arr]=new unsigned char[npixel_reduced*3];
-            buffer_copy_reduce_generic((unsigned char *)png_raster,png_width,png_height,
+            file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixel_reduced];
+            buffer_copy_reduce_generic((PIXEL_RGBA *)png_raster,png_width,png_height,
                                        0, 0,
-                                       file_data->rgb_data[sub_index_arr],w_reduced,h_reduced,
+                                       file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
                                        actual_zoom_out_value);
           }
         }
@@ -390,7 +389,7 @@ bool load_tiff_as_rgb_cached(const std::string& cached_filename,
   return successful;
 }
 
-bool load_tiff_as_rgb(const std::string& filename,
+bool load_tiff_as_rgba(const std::string& filename,
                       SubGridIndex& current_subgrid,
                       LoadFileDataTransfer& data_transfer) {
   auto sub_i=current_subgrid.subgrid_i();
@@ -399,7 +398,7 @@ bool load_tiff_as_rgb(const std::string& filename,
   auto success=false;
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
   if (!tif) {
-    ERROR("load_tiff_as_rgb() Failed to allocate raster for: " << filename);
+    ERROR("load_tiff_as_rgba() Failed to allocate raster for: " << filename);
   } else {
     uint32_t tiff_width,tiff_height;
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &tiff_width);
@@ -420,12 +419,12 @@ bool load_tiff_as_rgb(const std::string& filename,
           size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
           size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
           auto sub_index_arr=sub_j*sub_w+sub_i;
-          file_data->rgb_wpixel[sub_index_arr]=w_reduced;
-          file_data->rgb_hpixel[sub_index_arr]=h_reduced;
+          file_data->rgba_wpixel[sub_index_arr]=w_reduced;
+          file_data->rgba_hpixel[sub_index_arr]=h_reduced;
           auto npixels_reduced=w_reduced*h_reduced;
-          file_data->rgb_data[sub_index_arr]=new unsigned char[npixels_reduced*3];
+          file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
           buffer_copy_reduce_tiff(raster,tiff_width,tiff_height,
-                                  file_data->rgb_data[sub_index_arr],w_reduced,h_reduced,
+                                  file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
                                   zoom_out_value);
         }
         success=true;
@@ -454,7 +453,7 @@ bool read_png_data(const std::string& filename,
   return success;
 }
 
-bool load_png_as_rgb(const std::string& filename,
+bool load_png_as_rgba(const std::string& filename,
                      const std::string& cached_filename,
                      SubGridIndex& current_subgrid,
                      LoadFileDataTransfer& data_transfer) {
@@ -467,17 +466,17 @@ bool load_png_as_rgb(const std::string& filename,
   // TODO: check libpng library, may not want this
   image.version=PNG_IMAGE_VERSION;
   if (png_image_begin_read_from_file(&image, filename.c_str()) == 0) {
-    ERROR("load_png_as_rgb() failed to read from file: " << filename);
+    ERROR("load_png_as_rgba() failed to read from file: " << filename);
     success=false;
   } else {
     png_bytep raster;
-    image.format=PNG_FORMAT_RGB;
+    image.format=PNG_FORMAT_RGBA;
     raster=new unsigned char[PNG_IMAGE_SIZE(image)];
     if (raster == NULL) {
-      ERROR("load_png_as_rgb() failed to allocate buffer!");
+      ERROR("load_png_as_rgba() failed to allocate buffer!");
     } else {
       if (png_image_finish_read(&image, NULL, raster, 0, NULL) == 0) {
-        ERROR("load_png_as_rgb() failed to read full image!");
+        ERROR("load_png_as_rgba() failed to read full image!");
       } else {
         // TODO: test for mismatched size
         auto width=(size_t)image.width;
@@ -487,13 +486,13 @@ bool load_png_as_rgb(const std::string& filename,
           size_t w_reduced=reduce_and_pad(width,zoom_out_value);
           size_t h_reduced=reduce_and_pad(height,zoom_out_value);
           auto sub_index_arr=sub_j*sub_w+sub_i;
-          file_data->rgb_wpixel[sub_index_arr]=w_reduced;
-          file_data->rgb_hpixel[sub_index_arr]=h_reduced;
+          file_data->rgba_wpixel[sub_index_arr]=w_reduced;
+          file_data->rgba_hpixel[sub_index_arr]=h_reduced;
           size_t npixel_reduced=w_reduced*h_reduced;
-          file_data->rgb_data[sub_index_arr]=new unsigned char[npixel_reduced*3];
-          buffer_copy_reduce_generic((unsigned char *)raster,width,height,
+          file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixel_reduced];
+          buffer_copy_reduce_generic((PIXEL_RGBA*)raster,width,height,
                                      0, 0,
-                                     file_data->rgb_data[sub_index_arr],w_reduced,h_reduced,
+                                     file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
                                      zoom_out_value);
           success=true;
         }
@@ -509,7 +508,7 @@ bool write_png_text(std::string filename_png,
                     std::string filename_text,
                     INT64 wpixel, INT64 hpixel,
                     INT64 full_wpixel, INT64 full_hpixel,
-                    unsigned char* rgb_data) {
+                    PIXEL_RGBA* rgba_data) {
    char new_filename[PATH_BUFFER_SIZE]="";
 
    auto c_str=filename_png.c_str();
@@ -528,10 +527,10 @@ bool write_png_text(std::string filename_png,
    image.opaque=NULL;
    image.width=wpixel;
    image.height=hpixel;
-   image.format=PNG_FORMAT_RGB;
+   image.format=PNG_FORMAT_RGBA;
    image.flags=0;
    image.colormap_entries=0;
-   png_image_write_to_file(&image, new_filename, 0, (void*)rgb_data, 0, 0);
+   png_image_write_to_file(&image, new_filename, 0, (void*)rgba_data, 0, 0);
    // finally write out a text file with vital information
    std::ofstream file_out_text;
    file_out_text.open(filename_text,std::ios::trunc);

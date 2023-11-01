@@ -225,7 +225,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
       for (INT64 i_sub=0; i_sub < subimages_w; i_sub++) {
         for (INT64 j_sub=0; j_sub < subimages_h; j_sub++) {
           auto sub_index=SubGridIndex(i_sub,j_sub);
-          auto source_data=source_square->get_rgb_data(sub_index);
+          auto source_data=source_square->get_rgba_data(sub_index);
           if (dest_array && source_data) {
             no_data=false;
           }
@@ -238,11 +238,11 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
       for (INT64 i_sub=0; i_sub < subimages_w; i_sub++) {
         for (INT64 j_sub=0; j_sub < subimages_h; j_sub++) {
           auto sub_index=SubGridIndex(i_sub,j_sub);
-          auto source_data=source_square->get_rgb_data(sub_index);
-          auto source_wpixel=(INT64)source_square->rgb_wpixel(sub_index);
-          auto source_hpixel=(INT64)source_square->rgb_hpixel(sub_index);
-          auto source_data_origin_x=source_square->rgb_xpixel_origin(sub_index);
-          auto source_data_origin_y=source_square->rgb_ypixel_origin(sub_index);
+          auto source_data=source_square->get_rgba_data(sub_index);
+          auto source_wpixel=(INT64)source_square->rgba_wpixel(sub_index);
+          auto source_hpixel=(INT64)source_square->rgba_hpixel(sub_index);
+          auto source_data_origin_x=source_square->rgba_xpixel_origin(sub_index);
+          auto source_data_origin_y=source_square->rgba_ypixel_orgin(sub_index);
           // do the things we are copying exist?
           if (dest_array && source_data) {
             // these should only be powers of 2, add an assert
@@ -253,13 +253,13 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
               auto skip=dest_zoom_index/source_zoom_out_value;
               buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
                                          source_data_origin_x, source_data_origin_y,
-                                         (unsigned char*)dest_array,dest_wpixel,dest_hpixel,
+                                         (PIXEL_RGBA*)dest_array,dest_wpixel,dest_hpixel,
                                          skip);
             } else {
               auto skip=source_zoom_out_value/dest_zoom_index;
               buffer_copy_expand_generic(source_data,source_wpixel,source_hpixel,
                                          source_data_origin_x, source_data_origin_y,
-                                         (unsigned char*)dest_array,dest_wpixel,dest_hpixel,
+                                         (PIXEL_RGBA*)dest_array,dest_wpixel,dest_hpixel,
                                          skip);
             }
             any_successful=true;
