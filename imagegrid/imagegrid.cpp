@@ -23,11 +23,11 @@
 #include <climits>
 
 ImageGridSquareZoomLevel::ImageGridSquareZoomLevel(ImageGridSquare* parent_square,
-                                                   INT64 zoom_out_value) {
+                                                   INT64 zoom_out) {
   this->_parent_square=parent_square;
-  this->_max_sub_wpixel=this->_parent_square->_max_sub_wpixel/zoom_out_value;
-  this->_max_sub_hpixel=this->_parent_square->_max_sub_hpixel/zoom_out_value;
-  this->_zoom_out_value=zoom_out_value;
+  this->_max_sub_wpixel=this->_parent_square->_max_sub_wpixel/zoom_out;
+  this->_max_sub_hpixel=this->_parent_square->_max_sub_hpixel/zoom_out;
+  this->_zoom_out=zoom_out;
   this->_rgba_wpixel=std::make_unique<size_t[]>(this->sub_w()*this->sub_h());
   this->_rgba_hpixel=std::make_unique<size_t[]>(this->sub_w()*this->sub_h());
   this->_rgba_xpixel_origin=std::make_unique<INT64[]>(this->sub_w()*this->sub_h());
@@ -59,7 +59,7 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
   for (auto& dest_square : dest_squares) {
     file_data.data_pairs.emplace_back(std::pair<ImageGridSquareZoomLevel* const,
                                       std::shared_ptr<LoadFileZoomLevelData>>(dest_square,std::make_shared<LoadFileZoomLevelData>()));
-    file_data.data_pairs.back().second->zoom_out_value=dest_square->zoom_out_value();
+    file_data.data_pairs.back().second->zoom_out=dest_square->zoom_out();
     file_data.data_pairs.back().second->max_sub_wpixel=dest_square->max_sub_wpixel();
     file_data.data_pairs.back().second->max_sub_hpixel=dest_square->max_sub_hpixel();
     data_transfer.data_transfer.emplace_back(file_data.data_pairs.back().second);
@@ -156,8 +156,8 @@ void ImageGridSquareZoomLevel::unload_square() {
   }
 }
 
-INT64 ImageGridSquareZoomLevel::zoom_out_value() const {
-  return this->_zoom_out_value;
+INT64 ImageGridSquareZoomLevel::zoom_out() const {
+  return this->_zoom_out;
 }
 
 size_t ImageGridSquareZoomLevel::rgba_wpixel(SubGridIndex& sub_index) const {
@@ -304,11 +304,11 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
   for (INT64 i=0L; i < this->grid_image_size().wimage(); i++) {
     for (INT64 j=0L; j < this->grid_image_size().himage(); j++) {
       this->_squares[i][j]->image_array=std::make_unique<std::unique_ptr<ImageGridSquareZoomLevel>[]>(this->_zoom_index_length);
-      INT64 zoom_out_value=1;
+      INT64 zoom_out=1;
       for (auto k=0L; k < this->_zoom_index_length; k++) {
         this->_squares[i][j]->image_array[k]=std::make_unique<ImageGridSquareZoomLevel>(this->_squares[i][j].get(),
-                                                                                        zoom_out_value);
-        zoom_out_value*=zoom_step;
+                                                                                        zoom_out);
+        zoom_out*=zoom_step;
       }
     }
   }

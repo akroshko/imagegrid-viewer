@@ -232,7 +232,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
         }
       }
       if (dest_array && no_data) {
-        std::memset((void*)dest_array,0,sizeof(char)*dest_wpixel*dest_hpixel*3);
+        std::memset((void*)dest_array,0,sizeof(PIXEL_RGBA)*dest_wpixel*dest_hpixel);
       }
       // everything is read, loop over
       for (INT64 i_sub=0; i_sub < subimages_w; i_sub++) {
@@ -246,21 +246,21 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
           // do the things we are copying exist?
           if (dest_array && source_data) {
             // these should only be powers of 2, add an assert
-            auto source_zoom_out_value=source_square->zoom_out_value();
+            auto source_zoom_out=source_square->zoom_out();
             auto dest_zoom_index=texture_zoom_reduction;
             // TODO: move out once I restructure code appropriately
-            if (source_zoom_out_value <= dest_zoom_index) {
-              auto skip=dest_zoom_index/source_zoom_out_value;
+            if (source_zoom_out <= dest_zoom_index) {
+              auto zoom_out=dest_zoom_index/source_zoom_out;
               buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
                                          source_data_origin_x, source_data_origin_y,
                                          (PIXEL_RGBA*)dest_array,dest_wpixel,dest_hpixel,
-                                         skip);
+                                         zoom_out);
             } else {
-              auto skip=source_zoom_out_value/dest_zoom_index;
+              auto zoom_in=source_zoom_out/dest_zoom_index;
               buffer_copy_expand_generic(source_data,source_wpixel,source_hpixel,
                                          source_data_origin_x, source_data_origin_y,
                                          (PIXEL_RGBA*)dest_array,dest_wpixel,dest_hpixel,
-                                         skip);
+                                         zoom_in);
             }
             any_successful=true;
           }

@@ -327,7 +327,7 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
                                  data_transfer);
   if (can_cache) {
     MSG("Using cached file: " << cached_filename);
-    INT64 cached_zoom_out_value=1;
+    INT64 cached_zoom_out=1;
     // TODO: this could be a problem amongst wildly varying image sizes
     //       solutions are to:
     //           store max width/max height vs zoom_out
@@ -338,9 +338,9 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
     // ImageGrid::_write_cache, there should be a better way once
     // the data structures are revised
     while (sub_w*width_test >= CACHE_MAX_PIXEL_SIZE || sub_h*height_test >= CACHE_MAX_PIXEL_SIZE) {
-      cached_zoom_out_value*=ZOOM_STEP;
-      width_test=reduce_and_pad(original_width,cached_zoom_out_value);
-      height_test=reduce_and_pad(original_height,cached_zoom_out_value);
+      cached_zoom_out*=ZOOM_STEP;
+      width_test=reduce_and_pad(original_width,cached_zoom_out);
+      height_test=reduce_and_pad(original_height,cached_zoom_out);
     }
     png_image png_image_local;
     memset(&png_image_local, 0, (sizeof png_image_local));
@@ -364,11 +364,11 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
           auto png_width=(size_t)png_image_local.width;
           auto png_height=(size_t)png_image_local.height;
           for (auto& file_data : data_transfer.data_transfer) {
-            auto zoom_out_value=file_data->zoom_out_value;
-            auto actual_zoom_out_value=file_data->zoom_out_value/cached_zoom_out_value;
+            auto zoom_out=file_data->zoom_out;
+            auto actual_zoom_out=file_data->zoom_out/cached_zoom_out;
             // TODO: might want to add an assert here but should be safe due to earlier check
-            size_t w_reduced=reduce_and_pad(original_width,zoom_out_value);
-            size_t h_reduced=reduce_and_pad(original_height,zoom_out_value);
+            size_t w_reduced=reduce_and_pad(original_width,zoom_out);
+            size_t h_reduced=reduce_and_pad(original_height,zoom_out);
             auto sub_index_arr=sub_j*sub_w+sub_i;
             file_data->rgba_wpixel[sub_index_arr]=w_reduced;
             file_data->rgba_hpixel[sub_index_arr]=h_reduced;
@@ -377,7 +377,7 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
             buffer_copy_reduce_generic((PIXEL_RGBA *)png_raster,png_width,png_height,
                                        0, 0,
                                        file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
-                                       actual_zoom_out_value);
+                                       actual_zoom_out);
           }
         }
         delete[] png_raster;
@@ -415,9 +415,9 @@ bool load_tiff_as_rgba(const std::string& filename,
       } else {
         // convert raster
         for (auto& file_data : data_transfer.data_transfer) {
-          auto zoom_out_value=file_data->zoom_out_value;
-          size_t w_reduced=reduce_and_pad(tiff_width,zoom_out_value);
-          size_t h_reduced=reduce_and_pad(tiff_height,zoom_out_value);
+          auto zoom_out=file_data->zoom_out;
+          size_t w_reduced=reduce_and_pad(tiff_width,zoom_out);
+          size_t h_reduced=reduce_and_pad(tiff_height,zoom_out);
           auto sub_index_arr=sub_j*sub_w+sub_i;
           file_data->rgba_wpixel[sub_index_arr]=w_reduced;
           file_data->rgba_hpixel[sub_index_arr]=h_reduced;
@@ -425,7 +425,7 @@ bool load_tiff_as_rgba(const std::string& filename,
           file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
           buffer_copy_reduce_tiff(raster,tiff_width,tiff_height,
                                   file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
-                                  zoom_out_value);
+                                  zoom_out);
         }
         success=true;
       }
@@ -482,9 +482,9 @@ bool load_png_as_rgba(const std::string& filename,
         auto width=(size_t)image.width;
         auto height=(size_t)image.height;
         for (auto& file_data : data_transfer.data_transfer) {
-          auto zoom_out_value=file_data->zoom_out_value;
-          size_t w_reduced=reduce_and_pad(width,zoom_out_value);
-          size_t h_reduced=reduce_and_pad(height,zoom_out_value);
+          auto zoom_out=file_data->zoom_out;
+          size_t w_reduced=reduce_and_pad(width,zoom_out);
+          size_t h_reduced=reduce_and_pad(height,zoom_out);
           auto sub_index_arr=sub_j*sub_w+sub_i;
           file_data->rgba_wpixel[sub_index_arr]=w_reduced;
           file_data->rgba_hpixel[sub_index_arr]=h_reduced;
@@ -493,7 +493,7 @@ bool load_png_as_rgba(const std::string& filename,
           buffer_copy_reduce_generic((PIXEL_RGBA*)raster,width,height,
                                      0, 0,
                                      file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
-                                     zoom_out_value);
+                                     zoom_out);
           success=true;
         }
       }

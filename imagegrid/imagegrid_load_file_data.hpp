@@ -29,7 +29,7 @@ public:
   std::unique_ptr<size_t[]> rgba_hpixel;
   INT64 max_sub_wpixel=INT_MIN;
   INT64 max_sub_hpixel=INT_MIN;
-  INT64 zoom_out_value=INT_MIN;
+  INT64 zoom_out=INT_MIN;
 };
 
 /**

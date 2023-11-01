@@ -1,5 +1,6 @@
 // local headers
 #include "../common.hpp"
+#include "buffer_manip.hpp"
 // C++ headers
 #include <memory>
 // C headers
@@ -11,49 +12,68 @@
 
 typedef unsigned char (*rgb_extract)(unsigned char);
 
+#define G_SHIFT 8
+#define B_SHIFT 16
+#define DEFAULT_ALPHA 0xFF000000
+
 void buffer_copy_reduce_tiff (uint32_t* source_buffer, uint32_t w, uint32_t h,
                               PIXEL_RGBA* dest_buffer, size_t w_reduced, size_t h_reduced,
-                              INT64 zoom_index) {
+                              INT64 zoom_out) {
+  buffer_copy_reduce_tiff_safe(source_buffer, w, h,
+                               dest_buffer, w_reduced, h_reduced,
+                               zoom_out);
+}
+
+void buffer_copy_reduce_tiff_safe (uint32_t* source_buffer, uint32_t w, uint32_t h,
+                                   PIXEL_RGBA* dest_buffer, size_t w_reduced, size_t h_reduced,
+                                   INT64 zoom_out) {
   // the loops in this function ensure memory is accessed sequentially
   // TODO: may wish to figure out an appropriate reduced size
   //       since 64 bit integers may be overkill
-  auto row_buffer=std::make_unique<INT64[]>(w_reduced*4);
+  auto row_buffer=std::make_unique<INT64[]>(w_reduced*3);
 
   // TODO: this can probably be further optimized by passing in the
   // precomputed shift from elsewhere in the program
-  INT64 block_average_shift=2*floor(log2(zoom_index));
+  INT64 block_average_shift=2*floor(log2(zoom_out));
 
   for (size_t j=0; j < h_reduced; j++) {
-    std::memset((void*)row_buffer.get(),0,sizeof(INT64)*w_reduced*4);
-    for (size_t tj=j*zoom_index; tj < (j+1)*zoom_index; tj++) {
+    std::memset((void*)row_buffer.get(),0,sizeof(INT64)*w_reduced*3);
+    for (size_t tj=j*zoom_out; tj < (j+1)*zoom_out; tj++) {
       for (size_t i=0; i < w_reduced; i++) {
-        for (size_t ti=i*zoom_index; ti < (i+1)*zoom_index; ti++) {
+        for (size_t ti=i*zoom_out; ti < (i+1)*zoom_out; ti++) {
           auto tiff_pixel=tj*w+ti;
           if ((ti < w) && (tj < h)) {
-            // TODO: this is a gross inefficiency and needs to be eliminated
-            row_buffer[i*4]+=TIFFGetR(source_buffer[tiff_pixel]);
-            row_buffer[i*4+1]+=TIFFGetG(source_buffer[tiff_pixel]);
-            row_buffer[i*4+2]+=TIFFGetB(source_buffer[tiff_pixel]);
+            row_buffer[i*3]+=TIFFGetR(source_buffer[tiff_pixel]);
+            row_buffer[i*3+1]+=TIFFGetG(source_buffer[tiff_pixel]);
+            row_buffer[i*3+2]+=TIFFGetB(source_buffer[tiff_pixel]);
           }
         }
       }
     }
     for (size_t i=0; i < w_reduced; i++) {
-      // TODO this still needs to be optimized
       auto rgba_pixel=j*w_reduced+i;
-      dest_buffer[rgba_pixel]=(row_buffer[i*4] >> block_average_shift);
-      dest_buffer[rgba_pixel]+=((row_buffer[i*4+1] >> block_average_shift) << 8);
-      dest_buffer[rgba_pixel]+=((row_buffer[i*4+2] >> block_average_shift) << 16);
-      dest_buffer[rgba_pixel]+=0xFF000000;
+      dest_buffer[rgba_pixel]=(row_buffer[i*3] >> block_average_shift);
+      dest_buffer[rgba_pixel]+=((row_buffer[i*3+1] >> block_average_shift) << G_SHIFT);
+      dest_buffer[rgba_pixel]+=((row_buffer[i*3+2] >> block_average_shift) << B_SHIFT);
+      dest_buffer[rgba_pixel]+=DEFAULT_ALPHA;
     }
   }
 }
 
-// TODO: finish looping over only necessary pixels
 void buffer_copy_reduce_generic (PIXEL_RGBA* source_buffer, size_t w, size_t h,
                                  INT64 x_origin, INT64 y_origin,
                                  PIXEL_RGBA* dest_buffer, size_t w_reduced, size_t h_reduced,
-                                 INT64 zoom_index) {
+                                 INT64 zoom_out) {
+  buffer_copy_reduce_generic_safe(source_buffer, w, h,
+                                  x_origin, y_origin,
+                                  dest_buffer, w_reduced, h_reduced,
+                                  zoom_out);
+}
+
+void buffer_copy_reduce_generic_safe (PIXEL_RGBA* source_buffer, size_t w, size_t h,
+                                      INT64 x_origin, INT64 y_origin,
+                                      PIXEL_RGBA* dest_buffer, size_t w_reduced, size_t h_reduced,
+                                      INT64 zoom_out) {
   // TODO: zoom_index is not the index, since index is power of two
   //       fix!!!
 
@@ -68,57 +88,63 @@ void buffer_copy_reduce_generic (PIXEL_RGBA* source_buffer, size_t w, size_t h,
   // row buffer to copy to
   // TODO: may wish to figure out an appropriate reduced size since 64
   // bit integers are probably overkill for any forseeable need
-  auto row_buffer=std::make_unique<INT64[]>(w_reduced*4);
+  auto row_buffer=std::make_unique<INT64[]>(w_reduced*3);
 
   // TODO: this can probably be further optimized by passing in the
   // precomputed shift from elsewhere in the program
-  INT64 block_average_shift=2*floor(log2(zoom_index));
+  INT64 block_average_shift=2*floor(log2(zoom_out));
 
   // the loops in this function ensure memory is accessed sequentially
   // TODO: want to make sure I hit last one
   // these outer two loops hit all pixels in source image
-  for (size_t bsj=0, dj=(y_origin/zoom_index);
+  for (size_t bsj=0, dj=(y_origin/zoom_out);
        bsj < h;
-       bsj+=zoom_index, dj++) {
+       bsj+=zoom_out, dj++) {
     // zero out the row buffer each one of these
-    std::memset((void*)row_buffer.get(),0,sizeof(INT64)*w_reduced*4);
-    // for testing
-    // for (INT64 i=0; i < w_reduced*3; i++) {
-    //   row_buffer[i]=0;
-    // }
-    for (size_t sj=bsj; sj < bsj+zoom_index; sj++) {
-      for (size_t bsi=0; bsi < w; bsi+=zoom_index) {
-        for (size_t si=bsi; si < bsi+zoom_index; si++) {
+    std::memset((void*)row_buffer.get(),0,sizeof(INT64)*w_reduced*3);
+    for (size_t sj=bsj; sj < bsj+zoom_out; sj++) {
+      for (size_t bsi=0; bsi < w; bsi+=zoom_out) {
+        for (size_t si=bsi; si < bsi+zoom_out; si++) {
           auto source_pixel=sj*w+si;
-          auto row_buffer_pixel=((x_origin+si)/zoom_index);
+          auto row_buffer_pixel=((x_origin+si)/zoom_out);
           // work out pixel math more carefuly and/or test with an
           // assert
           if (row_buffer_pixel < w_reduced && si < w && sj < h) {
-            row_buffer[row_buffer_pixel*4]+=(source_buffer[source_pixel] & 0xFF);
-            row_buffer[row_buffer_pixel*4+1]+=((source_buffer[source_pixel] & 0xFF00) >> 8);
-            row_buffer[row_buffer_pixel*4+2]+=((source_buffer[source_pixel] & 0xFF0000) >> 16);
+            row_buffer[row_buffer_pixel*3]+=(source_buffer[source_pixel] & 0xFF);
+            row_buffer[row_buffer_pixel*3+1]+=((source_buffer[source_pixel] & 0xFF00) >> G_SHIFT);
+            row_buffer[row_buffer_pixel*3+2]+=((source_buffer[source_pixel] & 0xFF0000) >> B_SHIFT);
           }
         }
       }
     }
-    for (size_t di=x_origin/zoom_index; di < w_reduced; di++) {
-      // TODO: possibly assert instead of testing for overflow
+    for (size_t di=x_origin/zoom_out; di < w_reduced; di++) {
       if (di < w_reduced && dj < h_reduced) {
         auto dest_pixel=dj*w_reduced+di;
-        dest_buffer[dest_pixel]=(row_buffer[di*4] >> block_average_shift);
-        dest_buffer[dest_pixel]+=((row_buffer[di*4+1] >> block_average_shift) << 8);
-        dest_buffer[dest_pixel]+=((row_buffer[di*4+2] >> block_average_shift) << 16);
-        dest_buffer[dest_pixel]+=0xFF000000;
+        dest_buffer[dest_pixel]=(row_buffer[di*3] >> block_average_shift);
+        dest_buffer[dest_pixel]+=((row_buffer[di*3+1] >> block_average_shift) << G_SHIFT);
+        dest_buffer[dest_pixel]+=((row_buffer[di*3+2] >> block_average_shift) << B_SHIFT);
+        dest_buffer[dest_pixel]+=DEFAULT_ALPHA;
       }
     }
   }
 }
 
+
 void buffer_copy_expand_generic (PIXEL_RGBA* source_buffer, size_t w, size_t h,
                                  INT64 x_origin, INT64 y_origin,
                                  PIXEL_RGBA* dest_buffer, size_t w_expanded, size_t h_expanded,
-                                 INT64 zoom_index) {
-  auto zoom_skip=zoom_index;
+                                 INT64 zoom_out) {
+  buffer_copy_expand_generic_safe (source_buffer, w, h,
+                                   x_origin, y_origin,
+                                   dest_buffer, w_expanded, h_expanded,
+                                   zoom_out);
+}
+
+void buffer_copy_expand_generic_safe (PIXEL_RGBA* source_buffer, size_t w, size_t h,
+                                      INT64 x_origin, INT64 y_origin,
+                                      PIXEL_RGBA* dest_buffer, size_t w_expanded, size_t h_expanded,
+                                      INT64 zoom_out) {
+  auto zoom_skip=zoom_out;
   auto dest_i_beg=x_origin*zoom_skip;
   auto dest_j_beg=y_origin*zoom_skip;
   auto dest_i_end=(x_origin+w)*zoom_skip;
@@ -133,17 +159,12 @@ void buffer_copy_expand_generic (PIXEL_RGBA* source_buffer, size_t w, size_t h,
         // not valid source pixels
         if (si < w && sj < h) {
           auto source_buffer_pixel=sj*w+si;
-          auto src_data_0=source_buffer[source_buffer_pixel] & 0xFF;
-          auto src_data_1=(source_buffer[source_buffer_pixel] & 0xFF00) >> 8;
-          auto src_data_2=(source_buffer[source_buffer_pixel] & 0xFF0000) >> 16;
+          auto src_data=source_buffer[source_buffer_pixel];
           for (size_t di=bdi; di < bdi+zoom_skip; di++) {
             // not valid dest pixels
             if (di < w_expanded && dj < h_expanded) {
               auto dest_pixel=dj*w_expanded+di;
-              dest_buffer[dest_pixel]=src_data_0;
-              dest_buffer[dest_pixel]+=(src_data_1 << 8);
-              dest_buffer[dest_pixel]+=(src_data_2 << 16);
-              dest_buffer[dest_pixel]+=0xFF000000;
+              dest_buffer[dest_pixel]=src_data;
             }
           }
         }

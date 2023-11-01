@@ -58,7 +58,7 @@ public:
   /** Unload and free memory from a loaded file */
   void unload_square();
   /** @return The amount zoomed out this class represents. */
-  INT64 zoom_out_value() const;
+  INT64 zoom_out() const;
   /**
    * @param sub_index The index of the subgrid.
    * @return The width in pixels.
@@ -110,7 +110,7 @@ private:
   // the origin foreach
   std::unique_ptr<INT64[]> _rgba_xpixel_origin;
   std::unique_ptr<INT64[]> _rgba_ypixel_origin;
-  INT64 _zoom_out_value;
+  INT64 _zoom_out;
 };
 
 /**

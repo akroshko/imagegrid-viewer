@@ -33,12 +33,12 @@ all: CXXFLAGS_UNSAFE += $(CXXFLAGS_ALL)
 all: CXXFLAGS_SDL += $(CXXFLAGS_ALL)
 all: imagegrid-viewer
 
-.PHONY: sanitize-address
-sanitize-address: CXXFLAGS_SAFE += $(CXXFLAGS_ALL) -fsanitize=address
-sanitize-address: CXXFLAGS_UNSAFE += $(CXXFLAGS_ALL) -fsanitize=address
-sanitize-address: CXXFLAGS_SDL += $(CXXFLAGS_ALL) -fsanitize=address
-sanitize-address: LDFLAGS += -fsanitize=address
-sanitize-address: imagegrid-viewer
+.PHONY: sanitize-address-undefined
+sanitize-address-undefined: CXXFLAGS_SAFE += $(CXXFLAGS_ALL) -fsanitize=address,undefined
+sanitize-address-undefined: CXXFLAGS_UNSAFE += $(CXXFLAGS_ALL) -fsanitize=address,undefined
+sanitize-address-undefined: CXXFLAGS_SDL += $(CXXFLAGS_ALL) -fsanitize=address,undefined
+sanitize-address-undefined: LDFLAGS += -fsanitize=address -lubsan
+sanitize-address-undefined: imagegrid-viewer
 
 .PHONY: sanitize-thread
 sanitize-thread: CXXFLAGS_SAFE += $(CXXFLAGS_ALL) -fsanitize=thread
@@ -46,13 +46,6 @@ sanitize-thread: CXXFLAGS_UNSAFE += $(CXXFLAGS_ALL) -fsanitize=thread
 sanitize-thread: CXXFLAGS_SDL += $(CXXFLAGS_ALL) -fsanitize=thread
 sanitize-thread: LDFLAGS += -ltsan
 sanitize-thread: imagegrid-viewer
-
-.PHONY: sanitize-undefined
-sanitize-undefined: CXXFLAGS_SAFE += $(CXXFLAGS_ALL) -fsanitize=undefined
-sanitize-undefined: CXXFLAGS_UNSAFE += $(CXXFLAGS_ALL) -fsanitize=undefined
-sanitize-undefined: CXXFLAGS_SDL += $(CXXFLAGS_ALL) -fsanitize=undefined
-sanitize-undefined: LDFLAGS += -lubsan
-sanitize-undefined: imagegrid-viewer
 
 .PHONY: debug
 debug: CXXFLAGS_SAFE += $(CXXFLAGS_DEBUG)
