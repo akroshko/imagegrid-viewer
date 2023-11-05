@@ -6,6 +6,7 @@
 // C headers
 #include <cstdlib>
 // C library headers
+#include <string.h>
 #include <getopt.h>
 
 void parse_standard_arguments(int argc, char* const* argv,
@@ -23,12 +24,14 @@ void parse_standard_arguments(int argc, char* const* argv,
     switch(opt) {
     case 'w':
       // width in images
-      wimage=strtol(optarg,&end,10);
+      wimage=strtol(optarg,&end,
+                    strnlen(optarg,PATH_BUFFER_SIZE));
       size_arg=true;
       break;
     case 'h':
       // height in images in images
-      himage=strtol(optarg,&end,10);
+      himage=strtol(optarg,&end,
+                    strnlen(optarg,PATH_BUFFER_SIZE));
       size_arg=true;
       break;
     case 'p':

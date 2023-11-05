@@ -61,15 +61,13 @@ bool read_data(const std::string& filename,
  * @param cached_filename The filename that cached the parts of the
  *                        image fitting in 512x512.
  * @param current_subgrid The current subgrid to load.
- * @param data_transfer The filedata to load.
+ * @param data_transfer The object used to transfer loaded data.
  * @return If reading image data was successful.
  */
 bool load_data_as_rgba(const std::string& filename,
                       const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
-                      LoadFileDataTransfer& data_transfer
-                      // const std::vector<std::shared_ptr<LoadFileZoomLevelData>> data_transfer
-  );
+                      LoadFileDataTransfer& data_transfer);
 
 /**
  * Read data about a tiff file using libtiff
@@ -88,7 +86,7 @@ bool read_tiff_data(const std::string& filename, INT64& width, INT64& height);
  *
  * @param cached_filename The filename that cached the parts of the
  *                        image fitting in 512x512.
- * @param data_transfer
+ * @param data_transfer The object used to transfer loaded data.
  * @return If loading image was successful.
  */
 bool test_tiff_cache(const std::string& cached_filename,
@@ -100,7 +98,7 @@ bool test_tiff_cache(const std::string& cached_filename,
  * @param cached_filename The filename that cached the parts of the
  *                        image fitting in 512x512.
  * @param current_subgrid The current subgrid to load.
- * @param data_transfer
+ * @param data_transfer The object used to transfer loaded data.
  * @return If loading image was successful.
  */
 bool load_tiff_as_rgba_cached(const std::string& cached_filename,
@@ -114,7 +112,7 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
  *
  * @param filename The filename to load.
  * @param current_subgrid The current subgrid to load.
- * @param data_transfer
+ * @param data_transfer The object used to transfer loaded data.
  * @return If loading image was successful.
  */
 bool load_tiff_as_rgba(const std::string& filename,
@@ -138,7 +136,7 @@ bool read_png_data(const std::string& filename, INT64& width, INT64& height);
  * @param cached_filename The filename that cached the parts of the
  *                        image fitting in 512x512.
  * @param current_subgrid The current subgrid to load.
- * @param data_transfer
+ * @param data_transfer The object used to transfer loaded data.
  * @return If loading image was successful.
  */
 bool load_png_as_rgba(const std::string& filename,
@@ -203,7 +201,7 @@ bool check_empty(const std::string& filename);
  * Load image grid from a text file.
  *
  * @param text_file The text file to load from.
- * @param read_data
+ * @param read_data The data read from the file.
  * @param max_i Set to the maximum width index found.
  * @param max_j Set to the maximum height index found.
  */
@@ -212,7 +210,8 @@ void load_image_grid_from_text(std::string text_file,
                                INT64& max_i,INT64& max_j);
 
 /**
- * Create the cached filename with png extension from the real filename.
+ * Create the cached filename with png extension from the real
+ * filename.
  *
  * @param filename The filename to use to create the cached filename.
  * @param extension The extension to create.
@@ -222,7 +221,8 @@ std::string create_cache_filename(const std::string& filename,
                                   const std::string extension);
 
 /**
- * Get a temporary tiff file from the Canadian national topographic system.
+ * Get a temporary tiff file from the Canadian national topographic
+ * system.
  *
  * @param filename The filenam of the NTS zip file.
  * @param temp_filename The filename of the temp tiff file.

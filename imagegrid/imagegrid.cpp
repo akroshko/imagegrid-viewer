@@ -8,6 +8,7 @@
 #include "../utility.hpp"
 #include "gridsetup.hpp"
 #include "imagegrid.hpp"
+#include "iterators.hpp"
 #include "../viewport_current_state.hpp"
 #include "imagegrid_load_file_data.hpp"
 // C compatible headers
@@ -50,9 +51,10 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
   auto sub_h=grid_square->sub_h();
   data_transfer.sub_h=sub_w;
   data_transfer.sub_w=sub_h;
-  data_transfer.original_rgba_wpixel=std::make_unique<size_t[]>(sub_w*sub_h);
-  data_transfer.original_rgba_hpixel=std::make_unique<size_t[]>(sub_w*sub_h);
-  for (INT64 sub_i_arr=0; sub_i_arr < sub_w*sub_h; sub_i_arr++) {
+  auto sub_size=sub_w*sub_h;
+  data_transfer.original_rgba_wpixel=std::make_unique<size_t[]>(sub_size);
+  data_transfer.original_rgba_hpixel=std::make_unique<size_t[]>(sub_size);
+  for (INT64 sub_i_arr=0; sub_i_arr < sub_size; sub_i_arr++) {
     data_transfer.original_rgba_wpixel[sub_i_arr]=grid_square->_subimages_wpixel[sub_i_arr];
     data_transfer.original_rgba_hpixel[sub_i_arr]=grid_square->_subimages_hpixel[sub_i_arr];
   }
@@ -70,9 +72,9 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
   // TODO: since these are fixed size, I could just allocate a
   //       transfer structure per square
   for (auto& data_transfer_temp : data_transfer.data_transfer) {
-    data_transfer_temp->rgba_data=std::make_unique<PIXEL_RGBA*[]>(sub_w*sub_h);
-    data_transfer_temp->rgba_wpixel=std::make_unique<size_t[]>(sub_w*sub_h);
-    data_transfer_temp->rgba_hpixel=std::make_unique<size_t[]>(sub_w*sub_h);
+    data_transfer_temp->rgba_data=std::make_unique<PIXEL_RGBA*[]>(sub_size);
+    data_transfer_temp->rgba_wpixel=std::make_unique<size_t[]>(sub_size);
+    data_transfer_temp->rgba_hpixel=std::make_unique<size_t[]>(sub_size);
     for (INT64 sub_j=0; sub_j < sub_h; sub_j++) {
       for (INT64 sub_i=0; sub_i < sub_w; sub_i++) {
         auto sub_index=SubGridIndex(sub_i,sub_j);
@@ -86,14 +88,13 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
       }
     }
   }
+  std::string cached_filename;
   for (INT64 sub_j=0; sub_j < sub_h; sub_j++) {
     for (INT64 sub_i=0; sub_i < sub_w; sub_i++) {
       auto sub_index=SubGridIndex(sub_i,sub_j);
       if (grid_square->grid_setup()->subgrid_has_data(grid_square->_grid_index,
                                                       sub_index)) {
         auto filename=grid_square->grid_setup()->get_filename(grid_square->_grid_index,sub_index);
-        // TODO: probably don't create this every iteration
-        std::string cached_filename;
         if (use_cache) {
           cached_filename=create_cache_filename(filename,"png");
         } else {

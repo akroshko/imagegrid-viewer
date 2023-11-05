@@ -32,29 +32,75 @@ public:
    * @return Setup was successful.
    */
   bool successful() const;
-  /** The size of the grid loaded.
+  /**
+   * The size of the grid loaded.
+   *
    * @return The size of the loaded grid.
    */
   GridImageSize grid_image_size() const;
-  /** Indicate whether to cache images.
+  /**
+   * Indicate whether to cache images.
    *
    * @return Whether to cache images.
    */
   bool setup_cache() const;
-  /** Indicate whether to try to use cached images.
+  /**
+   * Indicate whether to try to use cached images.
    *
    * @return Whether to try to use cached images.
    */
   bool use_cache() const;
   // The items allow access to the underlying data.
+  /** @return The width of the imagegrid. */
   INT64 grid_w() const;
+  /** @return The height of the imagegrid. */
   INT64 grid_h() const;
+  /**
+   * Check if a grid square has data.
+   *
+   * @param grid_index The index of the grid square.
+   * @return Whether the grid square has data.
+   */
   bool square_has_data(const GridIndex& grid_index) const;
+  /**
+   * Check if a grid square has data.
+   *
+   * @param grid_index The index of the grid square.
+   * @return Whether the grid square has data.
+   */
   bool square_has_data(const GridIndex* grid_index) const;
+  /**
+   * Get the width of the subgrid for a grid square.
+   *
+   * @param grid_index The index of the grid square.
+   * @return The width of the subgrid.
+   */
   INT64 sub_w(const GridIndex& grid_index) const;
+  /**
+   * Get the height of the subgrid for a grid square.
+   *
+   * @param grid_index The index of the grid square.
+   * @return The height of the subgrid.
+   */
   INT64 sub_h(const GridIndex& grid_index) const;
-  bool subgrid_has_data(const GridIndex& grid_index, const SubGridIndex& sub_index) const;
-  std::string get_filename(const GridIndex& grid_index, const SubGridIndex& sub_index) const;
+  /**
+   * Check if a particular subgrid square has.
+   *
+   * @param grid_index The index of the grid square.
+   * @param subgrid_index The subgrid index.
+   * @return Whether the subgrid has data.
+   */
+  bool subgrid_has_data(const GridIndex& grid_index,
+                        const SubGridIndex& sub_index) const;
+  /**
+   * Get filename associated with a particular subgrid square has.
+   *
+   * @param grid_index The index of the grid square.
+   * @param subgrid_index The subgrid index.
+   * @return The filename.
+   */
+  std::string get_filename(const GridIndex& grid_index,
+                           const SubGridIndex& sub_index) const;
   // getting iterators
   std::unique_ptr<ImageGridIteratorVisible> get_iterator_visible(const ViewPortCurrentState& viewport_current_state);
   std::unique_ptr<ImageGridIteratorFull> get_iterator_full(const ViewPortCurrentState& viewport_current_state);

@@ -34,6 +34,7 @@ public:
    *
    * @param grid The image grid.
    * @param texture_grid The texture grid.
+   * @param texture_overlay An overlay to use.
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */
@@ -45,7 +46,7 @@ public:
    * Load textures based on the current coordinates and zoom level.
    *
    * @param grid_square_visible Is the current square visible?
-   * @param zoom The current zoom.
+   * @param viewport_current_state The current state of the viewport
    * @param grid_square The grid square.
    * @param texture_grid_square The texture grid square.
    * @param texture_copy_count Keeps track of numbers of textures.
@@ -75,8 +76,8 @@ public:
    * @param grid_square_visible Is the current square visible?
    * @param viewport_current_state The current state of the viewport.
    * @param texture_grid_square The texture grid square.
-   * @param keeping_runnin Set true to stop what's happening,
-   *                       generally to indicate program exit.
+   * @param keeping_running Set true to stop what's happening,
+   *                        generally to indicate program exit.
    */
   void add_filler_textures(bool grid_square_visible,
                            const ViewPortCurrentState& viewport_current_state,
@@ -85,8 +86,8 @@ public:
   /**
    * Load a texture.
    *
-   * @param source_square The square containing the RGBA data.
    * @param dest_square The destination square to load the texture into.
+   * @param source_square The square containing the RGBA data.
    * @param zoom_index The zoom index of the texture being loaded.
    * @param texture_pixel_size The original size of the image to be copied.
    * @return If texture was actually copied.

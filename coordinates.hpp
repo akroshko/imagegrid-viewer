@@ -28,8 +28,8 @@ public:
   GridImageSize();
   GridImageSize(const GridImageSize& grid_image_size);
   /**
-   * @param wimage
-   * @param himage
+   * @param wimage The width of the grid in images.
+   * @param himage The height of the grid in images.
    */
   GridImageSize(const INT64 wimage, const INT64 himage);
   GridImageSize& operator=(const GridImageSize& grid_image_size);
@@ -53,6 +53,10 @@ class GridCoordinateSize {
 public:
   GridCoordinateSize();
   GridCoordinateSize(const GridCoordinateSize& grid_coordinate_size);
+  /**
+   * @param wgrid The width on the grid.
+   * @param hgrid The height on the grid.
+   */
   GridCoordinateSize(const FLOAT64 wgrid, const FLOAT64 hgrid);
   GridCoordinateSize& operator=(const GridCoordinateSize& grid_coordinate_size);
   /** @return The width. */
@@ -75,7 +79,22 @@ class GridCoordinate {
 public:
   GridCoordinate();
   GridCoordinate(const GridCoordinate& grid_coordinate);
+  /**
+   * @param xgrid The x coordinate on the grid.
+   * @param ygrid The y coordinate on the grid.
+   */
   GridCoordinate(const FLOAT64 xgrid, FLOAT64 ygrid);
+  /**
+   * Convert from viewport pixel coordinates to grid coordinates.
+   *
+   * TODO: fill in once certain features stop changes
+   *
+   * @param viewport_pixel_coordinate
+   * @param zoom
+   * @param viewport_pixel_size
+   * @param viewport_grid_coordinate
+   * @param max_image_pixel_size
+   */
   GridCoordinate(ViewportPixelCoordinate& viewport_pixel_coordinate,
                  FLOAT64 zoom,
                  ViewportPixelSize& viewport_pixel_size,
@@ -101,12 +120,16 @@ class GridIndex {
 public:
   GridIndex();
   GridIndex(const GridIndex& grid_index);
+  /**
+   * @param The i index on the grid.
+   * @param The j index on the grid.
+   */
   GridIndex(const INT64 igrid, INT64 jgrid);
   GridIndex(ViewportPixelCoordinate& viewport_pixel_coordinate);
   GridIndex& operator=(const GridIndex& grid_index);
-  /** @return The i coordinate. */
+  /** @return The i index. */
   INT64 i_grid() const;
-  /** @return The j coordinate. */
+  /** @return The j index. */
   INT64 j_grid() const;
   /** @return If values are valid. */
   bool invalid() const;
@@ -116,25 +139,28 @@ private:
 };
 
 /**
- * Represents coordinates with a grid, i.e., subgrid with the origin
- * at the top-right corner.
+ * Represents indices with a grid, i.e., subgrid with the origin at
+ * the top-right corner.
  *
  * Subgrids are generally used when the logical grid squares need
  * partitioning either because of the nature of the data (see
  * (E)ast/(W)est maps in the 50K Canadian NTS system) or for
  * performance reasons (grid squares larger than 16384x16384 that
  * makes sense for textures).
- *
  */
 class SubGridIndex {
 public:
   SubGridIndex();
   SubGridIndex(const SubGridIndex& sub_index);
+  /**
+   * @param The i index on the subgrid.
+   * @param The j index on the subgrid.
+   */
   SubGridIndex(const INT64 igrid, INT64 jgrid);
   SubGridIndex& operator=(const SubGridIndex& sub_index);
-  /** @return The i coordinate. */
+  /** @return The i index. */
   INT64 subgrid_i() const;
-  /** @return The j coordinate. */
+  /** @return The j index. */
   INT64 subgrid_j() const;
   /** @return If values are valid. */
   bool invalid() const;
@@ -152,11 +178,15 @@ class GridPixelSize {
 public:
   GridPixelSize();
   GridPixelSize(const GridPixelSize& grid_pixel_size);
+  /**
+   * @param wpixel The width in pixels.
+   * @param hpixel The height in pixels.
+   */
   GridPixelSize(INT64 wpixel, INT64 hpixel);
   GridPixelSize& operator=(const GridPixelSize& grid_pixel_size);
-  /** @return The width. */
+  /** @return The width in pixels. */
   INT64 wpixel() const;
-  /** @return The height. */
+  /** @return The height in pixels. */
   INT64 hpixel() const;
 private:
   INT64 _wpixel;
@@ -172,6 +202,10 @@ class ImagePixelCoordinate {
 public:
   ImagePixelCoordinate();
   ImagePixelCoordinate(const ImagePixelCoordinate& grid_pixel_coordinate);
+  /**
+   * @param xpixel The x coordinate in pixels.
+   * @param ypixel The y coorindate in pixels.
+   */
   ImagePixelCoordinate(INT64 xpixel, INT64 ypixel);
   /**
    * Initialize a pixel coordinate on an image with an image grid coordinate.
@@ -198,11 +232,15 @@ class ViewportPixelSize {
 public:
   ViewportPixelSize();
   ViewportPixelSize(const ViewportPixelSize& viewport_pixel_size);
+  /**
+   * @param wpixel The width in pixels.
+   * @param hpixel The height in pixels.
+   */
   ViewportPixelSize(INT64 wpixel, INT64 xpixel);
   ViewportPixelSize& operator= (const ViewportPixelSize& viewport_pixel_size);
-  /** @return The width. */
+  /** @return The width in pixels. */
   INT64 wpixel() const;
-  /** @return The height. */
+  /** @return The height in pixels. */
   INT64 hpixel() const;
 private:
   INT64 _wpixel;
@@ -217,6 +255,10 @@ class ViewportPixelCoordinate {
 public:
   ViewportPixelCoordinate();
   ViewportPixelCoordinate(const ViewportPixelCoordinate& viewport_pixel_coordinate);
+  /**
+   * @param xpixel The x coordinate in pixels.
+   * @param ypixel The y coorindate in pixels.
+   */
   ViewportPixelCoordinate(INT64 xpixel, INT64 ypixel);
   /**
    * Convert a grid coordinate to a viewport pixel coordinate.
@@ -233,9 +275,9 @@ public:
                           GridCoordinate& grid_coordinate_pixel_0,
                           ViewportPixelSize& viewport_pixel_size);
   ViewportPixelCoordinate& operator=(const ViewportPixelCoordinate& viewport_pixel_coordinate);
-  /** @return The x coordinate. */
+  /** @return The x coordinate in pixels. */
   INT64 xpixel() const;
-  /** @return The y coordinate. */
+  /** @return The y coordinate in pixels. */
   INT64 ypixel() const;
 private:
   INT64 _xpixel;

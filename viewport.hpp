@@ -55,7 +55,7 @@ private:
    * Just counting the number of items to be blit, mostly for
    * debugging.
    */
-  int _blit_index;
+  INT64 _blit_index;
 };
 
 /**
@@ -73,10 +73,18 @@ public:
   void find_viewport_blit(TextureGrid* texture_grid,
                           TextureOverlay* const texture_overlay,
                           SDLApp* sdl_app);
-  /** update the values in this class with current keyboard/joystick/etc. input */
+  /**
+   * Update the values in this class with current keyboard/joystick/etc. input.
+   *
+   * @param sdl_app The SDL app object.
+   * @return
+   */
   bool do_input(SDLApp* sdl_app);
   /**
    * Update the information and observors for the current state of the viewport.
+   *
+   * @param xgrid The x grid coordinate to update to.
+   * @param ygrid The y grid coordinate to update to.
    */
   void update_viewport_info(FLOAT64 xgrid, FLOAT64 ygrid);
   /**

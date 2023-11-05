@@ -20,6 +20,9 @@ GridImageSize::GridImageSize(const GridImageSize& grid_image_size) {
 };
 
 GridImageSize& GridImageSize::operator=(const GridImageSize& grid_image_size) {
+  if (this == &grid_image_size) {
+    return *this;
+  }
   this->_wimage=grid_image_size._wimage;
   this->_himage=grid_image_size._himage;
   return *this;
@@ -50,6 +53,9 @@ GridCoordinateSize::GridCoordinateSize(const GridCoordinateSize& grid_coordinate
 }
 
 GridCoordinateSize& GridCoordinateSize::operator=(const GridCoordinateSize& grid_coordinate_size) {
+  if (this == &grid_coordinate_size) {
+    return *this;
+  }
   this->_wgrid=grid_coordinate_size._wgrid;
   this->_hgrid=grid_coordinate_size._hgrid;
   return *this;
@@ -79,6 +85,9 @@ GridCoordinate::GridCoordinate(const GridCoordinate& grid_coordinate) {
 }
 
 GridCoordinate& GridCoordinate::operator=(const GridCoordinate& grid_coordinate) {
+  if (this == &grid_coordinate) {
+    return *this;
+  }
   this->_xgrid=grid_coordinate._xgrid;
   this->_ygrid=grid_coordinate._ygrid;
   return *this;
@@ -137,6 +146,9 @@ GridIndex::GridIndex(const GridIndex& grid_index) {
 }
 
 GridIndex& GridIndex::operator=(const GridIndex& grid_index) {
+  if (this == &grid_index) {
+    return *this;
+  }
   this->_igrid=grid_index._igrid;
   this->_jgrid=grid_index._jgrid;
   return *this;
@@ -170,6 +182,9 @@ SubGridIndex::SubGridIndex(const SubGridIndex& grid_index) {
 }
 
 SubGridIndex& SubGridIndex::operator=(const SubGridIndex& sub_index) {
+  if (this == &sub_index) {
+    return *this;
+  }
   this->_i_subgrid=sub_index._i_subgrid;
   this->_j_subgrid=sub_index._j_subgrid;
   return *this;
@@ -194,6 +209,9 @@ GridPixelSize::GridPixelSize(const GridPixelSize& grid_pixel_size) {
 }
 
 GridPixelSize& GridPixelSize::operator=(const GridPixelSize& grid_pixel_size) {
+  if (this == &grid_pixel_size) {
+    return *this;
+  }
   this->_wpixel=grid_pixel_size._wpixel;
   this->_hpixel=grid_pixel_size._hpixel;
   return *this;
@@ -233,6 +251,9 @@ ImagePixelCoordinate::ImagePixelCoordinate(GridCoordinate& grid_coordinate,
 }
 
 ImagePixelCoordinate& ImagePixelCoordinate::operator=(const ImagePixelCoordinate& grid_pixel_coordinate) {
+  if (this == &grid_pixel_coordinate) {
+    return *this;
+  }
   this->_xpixel=grid_pixel_coordinate.xpixel();
   this->_ypixel=grid_pixel_coordinate.ypixel();
   return *this;
@@ -257,6 +278,9 @@ ViewportPixelCoordinate::ViewportPixelCoordinate(const ViewportPixelCoordinate& 
 }
 
 ViewportPixelCoordinate& ViewportPixelCoordinate::operator=(const ViewportPixelCoordinate& viewport_pixel_coordinate) {
+  if (this == &viewport_pixel_coordinate) {
+    return *this;
+  }
   this->_xpixel=viewport_pixel_coordinate._xpixel;
   this->_ypixel=viewport_pixel_coordinate._ypixel;
   return *this;
@@ -293,6 +317,9 @@ ViewportPixelSize::ViewportPixelSize(const ViewportPixelSize& viewport_pixel_siz
 }
 
 ViewportPixelSize& ViewportPixelSize::operator=(const ViewportPixelSize& viewport_pixel_size) {
+  if (this == &viewport_pixel_size) {
+    return *this;
+  }
   this->_wpixel=viewport_pixel_size._wpixel;
   this->_hpixel=viewport_pixel_size._hpixel;
   return *this;

@@ -74,9 +74,6 @@ void buffer_copy_reduce_generic_safe (PIXEL_RGBA* source_buffer, size_t w, size_
                                       INT64 x_origin, INT64 y_origin,
                                       PIXEL_RGBA* dest_buffer, size_t w_reduced, size_t h_reduced,
                                       INT64 zoom_out) {
-  // TODO: zoom_index is not the index, since index is power of two
-  //       fix!!!
-
   // di:=destination i
   // dj:=destination j
   // bsi:=source i at beginning of block

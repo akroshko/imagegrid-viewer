@@ -110,6 +110,9 @@ const FLOAT64 JOY_BASE_ZOOM=0.25;
 const FLOAT64 JOY_MAX=32768;
 
 // internal configuration settings
+
+// TODO: changing SDL_DELAY from 64 to 16 slows down loading of a
+// particular set of maps from 1'05 to 1'17, investigate later
 const int SDL_DELAY=16;
 const INT64 TEXTURE_ALIGNMENT=4;
 

@@ -2,6 +2,9 @@
 #define BUFFER_MANIP_HPP
 
 #include "../common.hpp"
+// C headers
+#include <cstddef>
+#include <cstdint>
 
 /**
  * Copy and reduce size of an RGBA buffer from tiff files.

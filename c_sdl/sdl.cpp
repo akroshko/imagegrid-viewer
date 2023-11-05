@@ -5,6 +5,10 @@
 #include "../common.hpp"
 #include "../coordinates.hpp"
 #include "sdl.hpp"
+// C++ headers
+#include <iostream>
+// C headers
+#include <cstddef>
 // C library headers
 #include <SDL2/SDL.h>
 
@@ -16,9 +20,16 @@ SDLApp::SDLApp() {
     ERROR("Couldn't initialize SDL:" << SDL_GetError());
     this->_successful=false;
   } else {
-    this->_window=SDL_CreateWindow("Image Grid Viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, INITIAL_SCREEN_WIDTH, INITIAL_SCREEN_HEIGHT, windowFlags);
+    this->_window=SDL_CreateWindow("Image Grid Viewer",
+                                   SDL_WINDOWPOS_UNDEFINED,
+                                   SDL_WINDOWPOS_UNDEFINED,
+                                   INITIAL_SCREEN_WIDTH,
+                                   INITIAL_SCREEN_HEIGHT,
+                                   windowFlags);
     if (!this->_window) {
-      ERROR("Failed to open %d " << INITIAL_SCREEN_WIDTH << "x" << INITIAL_SCREEN_HEIGHT << " window: " << SDL_GetError());
+      ERROR("Failed to open %d " << INITIAL_SCREEN_WIDTH
+                                 << "x" << INITIAL_SCREEN_HEIGHT
+                                 << " window: " << SDL_GetError());
       this->_successful=false;
     } else {
       if (SDL_NumJoysticks() < 1) {
@@ -140,8 +151,7 @@ bool SDLApp::do_input(FLOAT64& current_speed_x, FLOAT64& current_speed_y,
 }
 
 void SDLApp::delay() const {
-  // SDL_Delay(SDL_DELAY);
-  SDL_Delay(64);
+  SDL_Delay(SDL_DELAY);
 }
 
 bool SDLApp::successful() const {
@@ -165,7 +175,9 @@ SDLDrawableSurface::SDLDrawableSurface(SDLApp* const sdl_app,
   screen_rect.y=0;
   screen_rect.w=viewport_pixel_size.wpixel();
   screen_rect.h=viewport_pixel_size.hpixel();
-  SDL_FillRect(this->_screen_surface,& screen_rect, SDL_MapRGBA(sdl_app->format(),0,0,0,0));
+  SDL_FillRect(this->_screen_surface,
+               &screen_rect,
+               SDL_MapRGBA(sdl_app->format(),0,0,0,0));
 }
 
 SDLDrawableSurface::~SDLDrawableSurface() {
@@ -206,12 +218,11 @@ void* SDLDisplayTextureWrapper::pixels () {
 }
 
 bool SDLDisplayTextureWrapper::lock_surface () {
-  // TODO: want a check if this is not initialized
-  // if (this->_display_texture) {
-  return SDL_LockSurface(this->_display_texture);
-  // } else {
-  //   return 1;
-  // }
+  if (this->_display_texture) {
+    return SDL_LockSurface(this->_display_texture);
+  } else {
+    return false;
+  }
 }
 
 void SDLDisplayTextureWrapper::unlock_surface () {
@@ -228,5 +239,7 @@ void SDLDisplayTextureWrapper::blit_texture(SDLDrawableSurface* drawable_surface
   scaled_rect.y=viewport_pixel_coordinate.ypixel();
   scaled_rect.w=image_pixel_size_viewport.wpixel();
   scaled_rect.h=image_pixel_size_viewport.hpixel();
-  SDL_BlitScaled(this->_display_texture, NULL, drawable_surface->screen_surface(),& scaled_rect);
+  SDL_BlitScaled(this->_display_texture, NULL,
+                 drawable_surface->screen_surface(),
+                 &scaled_rect);
 }

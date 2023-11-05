@@ -26,8 +26,8 @@ public:
    *
    * @param current_speed_x The current x speed for the joystick,
    *                        generally a multiplier for an internal
-   *                        constant.  @param current_speed_y The
-   *                        current y speed for the joystick,
+   *                        constant.
+   * @param current_speed_y The current y speed for the joystick,
    *                        generally a multiplier for an internal
    *                        constant.
    * @param current_speed_zoom Current speed things are being zoomed
@@ -50,7 +50,7 @@ public:
   /**
    * Process raw joystick values.
    *
-   * @param jaxis_original the raw joystick axis value
+   * @param jaxis_original The raw joystick axis value
    * @return the processed value, generally with deadzones for now.
    */
   Sint16 get_jaxis(Sint16 jaxis_original);

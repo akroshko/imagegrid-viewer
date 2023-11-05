@@ -17,8 +17,9 @@ class ImageGridSquareZoomLevel;
  * Contains loaded file data in preparation to be transferred to
  * ImageGridSquareZoomLevel.
  *
- * May not be permanent, members correspond to those in
- * ImageGridSquareZoomLevel.
+ * TODO: May not be permanent, members correspond to those in
+ * ImageGridSquareZoomLevel.  Will document once data structures are
+ * more stable.
  */
 class LoadFileZoomLevelData {
 public:

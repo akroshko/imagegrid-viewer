@@ -34,7 +34,6 @@ public:
   ImageGridMetadata(const ImageGridMetadata&&)=delete;
   ImageGridMetadata& operator=(const ImageGridMetadata&)=delete;
   ImageGridMetadata& operator=(const ImageGridMetadata&&)=delete;
-
   /**
    * Look up metadata.
    *

@@ -39,7 +39,7 @@ public:
    * @param overlay_message The message to include in the overlay.
    */
   void update_overlay(std::string overlay_message);
-  /** @return The SDl surface. */
+  /** @return The SDL surface. */
   SDL_Surface* overlay_message_surface();
 private:
   SDL_Surface* _overlay_message_surface=nullptr;

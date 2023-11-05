@@ -182,7 +182,7 @@ void ViewPort::update_viewport_info(FLOAT64 xgrid, FLOAT64 ygrid) {
   this->_viewport_grid=GridCoordinate(xgrid,ygrid);
   this->_viewport_pixel_size=ViewportPixelSize(this->_current_window_w,this->_current_window_h);
   // update the viewport
-  //  TODO: too much duplicate code here
+  // TODO: too much duplicate code here
   this->_viewport_current_state_texturegrid_update->UpdateGridValues(this->_zoom,
                                                                      this->_viewport_grid,
                                                                      this->_image_max_size,

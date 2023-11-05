@@ -9,8 +9,6 @@
 #include "../coordinates.hpp"
 #include "gridsetup.hpp"
 #include "../viewport_current_state.hpp"
-// C compatible headers
-#include "../c_io_net/fileload.hpp"
 // C++ headers
 #include <atomic>
 #include <memory>
@@ -42,7 +40,9 @@ public:
   ImageGridSquareZoomLevel(const ImageGridSquareZoomLevel&&)=delete;
   ImageGridSquareZoomLevel& operator=(const ImageGridSquareZoomLevel&)=delete;
   ImageGridSquareZoomLevel& operator=(const ImageGridSquareZoomLevel&&)=delete;
+  /** Mutex that is locked while loading or reading. */
   std::mutex load_mutex;
+  /** Has this been loaded? */
   std::atomic<bool> is_loaded{false};
   /**
    * Load a file and fill out squares.
@@ -60,26 +60,38 @@ public:
   /** @return The amount zoomed out this class represents. */
   INT64 zoom_out() const;
   /**
+   * Get the zoomed width in pixels of RGBA array.
+   *
    * @param sub_index The index of the subgrid.
    * @return The width in pixels.
    */
   size_t rgba_wpixel(SubGridIndex& sub_index) const;
   /**
+   * Get the zoomed height in pixels of RGBA array.
+   *
    * @param sub_index The index of the subgrid.
    * @return The height in pixels.
    */
   size_t rgba_hpixel(SubGridIndex& sub_index) const;
   /**
+   * Get the zoomed x coordinate of the origin of this image within
+   * the grid square.
+   *
    * @param sub_index The index of the subgrid.
    * @return The x origin coordinate in pixels.
    */
   INT64 rgba_xpixel_origin(SubGridIndex& sub_index) const;
   /**
+   * Get the zoomed y coordinate of the origin of this image within
+   * the grid square.
+   *
    * @param sub_index The index of the subgrid.
    * @return The y origin coordinate in pixels.
    */
   INT64 rgba_ypixel_orgin(SubGridIndex& sub_index) const;
   /**
+   * Get the RGBA data for this square.
+   *
    * @param sub_index The index of the subgrid.
    * @return A pointer to the RGBA data.
    */
@@ -120,6 +132,15 @@ class ImageGridSquare {
 public:
   ImageGridSquare()=delete;
   /**
+   * TODO: fill in description more throrougly in next iteration of
+   * this data structure
+   *
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   * @param parent_grid The imagegrid this square is a part of.
+   * @param grid_index The index of grid square this corresponds to in
+   *                   the parent grid.
    */
   ImageGridSquare(GridSetup* grid_setup,
                   ImageGrid* parent_grid,
@@ -184,17 +205,25 @@ public:
    * @param keep_running Toggled when this is shutting down.
    */
   void load_grid(const GridSetup* grid_setup, std::atomic<bool>& keep_running);
-  void setup_grid_cache(GridSetup* const grid_setup);
+
   GridPixelSize get_image_max_pixel_size() const;
   ImageGridSquare* squares(const GridIndex& grid_index) const;
   ImageGridSquare* squares(const GridIndex* grid_index) const;
-  /**
-   * @return Whether read_grid_info was successful.
-   */
+  /** @return Whether read_grid_info was successful. */
   bool read_grid_info_successful() const;
+  /** @return The length of arrays of zoomed image. */
   INT64 zoom_index_length() const;
+  /** @return The grid setup object used by this imagegrid. */
   GridSetup* grid_setup() const;
   const GridImageSize grid_image_size() const;
+  /**
+   * Used to setup and write the cache for this grid.
+   *
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   */
+  void setup_grid_cache(GridSetup* const grid_setup);
 private:
   GridSetup* _grid_setup;
   /**
@@ -258,15 +287,11 @@ private:
   std::unique_ptr<std::unique_ptr<std::unique_ptr<ImageGridSquare>[]>[]> _squares;
   /** Maximum size of images loaded into the grid. */
   GridPixelSize _image_max_size;
-  /** Threadsafe class for getting the state of the viewport */
+  /** Threadsafe class for getting the state of the viewport. */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_imagegrid_update;
-  /**
-   * Indicate whether grid info was read properly.
-   */
+  /** Indicate whether grid info was read properly. */
   bool _read_grid_info_successful=false;
-  /**
-   * How many steps each zoom takes, power of 2.
-   */
+  /** The length of arrays of zoomed image. */
   INT64 _zoom_index_length;
 };
 

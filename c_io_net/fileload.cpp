@@ -343,7 +343,7 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
       height_test=reduce_and_pad(original_height,cached_zoom_out);
     }
     png_image png_image_local;
-    memset(&png_image_local, 0, (sizeof png_image_local));
+    memset(&png_image_local, 0, sizeof(png_image_local));
     png_image_local.version=PNG_IMAGE_VERSION;
     if (png_image_begin_read_from_file(&png_image_local, cached_filename.c_str()) == 0) {
       ERROR("load_tiff_as_rgba() failed to read from png file: " << cached_filename);
