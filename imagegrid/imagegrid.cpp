@@ -173,7 +173,7 @@ INT64 ImageGridSquareZoomLevel::rgba_xpixel_origin(SubGridIndex& sub_index) cons
   return this->_rgba_xpixel_origin[_sub_i_arr(sub_index)];
 }
 
-INT64 ImageGridSquareZoomLevel::rgba_ypixel_orgin(SubGridIndex& sub_index) const {
+INT64 ImageGridSquareZoomLevel::rgba_ypixel_origin(SubGridIndex& sub_index) const {
   return this->_rgba_ypixel_origin[_sub_i_arr(sub_index)];
 }
 

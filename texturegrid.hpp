@@ -34,8 +34,11 @@ public:
   TextureGridSquareZoomLevel& operator=(const TextureGridSquareZoomLevel&&)=delete;
   /**
    * Unload the texture for this square.  Also resets any state.
+   *
+   * @param tile_i
+   * @param tile_j
    */
-  void unload_texture();
+  void unload_all_textures();
   /**
    * Set this texture as a loaded image/data.
    *
@@ -62,14 +65,45 @@ public:
   // TODO: this one needs help being private and investigation whether
   // there's a better way
   INT64 last_load_index=INT_MAX;
-  SDLDisplayTextureWrapper* display_texture_wrapper();
+  /**
+   * Create surfaces to render to.
+   *
+   * @param tile_w The width in tiles of the surfaces.
+   * @param tile_h The height in tiles of the surfaces.
+   * @param tile_pixel_size The pixel size of each tile (they are square).
+   */
+  void create_surfaces(INT64 tile_w, INT64 tile_h, INT64 tile_pixel_size);
+  /** @return If all surfaces are valid. */
+  bool all_surfaces_valid ();
+  /** @return If locking all surfaces was successful. */
+  bool lock_all_surfaces ();
+  /** Unlock all surfaces. */
+  void unlock_all_surfaces ();
+  /** Get the RGBA pixels for a particular tile. */
+  void* get_rgba_pixels(INT64 tile_w, INT64 tile_h);
+  /**
+   * Get the display texture for a tile.
+   *
+   * @param tile_i The index in the x direction.
+   * @param tile_j The index in the y direction.
+   */
+  SDLDisplayTextureWrapper* display_texture_wrapper(INT64 tile_i, INT64 tile_j);
+  /**
+   * Get the texture used for the filler texture.
+   */
   SDLDisplayTextureWrapper* filler_texture_wrapper();
+  /** @return The width in tiles. */
+  INT64 tile_w();
+  /** @return The height in tiles. */
+  INT64 tile_h();
 private:
+  INT64 _tile_w=INT_MIN;
+  INT64 _tile_h=INT_MIN;
   friend class TextureGrid;
   friend class TextureGridSquare;
   TextureGridSquare* _parent_square;
   // the actual display texture
-  std::unique_ptr<SDLDisplayTextureWrapper> _display_texture_wrapper;
+  std::unique_ptr<std::unique_ptr<SDLDisplayTextureWrapper>[]> _display_texture_wrapper;
   // the filler texture
   SDLDisplayTextureWrapper* _filler_texture_wrapper;
 };

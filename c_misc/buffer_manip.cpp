@@ -60,19 +60,25 @@ void buffer_copy_reduce_tiff_safe (uint32_t* source_buffer, uint32_t w, uint32_t
   }
 }
 
-void buffer_copy_reduce_generic (PIXEL_RGBA* source_buffer, size_t w, size_t h,
-                                 INT64 x_origin, INT64 y_origin,
-                                 PIXEL_RGBA* dest_buffer, size_t w_reduced, size_t h_reduced,
+void buffer_copy_reduce_generic (PIXEL_RGBA* source_buffer, INT64 source_w, INT64 source_h,
+                                 INT64 source_start_x, INT64 source_start_y,
+                                 INT64 source_copy_w, INT64 source_copy_h,
+                                 PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
+                                 INT64 dest_start_x, INT64 dest_start_y,
                                  INT64 zoom_out) {
-  buffer_copy_reduce_generic_safe(source_buffer, w, h,
-                                  x_origin, y_origin,
-                                  dest_buffer, w_reduced, h_reduced,
+  buffer_copy_reduce_generic_safe(source_buffer, source_w, source_h,
+                                  source_start_x, source_start_y,
+                                  source_copy_w, source_copy_h,
+                                  dest_buffer, dest_w, dest_h,
+                                  dest_start_x, dest_start_y,
                                   zoom_out);
 }
 
-void buffer_copy_reduce_generic_safe (PIXEL_RGBA* source_buffer, size_t w, size_t h,
-                                      INT64 x_origin, INT64 y_origin,
-                                      PIXEL_RGBA* dest_buffer, size_t w_reduced, size_t h_reduced,
+void buffer_copy_reduce_generic_safe (PIXEL_RGBA* source_buffer, INT64 source_w, INT64 source_h,
+                                      INT64 source_start_x, INT64 source_start_y,
+                                      INT64 source_copy_w, INT64 source_copy_h,
+                                      PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
+                                      INT64 dest_start_x, INT64 dest_start_y,
                                       INT64 zoom_out) {
   // di:=destination i
   // dj:=destination j
@@ -80,12 +86,13 @@ void buffer_copy_reduce_generic_safe (PIXEL_RGBA* source_buffer, size_t w, size_
   // bsj:=source j at beginning of block
   // si:=source i
   // sj:=source j
+  // ri:=row buffer i
   // etc
 
   // row buffer to copy to
   // TODO: may wish to figure out an appropriate reduced size since 64
   // bit integers are probably overkill for any forseeable need
-  auto row_buffer=std::make_unique<INT64[]>(w_reduced*3);
+  auto row_buffer=std::make_unique<INT64[]>((source_copy_w/zoom_out)*3);
 
   // TODO: this can probably be further optimized by passing in the
   // precomputed shift from elsewhere in the program
@@ -94,32 +101,34 @@ void buffer_copy_reduce_generic_safe (PIXEL_RGBA* source_buffer, size_t w, size_
   // the loops in this function ensure memory is accessed sequentially
   // TODO: want to make sure I hit last one
   // these outer two loops hit all pixels in source image
-  for (size_t bsj=0, dj=(y_origin/zoom_out);
-       bsj < h;
+  for (INT64 bsj=source_start_y, dj=dest_start_y;
+       bsj < source_start_y+source_copy_h;
        bsj+=zoom_out, dj++) {
     // zero out the row buffer each one of these
-    std::memset((void*)row_buffer.get(),0,sizeof(INT64)*w_reduced*3);
-    for (size_t sj=bsj; sj < bsj+zoom_out; sj++) {
-      for (size_t bsi=0; bsi < w; bsi+=zoom_out) {
-        for (size_t si=bsi; si < bsi+zoom_out; si++) {
-          auto source_pixel=sj*w+si;
-          auto row_buffer_pixel=((x_origin+si)/zoom_out);
-          // work out pixel math more carefuly and/or test with an
-          // assert
-          if (row_buffer_pixel < w_reduced && si < w && sj < h) {
-            row_buffer[row_buffer_pixel*3]+=(source_buffer[source_pixel] & 0xFF);
-            row_buffer[row_buffer_pixel*3+1]+=((source_buffer[source_pixel] & 0xFF00) >> G_SHIFT);
-            row_buffer[row_buffer_pixel*3+2]+=((source_buffer[source_pixel] & 0xFF0000) >> B_SHIFT);
+    std::memset((void*)row_buffer.get(),0,sizeof(INT64)*(source_copy_w/zoom_out)*3);
+    for (INT64 sj=bsj; sj < bsj+zoom_out; sj++) {
+      for (INT64 bsi=source_start_x, ri=0;
+           bsi < source_start_x+source_copy_w;
+           bsi+=zoom_out, ri++) {
+        for (INT64 si=bsi; si < bsi+zoom_out; si++) {
+          auto source_pixel=sj*source_w+si;
+          // auto row_buffer_pixel=(si-source_start_x)/zoom_out;
+          // work out pixel math more carefuly so we don't have to do
+          // this check every copy, test with asserts
+          if (ri < (source_copy_w/zoom_out) && si < source_w && sj < source_h) {
+            row_buffer[ri*3]+=(source_buffer[source_pixel] & 0xFF);
+            row_buffer[ri*3+1]+=((source_buffer[source_pixel] & 0xFF00) >> G_SHIFT);
+            row_buffer[ri*3+2]+=((source_buffer[source_pixel] & 0xFF0000) >> B_SHIFT);
           }
         }
       }
     }
-    for (size_t di=x_origin/zoom_out; di < w_reduced; di++) {
-      if (di < w_reduced && dj < h_reduced) {
-        auto dest_pixel=dj*w_reduced+di;
-        dest_buffer[dest_pixel]=(row_buffer[di*3] >> block_average_shift);
-        dest_buffer[dest_pixel]+=((row_buffer[di*3+1] >> block_average_shift) << G_SHIFT);
-        dest_buffer[dest_pixel]+=((row_buffer[di*3+2] >> block_average_shift) << B_SHIFT);
+    for (INT64 di=dest_start_x, ri=0; di < dest_start_x+(source_copy_w/zoom_out); di++, ri++) {
+      if (ri < (source_copy_w/zoom_out) && di < dest_w && dj < dest_h) {
+        auto dest_pixel=dj*dest_w+di;
+        dest_buffer[dest_pixel]=(row_buffer[ri*3] >> block_average_shift);
+        dest_buffer[dest_pixel]+=((row_buffer[ri*3+1] >> block_average_shift) << G_SHIFT);
+        dest_buffer[dest_pixel]+=((row_buffer[ri*3+2] >> block_average_shift) << B_SHIFT);
         dest_buffer[dest_pixel]+=DEFAULT_ALPHA;
       }
     }
@@ -127,40 +136,42 @@ void buffer_copy_reduce_generic_safe (PIXEL_RGBA* source_buffer, size_t w, size_
 }
 
 
-void buffer_copy_expand_generic (PIXEL_RGBA* source_buffer, size_t w, size_t h,
-                                 INT64 x_origin, INT64 y_origin,
-                                 PIXEL_RGBA* dest_buffer, size_t w_expanded, size_t h_expanded,
-                                 INT64 zoom_out) {
-  buffer_copy_expand_generic_safe (source_buffer, w, h,
-                                   x_origin, y_origin,
-                                   dest_buffer, w_expanded, h_expanded,
-                                   zoom_out);
+void buffer_copy_expand_generic (PIXEL_RGBA* source_buffer, INT64 source_w, INT64 source_h,
+                                 INT64 source_start_x, INT64 source_start_y,
+                                 INT64 source_copy_w, INT64 source_copy_h,
+                                 PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
+                                 INT64 dest_start_x, INT64 dest_start_y,
+                                 INT64 zoom_in) {
+  buffer_copy_expand_generic_safe (source_buffer, source_w, source_h,
+                                   source_start_x, source_start_y,
+                                   source_copy_w, source_copy_h,
+                                   dest_buffer, dest_w, dest_h,
+                                   dest_start_x, dest_start_y,
+                                   zoom_in);
 }
 
-void buffer_copy_expand_generic_safe (PIXEL_RGBA* source_buffer, size_t w, size_t h,
-                                      INT64 x_origin, INT64 y_origin,
-                                      PIXEL_RGBA* dest_buffer, size_t w_expanded, size_t h_expanded,
-                                      INT64 zoom_out) {
-  auto zoom_skip=zoom_out;
-  auto dest_i_beg=x_origin*zoom_skip;
-  auto dest_j_beg=y_origin*zoom_skip;
-  auto dest_i_end=(x_origin+w)*zoom_skip;
-  auto dest_j_end=(y_origin+h)*zoom_skip;
-  for (size_t bdj=dest_j_beg, sj=0;
-       (bdj < h_expanded && bdj < dest_j_end);
+void buffer_copy_expand_generic_safe (PIXEL_RGBA* source_buffer, INT64 source_w, INT64 source_h,
+                                      INT64 source_start_x, INT64 source_start_y,
+                                      INT64 source_copy_w, INT64 source_copy_h,
+                                      PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
+                                      INT64 dest_start_x, INT64 dest_start_y,
+                                      INT64 zoom_in) {
+  auto zoom_skip=zoom_in;
+  for (INT64 bdj=dest_start_y, sj=source_start_y;
+       sj < source_start_y+source_copy_h;
        bdj+=zoom_skip, sj++) {
-    for (size_t dj=bdj; dj < bdj+zoom_skip; dj++) {
-      for (size_t bdi=dest_i_beg, si=0;
-           (bdi < w_expanded && bdi < dest_i_end);
+    for (INT64 dj=bdj; dj < bdj+zoom_skip; dj++) {
+      for (INT64 bdi=dest_start_x, si=source_start_x;
+           si < source_start_x+source_copy_w;
            bdi+=zoom_skip, si++) {
         // not valid source pixels
-        if (si < w && sj < h) {
-          auto source_buffer_pixel=sj*w+si;
+        if (si >= source_start_x && si < source_w && sj >= source_start_y && sj < source_h) {
+          auto source_buffer_pixel=sj*source_w+si;
           auto src_data=source_buffer[source_buffer_pixel];
-          for (size_t di=bdi; di < bdi+zoom_skip; di++) {
+          for (INT64 di=bdi; di < bdi+zoom_skip; di++) {
             // not valid dest pixels
-            if (di < w_expanded && dj < h_expanded) {
-              auto dest_pixel=dj*w_expanded+di;
+            if (di < dest_w && dj < dest_h) {
+              auto dest_pixel=dj*dest_w+di;
               dest_buffer[dest_pixel]=src_data;
             }
           }

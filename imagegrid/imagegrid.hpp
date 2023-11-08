@@ -88,7 +88,7 @@ public:
    * @param sub_index The index of the subgrid.
    * @return The y origin coordinate in pixels.
    */
-  INT64 rgba_ypixel_orgin(SubGridIndex& sub_index) const;
+  INT64 rgba_ypixel_origin(SubGridIndex& sub_index) const;
   /**
    * Get the RGBA data for this square.
    *

@@ -375,8 +375,10 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
             size_t npixel_reduced=w_reduced*h_reduced;
             file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixel_reduced];
             buffer_copy_reduce_generic((PIXEL_RGBA *)png_raster,png_width,png_height,
-                                       0, 0,
+                                       0,0,
+                                       png_width,png_height,
                                        file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
+                                       0,0,
                                        actual_zoom_out);
           }
         }
@@ -492,7 +494,9 @@ bool load_png_as_rgba(const std::string& filename,
           file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixel_reduced];
           buffer_copy_reduce_generic((PIXEL_RGBA*)raster,width,height,
                                      0, 0,
+                                     width,height,
                                      file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
+                                     0, 0,
                                      zoom_out);
           success=true;
         }

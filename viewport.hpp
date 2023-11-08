@@ -26,7 +26,6 @@ public:
            const ViewportPixelCoordinate& viewport_pixel_coordinate,
            const ViewportPixelSize& grid_image_size_zoomed);
   ~BlitItem()=default;
-  // BlitItem(const BlitItem&)=delete;
   BlitItem(const BlitItem&)=default;
   BlitItem(const BlitItem&&)=delete;
   BlitItem& operator=(const BlitItem&)=delete;

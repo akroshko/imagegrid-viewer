@@ -33,9 +33,20 @@ void BlitItem::blit_this(SDLDrawableSurface* screen_surface) {
                                                         this->viewport_pixel_coordinate,
                                                         this->image_pixel_size_viewport);
   } else {
-    blit_square->display_texture_wrapper()->blit_texture(screen_surface,
-                                                         this->viewport_pixel_coordinate,
-                                                         this->image_pixel_size_viewport);
+    if (this->blit_square->tile_w() > 0 && this->blit_square->tile_w() > 0) {
+      for (INT64 i=0; i < this->blit_square->tile_w(); i++) {
+        for (INT64 j=0; j < this->blit_square->tile_h(); j++) {
+          auto vp_wpixel=this->image_pixel_size_viewport.wpixel()/this->blit_square->tile_w();
+          auto vp_hpixel=this->image_pixel_size_viewport.hpixel()/this->blit_square->tile_h();
+          auto viewport_pixel_coordinate_local=ViewportPixelCoordinate(this->viewport_pixel_coordinate.xpixel()+i*vp_wpixel,
+                                                                       this->viewport_pixel_coordinate.ypixel()+j*vp_hpixel);
+          auto viewport_pixel_size=ViewportPixelSize(vp_wpixel,vp_hpixel);
+          blit_square->display_texture_wrapper(i,j)->blit_texture(screen_surface,
+                                                                  viewport_pixel_coordinate_local,
+                                                                  viewport_pixel_size);
+        }
+      }
+    }
   }
 }
 
@@ -96,7 +107,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
             if (texture_square_zoom->display_mutex.try_lock()) {
               if (texture_square_zoom->is_loaded &&
                   texture_square_zoom->is_displayable &&
-                  texture_square_zoom->display_texture_wrapper()->is_valid()) {
+                  texture_square_zoom->all_surfaces_valid()) {
                 texture_loaded=true;
                 auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.wpixel()*this->_zoom),
                                                               (int)round(this->_image_max_size.hpixel()*this->_zoom));

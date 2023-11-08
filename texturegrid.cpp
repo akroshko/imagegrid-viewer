@@ -11,20 +11,33 @@
 // C++ headers
 #include <atomic>
 // C headers
+#include <climits>
 #include <cmath>
 
 TextureGridSquareZoomLevel::TextureGridSquareZoomLevel (TextureGridSquare* parent_square) {
-  this->_display_texture_wrapper=std::make_unique<SDLDisplayTextureWrapper>();
   this->_parent_square=parent_square;
 }
 
 TextureGridSquareZoomLevel::~TextureGridSquareZoomLevel () {
-  this->unload_texture();
+  this->unload_all_textures();
 }
 
-void TextureGridSquareZoomLevel::unload_texture () {
-  if (this->_display_texture_wrapper->is_valid()) {
-    this->_display_texture_wrapper->unload_surface();
+void TextureGridSquareZoomLevel::unload_all_textures () {
+  if (this->_tile_w > 0 && this->_tile_h > 0) {
+    for (INT64 j=0; j < this->_tile_h; j++) {
+      for (INT64 i=0; i < this->_tile_w; i++) {
+        auto tile_index=j*this->_tile_w+i;
+        if (this->_display_texture_wrapper[tile_index]->is_valid()) {
+          this->_display_texture_wrapper[tile_index]->unload_surface();
+        }
+      }
+    }
+    for (INT64 i=0; i < this->_tile_w*this->_tile_h; i++) {
+      this->_display_texture_wrapper[i].release();
+    }
+    this->_display_texture_wrapper.release();
+    this->_tile_w=INT_MIN;
+    this->_tile_h=INT_MIN;
     this->is_loaded=false;
     this->is_displayable=false;
     this->last_load_index=INT_MAX;
@@ -47,11 +60,89 @@ bool TextureGridSquareZoomLevel::get_image_filler () const {
   return !this->is_loaded && this->is_displayable;
 }
 
-SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::display_texture_wrapper() {
-  return this->_display_texture_wrapper.get();
+SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::display_texture_wrapper(INT64 tile_i, INT64 tile_j) {
+  auto tile_index=tile_j*this->_tile_w+tile_i;
+  return this->_display_texture_wrapper[tile_index].get();
 }
+
+void TextureGridSquareZoomLevel::create_surfaces(INT64 tile_w, INT64 tile_h,
+                                                 INT64 tile_pixel_size) {
+  this->_tile_w=tile_w;
+  this->_tile_h=tile_h;
+  // TODO: this should be an assertion
+  if (this->_tile_w > 0 && this->_tile_h > 0) {
+    // check higher up to make sure surfaces are freed before creating
+    this->_display_texture_wrapper=std::make_unique<std::unique_ptr<SDLDisplayTextureWrapper>[]>(tile_w*tile_h);
+    for (INT64 i=0; i < tile_w*tile_h; i++) {
+      this->_display_texture_wrapper[i]=std::make_unique<SDLDisplayTextureWrapper>();
+    }
+    for (INT64 j=0; j < this->_tile_h; j++) {
+      for (INT64 i=0; i < this->_tile_w; i++) {
+        auto tile_index=j*this->_tile_w+i;
+        this->_display_texture_wrapper[tile_index]->create_surface(tile_pixel_size, tile_pixel_size);
+      }
+    }
+  }
+}
+
+bool TextureGridSquareZoomLevel::all_surfaces_valid () {
+  auto all_valid=true;
+  if (this->_tile_w > 0 && this->_tile_h > 0) {
+    for (INT64 j=0; j < this->_tile_h; j++) {
+      for (INT64 i=0; i < this->_tile_w; i++) {
+        auto tile_index=j*this->_tile_w+i;
+        if (!this->_display_texture_wrapper[tile_index]->is_valid()) {
+          all_valid=false;
+        };
+      }
+    }
+  }
+  return all_valid;
+}
+
+bool TextureGridSquareZoomLevel::lock_all_surfaces () {
+  auto all_lock_successful=true;
+  if (this->_tile_w > 0 && this->_tile_h > 0) {
+    for (INT64 j=0; j < this->_tile_h; j++) {
+      for (INT64 i=0; i < this->_tile_w; i++) {
+        auto tile_index=j*this->_tile_w+i;
+        auto lock_surface_return=this->_display_texture_wrapper[tile_index]->lock_surface();
+        if (lock_surface_return != 0) {
+          all_lock_successful=false;
+        }
+      }
+    }
+  }
+  return all_lock_successful;
+}
+
+void TextureGridSquareZoomLevel::unlock_all_surfaces () {
+  if (this->_tile_w > 0 && this->_tile_h > 0) {
+    for (INT64 j=0; j < this->_tile_h; j++) {
+      for (INT64 i=0; i < this->_tile_w; i++) {
+        auto tile_index=j*this->_tile_w+i;
+        this->_display_texture_wrapper[tile_index]->unlock_surface();
+      }
+    }
+  }
+}
+
 SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::filler_texture_wrapper() {
   return this->_filler_texture_wrapper;
+}
+
+void* TextureGridSquareZoomLevel::get_rgba_pixels(INT64 tile_i, INT64 tile_j) {
+  // TODO: definitely want an assert here
+  auto tile_index=tile_j*this->_tile_w+tile_i;
+  return this->_display_texture_wrapper[tile_index]->pixels();
+}
+
+INT64 TextureGridSquareZoomLevel::tile_w() {
+  return this->_tile_w;
+}
+
+INT64 TextureGridSquareZoomLevel::tile_h() {
+  return this->_tile_h;
 }
 
 TextureGridSquare::TextureGridSquare (TextureGrid* parent_grid,INT64 zoom_index_length) {

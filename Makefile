@@ -24,7 +24,7 @@ CXXFLAGS_SDL=$(CXXFLAGS_ALWAYS)
 # -Wconversion -Wsign-conversion
 # specific CFLAGS
 CXXFLAGS_ALL=-flto -g3 -Og
-CXXFLAGS_DEBUG=-g3 -Og
+CXXFLAGS_DEBUG=-g3 -O0
 
 # TODO: reenable test code
 # all: imagegrid-viewer test_file
