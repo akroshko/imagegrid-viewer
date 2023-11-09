@@ -89,13 +89,11 @@ public:
    * @param dest_square The destination square to load the texture into.
    * @param source_square The square containing the RGBA data.
    * @param zoom_out_shift The right shift that represents the zoom out of the texture being loaded.
-   * @param texture_pixel_size The original size of the image to be copied.
    * @return If texture was actually copied.
    */
   static bool load_texture(TextureGridSquareZoomLevel* dest_square,
                            ImageGridSquareZoomLevel* source_square,
-                           INT64 zoom_out_shift,
-                           GridPixelSize texture_pixel_size);
+                           INT64 zoom_out_shift);
 private:
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;

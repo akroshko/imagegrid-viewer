@@ -125,8 +125,7 @@ void TextureUpdate::load_new_textures(bool grid_square_visible,
                    dest_square->last_load_index>load_index)) {
                 texture_copy_successful=this->load_texture(dest_square,
                                                            image_square,
-                                                           zoom_index,
-                                                           GridPixelSize(viewport_current_state.image_max_size()));
+                                                           zoom_index);
                 if (texture_copy_successful) {
                   dest_square->set_image_loaded(load_index);
                   texture_copy_count+=1;
@@ -203,21 +202,15 @@ bool TextureUpdate::_grid_square_visible(INT64 i, INT64 j,
 
 bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                   ImageGridSquareZoomLevel* const source_square,
-                                  INT64 zoom_out_shift,
-                                  GridPixelSize texture_pixel_size) {
+                                  INT64 zoom_out_shift) {
   INT64 subimages_w=source_square->sub_w();
   INT64 subimages_h=source_square->sub_h();
   // TODO: change how this notifies about valid/invalid textures
   bool any_successful=false;
-  auto dest_wpixel=texture_pixel_size.wpixel() >> zoom_out_shift;
-  auto dest_hpixel=texture_pixel_size.hpixel() >> zoom_out_shift;
-  dest_wpixel=dest_wpixel + (TEXTURE_ALIGNMENT - (dest_wpixel % TEXTURE_ALIGNMENT));
   dest_square->_source_square=source_square;
   dest_square->unload_all_textures();
   auto tile_pixel_size=TILE_PIXEL_BASE_SIZE >> zoom_out_shift;
-  auto tile_w=(dest_wpixel/tile_pixel_size)+1;
-  auto tile_h=(dest_hpixel/tile_pixel_size)+1;
-  dest_square->create_surfaces(tile_w, tile_h, tile_pixel_size);
+  dest_square->create_surfaces(tile_pixel_size);
   // skip if can't load texture
   if (dest_square->all_surfaces_valid()) {
     auto all_lock_successful=dest_square->lock_all_surfaces();
@@ -235,11 +228,14 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
       }
       // TODO: this is probably a slowdown
       // zero out any array
-      for (INT64 tj=0; tj < tile_h; tj++) {
-        for (INT64 ti=0; ti < tile_w; ti++) {
+      for (INT64 tj=0; tj < dest_square->tile_h(); tj++) {
+        for (INT64 ti=0; ti < dest_square->tile_w(); ti++) {
           auto dest_array=dest_square->get_rgba_pixels(ti,tj);
           if (dest_array && no_data) {
-            std::memset((void*)dest_array,0,sizeof(PIXEL_RGBA)*tile_pixel_size*tile_pixel_size);
+            auto wpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_aligned();
+            auto hpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_aligned();
+            std::memset((void*)dest_array,0,
+                        sizeof(PIXEL_RGBA)*wpixel_aligned*hpixel_aligned);
           }
         }
       }
@@ -255,8 +251,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
           if (source_data) {
             auto source_zoom_out_shift=source_square->zoom_out_shift();
             // set pixel size that actually gets displayed
-            dest_square->_texture_display_wpixel=source_square->square_wpixel() >> zoom_out_shift;
-            dest_square->_texture_display_hpixel=source_square->square_hpixel() >> zoom_out_shift;
+            dest_square->_texture_display_wpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().wpixel() >> zoom_out_shift;
+            dest_square->_texture_display_hpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().hpixel() >> zoom_out_shift;
             auto zoom_left_shift=zoom_out_shift-source_zoom_out_shift;
             auto source_texture_size=shift_left_signed(tile_pixel_size,zoom_left_shift);
             // which tile is the origin of the source is one
@@ -317,22 +313,32 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                   dest_start_y=0;
                 }
                 auto dest_array=dest_square->get_rgba_pixels(ti,tj);
+                auto wpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_aligned();
+                auto hpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_aligned();
+                auto wpixel_unaligned=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_unaligned();
+                auto hpixel_unaligned=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_unaligned();
                 if (zoom_left_shift >= 0) {
                   buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
                                              current_tile_source_start_x, current_tile_source_start_y,
                                              current_tile_source_wpixel,current_tile_source_hpixel,
-                                             (PIXEL_RGBA*)dest_array,tile_pixel_size,tile_pixel_size,
+                                             (PIXEL_RGBA*)dest_array,
+                                             wpixel_aligned,
+                                             hpixel_aligned,
+                                             wpixel_unaligned,
+                                             hpixel_unaligned,
                                              dest_start_x, dest_start_y,
-                                             // TODO: eliminate this floating point
-                                             floor(pow(2.0,zoom_left_shift)));
+                                             zoom_left_shift);
                 } else {
                   buffer_copy_expand_generic(source_data,source_wpixel,source_hpixel,
                                              current_tile_source_start_x, current_tile_source_start_y,
                                              current_tile_source_wpixel,current_tile_source_hpixel,
-                                             (PIXEL_RGBA*)dest_array,tile_pixel_size,tile_pixel_size,
+                                             (PIXEL_RGBA*)dest_array,
+                                             wpixel_aligned,
+                                             hpixel_aligned,
+                                             wpixel_unaligned,
+                                             hpixel_unaligned,
                                              dest_start_x, dest_start_y,
-                                             // TODO: eliminate this floating point
-                                             floor(pow(2.0,-zoom_left_shift)));
+                                             -zoom_left_shift);
                 }
               }
             }

@@ -71,7 +71,7 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
   //       all data for a square before transfering
   // TODO: since these are fixed size, I could just allocate a
   //       transfer structure per square
-  for (auto& data_transfer_temp : data_transfer.data_transfer) {
+  for (const auto& data_transfer_temp : data_transfer.data_transfer) {
     data_transfer_temp->rgba_data=std::make_unique<PIXEL_RGBA*[]>(sub_size);
     data_transfer_temp->rgba_wpixel=std::make_unique<size_t[]>(sub_size);
     data_transfer_temp->rgba_hpixel=std::make_unique<size_t[]>(sub_size);
@@ -203,21 +203,15 @@ INT64 ImageGridSquareZoomLevel::max_sub_hpixel() const {
   return this->_max_sub_hpixel;
 }
 
-// TODO: make sure these are actually needed at some point
-INT64 ImageGridSquareZoomLevel::square_wpixel() const {
-  return this->_parent_square->_square_wpixel;
-}
-
-// TODO: make sure these are actually needed at some point
-INT64 ImageGridSquareZoomLevel::square_hpixel() const {
-  return this->_parent_square->_square_hpixel;
+ImageGridSquare* ImageGridSquareZoomLevel::parent_square() {
+  return this->_parent_square;
 }
 
 INT64 ImageGridSquareZoomLevel::_sub_i_arr(INT64 sub_i, INT64 sub_j) const {
   return sub_j*this->sub_w()+sub_i;
 }
 
-INT64 ImageGridSquareZoomLevel::_sub_i_arr(SubGridIndex& sub_index) const {
+INT64 ImageGridSquareZoomLevel::_sub_i_arr(const SubGridIndex& sub_index) const {
   return sub_index.subgrid_j()*this->sub_w()+sub_index.subgrid_i();
 }
 
@@ -290,9 +284,8 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
       // set the RGBA of the surface
       auto rgba_wpixel=this->_squares[i][j]->_square_wpixel;
       auto rgba_hpixel=this->_squares[i][j]->_square_hpixel;
-      // TODO: encapsulate calculation of max pixels while aligning
       if ((INT64)rgba_wpixel > new_wpixel) {
-        new_wpixel=(INT64)(rgba_wpixel+(TEXTURE_ALIGNMENT - (rgba_wpixel % TEXTURE_ALIGNMENT)));
+        new_wpixel=(INT64)rgba_wpixel;
       }
       if ((INT64)rgba_hpixel > new_hpixel) {
         new_hpixel=(INT64)rgba_hpixel;
@@ -420,7 +413,7 @@ bool ImageGrid::_load_square(const ViewPortCurrentState& viewport_current_state,
     }
     if (zoom_index_list.size() > 0) {
       auto dest_squares=std::vector<ImageGridSquareZoomLevel*>{};
-      for (auto& zoom_index : zoom_index_list) {
+      for (const auto& zoom_index : zoom_index_list) {
         dest_squares.push_back(this->squares(grid_index)->image_array[zoom_index].get());
       }
       tried_load=true;

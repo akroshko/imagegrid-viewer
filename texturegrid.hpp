@@ -27,7 +27,8 @@ class TextureGridSquareZoomLevel;
 class TextureGridSquareZoomLevel {
 public:
   TextureGridSquareZoomLevel()=delete;
-  TextureGridSquareZoomLevel(TextureGridSquare* parent_square);
+  TextureGridSquareZoomLevel(TextureGridSquare* parent_square,
+                             GridPixelSize image_max_pixel_size);
   ~TextureGridSquareZoomLevel();
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&)=delete;
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&&)=delete;
@@ -71,11 +72,9 @@ public:
   /**
    * Create surfaces to render to.
    *
-   * @param tile_w The width in tiles of the surfaces.
-   * @param tile_h The height in tiles of the surfaces.
    * @param tile_pixel_size The pixel size of each tile (they are square).
    */
-  void create_surfaces(INT64 tile_w, INT64 tile_h, INT64 tile_pixel_size);
+  void create_surfaces(INT64 tile_pixel_size);
   /** @return If all surfaces are valid. */
   bool all_surfaces_valid ();
   /** @return If locking all surfaces was successful. */
@@ -128,7 +127,9 @@ private:
 class TextureGridSquare {
 public:
   TextureGridSquare()=delete;
-  TextureGridSquare(TextureGrid* parent_grid,INT64 zoom_index_length);
+  TextureGridSquare(TextureGrid* parent_grid,
+                    GridPixelSize image_max_pixel_size,
+                    INT64 zoom_index_length);
   ~TextureGridSquare()=default;
   TextureGridSquare(const TextureGridSquare&)=delete;
   TextureGridSquare(const TextureGridSquare&&)=delete;
@@ -160,10 +161,12 @@ public:
    * @param grid_setup The object holding the data on the images in
    *                   the grid, including the filenames and grid
    *                   size.
+   * @param image_max_pixel_size
    * @param zoom_index_length The length of the array holding
    *                          progressively zoomed out images.
    */
   TextureGrid(const GridSetup* grid_setup,
+              GridPixelSize image_max_pixel_size,
               INT64 zoom_index_length);
   ~TextureGrid()=default;
   TextureGrid(const TextureGrid&)=delete;

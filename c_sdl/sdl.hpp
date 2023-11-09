@@ -43,7 +43,7 @@ public:
    * @return Whether to keep going or to quit.
    */
   bool do_input(FLOAT64& current_speed_x, FLOAT64& current_speed_y,
-                FLOAT64& current_speed_zoom, FLOAT64& zoom, FLOAT64& zoom_speed,
+                FLOAT64& current_speed_zoom, FLOAT64& zoom, const FLOAT64& zoom_speed,
                 const GridPixelSize& image_max_size, FLOAT64& xgrid, FLOAT64& ygrid,
                 INT64& mouse_x, INT64& mouse_y,
                 INT64& window_w, INT64& window_h);
@@ -124,10 +124,14 @@ public:
    * Unlock the surface.
    */
   void unlock_surface();
-  /** @return The width in pixels of the stored texture */
-  INT64 texture_wpixel() const;
-  /** @return The height in pixels of the stored texture */
-  INT64 texture_hpixel() const;
+  /** @return The width in pixels of the stored texture. */
+  INT64 texture_wpixel_aligned() const;
+  /** @return The height in pixels of the stored texture. */
+  INT64 texture_hpixel_aligned() const;
+  /** @return The width in pixels of the texture before alignment. */
+  INT64 texture_wpixel_unaligned() const;
+  /** @return The height in pixels of the stored texture before alignment. */
+  INT64 texture_hpixel_unaligned() const;
   /**
    * Blit a texture to the surface.
    *
@@ -146,6 +150,8 @@ public:
                     ViewportPixelSize& image_pixel_size_viewport);
 private:
   SDL_Surface* _display_texture=nullptr;
+  INT64 _wpixel_unaligned;
+  INT64 _hpixel_unaligned;
 };
 
 # endif

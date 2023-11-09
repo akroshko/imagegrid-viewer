@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 // C headers
+#include <cmath>
 #include <cstring>
 #include <cstddef>
 #include <cstdint>
@@ -299,7 +300,7 @@ bool test_tiff_cache(const std::string& cached_filename,
   auto sub_h=data_transfer.sub_h;
   if (can_cache) {
     MSG("Cached file exists: " << cached_filename);
-    for (auto& file_data : data_transfer.data_transfer) {
+    for (const auto& file_data : data_transfer.data_transfer) {
       auto max_wpixel=sub_w*file_data->max_sub_wpixel;
       auto max_hpixel=sub_h*file_data->max_sub_hpixel;
       if (max_wpixel >= CACHE_MAX_PIXEL_SIZE || max_hpixel >= CACHE_MAX_PIXEL_SIZE) {
@@ -347,23 +348,20 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
     png_image_local.version=PNG_IMAGE_VERSION;
     if (png_image_begin_read_from_file(&png_image_local, cached_filename.c_str()) == 0) {
       ERROR("load_tiff_as_rgba() failed to read from png file: " << cached_filename);
-      can_cache=false;
     } else {
       png_bytep png_raster;
       png_image_local.format=PNG_FORMAT_RGBA;
       png_raster=new unsigned char[PNG_IMAGE_SIZE(png_image_local)];
       if (png_raster == NULL) {
         ERROR("load_tiff_as_rgba() failed to allocate png buffer!");
-        can_cache=false;
       } else {
         if (png_image_finish_read(&png_image_local, NULL, png_raster, 0, NULL) == 0) {
           ERROR("load_tiff_as_rgba() failed to read full png image!");
-          can_cache=false;
         } else {
           // TODO: test for mismatched size
           auto png_width=(size_t)png_image_local.width;
           auto png_height=(size_t)png_image_local.height;
-          for (auto& file_data : data_transfer.data_transfer) {
+          for (const auto& file_data : data_transfer.data_transfer) {
             auto zoom_out=file_data->zoom_out;
             auto actual_zoom_out=file_data->zoom_out/cached_zoom_out;
             // TODO: might want to add an assert here but should be safe due to earlier check
@@ -377,9 +375,12 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
             buffer_copy_reduce_generic((PIXEL_RGBA *)png_raster,png_width,png_height,
                                        0,0,
                                        png_width,png_height,
-                                       file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
+                                       file_data->rgba_data[sub_index_arr],
+                                       w_reduced,h_reduced,
+                                       w_reduced,h_reduced,
                                        0,0,
-                                       actual_zoom_out);
+                                       // TODO: get rid of this float
+                                       floor(log2(actual_zoom_out)));
           }
         }
         delete[] png_raster;
@@ -416,7 +417,7 @@ bool load_tiff_as_rgba(const std::string& filename,
         ERROR("Failed to read: " << filename);
       } else {
         // convert raster
-        for (auto& file_data : data_transfer.data_transfer) {
+        for (const auto& file_data : data_transfer.data_transfer) {
           auto zoom_out=file_data->zoom_out;
           size_t w_reduced=reduce_and_pad(tiff_width,zoom_out);
           size_t h_reduced=reduce_and_pad(tiff_height,zoom_out);
@@ -427,7 +428,8 @@ bool load_tiff_as_rgba(const std::string& filename,
           file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
           buffer_copy_reduce_tiff(raster,tiff_width,tiff_height,
                                   file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
-                                  zoom_out);
+                                  // TODO: get rid of this floating point
+                                  floor(log2(zoom_out)));
         }
         success=true;
       }
@@ -483,7 +485,7 @@ bool load_png_as_rgba(const std::string& filename,
         // TODO: test for mismatched size
         auto width=(size_t)image.width;
         auto height=(size_t)image.height;
-        for (auto& file_data : data_transfer.data_transfer) {
+        for (const auto& file_data : data_transfer.data_transfer) {
           auto zoom_out=file_data->zoom_out;
           size_t w_reduced=reduce_and_pad(width,zoom_out);
           size_t h_reduced=reduce_and_pad(height,zoom_out);
@@ -493,11 +495,14 @@ bool load_png_as_rgba(const std::string& filename,
           size_t npixel_reduced=w_reduced*h_reduced;
           file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixel_reduced];
           buffer_copy_reduce_generic((PIXEL_RGBA*)raster,width,height,
-                                     0, 0,
+                                     0,0,
                                      width,height,
-                                     file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
-                                     0, 0,
-                                     zoom_out);
+                                     file_data->rgba_data[sub_index_arr],
+                                     w_reduced,h_reduced,
+                                     w_reduced,h_reduced,
+                                     0,0,
+                                     // TODO: get rid of this float
+                                     floor(log2(zoom_out)));
           success=true;
         }
       }

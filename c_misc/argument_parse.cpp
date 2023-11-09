@@ -24,14 +24,12 @@ void parse_standard_arguments(int argc, char* const* argv,
     switch(opt) {
     case 'w':
       // width in images
-      wimage=strtol(optarg,&end,
-                    strnlen(optarg,PATH_BUFFER_SIZE));
+      wimage=strtol(optarg,&end,10);
       size_arg=true;
       break;
     case 'h':
       // height in images in images
-      himage=strtol(optarg,&end,
-                    strnlen(optarg,PATH_BUFFER_SIZE));
+      himage=strtol(optarg,&end,10);
       size_arg=true;
       break;
     case 'p':
@@ -70,10 +68,9 @@ void parse_standard_arguments(int argc, char* const* argv,
   } else {
     successful=true;
   }
-  path_value=std::string(path_value);
   // get any files on the end
   if (optind != argc) {
-    if (path_value[0] != 0) {
+    if (path_value.length() != 0) {
       ERROR("Cannot specify both a path and individual files.");
     } else {
       for (auto i=optind; i < argc; i++) {

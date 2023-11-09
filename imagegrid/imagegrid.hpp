@@ -110,13 +110,18 @@ public:
   INT64 square_wpixel() const;
   /** @return The height of this square in pixels. */
   INT64 square_hpixel() const;
-
+  /** @return The width of the imagegrid squares in pixels. */
+  INT64 grid_square_wpixel() const;
+  /** @return The height of the imagegrid squares in pixels. */
+  INT64 grid_square_hpixel() const;
+  /** @return The parent square. */
+  ImageGridSquare* parent_square();
 private:
   friend class ImageGrid;
   friend class ImageGridSquare;
   ImageGridSquare* _parent_square;
   INT64 _sub_i_arr(INT64 sub_i, INT64 sub_j) const;
-  INT64 _sub_i_arr(SubGridIndex& sub_index) const;
+  INT64 _sub_i_arr(const SubGridIndex& sub_index) const;
   /** The actual RGBA data for this square at the zoom out value. */
   std::unique_ptr<PIXEL_RGBA*[]> _rgba_data;
   // TOOD: will eventually use an object from coordinates.hpp, but for

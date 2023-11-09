@@ -62,7 +62,7 @@ Sint16 SDLApp::get_jaxis(Sint16 jaxis_original) {
 
 bool SDLApp::do_input(FLOAT64& current_speed_x, FLOAT64& current_speed_y,
                       FLOAT64& current_speed_zoom,
-                      FLOAT64& zoom, FLOAT64& zoom_speed,
+                      FLOAT64& zoom, const FLOAT64& zoom_speed,
                       const GridPixelSize& image_max_size,
                       FLOAT64& xgrid, FLOAT64& ygrid,
                       INT64& mouse_x, INT64& mouse_y,
@@ -204,7 +204,11 @@ void SDLDisplayTextureWrapper::create_surface(INT64 wpixel, INT64 hpixel) {
   if (this->_display_texture) {
     this->unlock_surface();
   }
-  this->_display_texture=SDL_CreateRGBSurfaceWithFormat(0,wpixel,hpixel,32,SDL_PIXELFORMAT_RGBA32);
+  auto wpixel_aligned=wpixel + (TEXTURE_ALIGNMENT - (wpixel % TEXTURE_ALIGNMENT));
+  auto hpixel_aligned=hpixel;
+  this->_display_texture=SDL_CreateRGBSurfaceWithFormat(0,wpixel_aligned,hpixel_aligned,32,SDL_PIXELFORMAT_RGBA32);
+  this->_wpixel_unaligned=wpixel;
+  this->_hpixel_unaligned=hpixel;
 
 }
 
@@ -231,14 +235,22 @@ void SDLDisplayTextureWrapper::unlock_surface () {
   }
 }
 
-
-INT64 SDLDisplayTextureWrapper::texture_wpixel () const {
+INT64 SDLDisplayTextureWrapper::texture_wpixel_aligned () const {
   return this->_display_texture->w;
 }
 
-INT64 SDLDisplayTextureWrapper::texture_hpixel () const {
+INT64 SDLDisplayTextureWrapper::texture_hpixel_aligned () const {
   return this->_display_texture->h;
 }
+
+INT64 SDLDisplayTextureWrapper::texture_wpixel_unaligned() const {
+  return this->_wpixel_unaligned;
+}
+
+INT64 SDLDisplayTextureWrapper::texture_hpixel_unaligned() const {
+  return this->_hpixel_unaligned;
+}
+
 
 void SDLDisplayTextureWrapper::blit_texture(SDLDrawableSurface* drawable_surface,
                                             INT64 texture_wpixel,

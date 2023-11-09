@@ -14,7 +14,21 @@
 #include <climits>
 #include <cmath>
 
-TextureGridSquareZoomLevel::TextureGridSquareZoomLevel (TextureGridSquare* parent_square) {
+TextureGridSquareZoomLevel::TextureGridSquareZoomLevel (TextureGridSquare* parent_square,
+                                                        GridPixelSize image_max_pixel_size) {
+  this->_tile_w=image_max_pixel_size.wpixel()/TILE_PIXEL_BASE_SIZE;
+  if ((image_max_pixel_size.wpixel() % TILE_PIXEL_BASE_SIZE) != 0) {
+    this->_tile_w+=1;
+  }
+  this->_tile_h=image_max_pixel_size.hpixel()/TILE_PIXEL_BASE_SIZE;
+  if ((image_max_pixel_size.hpixel() % TILE_PIXEL_BASE_SIZE) != 0) {
+    this->_tile_h+=1;
+  }
+  auto tile_num=this->_tile_w*this->_tile_h;
+  this->_display_texture_wrapper=std::make_unique<std::unique_ptr<SDLDisplayTextureWrapper>[]>(tile_num);
+  for (INT64 i=0; i < tile_num; i++) {
+    this->_display_texture_wrapper[i]=std::make_unique<SDLDisplayTextureWrapper>();
+  }
   this->_parent_square=parent_square;
 }
 
@@ -23,25 +37,15 @@ TextureGridSquareZoomLevel::~TextureGridSquareZoomLevel () {
 }
 
 void TextureGridSquareZoomLevel::unload_all_textures () {
-  if (this->_tile_w > 0 && this->_tile_h > 0) {
-    for (INT64 j=0; j < this->_tile_h; j++) {
-      for (INT64 i=0; i < this->_tile_w; i++) {
-        auto tile_index=j*this->_tile_w+i;
-        if (this->_display_texture_wrapper[tile_index]->is_valid()) {
-          this->_display_texture_wrapper[tile_index]->unload_surface();
-        }
-      }
+  auto tile_num=this->_tile_w*this->_tile_h;
+  for (INT64 i=0; i < tile_num; i++) {
+    if (this->_display_texture_wrapper[i]->is_valid()) {
+      this->_display_texture_wrapper[i]->unload_surface();
     }
-    for (INT64 i=0; i < this->_tile_w*this->_tile_h; i++) {
-      this->_display_texture_wrapper[i].release();
-    }
-    this->_display_texture_wrapper.release();
-    this->_tile_w=INT_MIN;
-    this->_tile_h=INT_MIN;
-    this->is_loaded=false;
-    this->is_displayable=false;
-    this->last_load_index=INT_MAX;
   }
+  this->is_loaded=false;
+  this->is_displayable=false;
+  this->last_load_index=INT_MAX;
 }
 
 void TextureGridSquareZoomLevel::set_image_loaded (INT64 load_index) {
@@ -65,65 +69,42 @@ SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::display_texture_wrapper(IN
   return this->_display_texture_wrapper[tile_index].get();
 }
 
-void TextureGridSquareZoomLevel::create_surfaces(INT64 tile_w, INT64 tile_h,
-                                                 INT64 tile_pixel_size) {
-  this->_tile_w=tile_w;
-  this->_tile_h=tile_h;
-  // TODO: this should be an assertion
-  if (this->_tile_w > 0 && this->_tile_h > 0) {
-    // check higher up to make sure surfaces are freed before creating
-    this->_display_texture_wrapper=std::make_unique<std::unique_ptr<SDLDisplayTextureWrapper>[]>(tile_w*tile_h);
-    for (INT64 i=0; i < tile_w*tile_h; i++) {
-      this->_display_texture_wrapper[i]=std::make_unique<SDLDisplayTextureWrapper>();
-    }
-    for (INT64 j=0; j < this->_tile_h; j++) {
-      for (INT64 i=0; i < this->_tile_w; i++) {
-        auto tile_index=j*this->_tile_w+i;
-        this->_display_texture_wrapper[tile_index]->create_surface(tile_pixel_size, tile_pixel_size);
-      }
+void TextureGridSquareZoomLevel::create_surfaces(INT64 tile_pixel_size) {
+  auto tile_num=this->_tile_w*this->_tile_h;
+  for (INT64 i=0; i < tile_num; i++) {
+    if (!this->_display_texture_wrapper[i]->is_valid()) {
+      this->_display_texture_wrapper[i]->create_surface(tile_pixel_size, tile_pixel_size);
     }
   }
 }
 
 bool TextureGridSquareZoomLevel::all_surfaces_valid () {
   auto all_valid=true;
-  if (this->_tile_w > 0 && this->_tile_h > 0) {
-    for (INT64 j=0; j < this->_tile_h; j++) {
-      for (INT64 i=0; i < this->_tile_w; i++) {
-        auto tile_index=j*this->_tile_w+i;
-        if (!this->_display_texture_wrapper[tile_index]->is_valid()) {
-          all_valid=false;
-        };
-      }
-    }
+  auto tile_num=this->_tile_w*this->_tile_h;
+  for (INT64 i=0; i < tile_num; i++) {
+    if (!this->_display_texture_wrapper[i]->is_valid()) {
+      all_valid=false;
+    };
   }
   return all_valid;
 }
 
 bool TextureGridSquareZoomLevel::lock_all_surfaces () {
   auto all_lock_successful=true;
-  if (this->_tile_w > 0 && this->_tile_h > 0) {
-    for (INT64 j=0; j < this->_tile_h; j++) {
-      for (INT64 i=0; i < this->_tile_w; i++) {
-        auto tile_index=j*this->_tile_w+i;
-        auto lock_surface_return=this->_display_texture_wrapper[tile_index]->lock_surface();
-        if (lock_surface_return != 0) {
-          all_lock_successful=false;
-        }
-      }
+  auto tile_num=this->_tile_w*this->_tile_h;
+  for (INT64 i=0; i < tile_num; i++) {
+    auto lock_surface_return=this->_display_texture_wrapper[i]->lock_surface();
+    if (lock_surface_return != 0) {
+      all_lock_successful=false;
     }
   }
   return all_lock_successful;
 }
 
 void TextureGridSquareZoomLevel::unlock_all_surfaces () {
-  if (this->_tile_w > 0 && this->_tile_h > 0) {
-    for (INT64 j=0; j < this->_tile_h; j++) {
-      for (INT64 i=0; i < this->_tile_w; i++) {
-        auto tile_index=j*this->_tile_w+i;
-        this->_display_texture_wrapper[tile_index]->unlock_surface();
-      }
-    }
+  auto tile_num=this->_tile_w*this->_tile_h;
+  for (INT64 i=0; i < tile_num; i++) {
+    this->_display_texture_wrapper[i]->unlock_surface();
   }
 }
 
@@ -153,12 +134,15 @@ INT64 TextureGridSquareZoomLevel::texture_square_hpixel() {
   return this->_texture_display_hpixel;
 }
 
-TextureGridSquare::TextureGridSquare (TextureGrid* parent_grid,INT64 zoom_index_length) {
+TextureGridSquare::TextureGridSquare (TextureGrid* parent_grid,
+                                      GridPixelSize image_max_pixel_size,
+                                      INT64 zoom_index_length) {
   this->_parent_grid=parent_grid;
   this->_zoom_index_length=zoom_index_length;
   this->texture_array=std::make_unique<std::unique_ptr<TextureGridSquareZoomLevel>[]>(zoom_index_length);
   for (auto i=0L; i < zoom_index_length; i++) {
-    this->texture_array[i]=std::make_unique<TextureGridSquareZoomLevel>(this);
+    this->texture_array[i]=std::make_unique<TextureGridSquareZoomLevel>(this,
+                                                                        image_max_pixel_size);
   }
 }
 
@@ -167,6 +151,7 @@ TextureGrid* TextureGridSquare::parent_grid () const {
 }
 
 TextureGrid::TextureGrid (const GridSetup* const grid_setup,
+                          GridPixelSize image_max_pixel_size,
                           INT64 zoom_index_length) {
   this->_grid_image_size=GridImageSize(grid_setup->grid_image_size());
   this->_zoom_index_length=zoom_index_length;
@@ -174,7 +159,7 @@ TextureGrid::TextureGrid (const GridSetup* const grid_setup,
   for (INT64 i=0L; i < grid_setup->grid_image_size().wimage(); i++) {
     this->squares[i]=std::make_unique<std::unique_ptr<TextureGridSquare>[]>(grid_setup->grid_image_size().himage());
     for (INT64 j=0L; j < grid_setup->grid_image_size().himage(); j++) {
-      this->squares[i][j]=std::make_unique<TextureGridSquare>(this,zoom_index_length);
+      this->squares[i][j]=std::make_unique<TextureGridSquare>(this,image_max_pixel_size,zoom_index_length);
     }
   }
   this->filler_squares=std::make_unique<std::unique_ptr<SDLDisplayTextureWrapper>[]>(zoom_index_length);
@@ -188,7 +173,7 @@ void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
   // TODO: this should be built by the time things are ready
   //       may want to add an atomic
   for (INT64 zoom_index=0L; zoom_index < zoom_index_length; zoom_index++) {
-    auto texture_zoom_reduction=((INT64)pow(2,zoom_index));
+    auto texture_zoom_reduction=(1L << zoom_index);
     auto dest_wpixel=grid_pixel_size.wpixel()/texture_zoom_reduction;
     auto dest_hpixel=grid_pixel_size.hpixel()/texture_zoom_reduction;
     this->filler_squares[zoom_index] = std::make_unique<SDLDisplayTextureWrapper>();
@@ -196,10 +181,12 @@ void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
     auto lock_surface_return=this->filler_squares[zoom_index]->lock_surface();
     if (lock_surface_return == 0) {
       auto dest_array=this->filler_squares[zoom_index]->pixels();
+      auto wpixel_aligned=this->filler_squares[zoom_index]->texture_wpixel_aligned();
+      auto hpixel_aligned=this->filler_squares[zoom_index]->texture_hpixel_aligned();
       // copy over gray
-      for (INT64 l=0L; l < dest_hpixel; l++) {
-        for (INT64 k=0L; k < dest_wpixel; k++) {
-          auto dest_index=(l*dest_wpixel+k);
+      for (INT64 l=0L; l < hpixel_aligned; l++) {
+        for (INT64 k=0L; k < wpixel_aligned; k++) {
+          auto dest_index=(l*wpixel_aligned+k);
           ((PIXEL_RGBA*)dest_array)[dest_index]=FILLER_LEVEL;
         }
       }

@@ -70,6 +70,10 @@ rtags:
 tidy:
 	clang-tidy -checks=bugprone-*,cert-* -header-filter=.* $(SRC_MAIN) $(SRC_CIONET) $(SRC_CMISC) $(SRC_CSDL)
 
+.PHONY: cppcheck
+cppcheck:
+	cppcheck --enable=all $(SRC_MAIN) $(SRC_CIONET) $(SRC_CMISC) $(SRC_CSDL)
+
 .PHONY: iwyu
 iwyu:
 	echo "$(SRC_MAIN) $(SRC_CIONET) $(SRC_CMISC) $(SRC_CSDL)"'\0' | tr ' ' '\0' | xargs -0 -n1 iwyu -Xiwyu --cxx17ns -Xiwyu --no_fwd_decls -std=c++17
