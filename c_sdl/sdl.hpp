@@ -124,14 +124,24 @@ public:
    * Unlock the surface.
    */
   void unlock_surface();
+  /** @return The width in pixels of the stored texture */
+  INT64 texture_wpixel() const;
+  /** @return The height in pixels of the stored texture */
+  INT64 texture_hpixel() const;
   /**
    * Blit a texture to the surface.
    *
+   * TODO: texture_wpixel and texture_hpixel will get objects specific to texture coordinates.
+   *
    * @param drawable_surface A pointer to the the SDLDrawableSurface to blit to.
+   * @param texture_wpixel
+   * @param texture_hpixel
    * @param viewport_pixel_coordinate The coorindate to blit to on the viewport.
    * @param image_pixel_size_viewport The size of the texture on the viewport.
    */
   void blit_texture(SDLDrawableSurface* drawable_surface,
+                    INT64 texture_wpixel,
+                    INT64 texture_hpixel,
                     ViewportPixelCoordinate& viewport_pixel_coordinate,
                     ViewportPixelSize& image_pixel_size_viewport);
 private:

@@ -231,15 +231,32 @@ void SDLDisplayTextureWrapper::unlock_surface () {
   }
 }
 
+
+INT64 SDLDisplayTextureWrapper::texture_wpixel () const {
+  return this->_display_texture->w;
+}
+
+INT64 SDLDisplayTextureWrapper::texture_hpixel () const {
+  return this->_display_texture->h;
+}
+
 void SDLDisplayTextureWrapper::blit_texture(SDLDrawableSurface* drawable_surface,
+                                            INT64 texture_wpixel,
+                                            INT64 texture_hpixel,
                                             ViewportPixelCoordinate& viewport_pixel_coordinate,
                                             ViewportPixelSize& image_pixel_size_viewport) {
+  SDL_Rect texture_rect;
+  texture_rect.x=0;
+  texture_rect.y=0;
+  texture_rect.w=texture_wpixel;
+  texture_rect.h=texture_hpixel;
   SDL_Rect scaled_rect;
   scaled_rect.x=viewport_pixel_coordinate.xpixel();
   scaled_rect.y=viewport_pixel_coordinate.ypixel();
   scaled_rect.w=image_pixel_size_viewport.wpixel();
   scaled_rect.h=image_pixel_size_viewport.hpixel();
-  SDL_BlitScaled(this->_display_texture, NULL,
+  SDL_BlitScaled(this->_display_texture,
+                 &texture_rect,
                  drawable_surface->screen_surface(),
                  &scaled_rect);
 }

@@ -29,21 +29,53 @@ BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT64 count,
 
 void BlitItem::blit_this(SDLDrawableSurface* screen_surface) {
   if (this->blit_square->get_image_filler()) {
-    blit_square->filler_texture_wrapper()->blit_texture(screen_surface,
-                                                        this->viewport_pixel_coordinate,
-                                                        this->image_pixel_size_viewport);
+    auto texture_wpixel=this->blit_square->filler_texture_wrapper()->texture_wpixel();
+    auto texture_hpixel=this->blit_square->filler_texture_wrapper()->texture_hpixel();
+    this->blit_square->filler_texture_wrapper()->blit_texture(screen_surface,
+                                                              texture_wpixel,
+                                                              texture_hpixel,
+                                                              this->viewport_pixel_coordinate,
+                                                              this->image_pixel_size_viewport);
   } else {
-    if (this->blit_square->tile_w() > 0 && this->blit_square->tile_w() > 0) {
+    auto texture_square_wpixel=this->blit_square->texture_square_wpixel();
+    auto texture_square_hpixel=this->blit_square->texture_square_hpixel();
+    if (this->blit_square->tile_w() > 0 && this->blit_square->tile_h() > 0) {
       for (INT64 i=0; i < this->blit_square->tile_w(); i++) {
         for (INT64 j=0; j < this->blit_square->tile_h(); j++) {
-          auto vp_wpixel=this->image_pixel_size_viewport.wpixel()/this->blit_square->tile_w();
-          auto vp_hpixel=this->image_pixel_size_viewport.hpixel()/this->blit_square->tile_h();
-          auto viewport_pixel_coordinate_local=ViewportPixelCoordinate(this->viewport_pixel_coordinate.xpixel()+i*vp_wpixel,
-                                                                       this->viewport_pixel_coordinate.ypixel()+j*vp_hpixel);
+          // find the size of the texture
+
+          // if this is the last column
+          INT64 texture_wpixel, texture_hpixel;
+          INT64 vp_wpixel, vp_hpixel;
+          // TODO: this assumes uniform sized textures for now
+          auto texture_wpixel_base=this->blit_square->display_texture_wrapper(i,j)->texture_wpixel();
+          auto texture_hpixel_base=this->blit_square->display_texture_wrapper(i,j)->texture_hpixel();
+          auto vp_wpixel_base=this->image_pixel_size_viewport.wpixel()*texture_wpixel_base/texture_square_wpixel;
+          auto vp_hpixel_base=this->image_pixel_size_viewport.hpixel()*texture_hpixel_base/texture_square_hpixel;
+          if (i == this->blit_square->tile_w()-1) {
+            texture_wpixel=texture_square_wpixel % texture_wpixel_base;
+            vp_wpixel=this->image_pixel_size_viewport.wpixel()*texture_wpixel/texture_square_wpixel;
+          } else {
+            texture_wpixel=texture_wpixel_base;
+            vp_wpixel=vp_wpixel_base;
+          }
+          if (j == this->blit_square->tile_h()-1) {
+            texture_hpixel=texture_square_hpixel % texture_hpixel_base;
+            vp_hpixel=this->image_pixel_size_viewport.hpixel()*texture_hpixel/texture_square_hpixel;
+          } else {
+            texture_hpixel=texture_hpixel_base;
+            vp_hpixel=vp_hpixel_base;
+          }
+          auto vp_xpixel=this->viewport_pixel_coordinate.xpixel()+i*vp_wpixel_base;
+          auto vp_ypixel=this->viewport_pixel_coordinate.ypixel()+j*vp_hpixel_base;
+          auto viewport_pixel_coordinate_local=ViewportPixelCoordinate(vp_xpixel,
+                                                                       vp_ypixel);
           auto viewport_pixel_size=ViewportPixelSize(vp_wpixel,vp_hpixel);
-          blit_square->display_texture_wrapper(i,j)->blit_texture(screen_surface,
-                                                                  viewport_pixel_coordinate_local,
-                                                                  viewport_pixel_size);
+          this->blit_square->display_texture_wrapper(i,j)->blit_texture(screen_surface,
+                                                                        texture_wpixel,
+                                                                        texture_hpixel,
+                                                                        viewport_pixel_coordinate_local,
+                                                                        viewport_pixel_size);
         }
       }
     }

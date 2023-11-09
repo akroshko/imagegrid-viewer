@@ -43,4 +43,22 @@ void sleep_thread();
  */
 bool check_valid_filename (std::string filename);
 
+/**
+ * Bit shift right, expect when shift is negative then shift left.
+ *
+ * @param num The number to shift.
+ * @param shift The amount to shift by.
+ * @return The shifted number.
+ */
+INT64 shift_right_signed (INT64 num, INT64 shift);
+
+/**
+ * Bit shift left, expect when shift is negative then shift right.
+ *
+ * @param num The number to shift.
+ * @param shift The amount to shift by.
+ * @return The shifted number.
+ */
+INT64 shift_left_signed (INT64 num, INT64 shift);
+
 #endif

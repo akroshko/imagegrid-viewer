@@ -157,6 +157,12 @@ void ImageGridSquareZoomLevel::unload_square() {
   }
 }
 
+INT64 ImageGridSquareZoomLevel::zoom_out_shift() const {
+  // TODO: eliminate this float calculation once shifts are used to
+  // indicate zoom everywhere
+  return (INT64)floor(log2(this->_zoom_out));
+}
+
 INT64 ImageGridSquareZoomLevel::zoom_out() const {
   return this->_zoom_out;
 }
@@ -195,6 +201,16 @@ INT64 ImageGridSquareZoomLevel::max_sub_wpixel() const {
 
 INT64 ImageGridSquareZoomLevel::max_sub_hpixel() const {
   return this->_max_sub_hpixel;
+}
+
+// TODO: make sure these are actually needed at some point
+INT64 ImageGridSquareZoomLevel::square_wpixel() const {
+  return this->_parent_square->_square_wpixel;
+}
+
+// TODO: make sure these are actually needed at some point
+INT64 ImageGridSquareZoomLevel::square_hpixel() const {
+  return this->_parent_square->_square_hpixel;
 }
 
 INT64 ImageGridSquareZoomLevel::_sub_i_arr(INT64 sub_i, INT64 sub_j) const {
@@ -250,8 +266,8 @@ void ImageGridSquare::_read_data() {
       }
     }
   }
-  this->_image_wpixel=max_sub_wpixel*sub_w;
-  this->_image_hpixel=max_sub_hpixel*sub_h;
+  this->_square_wpixel=max_sub_wpixel*sub_w;
+  this->_square_hpixel=max_sub_hpixel*sub_h;
   this->_max_sub_wpixel=max_sub_wpixel;
   this->_max_sub_hpixel=max_sub_hpixel;
 }
@@ -272,8 +288,8 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
     for (INT64 j=0; j<grid_himage;j++) {
       this->_squares[i][j]=std::make_unique<ImageGridSquare>(grid_setup,this,GridIndex(i,j));
       // set the RGBA of the surface
-      auto rgba_wpixel=this->_squares[i][j]->_image_wpixel;
-      auto rgba_hpixel=this->_squares[i][j]->_image_hpixel;
+      auto rgba_wpixel=this->_squares[i][j]->_square_wpixel;
+      auto rgba_hpixel=this->_squares[i][j]->_square_hpixel;
       // TODO: encapsulate calculation of max pixels while aligning
       if ((INT64)rgba_wpixel > new_wpixel) {
         new_wpixel=(INT64)(rgba_wpixel+(TEXTURE_ALIGNMENT - (rgba_wpixel % TEXTURE_ALIGNMENT)));

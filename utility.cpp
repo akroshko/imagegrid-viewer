@@ -41,3 +41,23 @@ void sleep_thread () {
 bool check_valid_filename (std::string filename) {
   return filename != "";
 }
+
+INT64 shift_right_signed (INT64 num, INT64 shift) {
+  if (shift == 0) {
+    return num;
+  } else if (shift < 0) {
+    return num << -shift;
+  } else {
+    return num >> shift;
+  }
+}
+
+INT64 shift_left_signed (INT64 num, INT64 shift) {
+  if (shift == 0) {
+    return num;
+  } else if (shift < 0) {
+    return num >> -shift;
+  } else {
+    return num << shift;
+  }
+}

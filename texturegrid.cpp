@@ -145,6 +145,14 @@ INT64 TextureGridSquareZoomLevel::tile_h() {
   return this->_tile_h;
 }
 
+INT64 TextureGridSquareZoomLevel::texture_square_wpixel() {
+  return this->_texture_display_wpixel;
+}
+
+INT64 TextureGridSquareZoomLevel::texture_square_hpixel() {
+  return this->_texture_display_hpixel;
+}
+
 TextureGridSquare::TextureGridSquare (TextureGrid* parent_grid,INT64 zoom_index_length) {
   this->_parent_grid=parent_grid;
   this->_zoom_index_length=zoom_index_length;

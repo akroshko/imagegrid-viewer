@@ -57,6 +57,8 @@ public:
                           std::vector<ImageGridSquareZoomLevel*> dest_square);
   /** Unload and free memory from a loaded file */
   void unload_square();
+  /** @return The amount of right shift corresponding how zoomed out this square is. */
+  INT64 zoom_out_shift() const;
   /** @return The amount zoomed out this class represents. */
   INT64 zoom_out() const;
   /**
@@ -100,17 +102,22 @@ public:
   INT64 sub_w() const;
   /** @return The subgrid height of this square. */
   INT64 sub_h() const;
-  /** @return The max subgrid pixel width for each image at the zoom level of this square. */
+  /** @return The max subgrid pixel width for each image at the zoom out of this square. */
   INT64 max_sub_wpixel() const;
-  /** @return The max subgrid pixel height for each image at the zoom level of this square. */
+  /** @return The max subgrid pixel height for each image at the zoom out of this square. */
   INT64 max_sub_hpixel() const;
+  /** @return The width of this square in pixels. */
+  INT64 square_wpixel() const;
+  /** @return The height of this square in pixels. */
+  INT64 square_hpixel() const;
+
 private:
   friend class ImageGrid;
   friend class ImageGridSquare;
   ImageGridSquare* _parent_square;
   INT64 _sub_i_arr(INT64 sub_i, INT64 sub_j) const;
   INT64 _sub_i_arr(SubGridIndex& sub_index) const;
-  /** The actual RGBA data for this square and zoom level */
+  /** The actual RGBA data for this square at the zoom out value. */
   std::unique_ptr<PIXEL_RGBA*[]> _rgba_data;
   // TOOD: will eventually use an object from coordinates.hpp, but for
   // now I want this freedom
@@ -165,8 +172,8 @@ private:
   ImageGrid* _parent_grid;
   GridSetup* _grid_setup;
   GridIndex _grid_index;
-  INT64 _image_wpixel;
-  INT64 _image_hpixel;
+  INT64 _square_wpixel;
+  INT64 _square_hpixel;
   std::unique_ptr<INT64[]> _subimages_wpixel;
   std::unique_ptr<INT64[]> _subimages_hpixel;
   INT64 _max_sub_wpixel;
@@ -234,7 +241,7 @@ private:
   bool _check_bounds(const GridIndex* grid_index) const;
   /**
    * Check whether it is appropriate to load a file given current
-   * viewport corrdinates and zoom level.
+   * viewport coordinates and zoom out value.
    *
    * @param viewport_current_state The current state of the viewport.
    * @param zoom_index The zoom index to check.

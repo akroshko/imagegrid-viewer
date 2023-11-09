@@ -7,6 +7,7 @@
 #include "common.hpp"
 #include "coordinates.hpp"
 #include "imagegrid/gridsetup.hpp"
+#include "imagegrid/imagegrid.hpp"
 #include "c_sdl/sdl.hpp"
 // C++ headers
 #include <atomic>
@@ -65,6 +66,8 @@ public:
   // TODO: this one needs help being private and investigation whether
   // there's a better way
   INT64 last_load_index=INT_MAX;
+  // TODO: this will have to be made private
+  ImageGridSquareZoomLevel* _source_square;
   /**
    * Create surfaces to render to.
    *
@@ -96,12 +99,23 @@ public:
   INT64 tile_w();
   /** @return The height in tiles. */
   INT64 tile_h();
+  /** @return The width in pixels this square actually displays. */
+  INT64 texture_square_wpixel();
+  /** @return The height in pixels this square actually displays. */
+  INT64 texture_square_hpixel();
+  // the size of the texture that actually gets displayed
+  // this is so the padding and tile sizes do not affect what can be
+  // displayed
+  // TODO: decide whether TextureUpdate is a friend or do some other
+  // solution
+  INT64 _texture_display_wpixel;
+  INT64 _texture_display_hpixel;
 private:
-  INT64 _tile_w=INT_MIN;
-  INT64 _tile_h=INT_MIN;
   friend class TextureGrid;
   friend class TextureGridSquare;
   TextureGridSquare* _parent_square;
+  INT64 _tile_w=INT_MIN;
+  INT64 _tile_h=INT_MIN;
   // the actual display texture
   std::unique_ptr<std::unique_ptr<SDLDisplayTextureWrapper>[]> _display_texture_wrapper;
   // the filler texture

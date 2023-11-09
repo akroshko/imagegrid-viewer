@@ -264,7 +264,7 @@ public:
    * Convert a grid coordinate to a viewport pixel coordinate.
    *
    * @param grid_coordinate The GridCoordinate to convert.
-   * @param zoom The zoom level, used to convert between pixels on the
+   * @param zoom The zoom out value, used to convert between pixels on the
    *             image grid and viewport.
    * @param grid_coordinate_pixel_0 The grid coordinate of the origin
    *                                of the viewport.

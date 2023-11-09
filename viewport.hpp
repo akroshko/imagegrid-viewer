@@ -106,7 +106,7 @@ private:
   ViewportPixelSize _viewport_pixel_size;
   /** the grid coordinates of the center of the viewport */
   GridCoordinate _viewport_grid;
-  /** the zoom level, 1.0 indicates all pixels are 1:1, 0.5 indicates zoomed out by a factor of 2 */
+  /** the zoom out value, 1.0 indicates all pixels are 1:1, 0.5 indicates zoomed out by a factor of 2 */
   FLOAT64 _zoom=INITIAL_ZOOM;
   /** a zoom speed per SDL frame */
   FLOAT64 _zoom_speed=INITIAL_ZOOM_SPEED;
