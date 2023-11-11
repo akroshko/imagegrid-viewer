@@ -108,6 +108,13 @@ void TextureGridSquareZoomLevel::unlock_all_surfaces () {
   }
 }
 
+void TextureGridSquareZoomLevel::clear_all_surfaces () {
+  auto tile_num=this->_tile_w*this->_tile_h;
+  for (INT64 i=0; i < tile_num; i++) {
+    this->_display_texture_wrapper[i]->clear();
+  }
+}
+
 SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::filler_texture_wrapper() {
   return this->_filler_texture_wrapper;
 }

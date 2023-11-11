@@ -115,6 +115,12 @@ public:
    */
   void* pixels();
   /**
+   * Clears the surface.
+   *
+   * Assumes surface is locked.
+   */
+  void clear();
+  /**
    * Lock the surface.
    *
    * @return If the surface was successfully locked.

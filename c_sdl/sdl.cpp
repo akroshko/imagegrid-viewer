@@ -221,6 +221,13 @@ void* SDLDisplayTextureWrapper::pixels () {
   return this->_display_texture->pixels;
 }
 
+void SDLDisplayTextureWrapper::clear () {
+  if (this->_display_texture) {
+    SDL_Rect clear_rect;
+    SDL_FillRect(this->_display_texture,&clear_rect,0);
+  }
+}
+
 bool SDLDisplayTextureWrapper::lock_surface () {
   if (this->_display_texture) {
     return SDL_LockSurface(this->_display_texture);

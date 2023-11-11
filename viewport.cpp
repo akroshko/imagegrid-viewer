@@ -2,6 +2,7 @@
 #include "imagegrid/gridsetup.hpp"
 #include "coordinates.hpp"
 #include "texture_overlay.hpp"
+#include "utility.hpp"
 #include "viewport.hpp"
 #include "viewport_current_state.hpp"
 // C compatible headers
@@ -37,42 +38,60 @@ void BlitItem::blit_this(SDLDrawableSurface* screen_surface) {
                                                               this->viewport_pixel_coordinate,
                                                               this->image_pixel_size_viewport);
   } else {
-    auto texture_square_wpixel=this->blit_square->texture_square_wpixel();
-    auto texture_square_hpixel=this->blit_square->texture_square_hpixel();
+    FLOAT64 texture_square_wpixel=this->blit_square->texture_square_wpixel();
+    FLOAT64 texture_square_hpixel=this->blit_square->texture_square_hpixel();
     for (INT64 i=0; i < this->blit_square->tile_w(); i++) {
       for (INT64 j=0; j < this->blit_square->tile_h(); j++) {
-        INT64 texture_wpixel, texture_hpixel;
-        INT64 vp_wpixel, vp_hpixel;
+        FLOAT64 texture_xpixel_start,texture_xpixel_end;
+        FLOAT64 texture_ypixel_start,texture_ypixel_end;
+        FLOAT64 texture_wpixel, texture_hpixel;
+        FLOAT64 vp_xpixel_start,vp_xpixel_end;
+        FLOAT64 vp_ypixel_start,vp_ypixel_end;
+        FLOAT64 vp_wpixel, vp_hpixel;
         // TODO: this assumes uniform sized textures for now
-        // TODO: should this be aligned or unaligned
-        auto texture_wpixel_base=this->blit_square->display_texture_wrapper(i,j)->texture_wpixel_unaligned();
-        auto texture_hpixel_base=this->blit_square->display_texture_wrapper(i,j)->texture_hpixel_unaligned();
-        auto vp_wpixel_base=this->image_pixel_size_viewport.wpixel()*texture_wpixel_base/texture_square_wpixel;
-        auto vp_hpixel_base=this->image_pixel_size_viewport.hpixel()*texture_hpixel_base/texture_square_hpixel;
+        FLOAT64 texture_wpixel_base=(FLOAT64)this->blit_square->display_texture_wrapper(i,j)->texture_wpixel_unaligned();
+        FLOAT64 texture_hpixel_base=(FLOAT64)this->blit_square->display_texture_wrapper(i,j)->texture_hpixel_unaligned();
+        FLOAT64 vp_wpixel_base=(FLOAT64)this->image_pixel_size_viewport.wpixel()*(FLOAT64)texture_wpixel_base/(FLOAT64)texture_square_wpixel;
+        FLOAT64 vp_hpixel_base=(FLOAT64)this->image_pixel_size_viewport.hpixel()*(FLOAT64)texture_hpixel_base/(FLOAT64)texture_square_hpixel;
         // if this is the last column
         if (i == this->blit_square->tile_w()-1) {
-          texture_wpixel=texture_square_wpixel % texture_wpixel_base;
-          vp_wpixel=this->image_pixel_size_viewport.wpixel()*texture_wpixel/texture_square_wpixel;
+          texture_xpixel_start=i*texture_wpixel_base;
+          texture_xpixel_end=texture_square_wpixel;
+          texture_wpixel=texture_xpixel_end-texture_xpixel_start;
+          vp_xpixel_start=floor(i*vp_wpixel_base);
+          vp_xpixel_end=(FLOAT64)this->image_pixel_size_viewport.wpixel();
+          vp_wpixel=vp_xpixel_end-vp_xpixel_start;
         } else {
-          texture_wpixel=texture_wpixel_base;
-          vp_wpixel=vp_wpixel_base;
+          texture_xpixel_start=i*texture_wpixel_base;
+          texture_xpixel_end=(i+1)*texture_wpixel_base;
+          texture_wpixel=texture_xpixel_end-texture_xpixel_start;
+          vp_xpixel_start=floor(i*vp_wpixel_base);
+          vp_xpixel_end=ceil_minus_one((i+1)*vp_wpixel_base);
+          vp_wpixel=vp_xpixel_end-vp_xpixel_start;
         }
         // if this is the last row
         if (j == this->blit_square->tile_h()-1) {
-          texture_hpixel=texture_square_hpixel % texture_hpixel_base;
-          vp_hpixel=this->image_pixel_size_viewport.hpixel()*texture_hpixel/texture_square_hpixel;
+          texture_ypixel_start=j*texture_hpixel_base;
+          texture_ypixel_end=texture_square_hpixel;
+          texture_hpixel=texture_ypixel_end-texture_ypixel_start;
+          vp_ypixel_start=floor(j*vp_hpixel_base);
+          vp_ypixel_end=(FLOAT64)this->image_pixel_size_viewport.hpixel();
+          vp_hpixel=vp_ypixel_end-vp_ypixel_start;
         } else {
-          texture_hpixel=texture_hpixel_base;
-          vp_hpixel=vp_hpixel_base;
+          texture_ypixel_start=j*texture_hpixel_base;
+          texture_ypixel_end=(j+1)*texture_hpixel_base;
+          texture_hpixel=texture_ypixel_end-texture_ypixel_start;
+          vp_ypixel_start=floor(j*vp_hpixel_base);
+          vp_ypixel_end=ceil_minus_one((j+1)*vp_hpixel_base);
+          vp_hpixel=vp_ypixel_end-vp_ypixel_start;
         }
-        auto vp_xpixel=this->viewport_pixel_coordinate.xpixel()+i*vp_wpixel_base;
-        auto vp_ypixel=this->viewport_pixel_coordinate.ypixel()+j*vp_hpixel_base;
-        auto viewport_pixel_coordinate_local=ViewportPixelCoordinate(vp_xpixel,
-                                                                     vp_ypixel);
-        auto viewport_pixel_size=ViewportPixelSize(vp_wpixel,vp_hpixel);
+        auto viewport_pixel_coordinate_local=ViewportPixelCoordinate((FLOAT64)this->viewport_pixel_coordinate.xpixel()+(INT64)vp_xpixel_start,
+                                                                     (FLOAT64)this->viewport_pixel_coordinate.ypixel()+(INT64)vp_ypixel_start);
+        auto viewport_pixel_size=ViewportPixelSize((INT64)vp_wpixel,
+                                                   (INT64)vp_hpixel);
         this->blit_square->display_texture_wrapper(i,j)->blit_texture(screen_surface,
-                                                                      texture_wpixel,
-                                                                      texture_hpixel,
+                                                                      (INT64)texture_wpixel,
+                                                                      (INT64)texture_hpixel,
                                                                       viewport_pixel_coordinate_local,
                                                                       viewport_pixel_size);
       }

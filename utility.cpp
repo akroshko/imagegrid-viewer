@@ -7,7 +7,7 @@
 #include <string>
 #include <thread>
 // C headers
-// #include <cmath>
+#include <cmath>
 
 INT64 reduce_and_pad(INT64 x, INT64 reduction_factor) {
   auto padded_x=pad(x, reduction_factor);
@@ -59,5 +59,14 @@ INT64 shift_left_signed (INT64 num, INT64 shift) {
     return num >> -shift;
   } else {
     return num << shift;
+  }
+}
+
+FLOAT64 ceil_minus_one (FLOAT64 num) {
+  auto ceil_test=ceil(num);
+  if (ceil_test != num) {
+    return ceil_test-1;
+  } else {
+    return num;
   }
 }

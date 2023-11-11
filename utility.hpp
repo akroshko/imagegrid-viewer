@@ -61,4 +61,11 @@ INT64 shift_right_signed (INT64 num, INT64 shift);
  */
 INT64 shift_left_signed (INT64 num, INT64 shift);
 
+/**
+ *
+ * @param num
+ * @return ceil(num)-1 or just the number if whole.
+ */
+FLOAT64 ceil_minus_one (FLOAT64 num);
+
 #endif

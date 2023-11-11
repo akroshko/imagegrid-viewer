@@ -81,6 +81,8 @@ public:
   bool lock_all_surfaces ();
   /** Unlock all surfaces. */
   void unlock_all_surfaces ();
+  /** Clear all surfaces. */
+  void clear_all_surfaces ();
   /** Get the RGBA pixels for a particular tile. */
   void* get_rgba_pixels(INT64 tile_w, INT64 tile_h);
   /**

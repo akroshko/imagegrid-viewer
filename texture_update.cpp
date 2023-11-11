@@ -226,18 +226,9 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
           }
         }
       }
-      // TODO: this is probably a slowdown
       // zero out any array
-      for (INT64 tj=0; tj < dest_square->tile_h(); tj++) {
-        for (INT64 ti=0; ti < dest_square->tile_w(); ti++) {
-          auto dest_array=dest_square->get_rgba_pixels(ti,tj);
-          if (dest_array && no_data) {
-            auto wpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_aligned();
-            auto hpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_aligned();
-            std::memset((void*)dest_array,0,
-                        sizeof(PIXEL_RGBA)*wpixel_aligned*hpixel_aligned);
-          }
-        }
+      if (no_data) {
+        dest_square->clear_all_surfaces();
       }
       // everything is read, loop over
       for (INT64 i_sub=0; i_sub < subimages_w; i_sub++) {
@@ -250,7 +241,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
           auto source_data_origin_y=source_square->rgba_ypixel_origin(sub_index);
           if (source_data) {
             auto source_zoom_out_shift=source_square->zoom_out_shift();
-            // set pixel size that actually gets displayed
+            // set pixel size for whole grid square that actually gets displayed
             dest_square->_texture_display_wpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().wpixel() >> zoom_out_shift;
             dest_square->_texture_display_hpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().hpixel() >> zoom_out_shift;
             auto zoom_left_shift=zoom_out_shift-source_zoom_out_shift;
@@ -262,8 +253,9 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
             auto tile_end_i=(source_data_origin_x+source_wpixel)/source_texture_size;
             auto tile_end_j=(source_data_origin_y+source_hpixel)/source_texture_size;
             // how large is the source on the first tile
-            auto source_end_x_first=shift_left_signed((tile_pixel_size-(source_data_origin_x % tile_pixel_size)),zoom_left_shift);
-            auto source_end_y_first=shift_left_signed((tile_pixel_size-(source_data_origin_y % tile_pixel_size)),zoom_left_shift);
+            auto tile_pixel_size_source=TILE_PIXEL_BASE_SIZE >> source_zoom_out_shift;
+            auto source_end_x_first=tile_pixel_size_source-(source_data_origin_x % tile_pixel_size_source);
+            auto source_end_y_first=tile_pixel_size_source-(source_data_origin_y % tile_pixel_size_source);
             for (INT64 ti=tile_origin_i; ti <= tile_end_i; ti++) {
               for (INT64 tj=tile_origin_j; tj <= tile_end_j; tj++) {
                 // what is the x coordinate of the source that starts the current tile
@@ -291,7 +283,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                   dest_start_x=0;
                 } else {
                   // current_tile_source_start_x=use default
-                  current_tile_source_wpixel=shift_left_signed(tile_pixel_size,zoom_left_shift);
+                  current_tile_source_wpixel=source_texture_size;
                   dest_start_x=0;
                 }
                 // find tile j coordinates
@@ -309,7 +301,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                   dest_start_y=0;
                 } else {
                   // current_tile_source_start_y=use default
-                  current_tile_source_hpixel=shift_left_signed(tile_pixel_size,zoom_left_shift);
+                  current_tile_source_hpixel=source_texture_size;
                   dest_start_y=0;
                 }
                 auto dest_array=dest_square->get_rgba_pixels(ti,tj);
