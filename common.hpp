@@ -34,7 +34,8 @@
 // Give errors and other messages for the user
 ////////////////////////////////////////////////////////////////////////////////
 // show an error
-#define ERROR(x) do { std::cerr << "ERROR: " << x << std::endl; } while (0)
+// TODO: eventually only show internals in non-release builds
+#define ERROR(x) do { std::cerr << "ERROR: " << __FILE__ << ":" << __LINE__ << " " << x << std::endl; } while (0)
 // show a non-fatal warning
 #define WARN(x) do { std::cerr << "WARN: " << x << std::endl; } while (0)
 // show a standard message

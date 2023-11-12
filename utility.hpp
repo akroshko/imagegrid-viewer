@@ -41,7 +41,7 @@ void sleep_thread();
  * @param filename The filename to check.
  * @return Whether the filename is valid.
  */
-bool check_valid_filename (std::string filename);
+bool check_valid_filename (const std::string& filename);
 
 /**
  * Bit shift right, expect when shift is negative then shift left.

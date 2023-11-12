@@ -20,6 +20,10 @@ class LoadFileZoomLevelData;
 
 enum IMAGEDIRECTION {tl_horiz_reset,tl_horiz_follow};
 
+const std::string TEXT_EXTENSION="txt";
+
+const std::string IMAGEGRID_CACHE_DIRECTORY="__imagegrid__cache__";
+
 /**
  * Load numbered images from a path in order
  *
@@ -218,7 +222,7 @@ void load_image_grid_from_text(std::string text_file,
  * @return The cached filename.
  */
 std::string create_cache_filename(const std::string& filename,
-                                  const std::string extension);
+                                  const std::string& extension);
 
 /**
  * Get a temporary tiff file from the Canadian national topographic

@@ -38,7 +38,7 @@ void sleep_thread () {
   std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 
-bool check_valid_filename (std::string filename) {
+bool check_valid_filename (const std::string& filename) {
   return filename != "";
 }
 

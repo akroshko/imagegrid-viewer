@@ -16,8 +16,6 @@
 // C headers
 #include <cmath>
 #include <cstddef>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 
 BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT64 count,
                    const ViewportPixelCoordinate &l_viewport_pixel_coordinate,
@@ -29,7 +27,7 @@ BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT64 count,
 }
 
 void BlitItem::blit_this(SDLDrawableSurface* screen_surface) {
-  if (this->blit_square->get_image_filler()) {
+   if (this->blit_square->get_image_filler()) {
     auto texture_wpixel=this->blit_square->filler_texture_wrapper()->texture_wpixel_unaligned();
     auto texture_hpixel=this->blit_square->filler_texture_wrapper()->texture_hpixel_unaligned();
     this->blit_square->filler_texture_wrapper()->blit_texture(screen_surface,
@@ -209,18 +207,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
       blititems[i]->blit_this(drawable_surface.get());
       blititems[i]->blit_square->display_mutex.unlock();
     }
-    // TODO: move sdl into it's own wrapper
-    if (texture_overlay->overlay_message_surface()) {
-      SDL_Rect message_rect;
-      message_rect.x = OVERLAY_X;
-      message_rect.y = OVERLAY_Y;
-      message_rect.w =texture_overlay->overlay_message_surface()->w;
-      message_rect.h =texture_overlay->overlay_message_surface()->h;
-      SDL_BlitScaled(texture_overlay->overlay_message_surface(),
-                     NULL,
-                     drawable_surface->screen_surface(),
-                     &message_rect);
-    }
+    texture_overlay->draw_overlay(drawable_surface.get());
     overlay_lock.unlock();
   }
 }

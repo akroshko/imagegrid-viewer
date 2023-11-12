@@ -94,7 +94,7 @@ bool TextureGridSquareZoomLevel::lock_all_surfaces () {
   auto tile_num=this->_tile_w*this->_tile_h;
   for (INT64 i=0; i < tile_num; i++) {
     auto lock_surface_return=this->_display_texture_wrapper[i]->lock_surface();
-    if (lock_surface_return != 0) {
+    if (!lock_surface_return) {
       all_lock_successful=false;
     }
   }
@@ -186,7 +186,7 @@ void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
     this->filler_squares[zoom_index] = std::make_unique<SDLDisplayTextureWrapper>();
     this->filler_squares[zoom_index]->create_surface(dest_wpixel, dest_hpixel);
     auto lock_surface_return=this->filler_squares[zoom_index]->lock_surface();
-    if (lock_surface_return == 0) {
+    if (lock_surface_return) {
       auto dest_array=this->filler_squares[zoom_index]->pixels();
       auto wpixel_aligned=this->filler_squares[zoom_index]->texture_wpixel_aligned();
       auto hpixel_aligned=this->filler_squares[zoom_index]->texture_hpixel_aligned();

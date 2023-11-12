@@ -7,11 +7,9 @@
 #include "common.hpp"
 #include "c_sdl/sdl.hpp"
 // C++ headers
-#include <string>
+#include <memory>
 #include <mutex>
-// C headers
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include <string>
 
 /**
  * This class holds the textures in the overlay.
@@ -26,7 +24,7 @@ public:
   TextureOverlay& operator=(const TextureOverlay&&)=delete;
   // lock when the display_area is being worked on
   std::mutex display_mutex;
-  // not currently used and nt sure I need these but here because
+  // not currently used and not sure I need these but here because
   // TextureGridSquareZoomLevel uses them
   //
   // is a real image/data loaded here
@@ -39,12 +37,14 @@ public:
    * @param overlay_message The message to include in the overlay.
    */
   void update_overlay(std::string overlay_message);
-  /** @return The SDL surface. */
-  SDL_Surface* overlay_message_surface();
+  /**
+   * Draw the overlay to a surface.
+   *
+   * @param drawable_surface The screen surface to draw on.
+   */
+  void draw_overlay(SDLDrawableSurface* drawable_surface);
 private:
-  SDL_Surface* _overlay_message_surface=nullptr;
-  TTF_Font* _sdl_current_font=nullptr;
-  SDL_Color _sdl_font_color;
+  std::unique_ptr<SDLFontTextureWrapper> _overlay_message_wrapper;
 };
 
 #endif

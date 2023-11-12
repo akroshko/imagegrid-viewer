@@ -8,6 +8,11 @@
 #include "../coordinates.hpp"
 // library headers
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+
+// this is defined as a macro so I can get easily get file/line information
+#define PRINT_SDL_ERROR ERROR("SDL " << SDL_GetError())
+#define PRINT_SDL_TTF_ERROR ERROR("SDL TTF " << TTF_GetError())
 
 /**
  * An object to contain all the SDL boilerplate and implementation.
@@ -152,12 +157,38 @@ public:
   void blit_texture(SDLDrawableSurface* drawable_surface,
                     INT64 texture_wpixel,
                     INT64 texture_hpixel,
-                    ViewportPixelCoordinate& viewport_pixel_coordinate,
-                    ViewportPixelSize& image_pixel_size_viewport);
+                    const ViewportPixelCoordinate& viewport_pixel_coordinate,
+                    const ViewportPixelSize& image_pixel_size_viewport);
 private:
   SDL_Surface* _display_texture=nullptr;
   INT64 _wpixel_unaligned;
   INT64 _hpixel_unaligned;
 };
+
+/**
+ * An object to hold an SDL texture with text.
+ */
+class SDLFontTextureWrapper {
+public:
+  SDLFontTextureWrapper();
+  ~SDLFontTextureWrapper();
+  /** Update the text. */
+  void update_text(std::string& text);
+  /**
+   * Draw the text.
+   *
+   * @param drawable_surface The screen surface to draw on.
+   * @param The x pixel coordinate of the upper left corner.
+   * @param The y pixel coordinate of the upper left corner.
+   */
+  void draw_text(SDLDrawableSurface* drawable_surface, INT64 xpixel, INT64 ypixel);
+  /** Get the surface that displays the text. */
+  SDL_Surface* get_surface();
+private:
+  SDL_Surface* _overlay_message_surface=nullptr;
+  TTF_Font* _sdl_current_font=nullptr;
+  SDL_Color _sdl_font_color;
+};
+
 
 # endif

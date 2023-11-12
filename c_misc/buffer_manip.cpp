@@ -4,7 +4,6 @@
 // C++ headers
 #include <memory>
 // C headers
-#include <cmath>
 #include <cstring>
 #include <cstdint>
 // C library headers

@@ -15,8 +15,6 @@
 #include "c_sdl/sdl.hpp"
 // C++ headers
 #include <memory>
-// C headers
-#include <SDL2/SDL_ttf.h>
 
  /** Class that stores an item that ready to be blit to the screen. */
 class BlitItem {

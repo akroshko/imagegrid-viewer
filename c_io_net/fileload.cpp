@@ -156,7 +156,7 @@ bool read_data(const std::string& filename,
   if (use_cache) {
     // TODO: assuming read always successful if file opens
     //       files are two lines for now
-    auto filename_txt=create_cache_filename(filename,"txt");
+    auto filename_txt=create_cache_filename(filename,TEXT_EXTENSION);
     std::ifstream file_in_text(filename_txt);
     if (std::filesystem::exists(filename_txt)) {
       MSG("Using file: " << filename_txt << " as cache for: " << filename);
@@ -608,7 +608,7 @@ void load_image_grid_from_text (std::string text_file,
   }
 }
 
-std::string create_cache_filename(const std::string& filename, const std::string extension) {
+std::string create_cache_filename(const std::string& filename, const std::string& extension) {
   // TODO: this really needs to be both profiled and called less
   std::filesystem::path filename_path{filename};
   auto filename_parent=filename_path.parent_path();

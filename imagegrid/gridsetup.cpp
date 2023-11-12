@@ -7,6 +7,7 @@
 #include "../coordinates.hpp"
 #include "../c_io_net/fileload.hpp"
 #include "../c_misc/argument_parse.hpp"
+#include "../viewport_current_state.hpp"
 // C++ headers
 #include <iostream>
 #include <string>

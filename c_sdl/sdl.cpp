@@ -169,20 +169,28 @@ SDL_PixelFormat* SDLApp::format() const {
 SDLDrawableSurface::SDLDrawableSurface(SDLApp* const sdl_app,
                                        const ViewportPixelSize& viewport_pixel_size) {
   this->_sdl_app=sdl_app;
-  this->_screen_surface=SDL_GetWindowSurface(sdl_app->window());
-  SDL_Rect screen_rect;
-  screen_rect.x=0;
-  screen_rect.y=0;
-  screen_rect.w=viewport_pixel_size.wpixel();
-  screen_rect.h=viewport_pixel_size.hpixel();
-  SDL_FillRect(this->_screen_surface,
-               &screen_rect,
-               SDL_MapRGBA(sdl_app->format(),0,0,0,0));
+  if ((this->_screen_surface=SDL_GetWindowSurface(sdl_app->window()))) {
+    SDL_Rect screen_rect;
+    screen_rect.x=0;
+    screen_rect.y=0;
+    screen_rect.w=viewport_pixel_size.wpixel();
+    screen_rect.h=viewport_pixel_size.hpixel();
+    if (SDL_FillRect(this->_screen_surface,
+                     &screen_rect,
+                     SDL_MapRGBA(sdl_app->format(),0,0,0,0)) < 0) {
+      PRINT_SDL_ERROR;
+    }
+  } else {
+    PRINT_SDL_ERROR;
+  }
 }
 
 SDLDrawableSurface::~SDLDrawableSurface() {
-  SDL_UpdateWindowSurface(this->_sdl_app->window());
+  if (SDL_UpdateWindowSurface(this->_sdl_app->window()) != 0) {
+    PRINT_SDL_ERROR;
+  }
   SDL_FreeSurface(this->_screen_surface);
+  this->_screen_surface=nullptr;
 }
 
 SDL_Surface* SDLDrawableSurface::screen_surface() {
@@ -194,10 +202,8 @@ bool SDLDisplayTextureWrapper::is_valid () const {
 }
 
 SDLDisplayTextureWrapper::~SDLDisplayTextureWrapper () {
-  if (this->_display_texture) {
-    SDL_FreeSurface(this->_display_texture);
-    this->_display_texture=nullptr;
-  }
+  SDL_FreeSurface(this->_display_texture);
+  this->_display_texture=nullptr;
 }
 
 void SDLDisplayTextureWrapper::create_surface(INT64 wpixel, INT64 hpixel) {
@@ -206,10 +212,12 @@ void SDLDisplayTextureWrapper::create_surface(INT64 wpixel, INT64 hpixel) {
   }
   auto wpixel_aligned=wpixel + (TEXTURE_ALIGNMENT - (wpixel % TEXTURE_ALIGNMENT));
   auto hpixel_aligned=hpixel;
-  this->_display_texture=SDL_CreateRGBSurfaceWithFormat(0,wpixel_aligned,hpixel_aligned,32,SDL_PIXELFORMAT_RGBA32);
-  this->_wpixel_unaligned=wpixel;
-  this->_hpixel_unaligned=hpixel;
-
+  if (!(this->_display_texture=SDL_CreateRGBSurfaceWithFormat(0,wpixel_aligned,hpixel_aligned,32,SDL_PIXELFORMAT_RGBA32))) {
+    PRINT_SDL_ERROR;
+  } else {
+    this->_wpixel_unaligned=wpixel;
+    this->_hpixel_unaligned=hpixel;
+  }
 }
 
 void SDLDisplayTextureWrapper::unload_surface() {
@@ -223,14 +231,20 @@ void* SDLDisplayTextureWrapper::pixels () {
 
 void SDLDisplayTextureWrapper::clear () {
   if (this->_display_texture) {
-    SDL_Rect clear_rect;
-    SDL_FillRect(this->_display_texture,&clear_rect,0);
+    if (SDL_FillRect(this->_display_texture,NULL,0) < 0) {
+      PRINT_SDL_ERROR;
+    }
   }
 }
 
 bool SDLDisplayTextureWrapper::lock_surface () {
   if (this->_display_texture) {
-    return SDL_LockSurface(this->_display_texture);
+    if (SDL_LockSurface(this->_display_texture) < 0) {
+      PRINT_SDL_ERROR;
+      return false;
+    } else {
+      return true;
+    }
   } else {
     return false;
   }
@@ -258,12 +272,11 @@ INT64 SDLDisplayTextureWrapper::texture_hpixel_unaligned() const {
   return this->_hpixel_unaligned;
 }
 
-
 void SDLDisplayTextureWrapper::blit_texture(SDLDrawableSurface* drawable_surface,
                                             INT64 texture_wpixel,
                                             INT64 texture_hpixel,
-                                            ViewportPixelCoordinate& viewport_pixel_coordinate,
-                                            ViewportPixelSize& image_pixel_size_viewport) {
+                                            const ViewportPixelCoordinate& viewport_pixel_coordinate,
+                                            const ViewportPixelSize& image_pixel_size_viewport) {
   SDL_Rect texture_rect;
   texture_rect.x=0;
   texture_rect.y=0;
@@ -274,8 +287,60 @@ void SDLDisplayTextureWrapper::blit_texture(SDLDrawableSurface* drawable_surface
   scaled_rect.y=viewport_pixel_coordinate.ypixel();
   scaled_rect.w=image_pixel_size_viewport.wpixel();
   scaled_rect.h=image_pixel_size_viewport.hpixel();
-  SDL_BlitScaled(this->_display_texture,
-                 &texture_rect,
-                 drawable_surface->screen_surface(),
-                 &scaled_rect);
+  if (SDL_BlitScaled(this->_display_texture,
+                     &texture_rect,
+                     drawable_surface->screen_surface(),
+                     &scaled_rect) < 0) {
+    PRINT_SDL_ERROR;
+  }
+}
+
+SDLFontTextureWrapper::SDLFontTextureWrapper () {
+  if (TTF_Init() < 0) {
+    PRINT_SDL_TTF_ERROR;
+  }
+  if (!(this->_sdl_current_font = TTF_OpenFont(OVERLAY_FONT_PATH, 24))) {
+    // does not appear to use TTF_ERROR
+    ERROR("TTF_OpenFont");
+  }
+  this->_sdl_font_color = {255, 255, 255, 0};
+}
+
+SDLFontTextureWrapper::~SDLFontTextureWrapper () {
+  SDL_FreeSurface(this->_overlay_message_surface);
+  this->_overlay_message_surface=nullptr;
+  TTF_CloseFont(this->_sdl_current_font);
+  this->_sdl_current_font=nullptr;
+  TTF_Quit();
+}
+
+void SDLFontTextureWrapper::update_text(std::string& text) {
+  SDL_FreeSurface(this->_overlay_message_surface);
+  this->_overlay_message_surface=nullptr;
+  this->_overlay_message_surface=TTF_RenderText_Solid(this->_sdl_current_font,
+                                                      text.c_str(),
+                                                      this->_sdl_font_color);
+  if (!this->_overlay_message_surface) {
+    // does not appear to use TTF_ERROR
+    ERROR("TTF_RenderText_Solid");
+  }
+}
+
+void SDLFontTextureWrapper::draw_text(SDLDrawableSurface* drawable_surface,
+                                      INT64 xpixel, INT64 ypixel) {
+  if (this->_overlay_message_surface) {
+    SDL_Rect message_rect;
+    message_rect.x = xpixel;
+    message_rect.y = ypixel;
+    message_rect.w =this->_overlay_message_surface->w;
+    message_rect.h =this->_overlay_message_surface->h;
+    SDL_BlitScaled(this->_overlay_message_surface,
+                   NULL,
+                   drawable_surface->screen_surface(),
+                   &message_rect);
+  }
+}
+
+SDL_Surface* SDLFontTextureWrapper::get_surface() {
+  return this->_overlay_message_surface;
 }

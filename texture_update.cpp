@@ -17,7 +17,6 @@
 #include <string>
 #include <sstream>
 // C headers
-#include <cstring>
 #include <cmath>
 
 TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update) {

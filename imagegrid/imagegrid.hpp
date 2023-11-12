@@ -67,14 +67,14 @@ public:
    * @param sub_index The index of the subgrid.
    * @return The width in pixels.
    */
-  size_t rgba_wpixel(SubGridIndex& sub_index) const;
+  size_t rgba_wpixel(const SubGridIndex& sub_index) const;
   /**
    * Get the zoomed height in pixels of RGBA array.
    *
    * @param sub_index The index of the subgrid.
    * @return The height in pixels.
    */
-  size_t rgba_hpixel(SubGridIndex& sub_index) const;
+  size_t rgba_hpixel(const SubGridIndex& sub_index) const;
   /**
    * Get the zoomed x coordinate of the origin of this image within
    * the grid square.
@@ -82,7 +82,7 @@ public:
    * @param sub_index The index of the subgrid.
    * @return The x origin coordinate in pixels.
    */
-  INT64 rgba_xpixel_origin(SubGridIndex& sub_index) const;
+  INT64 rgba_xpixel_origin(const SubGridIndex& sub_index) const;
   /**
    * Get the zoomed y coordinate of the origin of this image within
    * the grid square.
@@ -90,14 +90,14 @@ public:
    * @param sub_index The index of the subgrid.
    * @return The y origin coordinate in pixels.
    */
-  INT64 rgba_ypixel_origin(SubGridIndex& sub_index) const;
+  INT64 rgba_ypixel_origin(const SubGridIndex& sub_index) const;
   /**
    * Get the RGBA data for this square.
    *
    * @param sub_index The index of the subgrid.
    * @return A pointer to the RGBA data.
    */
-  PIXEL_RGBA* get_rgba_data(SubGridIndex& sub_index) const;
+  PIXEL_RGBA* get_rgba_data(const SubGridIndex& sub_index) const;
   /** @return The subgrid width of this square. */
   INT64 sub_w() const;
   /** @return The subgrid height of this square. */
