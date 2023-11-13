@@ -15,7 +15,7 @@
 #include <cmath>
 
 TextureGridSquareZoomLevel::TextureGridSquareZoomLevel (TextureGridSquare* parent_square,
-                                                        GridPixelSize image_max_pixel_size) {
+                                                        const GridPixelSize& image_max_pixel_size) {
   this->_tile_w=image_max_pixel_size.wpixel()/TILE_PIXEL_BASE_SIZE;
   if ((image_max_pixel_size.wpixel() % TILE_PIXEL_BASE_SIZE) != 0) {
     this->_tile_w+=1;
@@ -142,7 +142,7 @@ INT64 TextureGridSquareZoomLevel::texture_square_hpixel() {
 }
 
 TextureGridSquare::TextureGridSquare (TextureGrid* parent_grid,
-                                      GridPixelSize image_max_pixel_size,
+                                      const GridPixelSize& image_max_pixel_size,
                                       INT64 zoom_index_length) {
   this->_parent_grid=parent_grid;
   this->_zoom_index_length=zoom_index_length;
@@ -158,7 +158,7 @@ TextureGrid* TextureGridSquare::parent_grid () const {
 }
 
 TextureGrid::TextureGrid (const GridSetup* const grid_setup,
-                          GridPixelSize image_max_pixel_size,
+                          const GridPixelSize& image_max_pixel_size,
                           INT64 zoom_index_length) {
   this->_grid_image_size=GridImageSize(grid_setup->grid_image_size());
   this->_zoom_index_length=zoom_index_length;
@@ -174,7 +174,7 @@ TextureGrid::TextureGrid (const GridSetup* const grid_setup,
 
 void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
                                       INT64 zoom_index_length,
-                                      GridPixelSize grid_pixel_size) {
+                                      const GridPixelSize& grid_pixel_size) {
   // fill squares
   // TODO: I may want to defer filling texture squares eventually
   // TODO: this should be built by the time things are ready

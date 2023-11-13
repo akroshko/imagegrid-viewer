@@ -36,7 +36,7 @@ public:
    *
    * @param overlay_message The message to include in the overlay.
    */
-  void update_overlay(std::string overlay_message);
+  void update_overlay(const std::string& overlay_message);
   /**
    * Draw the overlay to a surface.
    *

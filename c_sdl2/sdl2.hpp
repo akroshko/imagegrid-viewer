@@ -173,7 +173,7 @@ public:
   SDLFontTextureWrapper();
   ~SDLFontTextureWrapper();
   /** Update the text. */
-  void update_text(std::string& text);
+  void update_text(const std::string& text);
   /**
    * Draw the text.
    *

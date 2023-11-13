@@ -164,9 +164,9 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
                                                               grid_image_size_zoomed);
                 blititems.push_back(std::move(new_blit_item));
               } else {
+                texture_loaded=false;
                 texture_square_zoom->display_mutex.unlock();
                 MSG("Couldn't lock normal: " << i << " " << j);
-                texture_loaded=false;
               }
             }
           }
@@ -203,7 +203,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
     // blit blitables
     auto viewport_pixel_size=ViewportPixelSize(this->_current_window_w,this->_current_window_h);
     std::unique_ptr<SDLDrawableSurface> drawable_surface=std::make_unique<SDLDrawableSurface>(sdl_app,viewport_pixel_size);
-    for (size_t i=0; i < blititems.size(); i++) {
+    for (INT64 i=blititems.size()-1; i >= 0; i--) {
       blititems[i]->blit_this(drawable_surface.get());
       blititems[i]->blit_square->display_mutex.unlock();
     }

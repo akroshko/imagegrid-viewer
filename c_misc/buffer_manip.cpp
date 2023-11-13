@@ -15,32 +15,33 @@ typedef unsigned char (*rgb_extract)(unsigned char);
 #define B_SHIFT 16
 #define DEFAULT_ALPHA 0xFF000000
 
-void buffer_copy_reduce_tiff (const uint32_t* const source_buffer, uint32_t w, uint32_t h,
-                              PIXEL_RGBA* dest_buffer, size_t w_reduced, size_t h_reduced,
-                              INT64 zoom_out_shift) {
-  buffer_copy_reduce_tiff_safe(source_buffer, w, h,
-                               dest_buffer, w_reduced, h_reduced,
-                               zoom_out_shift);
+void buffer_copy_reduce_tiff (const uint32_t* const source_buffer, uint32_t source_w, uint32_t source_h,
+                              PIXEL_RGBA* dest_buffer, size_t dest_w, size_t dest_h,
+                              INT64 zoom_out_shift,
+                              INT64* row_buffer) {
+  buffer_copy_reduce_tiff_safe(source_buffer, source_w, source_h,
+                               dest_buffer, dest_w, dest_h,
+                               zoom_out_shift,
+                               row_buffer);
 }
 
-void buffer_copy_reduce_tiff_safe (const uint32_t* const source_buffer, uint32_t w, uint32_t h,
-                                   PIXEL_RGBA* dest_buffer, size_t w_reduced, size_t h_reduced,
-                                   INT64 zoom_out_shift) {
+void buffer_copy_reduce_tiff_safe (const uint32_t* const source_buffer, uint32_t source_w, uint32_t source_h,
+                                   PIXEL_RGBA* dest_buffer, size_t dest_w, size_t dest_h,
+                                   INT64 zoom_out_shift,
+                                   INT64* row_buffer) {
   // the loops in this function ensure memory is accessed sequentially
   // TODO: may wish to figure out an appropriate reduced size
   //       since 64 bit integers may be overkill
-  auto row_buffer=std::make_unique<INT64[]>(w_reduced*3);
-
   auto block_average_shift=2*zoom_out_shift;
   auto zoom_out=1L << zoom_out_shift;
 
-  for (size_t j=0; j < h_reduced; j++) {
-    std::memset((void*)row_buffer.get(),0,sizeof(INT64)*w_reduced*3);
+  for (size_t j=0; j < dest_h; j++) {
+    std::memset((void*)row_buffer,0,sizeof(INT64)*dest_w*3);
     for (size_t tj=j*zoom_out; tj < (j+1)*zoom_out; tj++) {
-      for (size_t i=0; i < w_reduced; i++) {
+      for (size_t i=0; i < dest_w; i++) {
         for (size_t ti=i*zoom_out; ti < (i+1)*zoom_out; ti++) {
-          auto tiff_pixel=tj*w+ti;
-          if ((ti < w) && (tj < h)) {
+          auto tiff_pixel=tj*source_w+ti;
+          if ((ti < source_w) && (tj < source_h)) {
             row_buffer[i*3]+=TIFFGetR(source_buffer[tiff_pixel]);
             row_buffer[i*3+1]+=TIFFGetG(source_buffer[tiff_pixel]);
             row_buffer[i*3+2]+=TIFFGetB(source_buffer[tiff_pixel]);
@@ -48,8 +49,8 @@ void buffer_copy_reduce_tiff_safe (const uint32_t* const source_buffer, uint32_t
         }
       }
     }
-    for (size_t i=0; i < w_reduced; i++) {
-      auto rgba_pixel=j*w_reduced+i;
+    for (size_t i=0; i < dest_w; i++) {
+      auto rgba_pixel=j*dest_w+i;
       dest_buffer[rgba_pixel]=(row_buffer[i*3] >> block_average_shift);
       dest_buffer[rgba_pixel]+=((row_buffer[i*3+1] >> block_average_shift) << G_SHIFT);
       dest_buffer[rgba_pixel]+=((row_buffer[i*3+2] >> block_average_shift) << B_SHIFT);
@@ -65,7 +66,8 @@ void buffer_copy_reduce_generic (const PIXEL_RGBA* const source_buffer, INT64 so
                                  INT64 dest_w, INT64 dest_h,
                                  INT64 dest_w_limit, INT64 dest_h_limit,
                                  INT64 dest_start_x, INT64 dest_start_y,
-                                 INT64 zoom_out_shift) {
+                                 INT64 zoom_out_shift,
+                                 INT64* row_buffer) {
   buffer_copy_reduce_generic_safe(source_buffer, source_w, source_h,
                                   source_start_x, source_start_y,
                                   source_copy_w, source_copy_h,
@@ -73,7 +75,8 @@ void buffer_copy_reduce_generic (const PIXEL_RGBA* const source_buffer, INT64 so
                                   dest_w, dest_h,
                                   dest_w_limit, dest_h_limit,
                                   dest_start_x, dest_start_y,
-                                  zoom_out_shift);
+                                  zoom_out_shift,
+                                  row_buffer);
 }
 
 void buffer_copy_reduce_generic_safe (const PIXEL_RGBA* const source_buffer, INT64 source_w, INT64 source_h,
@@ -83,7 +86,8 @@ void buffer_copy_reduce_generic_safe (const PIXEL_RGBA* const source_buffer, INT
                                       INT64 dest_w, INT64 dest_h,
                                       INT64 dest_w_limit, INT64 dest_h_limit,
                                       INT64 dest_start_x, INT64 dest_start_y,
-                                      INT64 zoom_out_shift) {
+                                      INT64 zoom_out_shift,
+                                      INT64* row_buffer) {
   // di:=destination i
   // dj:=destination j
   // bsi:=source i at beginning of block
@@ -96,7 +100,7 @@ void buffer_copy_reduce_generic_safe (const PIXEL_RGBA* const source_buffer, INT
   // row buffer to copy to
   // TODO: may wish to figure out an appropriate reduced size since 64
   // bit integers are probably overkill for any forseeable need
-  auto row_buffer=std::make_unique<INT64[]>((source_copy_w >> zoom_out_shift)*3);
+  // auto row_buffer=std::make_unique<INT64[]>((source_copy_w >> zoom_out_shift)*3);
 
   INT64 block_average_shift=2*zoom_out_shift;
   auto zoom_out=1L << zoom_out_shift;
@@ -108,7 +112,7 @@ void buffer_copy_reduce_generic_safe (const PIXEL_RGBA* const source_buffer, INT
        bsj < source_start_y+source_copy_h;
        bsj+=zoom_out, dj++) {
     // zero out the row buffer each one of these
-    std::memset((void*)row_buffer.get(),0,sizeof(INT64)*(source_copy_w/zoom_out)*3);
+    std::memset((void*)row_buffer,0,sizeof(INT64)*(source_copy_w/zoom_out)*3);
     for (INT64 sj=bsj; sj < bsj+zoom_out; sj++) {
       if (dj < dest_h_limit) {
         for (INT64 bsi=source_start_x, ri=0;

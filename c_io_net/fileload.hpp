@@ -66,12 +66,14 @@ bool read_data(const std::string& filename,
  *                        image fitting in 512x512.
  * @param current_subgrid The current subgrid to load.
  * @param data_transfer The object used to transfer loaded data.
+ * @param row_temp_buffer A buffer to use as a working area when loading images.
  * @return If reading image data was successful.
  */
 bool load_data_as_rgba(const std::string& filename,
-                      const std::string& cached_filename,
-                      SubGridIndex& current_subgrid,
-                      LoadFileDataTransfer& data_transfer);
+                       const std::string& cached_filename,
+                       SubGridIndex& current_subgrid,
+                       LoadFileDataTransfer& data_transfer,
+                       INT64* row_temp_buffer);
 
 /**
  * Read data about a tiff file using libtiff
@@ -103,11 +105,13 @@ bool test_tiff_cache(const std::string& cached_filename,
  *                        image fitting in 512x512.
  * @param current_subgrid The current subgrid to load.
  * @param data_transfer The object used to transfer loaded data.
+ * @param row_temp_buffer A buffer to use as a working area when loading images.
  * @return If loading image was successful.
  */
 bool load_tiff_as_rgba_cached(const std::string& cached_filename,
-                             SubGridIndex& current_subgrid,
-                             LoadFileDataTransfer& data_transfer);
+                              SubGridIndex& current_subgrid,
+                              LoadFileDataTransfer& data_transfer,
+                              INT64* row_temp_buffer);
 
 /**
  * Load a tiff file using libtiff.
@@ -117,11 +121,13 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
  * @param filename The filename to load.
  * @param current_subgrid The current subgrid to load.
  * @param data_transfer The object used to transfer loaded data.
+ * @param row_temp_buffer A buffer to use as a working area when loading images.
  * @return If loading image was successful.
  */
 bool load_tiff_as_rgba(const std::string& filename,
                       SubGridIndex& current_subgrid,
-                      LoadFileDataTransfer& data_transfer);
+                      LoadFileDataTransfer& data_transfer,
+                       INT64* row_temp_buffer);
 
 /**
  * Read data about a png file using libpng.
@@ -141,12 +147,14 @@ bool read_png_data(const std::string& filename, INT64& width, INT64& height);
  *                        image fitting in 512x512.
  * @param current_subgrid The current subgrid to load.
  * @param data_transfer The object used to transfer loaded data.
+ * @param row_temp_buffer A buffer to use as a working area when loading images.
  * @return If loading image was successful.
  */
 bool load_png_as_rgba(const std::string& filename,
-                     const std::string& cached_filename,
-                     SubGridIndex& current_subgrid,
-                     LoadFileDataTransfer& data_transfer);
+                      const std::string& cached_filename,
+                      SubGridIndex& current_subgrid,
+                      LoadFileDataTransfer& data_transfer,
+                      INT64* row_temp_buffer);
 
 /**
  * Write a png file using libpng.

@@ -42,7 +42,8 @@ ImageGridSquareZoomLevel::~ImageGridSquareZoomLevel() {
 
 bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
                                            bool use_cache,
-                                           std::vector<ImageGridSquareZoomLevel*> dest_squares) {
+                                           const std::vector<ImageGridSquareZoomLevel*>& dest_squares,
+                                           INT64* row_temp_buffer) {
   bool load_successful=true;
   // iterate over square data
   LoadFileData file_data;
@@ -103,9 +104,10 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
         }
         auto current_subgrid=SubGridIndex(sub_i,sub_j);
         auto load_successful_temp=load_data_as_rgba(filename,
-                                                   cached_filename,
-                                                   current_subgrid,
-                                                   data_transfer);
+                                                    cached_filename,
+                                                    current_subgrid,
+                                                    data_transfer,
+                                                    row_temp_buffer);
         // TODO: what happens if one part loads succesfully and
         // another does not? Not loading when I think it should load
         // is also pretty severe, this is probably a fatal error
@@ -295,7 +297,8 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
   this->_image_max_size=GridPixelSize(new_wpixel,new_hpixel);;
   auto image_max_size_wpixel=this->_image_max_size.wpixel();
   auto image_max_size_hpixel=this->_image_max_size.hpixel();
-
+  // allocate temporary buffers to use as a working area
+  this->_row_temp_buffer=std::make_unique<INT64[]>(new_wpixel*3);
   // find how many zoom_step to get whole image grid as a 3x3 grid of original size
   // TODO: revise description of why this works
   auto max_scale=(INT64)ceil((FLOAT64)(fmax(image_max_size_wpixel,image_max_size_hpixel))/(FLOAT64)MAX_MIN_SCALED_IMAGE_SIZE);
@@ -328,11 +331,11 @@ GridSetup* ImageGridSquare::grid_setup() const {
   return this->_grid_setup;
 }
 
-INT64 ImageGridSquare::sub_w() {
+INT64 ImageGridSquare::sub_w() const {
   return this->grid_setup()->sub_w(this->_grid_index);
 }
 
-INT64 ImageGridSquare::sub_h() {
+INT64 ImageGridSquare::sub_h() const {
   return this->grid_setup()->sub_h(this->_grid_index);
 }
 
@@ -419,7 +422,8 @@ bool ImageGrid::_load_square(const ViewPortCurrentState& viewport_current_state,
       tried_load=true;
       auto load_successful_temp=ImageGridSquareZoomLevel::load_square(this->squares(grid_index),
                                                                       grid_setup->use_cache(),
-                                                                      dest_squares);
+                                                                      dest_squares,
+                                                                      this->_row_temp_buffer.get());
       if (!load_successful_temp) {
         never_false=false;
       }

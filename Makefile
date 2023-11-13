@@ -23,8 +23,11 @@ CXXFLAGS_UNSAFE=$(CXXFLAGS_ALWAYS) -fno-rtti
 CXXFLAGS_SDL=$(CXXFLAGS_ALWAYS)
 # -Wconversion -Wsign-conversion
 # specific CFLAGS
-CXXFLAGS_ALL=-flto -g3 -Og
-CXXFLAGS_DEBUG=-g3 -O0
+CXXFLAGS_ALL=-g3 -O2
+CXXFLAGS_FAST=-O3 -march=native
+CXXFLAGS_SANITIZE=-g3 -O2
+CXXFLAGS_PROFILE=-g3 -O2 -pg
+CXXFLAGS_DEBUG=-g3 -Og
 
 # TODO: reenable test code
 # all: imagegrid-viewer test_file
@@ -33,19 +36,32 @@ all: CXXFLAGS_UNSAFE += $(CXXFLAGS_ALL)
 all: CXXFLAGS_SDL += $(CXXFLAGS_ALL)
 all: imagegrid-viewer
 
+.PHONY: release
+fast: CXXFLAGS_SAFE += $(CXXFLAGS_FAST)
+fast: CXXFLAGS_UNSAFE += $(CXXFLAGS_FAST)
+fast: CXXFLAGS_SDL += $(CXXFLAGS_FAST)
+fast: imagegrid-viewer
+
 .PHONY: sanitize-address-undefined
-sanitize-address-undefined: CXXFLAGS_SAFE += $(CXXFLAGS_ALL) -fsanitize=address,undefined
-sanitize-address-undefined: CXXFLAGS_UNSAFE += $(CXXFLAGS_ALL) -fsanitize=address,undefined
-sanitize-address-undefined: CXXFLAGS_SDL += $(CXXFLAGS_ALL) -fsanitize=address,undefined
+sanitize-address-undefined: CXXFLAGS_SAFE += $(CXXFLAGS_SANITIZE) -fsanitize=address,undefined
+sanitize-address-undefined: CXXFLAGS_UNSAFE += $(CXXFLAGS_SANITIZE) -fsanitize=address,undefined
+sanitize-address-undefined: CXXFLAGS_SDL += $(CXXFLAGS_SANITIZE) -fsanitize=address,undefined
 sanitize-address-undefined: LDFLAGS += -fsanitize=address -lubsan
 sanitize-address-undefined: imagegrid-viewer
 
 .PHONY: sanitize-thread
-sanitize-thread: CXXFLAGS_SAFE += $(CXXFLAGS_ALL) -fsanitize=thread
-sanitize-thread: CXXFLAGS_UNSAFE += $(CXXFLAGS_ALL) -fsanitize=thread
-sanitize-thread: CXXFLAGS_SDL += $(CXXFLAGS_ALL) -fsanitize=thread
+sanitize-thread: CXXFLAGS_SAFE += $(CXXFLAGS_SANITIZE) -fsanitize=thread
+sanitize-thread: CXXFLAGS_UNSAFE += $(CXXFLAGS_SANITIZE) -fsanitize=thread
+sanitize-thread: CXXFLAGS_SDL += $(CXXFLAGS_SANITIZE) -fsanitize=thread
 sanitize-thread: LDFLAGS += -ltsan
 sanitize-thread: imagegrid-viewer
+
+.PHONY: profile
+profile: CXXFLAGS_SAFE += $(CXXFLAGS_PROFILE)
+profile: CXXFLAGS_UNSAFE += $(CXXFLAGS_PROFILE)
+profile: CXXFLAGS_SDL += $(CXXFLAGS_PROFILE)
+profile: LDFLAGS += -pg
+profile: imagegrid-viewer
 
 .PHONY: debug
 debug: CXXFLAGS_SAFE += $(CXXFLAGS_DEBUG)

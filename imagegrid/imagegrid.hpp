@@ -50,11 +50,13 @@ public:
    * @param grid_square
    * @param use_cache Whether to use the cache for initial loading.
    * @param dest_square A vector of this class to be loaded.
+   * @param row_temp_buffer A buffer to use as a working area when loading images.
    * @return If loading the square was successful.
    */
   static bool load_square(ImageGridSquare* grid_square,
                           bool use_cache,
-                          std::vector<ImageGridSquareZoomLevel*> dest_square);
+                          const std::vector<ImageGridSquareZoomLevel*>& dest_square,
+                          INT64* row_temp_buffer);
   /** Unload and free memory from a loaded file */
   void unload_square();
   /** @return The amount of right shift corresponding how zoomed out this square is. */
@@ -164,9 +166,9 @@ public:
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
   std::unique_ptr<std::unique_ptr<ImageGridSquareZoomLevel>[]> image_array;
   /** @return The subgrid width. */
-  INT64 sub_w();
+  INT64 sub_w() const;
   /** @return The subgrid height. */
-  INT64 sub_h();
+  INT64 sub_h() const;
   /** @return The parent image grid. */
   ImageGrid* parent_grid() const;
   /** @return The grid setup class. */
@@ -216,7 +218,8 @@ public:
    *                   size.
    * @param keep_running Toggled when this is shutting down.
    */
-  void load_grid(const GridSetup* grid_setup, std::atomic<bool>& keep_running);
+  void load_grid(const GridSetup* grid_setup,
+                 std::atomic<bool>& keep_running);
 
   GridPixelSize get_image_max_pixel_size() const;
   ImageGridSquare* squares(const GridIndex& grid_index) const;
@@ -305,6 +308,13 @@ private:
   bool _read_grid_info_successful=false;
   /** The length of arrays of zoomed image. */
   INT64 _zoom_index_length;
+  /**
+   * This is a temporar pre-allocated buffer for row copies when loading files.
+   *
+   * These will have to be allocated on a pre-thread basis when file
+   * loading through this class becomes more multithreaded.
+   */
+  std::unique_ptr<INT64[]> _row_temp_buffer;
 };
 
 #endif

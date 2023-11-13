@@ -10,7 +10,7 @@ TextureOverlay::TextureOverlay () {
 TextureOverlay::~TextureOverlay () {
 }
 
-void TextureOverlay::update_overlay(std::string overlay_message) {
+void TextureOverlay::update_overlay(const std::string& overlay_message) {
   this->_overlay_message_wrapper->update_text(overlay_message);
 }
 

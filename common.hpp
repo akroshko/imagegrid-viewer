@@ -116,6 +116,9 @@ const FLOAT64 JOY_MAX=32768;
 // particular set of maps from 1'05 to 1'17, investigate later
 const int SDL_DELAY=16;
 const INT64 TEXTURE_ALIGNMENT=4;
+// experimental
+// const INT64 SMALL_TEXTURE_ALIGNMENT=3;
+// const INT64 LARGE_TEXTURE_ALIGNMENT=16;
 
 const double INITIAL_ZOOM=0.0125;
 
@@ -134,7 +137,8 @@ const INT64 MAX_MIN_SCALED_IMAGE_SIZE=32;
 
 // size of the individual textures
 const INT64 TILE_PIXEL_BASE_SIZE=2048;
-// for testing
+// for debugging
+// const INT64 TILE_PIXEL_BASE_SIZE=8192;
 // const INT64 TILE_PIXEL_BASE_SIZE=16384;
 
 // some placeholder values

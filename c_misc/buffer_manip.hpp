@@ -17,10 +17,12 @@
  * @param h_reduced The height of the destination buffer in pixels.
  * @param zoom_out_shift The factor to the reduce the image by, must be a
  *                       power of 2.
+ * @param row_buffer A working buffer of size at least (source_copy_w >> zoom_out_shift)*3).
  */
 void buffer_copy_reduce_tiff (const uint32_t* const source_buffer, uint32_t source_w, uint32_t source_h,
                               PIXEL_RGBA* dest_buffer, size_t w_reduced, size_t h_reduced,
-                              INT64 zoom_out_shift);
+                              INT64 zoom_out_shift,
+                              INT64* row_buffer);
 
 /**
  * Copy and reduce size of an RGBA buffer from tiff files.  A "safe"
@@ -35,11 +37,12 @@ void buffer_copy_reduce_tiff (const uint32_t* const source_buffer, uint32_t sour
  * @param h_reduced The height of the destination buffer in pixels.
  * @param zoom_out_shift The factor to the reduce the image by, must be a
  *                       power of 2.
+ * @param row_buffer A working buffer of size at least (source_copy_w >> zoom_out_shift)*3).
  */
 void buffer_copy_reduce_tiff_safe (const uint32_t* const source_buffer, uint32_t source_w, uint32_t source_h,
                                    PIXEL_RGBA* dest_buffer, size_t w_reduced, size_t h_reduced,
-                                   INT64 zoom_out_shift);
-
+                                   INT64 zoom_out_shift,
+                                   INT64* row_buffer);
 
 /**
  * Copy and reduce size of a generic RGBA buffer.
@@ -60,6 +63,7 @@ void buffer_copy_reduce_tiff_safe (const uint32_t* const source_buffer, uint32_t
  * @param dest_start_y A y offset for the origin.
  * @param zoom_out_shift The factor to the reduce the image by, must
  *                       be a power of 2.
+ * @param row_buffer A working buffer of size at least (source_copy_w >> zoom_out_shift)*3).
  */
 void buffer_copy_reduce_generic (const PIXEL_RGBA* const source_buffer, INT64 source_w, INT64 source_h,
                                  INT64 source_start_x, INT64 source_start_y,
@@ -68,7 +72,9 @@ void buffer_copy_reduce_generic (const PIXEL_RGBA* const source_buffer, INT64 so
                                  INT64 dest_w, INT64 dest_h,
                                  INT64 dest_w_limit, INT64 dest_h_limit,
                                  INT64 dest_start_x, INT64 dest_start_y,
-                                 INT64 zoom_out_shift);
+                                 INT64 zoom_out_shift,
+                                 INT64* row_buffer);
+
 /**
  * Copy and reduce size of a generic RGBA buffer. A "safe" version
  * that should work with any zoom_index and on any 64-bit platform.
@@ -89,6 +95,7 @@ void buffer_copy_reduce_generic (const PIXEL_RGBA* const source_buffer, INT64 so
  * @param dest_start_y A y offset for the origin.
  * @param zoom_out_shift The factor to the reduce the image by, must be a
  *                       power of 2.
+ * @param row_buffer A working buffer of size at least (source_copy_w >> zoom_out_shift)*3).
  */
 void buffer_copy_reduce_generic_safe (const PIXEL_RGBA* const source_buffer, INT64 source_w, INT64 source_h,
                                       INT64 source_start_x, INT64 source_start_y,
@@ -97,7 +104,8 @@ void buffer_copy_reduce_generic_safe (const PIXEL_RGBA* const source_buffer, INT
                                       INT64 dest_w, INT64 dest_h,
                                       INT64 dest_w_limit, INT64 dest_h_limit,
                                       INT64 dest_start_x, INT64 dest_start_y,
-                                      INT64 zoom_out_shift);
+                                      INT64 zoom_out_shift,
+                                      INT64* row_buffer);
 
 /**
  * Copy and expand size of a generic RGBA buffer.

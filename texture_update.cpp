@@ -229,6 +229,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
       if (no_data) {
         dest_square->clear_all_surfaces();
       }
+      // a working buffer for copying, conservatively sized
+      auto row_temp_buffer=std::make_unique<INT64[]>(tile_pixel_size*3);
       // everything is read, loop over
       for (INT64 i_sub=0; i_sub < subimages_w; i_sub++) {
         for (INT64 j_sub=0; j_sub < subimages_h; j_sub++) {
@@ -318,7 +320,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                              wpixel_unaligned,
                                              hpixel_unaligned,
                                              dest_start_x, dest_start_y,
-                                             zoom_left_shift);
+                                             zoom_left_shift,
+                                             row_temp_buffer.get());
                 } else {
                   buffer_copy_expand_generic(source_data,source_wpixel,source_hpixel,
                                              current_tile_source_start_x, current_tile_source_start_y,

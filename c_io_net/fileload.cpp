@@ -207,9 +207,10 @@ bool read_data(const std::string& filename,
 }
 
 bool load_data_as_rgba(const std::string& filename,
-                      const std::string& cached_filename,
-                      SubGridIndex& current_subgrid,
-                      LoadFileDataTransfer& data_transfer) {
+                       const std::string& cached_filename,
+                       SubGridIndex& current_subgrid,
+                       LoadFileDataTransfer& data_transfer,
+                       INT64* row_temp_buffer) {
   // TODO: update error checking and propogation, not loading a known
   //       filename because of an error is serious but should not
   //       cause program crash, whereas this is also where the check
@@ -218,21 +219,24 @@ bool load_data_as_rgba(const std::string& filename,
   if (check_tiff(filename)) {
     MSG("Loading TIFF: " << filename);
     load_successful=load_tiff_as_rgba_cached(cached_filename,
-                                            current_subgrid,
-                                            data_transfer);
+                                             current_subgrid,
+                                             data_transfer,
+                                             row_temp_buffer);
     if (!load_successful) {
       load_successful=load_tiff_as_rgba(filename,
-                                       current_subgrid,
-                                       data_transfer);
+                                        current_subgrid,
+                                        data_transfer,
+                                        row_temp_buffer);
     }
     MSG("Done TIFF: " << filename);
   } else if (check_png(filename)) {
       MSG("Loading PNG: " << filename);
       // TODO: check success
       load_successful=load_png_as_rgba(filename,
-                                      cached_filename,
-                                      current_subgrid,
-                                      data_transfer);
+                                       cached_filename,
+                                       current_subgrid,
+                                       data_transfer,
+                                       row_temp_buffer);
       MSG("Done PNG: " << filename);
   } else if (check_nts(filename)) {
     // get temporary tiff
@@ -240,8 +244,9 @@ bool load_data_as_rgba(const std::string& filename,
     int tiff_fd=-1;
     MSG("Loading NTS: " << filename);
     load_successful=load_tiff_as_rgba_cached(cached_filename,
-                                            current_subgrid,
-                                            data_transfer);
+                                             current_subgrid,
+                                             data_transfer,
+                                             row_temp_buffer);
     if (!load_successful) {
        load_successful=get_tiff_from_nts_file(filename,
                                               temp_filename,
@@ -249,8 +254,9 @@ bool load_data_as_rgba(const std::string& filename,
        if (load_successful) {
          MSG("Loading TIFF: " << temp_filename);
          load_successful=load_tiff_as_rgba(temp_filename,
-                                          current_subgrid,
-                                          data_transfer);
+                                           current_subgrid,
+                                           data_transfer,
+                                           row_temp_buffer);
          if (tiff_fd >= 0) {
            close(tiff_fd);
            MSG("Unlinking: " << temp_filename);
@@ -315,7 +321,8 @@ bool test_tiff_cache(const std::string& cached_filename,
 
 bool load_tiff_as_rgba_cached(const std::string& cached_filename,
                               SubGridIndex& current_subgrid,
-                              LoadFileDataTransfer& data_transfer) {
+                              LoadFileDataTransfer& data_transfer,
+                              INT64* row_temp_buffer) {
   auto sub_i=current_subgrid.subgrid_i();
   auto sub_j=current_subgrid.subgrid_j();
   auto successful=false;
@@ -380,7 +387,8 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
                                        w_reduced,h_reduced,
                                        0,0,
                                        // TODO: get rid of this float
-                                       floor(log2(actual_zoom_out)));
+                                       (INT64)floor(log2(actual_zoom_out)),
+                                       row_temp_buffer);
           }
         }
         delete[] png_raster;
@@ -393,8 +401,9 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
 }
 
 bool load_tiff_as_rgba(const std::string& filename,
-                      SubGridIndex& current_subgrid,
-                      LoadFileDataTransfer& data_transfer) {
+                       SubGridIndex& current_subgrid,
+                       LoadFileDataTransfer& data_transfer,
+                       INT64* row_temp_buffer) {
   auto sub_i=current_subgrid.subgrid_i();
   auto sub_j=current_subgrid.subgrid_j();
   auto sub_w=data_transfer.sub_w;
@@ -429,7 +438,8 @@ bool load_tiff_as_rgba(const std::string& filename,
           buffer_copy_reduce_tiff(raster,tiff_width,tiff_height,
                                   file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
                                   // TODO: get rid of this floating point
-                                  floor(log2(zoom_out)));
+                                  floor(log2(zoom_out)),
+                                  row_temp_buffer);
         }
         success=true;
       }
@@ -458,9 +468,10 @@ bool read_png_data(const std::string& filename,
 }
 
 bool load_png_as_rgba(const std::string& filename,
-                     const std::string& cached_filename,
-                     SubGridIndex& current_subgrid,
-                     LoadFileDataTransfer& data_transfer) {
+                      const std::string& cached_filename,
+                      SubGridIndex& current_subgrid,
+                      LoadFileDataTransfer& data_transfer,
+                      INT64* row_temp_buffer) {
   auto sub_i=current_subgrid.subgrid_i();
   auto sub_j=current_subgrid.subgrid_j();
   auto sub_w=data_transfer.sub_w;
@@ -502,7 +513,8 @@ bool load_png_as_rgba(const std::string& filename,
                                      w_reduced,h_reduced,
                                      0,0,
                                      // TODO: get rid of this float
-                                     floor(log2(zoom_out)));
+                                     (INT64)floor(log2(zoom_out)),
+                                     row_temp_buffer);
           success=true;
         }
       }

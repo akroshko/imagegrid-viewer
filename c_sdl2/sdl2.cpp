@@ -314,7 +314,7 @@ SDLFontTextureWrapper::~SDLFontTextureWrapper () {
   TTF_Quit();
 }
 
-void SDLFontTextureWrapper::update_text(std::string& text) {
+void SDLFontTextureWrapper::update_text(const std::string& text) {
   SDL_FreeSurface(this->_overlay_message_surface);
   this->_overlay_message_surface=nullptr;
   this->_overlay_message_surface=TTF_RenderText_Solid(this->_sdl_current_font,

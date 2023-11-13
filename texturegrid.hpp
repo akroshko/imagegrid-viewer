@@ -28,7 +28,7 @@ class TextureGridSquareZoomLevel {
 public:
   TextureGridSquareZoomLevel()=delete;
   TextureGridSquareZoomLevel(TextureGridSquare* parent_square,
-                             GridPixelSize image_max_pixel_size);
+                             const GridPixelSize& image_max_pixel_size);
   ~TextureGridSquareZoomLevel();
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&)=delete;
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&&)=delete;
@@ -130,7 +130,7 @@ class TextureGridSquare {
 public:
   TextureGridSquare()=delete;
   TextureGridSquare(TextureGrid* parent_grid,
-                    GridPixelSize image_max_pixel_size,
+                    const GridPixelSize& image_max_pixel_size,
                     INT64 zoom_index_length);
   ~TextureGridSquare()=default;
   TextureGridSquare(const TextureGridSquare&)=delete;
@@ -168,7 +168,7 @@ public:
    *                          progressively zoomed out images.
    */
   TextureGrid(const GridSetup* grid_setup,
-              GridPixelSize image_max_pixel_size,
+              const GridPixelSize& image_max_pixel_size,
               INT64 zoom_index_length);
   ~TextureGrid()=default;
   TextureGrid(const TextureGrid&)=delete;
@@ -193,7 +193,7 @@ public:
    */
   void init_filler_squares(const GridSetup* const grid_setup,
                            INT64 zoom_index_length,
-                           GridPixelSize grid_pixel_size);
+                           const GridPixelSize& grid_pixel_size);
 private:
   /** this size of this grid in number of textures */
   GridImageSize _grid_image_size;
