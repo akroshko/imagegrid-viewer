@@ -8,7 +8,7 @@
 #include "coordinates.hpp"
 #include "imagegrid/gridsetup.hpp"
 #include "imagegrid/imagegrid.hpp"
-#include "c_sdl/sdl.hpp"
+#include "c_sdl2/sdl2.hpp"
 // C++ headers
 #include <atomic>
 #include <memory>

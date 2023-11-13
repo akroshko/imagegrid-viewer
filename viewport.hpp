@@ -12,7 +12,7 @@
 #include "coordinates.hpp"
 #include  "viewport_current_state.hpp"
 // C compatible headers
-#include "c_sdl/sdl.hpp"
+#include "c_sdl2/sdl2.hpp"
 // C++ headers
 #include <memory>
 

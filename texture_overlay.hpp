@@ -5,7 +5,7 @@
 #define TEXTURE_OVERLAY_HPP
 
 #include "common.hpp"
-#include "c_sdl/sdl.hpp"
+#include "c_sdl2/sdl2.hpp"
 // C++ headers
 #include <memory>
 #include <mutex>

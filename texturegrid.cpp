@@ -7,7 +7,7 @@
 #include "imagegrid/gridsetup.hpp"
 #include "texturegrid.hpp"
 // C compatible headers
-#include "c_sdl/sdl.hpp"
+#include "c_sdl2/sdl2.hpp"
 // C++ headers
 #include <atomic>
 // C headers

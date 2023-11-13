@@ -1,8 +1,8 @@
 /**
  * Headers representing classes that encapsulating SDL functions.
  */
-#ifndef SDL_HPP
-#define SDL_HPP
+#ifndef SDL2_HPP
+#define SDL2_HPP
 
 #include "../common.hpp"
 #include "../coordinates.hpp"

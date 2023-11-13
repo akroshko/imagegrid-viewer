@@ -4,7 +4,7 @@
 // local headers
 #include "../common.hpp"
 #include "../coordinates.hpp"
-#include "sdl.hpp"
+#include "sdl2.hpp"
 // C++ headers
 #include <iostream>
 // C headers
