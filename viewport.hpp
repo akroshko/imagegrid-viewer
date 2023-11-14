@@ -16,44 +16,19 @@
 // C++ headers
 #include <memory>
 
- /** Class that stores an item that ready to be blit to the screen. */
-class BlitItem {
-public:
-  BlitItem()=delete;
-  BlitItem(TextureGridSquareZoomLevel* square, INT64 count,
-           const ViewportPixelCoordinate& viewport_pixel_coordinate,
-           const ViewportPixelSize& grid_image_size_zoomed);
-  ~BlitItem()=default;
-  BlitItem(const BlitItem&)=default;
-  BlitItem(const BlitItem&&)=delete;
-  BlitItem& operator=(const BlitItem&)=delete;
-  BlitItem& operator=(const BlitItem&&)=delete;
-  /**
-   * Method called to do the actual blitting.
-   *
-   * @param screen_surface The screen surface to blit to.
-   */
-  void blit_this(SDLDrawableSurface* screen_surface);
-  /**
-   * The square that will be blit to the screen.
-   */
-  TextureGridSquareZoomLevel* blit_square=nullptr;
-  /**
-   * The pixel location on the viewport that this texture is being
-   * blit to.
-   */
-  ViewportPixelCoordinate viewport_pixel_coordinate;
-  /**
-   * The width on the viewport of this texture.
-   */
-  ViewportPixelSize image_pixel_size_viewport;
-private:
-  /**
-   * Just counting the number of items to be blit, mostly for
-   * debugging.
-   */
-  INT64 _blit_index;
-};
+/**
+ * Method called to do the actual blitting.
+ *
+ * @param screen_surface The screen surface to blit to.
+ * @param blit_square
+ * @param count
+ * @param l_viewport_pixel_coordinate
+ * @param grid_image_size_zoomed
+ */
+void blit_this(SDLDrawableSurface* screen_surface,
+               TextureGridSquareZoomLevel* const blit_square,
+               const ViewportPixelCoordinate& l_viewport_pixel_coordinate,
+               const ViewportPixelSize& grid_image_size_zoomed);
 
 /**
  * Class that represents a viewport.

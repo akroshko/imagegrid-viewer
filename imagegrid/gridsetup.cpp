@@ -195,7 +195,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
     if (this->_path_value.length() != 0) {
       this->_filenames=load_numbered_images(this->_path_value);
     }
-    if (grid_size != this->_filenames.size()) {
+    if (grid_size != (INT64)this->_filenames.size()) {
       this->_successful=false;
       ERROR("Number of filenames " << this->_filenames.size() << " does not match grid size " << grid_size);
       return;
@@ -217,7 +217,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       auto sub_index=this->_get_sub_index(0, 0, 1);
       this->_file_data[grid_index][sub_index]="";
     }
-    for (INT64 k=0;k < this->_filenames.size();k++) {
+    for (INT64 k=0;k < (INT64)this->_filenames.size();k++) {
       INT64 i=k%wimage;
       INT64 j=k/wimage;
       auto grid_index=this->_get_grid_index(i, j);

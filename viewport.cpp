@@ -17,29 +17,25 @@
 #include <cmath>
 #include <cstddef>
 
-BlitItem::BlitItem(TextureGridSquareZoomLevel* const square, INT64 count,
-                   const ViewportPixelCoordinate &l_viewport_pixel_coordinate,
-                   const ViewportPixelSize& grid_image_size_zoomed) {
-  this->_blit_index=count;
-  this->blit_square=square;
-  this->viewport_pixel_coordinate=ViewportPixelCoordinate(l_viewport_pixel_coordinate);
-  this->image_pixel_size_viewport=ViewportPixelSize(grid_image_size_zoomed);
-}
-
-void BlitItem::blit_this(SDLDrawableSurface* screen_surface) {
-   if (this->blit_square->get_image_filler()) {
-    auto texture_wpixel=this->blit_square->filler_texture_wrapper()->texture_wpixel_unaligned();
-    auto texture_hpixel=this->blit_square->filler_texture_wrapper()->texture_hpixel_unaligned();
-    this->blit_square->filler_texture_wrapper()->blit_texture(screen_surface,
+void blit_this(SDLDrawableSurface* screen_surface,
+               TextureGridSquareZoomLevel* const blit_square,
+               const ViewportPixelCoordinate &l_viewport_pixel_coordinate,
+               const ViewportPixelSize& grid_image_size_zoomed) {
+   auto viewport_pixel_coordinate=ViewportPixelCoordinate(l_viewport_pixel_coordinate);
+   auto image_pixel_size_viewport=ViewportPixelSize(grid_image_size_zoomed);
+   if (blit_square->get_image_filler()) {
+    auto texture_wpixel=blit_square->filler_texture_wrapper()->texture_wpixel_unaligned();
+    auto texture_hpixel=blit_square->filler_texture_wrapper()->texture_hpixel_unaligned();
+    blit_square->filler_texture_wrapper()->blit_texture(screen_surface,
                                                               texture_wpixel,
                                                               texture_hpixel,
-                                                              this->viewport_pixel_coordinate,
-                                                              this->image_pixel_size_viewport);
+                                                              viewport_pixel_coordinate,
+                                                              image_pixel_size_viewport);
   } else {
-    FLOAT64 texture_square_wpixel=this->blit_square->texture_square_wpixel();
-    FLOAT64 texture_square_hpixel=this->blit_square->texture_square_hpixel();
-    for (INT64 i=0; i < this->blit_square->tile_w(); i++) {
-      for (INT64 j=0; j < this->blit_square->tile_h(); j++) {
+    FLOAT64 texture_square_wpixel=blit_square->texture_square_wpixel();
+    FLOAT64 texture_square_hpixel=blit_square->texture_square_hpixel();
+    for (INT64 i=0; i < blit_square->tile_w(); i++) {
+      for (INT64 j=0; j < blit_square->tile_h(); j++) {
         FLOAT64 texture_xpixel_start,texture_xpixel_end;
         FLOAT64 texture_ypixel_start,texture_ypixel_end;
         FLOAT64 texture_wpixel, texture_hpixel;
@@ -47,17 +43,17 @@ void BlitItem::blit_this(SDLDrawableSurface* screen_surface) {
         FLOAT64 vp_ypixel_start,vp_ypixel_end;
         FLOAT64 vp_wpixel, vp_hpixel;
         // TODO: this assumes uniform sized textures for now
-        FLOAT64 texture_wpixel_base=(FLOAT64)this->blit_square->display_texture_wrapper(i,j)->texture_wpixel_unaligned();
-        FLOAT64 texture_hpixel_base=(FLOAT64)this->blit_square->display_texture_wrapper(i,j)->texture_hpixel_unaligned();
-        FLOAT64 vp_wpixel_base=(FLOAT64)this->image_pixel_size_viewport.wpixel()*(FLOAT64)texture_wpixel_base/(FLOAT64)texture_square_wpixel;
-        FLOAT64 vp_hpixel_base=(FLOAT64)this->image_pixel_size_viewport.hpixel()*(FLOAT64)texture_hpixel_base/(FLOAT64)texture_square_hpixel;
+        FLOAT64 texture_wpixel_base=(FLOAT64)blit_square->display_texture_wrapper(i,j)->texture_wpixel_unaligned();
+        FLOAT64 texture_hpixel_base=(FLOAT64)blit_square->display_texture_wrapper(i,j)->texture_hpixel_unaligned();
+        FLOAT64 vp_wpixel_base=(FLOAT64)image_pixel_size_viewport.wpixel()*(FLOAT64)texture_wpixel_base/(FLOAT64)texture_square_wpixel;
+        FLOAT64 vp_hpixel_base=(FLOAT64)image_pixel_size_viewport.hpixel()*(FLOAT64)texture_hpixel_base/(FLOAT64)texture_square_hpixel;
         // if this is the last column
-        if (i == this->blit_square->tile_w()-1) {
+        if (i == blit_square->tile_w()-1) {
           texture_xpixel_start=i*texture_wpixel_base;
           texture_xpixel_end=texture_square_wpixel;
           texture_wpixel=texture_xpixel_end-texture_xpixel_start;
           vp_xpixel_start=floor(i*vp_wpixel_base);
-          vp_xpixel_end=(FLOAT64)this->image_pixel_size_viewport.wpixel();
+          vp_xpixel_end=(FLOAT64)image_pixel_size_viewport.wpixel();
           vp_wpixel=vp_xpixel_end-vp_xpixel_start;
         } else {
           texture_xpixel_start=i*texture_wpixel_base;
@@ -68,12 +64,12 @@ void BlitItem::blit_this(SDLDrawableSurface* screen_surface) {
           vp_wpixel=vp_xpixel_end-vp_xpixel_start;
         }
         // if this is the last row
-        if (j == this->blit_square->tile_h()-1) {
+        if (j == blit_square->tile_h()-1) {
           texture_ypixel_start=j*texture_hpixel_base;
           texture_ypixel_end=texture_square_hpixel;
           texture_hpixel=texture_ypixel_end-texture_ypixel_start;
           vp_ypixel_start=floor(j*vp_hpixel_base);
-          vp_ypixel_end=(FLOAT64)this->image_pixel_size_viewport.hpixel();
+          vp_ypixel_end=(FLOAT64)image_pixel_size_viewport.hpixel();
           vp_hpixel=vp_ypixel_end-vp_ypixel_start;
         } else {
           texture_ypixel_start=j*texture_hpixel_base;
@@ -83,15 +79,15 @@ void BlitItem::blit_this(SDLDrawableSurface* screen_surface) {
           vp_ypixel_end=ceil_minus_one((j+1)*vp_hpixel_base);
           vp_hpixel=vp_ypixel_end-vp_ypixel_start;
         }
-        auto viewport_pixel_coordinate_local=ViewportPixelCoordinate((FLOAT64)this->viewport_pixel_coordinate.xpixel()+(INT64)vp_xpixel_start,
-                                                                     (FLOAT64)this->viewport_pixel_coordinate.ypixel()+(INT64)vp_ypixel_start);
+        auto viewport_pixel_coordinate_local=ViewportPixelCoordinate((FLOAT64)viewport_pixel_coordinate.xpixel()+(INT64)vp_xpixel_start,
+                                                                     (FLOAT64)viewport_pixel_coordinate.ypixel()+(INT64)vp_ypixel_start);
         auto viewport_pixel_size=ViewportPixelSize((INT64)vp_wpixel,
                                                    (INT64)vp_hpixel);
-        this->blit_square->display_texture_wrapper(i,j)->blit_texture(screen_surface,
-                                                                      (INT64)texture_wpixel,
-                                                                      (INT64)texture_hpixel,
-                                                                      viewport_pixel_coordinate_local,
-                                                                      viewport_pixel_size);
+        blit_square->display_texture_wrapper(i,j)->blit_texture(screen_surface,
+                                                                (INT64)texture_wpixel,
+                                                                (INT64)texture_hpixel,
+                                                                viewport_pixel_coordinate_local,
+                                                                viewport_pixel_size);
       }
     }
   }
@@ -113,11 +109,9 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
                                   SDLApp* const sdl_app) {
   // locking the textures
   // Stores the next items to be blit to the viewport.
-  std::vector<std::unique_ptr<BlitItem>> blititems;
   // lifted out of the old find_viewport_extents_grid function since it's only called from here
   // will be put into function eventually, but I wanted to use new data structures
   // I don't use objects for some things because I want to use FLOAT64 for intermediate calculations
-
   auto max_zoom_index=texture_grid->textures_zoom_index_length()-1;
   // TODO refactor this out
   if (max_zoom_index < 0) { max_zoom_index=0; }
@@ -125,14 +119,15 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
   ////////////////////////////////////////////////////////////////////////////////
   // now loop over grid squares
   // get the lock on the overlay
-  // TODO: for now don't display if I can't get it
+  // TODO: for now don't display if I can't get overlay lock
   std::unique_lock<std::mutex> overlay_lock(texture_overlay->display_mutex, std::defer_lock);
   if (overlay_lock.try_lock()) {
+    auto viewport_pixel_size=ViewportPixelSize(this->_current_window_w,this->_current_window_h);
+    // this draws the surrface when it goes out of scope
+    std::unique_ptr<SDLDrawableSurface> drawable_surface=std::make_unique<SDLDrawableSurface>(sdl_app,viewport_pixel_size);
     for (INT64 i=0L; i < texture_grid->grid_image_size().wimage(); i++) {
       for (INT64 j=0L; j < texture_grid->grid_image_size().himage(); j++) {
-        auto gi=j*texture_grid->grid_image_size().wimage()+i;
         auto upperleft_gridsquare=GridCoordinate(i,j);
-        // auto viewport_pixel_0_grid=GridCoordinate(viewport_left_grid,viewport_top_grid);
         auto pixel_0=ViewportPixelCoordinate(0,0);
         auto viewport_pixel_0_grid=GridCoordinate(pixel_0,
                                                   this->_zoom,
@@ -155,14 +150,15 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
               if (texture_square_zoom->is_loaded &&
                   texture_square_zoom->is_displayable &&
                   texture_square_zoom->all_surfaces_valid()) {
+
                 texture_loaded=true;
                 auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.wpixel()*this->_zoom),
                                                               (int)round(this->_image_max_size.hpixel()*this->_zoom));
-                auto new_blit_item=std::make_unique<BlitItem>(texture_square_zoom,
-                                                              gi,
-                                                              viewport_pixel_coordinate,
-                                                              grid_image_size_zoomed);
-                blititems.push_back(std::move(new_blit_item));
+                blit_this(drawable_surface.get(),
+                          texture_square_zoom,
+                          viewport_pixel_coordinate,
+                          grid_image_size_zoomed);
+                texture_square_zoom->display_mutex.unlock();
               } else {
                 texture_loaded=false;
                 texture_square_zoom->display_mutex.unlock();
@@ -184,11 +180,11 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
                   texture_square_zoom->filler_texture_wrapper()->is_valid()) {
                 auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.wpixel()*this->_zoom),
                                                               (int)round(this->_image_max_size.hpixel()*this->_zoom));
-                auto new_blit_item=std::make_unique<BlitItem>(texture_square_zoom,
-                                                              gi,
-                                                              viewport_pixel_coordinate,
-                                                              grid_image_size_zoomed);
-                blititems.push_back(std::move(new_blit_item));
+                blit_this(drawable_surface.get(),
+                          texture_square_zoom,
+                          viewport_pixel_coordinate,
+                          grid_image_size_zoomed);
+                texture_square_zoom->display_mutex.unlock();
               } else {
                 texture_square_zoom->display_mutex.unlock();
               }
@@ -199,13 +195,6 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
           }
         }
       }
-    }
-    // blit blitables
-    auto viewport_pixel_size=ViewportPixelSize(this->_current_window_w,this->_current_window_h);
-    std::unique_ptr<SDLDrawableSurface> drawable_surface=std::make_unique<SDLDrawableSurface>(sdl_app,viewport_pixel_size);
-    for (INT64 i=blititems.size()-1; i >= 0; i--) {
-      blititems[i]->blit_this(drawable_surface.get());
-      blititems[i]->blit_square->display_mutex.unlock();
     }
     texture_overlay->draw_overlay(drawable_surface.get());
     overlay_lock.unlock();
