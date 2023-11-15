@@ -24,8 +24,8 @@ void blit_this(SDLDrawableSurface* screen_surface,
    auto viewport_pixel_coordinate=ViewportPixelCoordinate(l_viewport_pixel_coordinate);
    auto image_pixel_size_viewport=ViewportPixelSize(grid_image_size_zoomed);
    if (blit_square->get_image_filler()) {
-    auto texture_wpixel=blit_square->filler_texture_wrapper()->texture_wpixel_unaligned();
-    auto texture_hpixel=blit_square->filler_texture_wrapper()->texture_hpixel_unaligned();
+    auto texture_wpixel=blit_square->filler_texture_wrapper()->texture_wpixel_visible();
+    auto texture_hpixel=blit_square->filler_texture_wrapper()->texture_hpixel_visible();
     blit_square->filler_texture_wrapper()->blit_texture(screen_surface,
                                                               texture_wpixel,
                                                               texture_hpixel,
@@ -43,8 +43,8 @@ void blit_this(SDLDrawableSurface* screen_surface,
         FLOAT64 vp_ypixel_start,vp_ypixel_end;
         FLOAT64 vp_wpixel, vp_hpixel;
         // TODO: this assumes uniform sized textures for now
-        FLOAT64 texture_wpixel_base=(FLOAT64)blit_square->display_texture_wrapper(i,j)->texture_wpixel_unaligned();
-        FLOAT64 texture_hpixel_base=(FLOAT64)blit_square->display_texture_wrapper(i,j)->texture_hpixel_unaligned();
+        FLOAT64 texture_wpixel_base=(FLOAT64)blit_square->display_texture_wrapper(i,j)->texture_wpixel_visible();
+        FLOAT64 texture_hpixel_base=(FLOAT64)blit_square->display_texture_wrapper(i,j)->texture_hpixel_visible();
         FLOAT64 vp_wpixel_base=(FLOAT64)image_pixel_size_viewport.wpixel()*(FLOAT64)texture_wpixel_base/(FLOAT64)texture_square_wpixel;
         FLOAT64 vp_hpixel_base=(FLOAT64)image_pixel_size_viewport.hpixel()*(FLOAT64)texture_hpixel_base/(FLOAT64)texture_square_hpixel;
         // if this is the last column
@@ -79,8 +79,8 @@ void blit_this(SDLDrawableSurface* screen_surface,
           vp_ypixel_end=ceil_minus_one((j+1)*vp_hpixel_base);
           vp_hpixel=vp_ypixel_end-vp_ypixel_start;
         }
-        auto viewport_pixel_coordinate_local=ViewportPixelCoordinate((FLOAT64)viewport_pixel_coordinate.xpixel()+(INT64)vp_xpixel_start,
-                                                                     (FLOAT64)viewport_pixel_coordinate.ypixel()+(INT64)vp_ypixel_start);
+        auto viewport_pixel_coordinate_local=ViewportPixelCoordinate((INT64)((FLOAT64)viewport_pixel_coordinate.xpixel()+vp_xpixel_start),
+                                                                     (INT64)((FLOAT64)viewport_pixel_coordinate.ypixel()+vp_ypixel_start));
         auto viewport_pixel_size=ViewportPixelSize((INT64)vp_wpixel,
                                                    (INT64)vp_hpixel);
         blit_square->display_texture_wrapper(i,j)->blit_texture(screen_surface,

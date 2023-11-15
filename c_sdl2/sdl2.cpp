@@ -215,8 +215,8 @@ void SDLDisplayTextureWrapper::create_surface(INT64 wpixel, INT64 hpixel) {
   if (!(this->_display_texture=SDL_CreateRGBSurfaceWithFormat(0,wpixel_aligned,hpixel_aligned,32,SDL_PIXELFORMAT_RGBA32))) {
     PRINT_SDL_ERROR;
   } else {
-    this->_wpixel_unaligned=wpixel;
-    this->_hpixel_unaligned=hpixel;
+    this->_wpixel_visible=wpixel;
+    this->_hpixel_visible=hpixel;
   }
 }
 
@@ -264,12 +264,12 @@ INT64 SDLDisplayTextureWrapper::texture_hpixel_aligned () const {
   return this->_display_texture->h;
 }
 
-INT64 SDLDisplayTextureWrapper::texture_wpixel_unaligned() const {
-  return this->_wpixel_unaligned;
+INT64 SDLDisplayTextureWrapper::texture_wpixel_visible() const {
+  return this->_wpixel_visible;
 }
 
-INT64 SDLDisplayTextureWrapper::texture_hpixel_unaligned() const {
-  return this->_hpixel_unaligned;
+INT64 SDLDisplayTextureWrapper::texture_hpixel_visible() const {
+  return this->_hpixel_visible;
 }
 
 void SDLDisplayTextureWrapper::blit_texture(SDLDrawableSurface* drawable_surface,

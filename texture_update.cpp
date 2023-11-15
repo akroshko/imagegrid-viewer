@@ -308,8 +308,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                 auto dest_array=dest_square->get_rgba_pixels(ti,tj);
                 auto wpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_aligned();
                 auto hpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_aligned();
-                auto wpixel_unaligned=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_unaligned();
-                auto hpixel_unaligned=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_unaligned();
+                auto wpixel_visible=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_visible();
+                auto hpixel_visible=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_visible();
                 if (zoom_left_shift >= 0) {
                   buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
                                              current_tile_source_start_x, current_tile_source_start_y,
@@ -317,20 +317,20 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                              (PIXEL_RGBA*)dest_array,
                                              wpixel_aligned,
                                              hpixel_aligned,
-                                             wpixel_unaligned,
-                                             hpixel_unaligned,
+                                             wpixel_visible,
+                                             hpixel_visible,
                                              dest_start_x, dest_start_y,
                                              zoom_left_shift,
                                              row_temp_buffer.get());
                 } else {
                   buffer_copy_expand_generic(source_data,source_wpixel,source_hpixel,
                                              current_tile_source_start_x, current_tile_source_start_y,
-                                             current_tile_source_wpixel,current_tile_source_hpixel,
+                                             current_tile_source_wpixel, current_tile_source_hpixel,
                                              (PIXEL_RGBA*)dest_array,
                                              wpixel_aligned,
                                              hpixel_aligned,
-                                             wpixel_unaligned,
-                                             hpixel_unaligned,
+                                             wpixel_visible,
+                                             hpixel_visible,
                                              dest_start_x, dest_start_y,
                                              -zoom_left_shift);
                 }

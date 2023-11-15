@@ -50,8 +50,8 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
   LoadFileDataTransfer data_transfer;
   auto sub_w=grid_square->sub_w();
   auto sub_h=grid_square->sub_h();
-  data_transfer.sub_h=sub_w;
-  data_transfer.sub_w=sub_h;
+  data_transfer.sub_w=sub_w;
+  data_transfer.sub_h=sub_h;
   auto sub_size=sub_w*sub_h;
   data_transfer.original_rgba_wpixel=std::make_unique<size_t[]>(sub_size);
   data_transfer.original_rgba_hpixel=std::make_unique<size_t[]>(sub_size);

@@ -140,9 +140,9 @@ public:
   /** @return The height in pixels of the stored texture. */
   INT64 texture_hpixel_aligned() const;
   /** @return The width in pixels of the texture before alignment. */
-  INT64 texture_wpixel_unaligned() const;
+  INT64 texture_wpixel_visible() const;
   /** @return The height in pixels of the stored texture before alignment. */
-  INT64 texture_hpixel_unaligned() const;
+  INT64 texture_hpixel_visible() const;
   /**
    * Blit a texture to the surface.
    *
@@ -161,8 +161,8 @@ public:
                     const ViewportPixelSize& image_pixel_size_viewport);
 private:
   SDL_Surface* _display_texture=nullptr;
-  INT64 _wpixel_unaligned;
-  INT64 _hpixel_unaligned;
+  INT64 _wpixel_visible;
+  INT64 _hpixel_visible;
 };
 
 /**
