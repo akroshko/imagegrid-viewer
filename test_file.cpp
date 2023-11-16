@@ -37,9 +37,9 @@ int main(int argc, char* argv[]) {
       auto rgb_index=(i*square->rgb_wpixel(index,index)+j)*3;
       auto texture_index=(i*texture_hpixel+j)*3;
       if (i < texture_wpixel && j < texture_hpixel) {
-        ((unsigned char *)display_texture->pixels)[texture_index]=square->get_rgb_data(index,index)[rgb_index];
-        ((unsigned char *)display_texture->pixels)[texture_index+1]=square->get_rgb_data(index,index)[rgb_index+1];
-        ((unsigned char *)display_texture->pixels)[texture_index+2]=square->get_rgb_data(index,index)[rgb_index+2];
+        ((unsigned char*)display_texture->pixels)[texture_index]=square->get_rgb_data(index,index)[rgb_index];
+        ((unsigned char*)display_texture->pixels)[texture_index+1]=square->get_rgb_data(index,index)[rgb_index+1];
+        ((unsigned char*)display_texture->pixels)[texture_index+2]=square->get_rgb_data(index,index)[rgb_index+2];
       }
     }
   }

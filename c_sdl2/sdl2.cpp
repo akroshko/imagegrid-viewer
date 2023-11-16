@@ -210,7 +210,12 @@ void SDLDisplayTextureWrapper::create_surface(INT64 wpixel, INT64 hpixel) {
   if (this->_display_texture) {
     this->unlock_surface();
   }
-  auto wpixel_aligned=wpixel + (TEXTURE_ALIGNMENT - (wpixel % TEXTURE_ALIGNMENT));
+  INT64 wpixel_aligned;
+  if ((wpixel % TEXTURE_ALIGNMENT) == 0) {
+    wpixel_aligned=wpixel;
+  } else {
+    wpixel_aligned=wpixel + (TEXTURE_ALIGNMENT - (wpixel % TEXTURE_ALIGNMENT));
+  }
   auto hpixel_aligned=hpixel;
   if (!(this->_display_texture=SDL_CreateRGBSurfaceWithFormat(0,wpixel_aligned,hpixel_aligned,32,SDL_PIXELFORMAT_RGBA32))) {
     PRINT_SDL_ERROR;

@@ -377,9 +377,11 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
             auto sub_index_arr=sub_j*sub_w+sub_i;
             file_data->rgba_wpixel[sub_index_arr]=w_reduced;
             file_data->rgba_hpixel[sub_index_arr]=h_reduced;
-            size_t npixel_reduced=w_reduced*h_reduced;
-            file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixel_reduced];
-            buffer_copy_reduce_generic((PIXEL_RGBA *)png_raster,png_width,png_height,
+            size_t npixels_reduced=w_reduced*h_reduced;
+            file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
+            std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
+            buffer_copy_reduce_generic((PIXEL_RGBA*)png_raster,
+                                       png_width,png_height,
                                        0,0,
                                        png_width,png_height,
                                        file_data->rgba_data[sub_index_arr],
@@ -389,6 +391,9 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
                                        // TODO: get rid of this float
                                        (INT64)floor(log2(actual_zoom_out)),
                                        row_temp_buffer);
+            // // DEBUGGING!!!
+            // std::filesystem::path cached_filename_test(cached_filename);
+            // write_png_text("/home/main/tmp-test/"+std::to_string((INT64)floor(log2(actual_zoom_out)))+"_"+cached_filename_test.filename().string(),"",w_reduced,h_reduced,0,0,file_data->rgba_data[sub_index_arr]);
           }
         }
         delete[] png_raster;
@@ -435,6 +440,7 @@ bool load_tiff_as_rgba(const std::string& filename,
           file_data->rgba_hpixel[sub_index_arr]=h_reduced;
           auto npixels_reduced=w_reduced*h_reduced;
           file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
+          std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
           buffer_copy_reduce_tiff(raster,tiff_width,tiff_height,
                                   file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
                                   // TODO: get rid of this floating point
@@ -503,8 +509,9 @@ bool load_png_as_rgba(const std::string& filename,
           auto sub_index_arr=sub_j*sub_w+sub_i;
           file_data->rgba_wpixel[sub_index_arr]=w_reduced;
           file_data->rgba_hpixel[sub_index_arr]=h_reduced;
-          size_t npixel_reduced=w_reduced*h_reduced;
-          file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixel_reduced];
+          size_t npixels_reduced=w_reduced*h_reduced;
+          file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
+          std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
           buffer_copy_reduce_generic((PIXEL_RGBA*)raster,width,height,
                                      0,0,
                                      width,height,
@@ -553,11 +560,13 @@ bool write_png_text(std::string filename_png,
    image.colormap_entries=0;
    png_image_write_to_file(&image, new_filename, 0, (void*)rgba_data, 0, 0);
    // finally write out a text file with vital information
-   std::ofstream file_out_text;
-   file_out_text.open(filename_text,std::ios::trunc);
-   file_out_text << full_wpixel << std::endl << full_hpixel << std::endl;
-   file_out_text.close();
-   // TODO: add error checking
+   if (filename_text == "") {
+     std::ofstream file_out_text;
+     file_out_text.open(filename_text,std::ios::trunc);
+     file_out_text << full_wpixel << std::endl << full_hpixel << std::endl;
+     file_out_text.close();
+     // TODO: add error checking
+   }
    return true;
 }
 

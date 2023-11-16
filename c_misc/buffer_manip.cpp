@@ -274,7 +274,7 @@ void buffer_copy_reduce_2_generic_safe (const PIXEL_RGBA* const source_buffer, I
         for (INT64 bsi=source_start_x, ri=0;
              bsi < source_start_x+source_copy_w;
              bsi+=2, ri++) {
-          for (INT64 si=bsi; si < bsi+2 && si < source_start_x+source_copy_w; si++) {
+          for (INT64 si=bsi; si < bsi+2 && si < source_start_x+source_copy_w && si < source_w; si++) {
             auto source_pixel=sj*source_w+si;
             // work out pixel math more carefully so we don't have to do
             // this check every copy, test with asserts
@@ -336,7 +336,7 @@ void buffer_copy_reduce_max_8_generic_safe (const PIXEL_RGBA* const source_buffe
         for (INT64 bsi=source_start_x, ri=0;
              bsi < source_start_x+source_copy_w;
              bsi+=zoom_out, ri++) {
-          for (INT64 si=bsi; si < bsi+zoom_out && si < source_start_x+source_copy_w; si++) {
+          for (INT64 si=bsi; si < bsi+zoom_out && si < source_start_x+source_copy_w && si < source_w; si++) {
             auto source_pixel=sj*source_w+si;
             // work out pixel math more carefully so we don't have to do
             // this check every copy, test with asserts
@@ -397,7 +397,7 @@ void buffer_copy_reduce_generic_safe (const PIXEL_RGBA* const source_buffer, INT
         for (INT64 bsi=source_start_x, ri=0;
              bsi < source_start_x+source_copy_w;
              bsi+=zoom_out, ri++) {
-          for (INT64 si=bsi; si < bsi+zoom_out && si < source_start_x+source_copy_w; si++) {
+          for (INT64 si=bsi; si < bsi+zoom_out && si < source_start_x+source_copy_w && si < source_w; si++) {
             auto source_pixel=sj*source_w+si;
             // work out pixel math more carefully so we don't have to do
             // this check every copy, test with asserts

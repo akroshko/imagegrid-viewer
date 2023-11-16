@@ -136,10 +136,10 @@ const double INITIAL_Y=1.5;
 const INT64 MAX_MIN_SCALED_IMAGE_SIZE=32;
 
 // size of the individual textures
-const INT64 TILE_PIXEL_BASE_SIZE=2048;
+// const INT64 TILE_PIXEL_BASE_SIZE=2048;
 // for debugging
 // const INT64 TILE_PIXEL_BASE_SIZE=8192;
-// const INT64 TILE_PIXEL_BASE_SIZE=16384;
+const INT64 TILE_PIXEL_BASE_SIZE=16384;
 
 // some placeholder values
 // rather than zero, this should make sure that any use of initialized class members becomes obvious

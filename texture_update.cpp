@@ -313,7 +313,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                 if (zoom_left_shift >= 0) {
                   buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
                                              current_tile_source_start_x, current_tile_source_start_y,
-                                             current_tile_source_wpixel,current_tile_source_hpixel,
+                                             current_tile_source_wpixel, current_tile_source_hpixel,
                                              (PIXEL_RGBA*)dest_array,
                                              wpixel_aligned,
                                              hpixel_aligned,

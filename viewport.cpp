@@ -27,10 +27,10 @@ void blit_this(SDLDrawableSurface* screen_surface,
     auto texture_wpixel=blit_square->filler_texture_wrapper()->texture_wpixel_visible();
     auto texture_hpixel=blit_square->filler_texture_wrapper()->texture_hpixel_visible();
     blit_square->filler_texture_wrapper()->blit_texture(screen_surface,
-                                                              texture_wpixel,
-                                                              texture_hpixel,
-                                                              viewport_pixel_coordinate,
-                                                              image_pixel_size_viewport);
+                                                        texture_wpixel,
+                                                        texture_hpixel,
+                                                        viewport_pixel_coordinate,
+                                                        image_pixel_size_viewport);
   } else {
     FLOAT64 texture_square_wpixel=blit_square->texture_square_wpixel();
     FLOAT64 texture_square_hpixel=blit_square->texture_square_hpixel();

@@ -343,6 +343,10 @@ ImageGrid* ImageGridSquare::parent_grid() const {
   return this->_parent_grid;
 }
 
+const GridIndex* ImageGridSquare::grid_index() const {
+  return &this->_grid_index;
+}
+
 void ImageGrid::read_grid_info(GridSetup* grid_setup, std::shared_ptr<ViewPortTransferState> viewport_current_state_imagegrid_update) {
   this->_grid_setup=grid_setup;
   this->_viewport_current_state_imagegrid_update=viewport_current_state_imagegrid_update;

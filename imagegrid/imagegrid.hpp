@@ -171,6 +171,8 @@ public:
   INT64 sub_h() const;
   /** @return The parent image grid. */
   ImageGrid* parent_grid() const;
+  /** @return The grid index of this square */
+  const GridIndex* grid_index() const;
   /** @return The grid setup class. */
   GridSetup* grid_setup() const;
 private:
