@@ -22,7 +22,7 @@ public:
    *
    * @return Whether to continue.
    */
-  virtual std::unique_ptr<GridIndex> get_next();
+  std::unique_ptr<GridIndex> get_next();
 protected:
   INT64 _w;
   INT64 _h;

@@ -5,6 +5,8 @@
 #define COORDINATES_HPP
 
 #include "common.hpp"
+// C headers
+#include <cmath>
 
 // forward declaring everything
 class GridImageSize;
@@ -18,28 +20,95 @@ class ViewportPixelSize;
 class ViewportPixelCoordinate;
 
 /**
+ * A coordinate consisting of a pair of components.
+ **/
+template <typename T>
+class CoordinatePair {
+public:
+  CoordinatePair()=default;
+  /**
+   * @param x1 The first component of the coordinate pair, typically x or width.
+   * @param x2 The second component of the coordinate pair, typically y or height.
+   */
+  CoordinatePair (T x1, T x2);
+  CoordinatePair(const CoordinatePair& coordinate_pair);
+  CoordinatePair& operator=(const CoordinatePair& coordinate_pair);
+  // TODO: not implemented yet
+  CoordinatePair& operator+(const CoordinatePair& coordinate_pair);
+  CoordinatePair& operator-(const CoordinatePair& coordinate_pair);
+  CoordinatePair& operator*(const CoordinatePair& coordinate_pair);
+  CoordinatePair& operator/(const CoordinatePair& coordinate_pair);
+protected:
+  T _x1;
+  T _x2;
+};
+
+template <typename T>
+CoordinatePair<T>::CoordinatePair (const CoordinatePair& coordinate_pair) {
+  this->_x1=coordinate_pair._x1;
+  this->_x2=coordinate_pair._x2;
+};
+
+template <typename T>
+CoordinatePair<T>::CoordinatePair (T x1, T x2) {
+  this->_x1=x1;
+  this->_x2=x2;
+};
+
+template <typename T>
+CoordinatePair<T>& CoordinatePair<T>::operator=(const CoordinatePair& coordinate_pair) {
+  if (this == &coordinate_pair) {
+    return *this;
+  }
+  this->_x1=coordinate_pair._x1;
+  this->_x2=coordinate_pair._x2;
+  return *this;
+};
+
+template <typename T>
+class CoordinatePairINT : public CoordinatePair<T> {
+public:
+  CoordinatePairINT();
+  CoordinatePairINT(T x1, T x2) : CoordinatePair<T>(x1, x2) {};
+};
+
+template <typename T>
+CoordinatePairINT<T>::CoordinatePairINT () {
+  this->_x1=INVALID_PIXEL_VALUE;
+  this->_x2=INVALID_PIXEL_VALUE;
+};
+
+template <typename T>
+class CoordinatePairFLOAT : public CoordinatePair<FLOAT64> {
+public:
+  CoordinatePairFLOAT();
+  CoordinatePairFLOAT(T x1, T x2) : CoordinatePair<T>(x1, x2) {};
+};
+
+template <typename T>
+CoordinatePairFLOAT<T>::CoordinatePairFLOAT () {
+  this->_x1=NAN;
+  this->_x2=NAN;
+};
+
+/**
  * Represents the size of the grid in integer units of images.
  *
  * For example, representing that a grid or part of a grid that is 20
  * images wide and 15 images high is a 20x15 grid of images.
  */
-class GridImageSize {
+class GridImageSize : public CoordinatePairINT<INT64> {
 public:
-  GridImageSize();
-  GridImageSize(const GridImageSize& grid_image_size);
+  GridImageSize()=default;
   /**
-   * @param wimage The width of the grid in images.
-   * @param himage The height of the grid in images.
+   * @param w The width of the grid in images.
+   * @param h The height of the grid in images.
    */
-  GridImageSize(const INT64 wimage, const INT64 himage);
-  GridImageSize& operator=(const GridImageSize& grid_image_size);
+  GridImageSize(const INT64 w, const INT64 h) : CoordinatePairINT<INT64>(w, h) {};
   /** @return The width. */
-  INT64 wimage() const;
+  INT64 w() const;
   /** @return The height. */
-  INT64 himage() const;
-private:
-  INT64 _wimage;
-  INT64 _himage;
+  INT64 h() const;
 };
 
 /**
@@ -49,23 +118,18 @@ private:
  * For example, a rectangle that is 3.2 image widths wide and 2.7
  * image heights high would be represented by 3.2x2.7.
  */
-class GridCoordinateSize {
+class GridCoordinateSize : public CoordinatePairFLOAT<FLOAT64> {
 public:
-  GridCoordinateSize();
-  GridCoordinateSize(const GridCoordinateSize& grid_coordinate_size);
+  GridCoordinateSize()=default;
   /**
-   * @param wgrid The width on the grid.
-   * @param hgrid The height on the grid.
+   * @param w The width on the grid.
+   * @param h The height on the grid.
    */
-  GridCoordinateSize(const FLOAT64 wgrid, const FLOAT64 hgrid);
-  GridCoordinateSize& operator=(const GridCoordinateSize& grid_coordinate_size);
+  GridCoordinateSize(const FLOAT64 w, const FLOAT64 h) : CoordinatePairFLOAT<FLOAT64>(w, h) {};
   /** @return The width. */
-  FLOAT64 wgrid() const;
+  FLOAT64 w() const;
   /** @return The height. */
-  FLOAT64 hgrid() const;
-private:
-  FLOAT64 _wgrid;
-  FLOAT64 _hgrid;
+  FLOAT64 h() const;
 };
 
 /**
@@ -75,19 +139,16 @@ private:
  * For example, a point 2.4 image widths right from the origin and 1.6
  * image height down would be represented by the coordinate (2.4,1.6).
  */
-class GridCoordinate {
+class GridCoordinate : public CoordinatePairFLOAT<FLOAT64> {
 public:
-  GridCoordinate();
-  GridCoordinate(const GridCoordinate& grid_coordinate);
+  GridCoordinate()=default;
   /**
-   * @param xgrid The x coordinate on the grid.
-   * @param ygrid The y coordinate on the grid.
+   * @param x The x coordinate on the grid.
+   * @param y The y coordinate on the grid.
    */
-  GridCoordinate(const FLOAT64 xgrid, FLOAT64 ygrid);
+  GridCoordinate(const FLOAT64 x, FLOAT64 y) : CoordinatePairFLOAT<FLOAT64>(x, y) {};
   /**
    * Convert from viewport pixel coordinates to grid coordinates.
-   *
-   * TODO: fill in once certain features stop changes
    *
    * @param viewport_pixel_coordinate
    * @param zoom
@@ -100,42 +161,33 @@ public:
                  ViewportPixelSize& viewport_pixel_size,
                  GridCoordinate& viewport_grid_coordinate,
                  GridPixelSize& max_image_pixel_size);
-  GridCoordinate& operator=(const GridCoordinate& grid_coordinate);
   /** @return The x coordinate. */
-  FLOAT64 xgrid() const;
+  FLOAT64 x() const;
   /** @return The y coordinate. */
-  FLOAT64 ygrid() const;
+  FLOAT64 y() const;
   /** @return If values are valid. */
   bool invalid() const;
-private:
-  FLOAT64 _xgrid;
-  FLOAT64 _ygrid;
 };
 
 /**
  * Represents indices a grid of images with the origin in the top-left
  * corner.
  */
-class GridIndex {
+class GridIndex : public CoordinatePairINT<INT64> {
 public:
-  GridIndex();
-  GridIndex(const GridIndex& grid_index);
+  GridIndex()=default;
   /**
-   * @param The i index on the grid.
-   * @param The j index on the grid.
+   * @param i The i index on the grid.
+   * @param j The j index on the grid.
    */
-  GridIndex(const INT64 igrid, INT64 jgrid);
+  GridIndex(const INT64 i, INT64 j) : CoordinatePairINT<INT64>(i, j) {};
   GridIndex(ViewportPixelCoordinate& viewport_pixel_coordinate);
-  GridIndex& operator=(const GridIndex& grid_index);
   /** @return The i index. */
-  INT64 i_grid() const;
+  INT64 i() const;
   /** @return The j index. */
-  INT64 j_grid() const;
+  INT64 j() const;
   /** @return If values are valid. */
   bool invalid() const;
-private:
-  INT64 _igrid;
-  INT64 _jgrid;
 };
 
 /**
@@ -148,25 +200,20 @@ private:
  * performance reasons (grid squares larger than 16384x16384 that
  * makes sense for textures).
  */
-class SubGridIndex {
+class SubGridIndex : public CoordinatePairINT<INT64> {
 public:
-  SubGridIndex();
-  SubGridIndex(const SubGridIndex& sub_index);
+  SubGridIndex()=default;
   /**
-   * @param The i index on the subgrid.
-   * @param The j index on the subgrid.
+   * @param i The i index on the subgrid.
+   * @param j The j index on the subgrid.
    */
-  SubGridIndex(const INT64 igrid, INT64 jgrid);
-  SubGridIndex& operator=(const SubGridIndex& sub_index);
+  SubGridIndex(const INT64 i, INT64 j) : CoordinatePairINT<INT64>(i, j) {};
   /** @return The i index. */
-  INT64 subgrid_i() const;
+  INT64 i() const;
   /** @return The j index. */
-  INT64 subgrid_j() const;
+  INT64 j() const;
   /** @return If values are valid. */
   bool invalid() const;
-private:
-  INT64 _i_subgrid;
-  INT64 _j_subgrid;
 };
 
 /**
@@ -174,23 +221,18 @@ private:
  * each image was 4000x2500 pixels, a rectangle represented by
  * GridCoordinateSize of 3.2x2.7 would be 12800x6750.
  */
-class GridPixelSize {
+class GridPixelSize : public CoordinatePairINT<INT64> {
 public:
-  GridPixelSize();
-  GridPixelSize(const GridPixelSize& grid_pixel_size);
+  GridPixelSize()=default;
   /**
-   * @param wpixel The width in pixels.
-   * @param hpixel The height in pixels.
+   * @param w The width in pixels.
+   * @param h The height in pixels.
    */
-  GridPixelSize(INT64 wpixel, INT64 hpixel);
-  GridPixelSize& operator=(const GridPixelSize& grid_pixel_size);
+  GridPixelSize(INT64 w, INT64 h) : CoordinatePairINT<INT64>(w, h) {};
   /** @return The width in pixels. */
-  INT64 wpixel() const;
+  INT64 w() const;
   /** @return The height in pixels. */
-  INT64 hpixel() const;
-private:
-  INT64 _wpixel;
-  INT64 _hpixel;
+  INT64 h() const;
 };
 
 /**
@@ -198,15 +240,14 @@ private:
  * if each image on the grid was 2000x1500 pixels.  The coordinate
  * represented by GridCoordinate of (2.4,1.6) would be 800x900.
  */
-class ImagePixelCoordinate {
+class ImagePixelCoordinate : public CoordinatePairINT<INT64> {
 public:
-  ImagePixelCoordinate();
-  ImagePixelCoordinate(const ImagePixelCoordinate& grid_pixel_coordinate);
+  ImagePixelCoordinate()=default;
   /**
-   * @param xpixel The x coordinate in pixels.
-   * @param ypixel The y coorindate in pixels.
+   * @param x The x coordinate in pixels.
+   * @param y The y coorindate in pixels.
    */
-  ImagePixelCoordinate(INT64 xpixel, INT64 ypixel);
+  ImagePixelCoordinate(INT64 x, INT64 y) : CoordinatePairINT<INT64>(x, y) {};
   /**
    * Initialize a pixel coordinate on an image with an image grid coordinate.
    *
@@ -215,51 +256,41 @@ public:
    */
   ImagePixelCoordinate(GridCoordinate& grid_coordinate,
                        GridPixelSize& grid_pixel_size);
-  ImagePixelCoordinate& operator=(const ImagePixelCoordinate& grid_pixel_coordinate);
   /** @return The x coordinate. */
-  INT64 xpixel() const;
+  INT64 x() const;
   /** @return The y coordinate. */
-  INT64 ypixel() const;
-private:
-  INT64 _xpixel;
-  INT64 _ypixel;
+  INT64 y() const;
 };
 
 /**
  * Represents a size on the viewport in pixels.
  */
-class ViewportPixelSize {
+class ViewportPixelSize : public CoordinatePairINT<INT64> {
 public:
-  ViewportPixelSize();
-  ViewportPixelSize(const ViewportPixelSize& viewport_pixel_size);
+  ViewportPixelSize()=default;
   /**
-   * @param wpixel The width in pixels.
-   * @param hpixel The height in pixels.
+   * @param w The width in pixels.
+   * @param h The height in pixels.
    */
-  ViewportPixelSize(INT64 wpixel, INT64 xpixel);
-  ViewportPixelSize& operator= (const ViewportPixelSize& viewport_pixel_size);
+  ViewportPixelSize(INT64 w, INT64 h) : CoordinatePairINT<INT64>(w, h) {};
   /** @return The width in pixels. */
-  INT64 wpixel() const;
+  INT64 w() const;
   /** @return The height in pixels. */
-  INT64 hpixel() const;
-private:
-  INT64 _wpixel;
-  INT64 _hpixel;
+  INT64 h() const;
 };
 
 /**
  * Represents a coorindate on the viewport in pixels using the upper
  * left corner as the origin.
  */
-class ViewportPixelCoordinate {
+class ViewportPixelCoordinate : public CoordinatePairINT<INT64> {
 public:
-  ViewportPixelCoordinate();
-  ViewportPixelCoordinate(const ViewportPixelCoordinate& viewport_pixel_coordinate);
+  ViewportPixelCoordinate()=default;
   /**
-   * @param xpixel The x coordinate in pixels.
-   * @param ypixel The y coorindate in pixels.
+   * @param x The x coordinate in pixels.
+   * @param y The y coorindate in pixels.
    */
-  ViewportPixelCoordinate(INT64 xpixel, INT64 ypixel);
+  ViewportPixelCoordinate(INT64 x, INT64 y) : CoordinatePairINT<INT64>(x, y) {};
   /**
    * Convert a grid coordinate to a viewport pixel coordinate.
    *
@@ -274,15 +305,10 @@ public:
                           FLOAT64 zoom,
                           GridCoordinate& grid_coordinate_pixel_0,
                           ViewportPixelSize& viewport_pixel_size);
-  ViewportPixelCoordinate& operator=(const ViewportPixelCoordinate& viewport_pixel_coordinate);
   /** @return The x coordinate in pixels. */
-  INT64 xpixel() const;
+  INT64 x() const;
   /** @return The y coordinate in pixels. */
-  INT64 ypixel() const;
-private:
-  INT64 _xpixel;
-  INT64 _ypixel;
+  INT64 y() const;
 };
-
 
 #endif

@@ -23,8 +23,8 @@ void ImageGridMetadata::get_metadata(const ImageGrid* const imagegrid,
     auto max_pixel_size=imagegrid->get_image_max_pixel_size();
     auto image_pixel_coordinate=ImagePixelCoordinate(metadata_grid_coordinate,
                                                      max_pixel_size);
-    metadata_info.pixel_coordinate=ImagePixelCoordinate(image_pixel_coordinate.xpixel(),
-                                                        image_pixel_coordinate.ypixel());
+    metadata_info.pixel_coordinate=ImagePixelCoordinate(image_pixel_coordinate.x(),
+                                                        image_pixel_coordinate.y());
     // TODO: no real world coordinates implemented for now
     metadata_info.real_world_x=0;
     metadata_info.real_world_y=0;

@@ -34,8 +34,8 @@ INT64 pad (INT64 x, INT64 pad_size) {
 void sleep_thread () {
   // do a minisleep after each file is unloaded to make sure other
   // things can happen
-  std::this_thread::yield();
-  std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  // std::this_thread::yield();
+  // std::this_thread::sleep_for(std::chrono::milliseconds(1));
 }
 
 bool check_valid_filename (const std::string& filename) {

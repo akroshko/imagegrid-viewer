@@ -27,8 +27,8 @@ ImageGridIteratorFull::ImageGridIteratorFull(INT64 w_image_grid, INT64 h_image_g
                                              const ViewPortCurrentState& viewport_current_state) {
   this->_w=w_image_grid;
   this->_h=h_image_grid;
-  auto current_grid_x=viewport_current_state.current_grid_coordinate().xgrid();
-  auto current_grid_y=viewport_current_state.current_grid_coordinate().ygrid();
+  auto current_grid_x=viewport_current_state.current_grid_coordinate().x();
+  auto current_grid_y=viewport_current_state.current_grid_coordinate().y();
   // TODO need a good iterator class for this type of work
   // load the one we are looking at
   // do the center
@@ -85,8 +85,8 @@ ImageGridIteratorVisible::ImageGridIteratorVisible(INT64 w_image_grid, INT64 h_i
                                                    const ViewPortCurrentState& viewport_current_state) {
   this->_w=w_image_grid;
   this->_h=h_image_grid;
-  auto current_grid_x=viewport_current_state.current_grid_coordinate().xgrid();
-  auto current_grid_y=viewport_current_state.current_grid_coordinate().ygrid();
+  auto current_grid_x=viewport_current_state.current_grid_coordinate().x();
+  auto current_grid_y=viewport_current_state.current_grid_coordinate().y();
   auto leftmost_visible=ViewPortTransferState::find_leftmost_visible(viewport_current_state);
   auto rightmost_visible=ViewPortTransferState::find_rightmost_visible(viewport_current_state);
   auto topmost_visible=ViewPortTransferState::find_topmost_visible(viewport_current_state);

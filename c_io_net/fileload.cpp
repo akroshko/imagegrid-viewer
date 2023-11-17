@@ -323,8 +323,8 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
                               SubGridIndex& current_subgrid,
                               LoadFileDataTransfer& data_transfer,
                               INT64* row_temp_buffer) {
-  auto sub_i=current_subgrid.subgrid_i();
-  auto sub_j=current_subgrid.subgrid_j();
+  auto sub_i=current_subgrid.i();
+  auto sub_j=current_subgrid.j();
   auto successful=false;
   auto sub_w=data_transfer.sub_w;
   auto sub_h=data_transfer.sub_h;
@@ -409,8 +409,8 @@ bool load_tiff_as_rgba(const std::string& filename,
                        SubGridIndex& current_subgrid,
                        LoadFileDataTransfer& data_transfer,
                        INT64* row_temp_buffer) {
-  auto sub_i=current_subgrid.subgrid_i();
-  auto sub_j=current_subgrid.subgrid_j();
+  auto sub_i=current_subgrid.i();
+  auto sub_j=current_subgrid.j();
   auto sub_w=data_transfer.sub_w;
   auto success=false;
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
@@ -478,8 +478,8 @@ bool load_png_as_rgba(const std::string& filename,
                       SubGridIndex& current_subgrid,
                       LoadFileDataTransfer& data_transfer,
                       INT64* row_temp_buffer) {
-  auto sub_i=current_subgrid.subgrid_i();
-  auto sub_j=current_subgrid.subgrid_j();
+  auto sub_i=current_subgrid.i();
+  auto sub_j=current_subgrid.j();
   auto sub_w=data_transfer.sub_w;
   bool success=false;
   png_image image;

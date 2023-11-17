@@ -70,7 +70,7 @@ bool SDLApp::do_input(FLOAT64& current_speed_x, FLOAT64& current_speed_y,
   SDL_Event e;
   auto keep_going=true;
   while(SDL_PollEvent(&e)) {
-    auto pixel_size=(100.0/image_max_size.wpixel()/zoom);
+    auto pixel_size=(100.0/image_max_size.w()/zoom);
     if (e.type == SDL_QUIT) {
       return false;
     } else if (e.type == SDL_WINDOWEVENT) {
@@ -173,8 +173,8 @@ SDLDrawableSurface::SDLDrawableSurface(SDLApp* const sdl_app,
     SDL_Rect screen_rect;
     screen_rect.x=0;
     screen_rect.y=0;
-    screen_rect.w=viewport_pixel_size.wpixel();
-    screen_rect.h=viewport_pixel_size.hpixel();
+    screen_rect.w=viewport_pixel_size.w();
+    screen_rect.h=viewport_pixel_size.h();
     if (SDL_FillRect(this->_screen_surface,
                      &screen_rect,
                      SDL_MapRGBA(sdl_app->format(),0,0,0,0)) < 0) {
@@ -288,10 +288,10 @@ void SDLDisplayTextureWrapper::blit_texture(SDLDrawableSurface* drawable_surface
   texture_rect.w=texture_wpixel;
   texture_rect.h=texture_hpixel;
   SDL_Rect scaled_rect;
-  scaled_rect.x=viewport_pixel_coordinate.xpixel();
-  scaled_rect.y=viewport_pixel_coordinate.ypixel();
-  scaled_rect.w=image_pixel_size_viewport.wpixel();
-  scaled_rect.h=image_pixel_size_viewport.hpixel();
+  scaled_rect.x=viewport_pixel_coordinate.x();
+  scaled_rect.y=viewport_pixel_coordinate.y();
+  scaled_rect.w=image_pixel_size_viewport.w();
+  scaled_rect.h=image_pixel_size_viewport.h();
   if (SDL_BlitScaled(this->_display_texture,
                      &texture_rect,
                      drawable_surface->screen_surface(),

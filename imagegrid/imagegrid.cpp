@@ -214,7 +214,7 @@ INT64 ImageGridSquareZoomLevel::_sub_i_arr(INT64 sub_i, INT64 sub_j) const {
 }
 
 INT64 ImageGridSquareZoomLevel::_sub_i_arr(const SubGridIndex& sub_index) const {
-  return sub_index.subgrid_j()*this->sub_w()+sub_index.subgrid_i();
+  return sub_index.j()*this->sub_w()+sub_index.i();
 }
 
 ImageGridSquare::ImageGridSquare(GridSetup* grid_setup,
@@ -270,10 +270,10 @@ void ImageGridSquare::_read_data() {
 
 void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
   // delayed allocation for the squares
-  auto grid_wimage=grid_setup->grid_image_size().wimage();
-  auto grid_himage=grid_setup->grid_image_size().himage();
+  auto grid_wimage=grid_setup->grid_image_size().w();
+  auto grid_himage=grid_setup->grid_image_size().h();
   this->_squares=std::make_unique<std::unique_ptr<std::unique_ptr<ImageGridSquare>[]>[]>(grid_wimage);
-  for (INT64 i=0L; i < grid_setup->grid_image_size().wimage(); i++) {
+  for (INT64 i=0L; i < grid_setup->grid_image_size().w(); i++) {
     this->_squares[i]=std::make_unique<std::unique_ptr<ImageGridSquare>[]>(grid_himage);
   }
   this->_image_max_size=GridPixelSize(0,0);
@@ -295,8 +295,8 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
     }
   }
   this->_image_max_size=GridPixelSize(new_wpixel,new_hpixel);;
-  auto image_max_size_wpixel=this->_image_max_size.wpixel();
-  auto image_max_size_hpixel=this->_image_max_size.hpixel();
+  auto image_max_size_wpixel=this->_image_max_size.w();
+  auto image_max_size_hpixel=this->_image_max_size.h();
   // allocate temporary buffers to use as a working area
   this->_row_temp_buffer=std::make_unique<INT64[]>(new_wpixel*3);
   // find how many zoom_step to get whole image grid as a 3x3 grid of original size
@@ -314,8 +314,8 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
   MSG("max_wpixel: " << image_max_size_wpixel);
   MSG("max_hpixel: " << image_max_size_hpixel);
   // add this info to the various data structure
-  for (INT64 i=0L; i < this->grid_image_size().wimage(); i++) {
-    for (INT64 j=0L; j < this->grid_image_size().himage(); j++) {
+  for (INT64 i=0L; i < this->grid_image_size().w(); i++) {
+    for (INT64 j=0L; j < this->grid_image_size().h(); j++) {
       this->_squares[i][j]->image_array=std::make_unique<std::unique_ptr<ImageGridSquareZoomLevel>[]>(this->_zoom_index_length);
       INT64 zoom_out=1;
       for (auto k=0L; k < this->_zoom_index_length; k++) {
@@ -363,9 +363,9 @@ INT64 ImageGrid::zoom_index_length() const {
 }
 
 bool ImageGrid::_check_bounds(const GridIndex* grid_index) const {
-  auto i=grid_index->i_grid();
-  auto j=grid_index->j_grid();
-  auto return_value=(i >= 0 && i < this->grid_image_size().wimage() && j >= 0 && j < this->grid_image_size().himage());
+  auto i=grid_index->i();
+  auto j=grid_index->j();
+  auto return_value=(i >= 0 && i < this->grid_image_size().w() && j >= 0 && j < this->grid_image_size().h());
   return return_value;
 }
 
@@ -374,15 +374,15 @@ bool ImageGrid::_check_load(const ViewPortCurrentState& viewport_current_state,
                             const GridIndex* grid_index,
                             INT64 zoom_index_lower_limit,
                             INT64 load_all) {
-  auto i=grid_index->i_grid();
-  auto j=grid_index->j_grid();
-  auto current_grid_x=viewport_current_state.current_grid_coordinate().xgrid();
-  auto current_grid_y=viewport_current_state.current_grid_coordinate().ygrid();
-  auto screen_width=viewport_current_state.screen_size().hpixel();
-  auto screen_height=viewport_current_state.screen_size().wpixel();
+  auto i=grid_index->i();
+  auto j=grid_index->j();
+  auto current_grid_x=viewport_current_state.current_grid_coordinate().x();
+  auto current_grid_y=viewport_current_state.current_grid_coordinate().y();
+  auto screen_width=viewport_current_state.screen_size().h();
+  auto screen_height=viewport_current_state.screen_size().w();
   auto viewport_current_state_new=ViewPortCurrentState(GridCoordinate(current_grid_x,current_grid_y),
-                                                       GridPixelSize(this->_image_max_size.wpixel(),
-                                                                     this->_image_max_size.hpixel()),
+                                                       GridPixelSize(this->_image_max_size.w(),
+                                                                     this->_image_max_size.h()),
                                                        ViewPortTransferState::find_zoom_upper(zoom_index),
                                                        ViewportPixelSize(screen_width,screen_height),
                                                        ViewportPixelCoordinate(0,0),
@@ -463,7 +463,7 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
           MSG("Trying to writing cache filenames: " <<
               filename_png << " " <<  " " << filename_txt <<
               " for " << filename << " at zoom index " << k <<
-              " i: " << grid_index.i_grid() << " j: " << grid_index.j_grid() <<
+              " i: " << grid_index.i() << " j: " << grid_index.j() <<
               " sub_i: " << sub_i << " sub_j: " << sub_j);
           if (sub_w*wpixel < CACHE_MAX_PIXEL_SIZE && sub_h*hpixel < CACHE_MAX_PIXEL_SIZE) {
             auto sub_i_arr=sub_j*sub_w+sub_i;
@@ -490,8 +490,8 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
   // different things for what should be loaded/unloaded
   // load in reverse order of size
   auto current_zoom_index=ViewPortTransferState::find_zoom_index_bounded(viewport_current_state.zoom(),0.0,this->_zoom_index_length-1);
-  auto grid_w=this->grid_image_size().wimage();
-  auto grid_h=this->grid_image_size().himage();
+  auto grid_w=this->grid_image_size().w();
+  auto grid_h=this->grid_image_size().h();
   auto load_all=false;
   auto zoom_index_lower_limit=current_zoom_index-1;
   // unload first
@@ -571,21 +571,21 @@ GridPixelSize ImageGrid::get_image_max_pixel_size() const {
 }
 
 ImageGridSquare* ImageGrid::squares(const GridIndex& grid_index) const {
-  auto i=grid_index.i_grid();
-  auto j=grid_index.j_grid();
+  auto i=grid_index.i();
+  auto j=grid_index.j();
   return this->_squares[i][j].get();
 }
 
 ImageGridSquare* ImageGrid::squares(const GridIndex* grid_index) const {
-  auto i=grid_index->i_grid();
-  auto j=grid_index->j_grid();
+  auto i=grid_index->i();
+  auto j=grid_index->j();
   return this->_squares[i][j].get();
 }
 
 void ImageGrid::setup_grid_cache(GridSetup* const grid_setup) {
   // no read_grid_info(...) called for now
-  auto grid_w=this->grid_image_size().wimage();
-  auto grid_h=this->grid_image_size().himage();
+  auto grid_w=this->grid_image_size().w();
+  auto grid_h=this->grid_image_size().h();
   this->_read_grid_info_setup_squares(grid_setup);
   // loop over the whole grid
   for (INT64 i=0L; i < grid_w; i++) {

@@ -30,11 +30,11 @@ bool GridSetup::use_cache() const {
 }
 
 INT64 GridSetup::grid_w() const {
-  return _grid_image_size.wimage();
+  return _grid_image_size.w();
 }
 
 INT64 GridSetup::grid_h() const {
-  return _grid_image_size.himage();
+  return _grid_image_size.h();
 }
 
 INT64 GridSetup::_get_grid_index(INT64 i, INT64 j) const {
@@ -42,14 +42,14 @@ INT64 GridSetup::_get_grid_index(INT64 i, INT64 j) const {
 }
 
 INT64 GridSetup::_get_grid_index(const GridIndex& grid_index) const {
-  auto i=grid_index.i_grid();
-  auto j=grid_index.j_grid();
+  auto i=grid_index.i();
+  auto j=grid_index.j();
   return j*this->grid_w()+i;
 }
 
 INT64 GridSetup::_get_grid_index(const GridIndex* grid_index) const {
-  auto i=grid_index->i_grid();
-  auto j=grid_index->j_grid();
+  auto i=grid_index->i();
+  auto j=grid_index->j();
   return j*this->grid_w()+i;
 }
 
@@ -58,8 +58,8 @@ INT64 GridSetup::_get_sub_index(INT64 sub_i, INT64 sub_j, INT64 sub_w) const {
 }
 
 INT64 GridSetup::_get_sub_index(const SubGridIndex& sub_index, INT64 sub_w) const {
-  auto sub_i=sub_index.subgrid_i();
-  auto sub_j=sub_index.subgrid_j();
+  auto sub_i=sub_index.i();
+  auto sub_j=sub_index.j();
   return sub_j*sub_w+sub_i;
 }
 
@@ -96,14 +96,14 @@ std::string GridSetup::get_filename(const GridIndex& grid_index, const SubGridIn
 };
 
 std::unique_ptr<ImageGridIteratorVisible> GridSetup::get_iterator_visible(const ViewPortCurrentState& viewport_current_state) {
-  return std::make_unique<ImageGridIteratorVisible>(this->grid_image_size().wimage(),
-                                                    this->grid_image_size().himage(),
+  return std::make_unique<ImageGridIteratorVisible>(this->grid_image_size().w(),
+                                                    this->grid_image_size().h(),
                                                     viewport_current_state);
 }
 
 std::unique_ptr<ImageGridIteratorFull> GridSetup::get_iterator_full(const ViewPortCurrentState& viewport_current_state) {
-  return std::make_unique<ImageGridIteratorFull>(this->grid_image_size().wimage(),
-                                                 this->grid_image_size().himage(),
+  return std::make_unique<ImageGridIteratorFull>(this->grid_image_size().w(),
+                                                 this->grid_image_size().h(),
                                                  viewport_current_state);
 }
 

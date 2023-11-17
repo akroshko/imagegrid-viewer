@@ -45,15 +45,15 @@ void blit_this(SDLDrawableSurface* screen_surface,
         // TODO: this assumes uniform sized textures for now
         FLOAT64 texture_wpixel_base=(FLOAT64)blit_square->display_texture_wrapper(i,j)->texture_wpixel_visible();
         FLOAT64 texture_hpixel_base=(FLOAT64)blit_square->display_texture_wrapper(i,j)->texture_hpixel_visible();
-        FLOAT64 vp_wpixel_base=(FLOAT64)image_pixel_size_viewport.wpixel()*(FLOAT64)texture_wpixel_base/(FLOAT64)texture_square_wpixel;
-        FLOAT64 vp_hpixel_base=(FLOAT64)image_pixel_size_viewport.hpixel()*(FLOAT64)texture_hpixel_base/(FLOAT64)texture_square_hpixel;
+        FLOAT64 vp_wpixel_base=(FLOAT64)image_pixel_size_viewport.w()*(FLOAT64)texture_wpixel_base/(FLOAT64)texture_square_wpixel;
+        FLOAT64 vp_hpixel_base=(FLOAT64)image_pixel_size_viewport.h()*(FLOAT64)texture_hpixel_base/(FLOAT64)texture_square_hpixel;
         // if this is the last column
         if (i == blit_square->tile_w()-1) {
           texture_xpixel_start=i*texture_wpixel_base;
           texture_xpixel_end=texture_square_wpixel;
           texture_wpixel=texture_xpixel_end-texture_xpixel_start;
           vp_xpixel_start=floor(i*vp_wpixel_base);
-          vp_xpixel_end=(FLOAT64)image_pixel_size_viewport.wpixel();
+          vp_xpixel_end=(FLOAT64)image_pixel_size_viewport.w();
           vp_wpixel=vp_xpixel_end-vp_xpixel_start;
         } else {
           texture_xpixel_start=i*texture_wpixel_base;
@@ -69,7 +69,7 @@ void blit_this(SDLDrawableSurface* screen_surface,
           texture_ypixel_end=texture_square_hpixel;
           texture_hpixel=texture_ypixel_end-texture_ypixel_start;
           vp_ypixel_start=floor(j*vp_hpixel_base);
-          vp_ypixel_end=(FLOAT64)image_pixel_size_viewport.hpixel();
+          vp_ypixel_end=(FLOAT64)image_pixel_size_viewport.h();
           vp_hpixel=vp_ypixel_end-vp_ypixel_start;
         } else {
           texture_ypixel_start=j*texture_hpixel_base;
@@ -79,8 +79,8 @@ void blit_this(SDLDrawableSurface* screen_surface,
           vp_ypixel_end=ceil_minus_one((j+1)*vp_hpixel_base);
           vp_hpixel=vp_ypixel_end-vp_ypixel_start;
         }
-        auto viewport_pixel_coordinate_local=ViewportPixelCoordinate((INT64)((FLOAT64)viewport_pixel_coordinate.xpixel()+vp_xpixel_start),
-                                                                     (INT64)((FLOAT64)viewport_pixel_coordinate.ypixel()+vp_ypixel_start));
+        auto viewport_pixel_coordinate_local=ViewportPixelCoordinate((INT64)((FLOAT64)viewport_pixel_coordinate.x()+vp_xpixel_start),
+                                                                     (INT64)((FLOAT64)viewport_pixel_coordinate.y()+vp_ypixel_start));
         auto viewport_pixel_size=ViewportPixelSize((INT64)vp_wpixel,
                                                    (INT64)vp_hpixel);
         blit_square->display_texture_wrapper(i,j)->blit_texture(screen_surface,
@@ -125,8 +125,8 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
     auto viewport_pixel_size=ViewportPixelSize(this->_current_window_w,this->_current_window_h);
     // this draws the surrface when it goes out of scope
     std::unique_ptr<SDLDrawableSurface> drawable_surface=std::make_unique<SDLDrawableSurface>(sdl_app,viewport_pixel_size);
-    for (INT64 i=0L; i < texture_grid->grid_image_size().wimage(); i++) {
-      for (INT64 j=0L; j < texture_grid->grid_image_size().himage(); j++) {
+    for (INT64 i=0L; i < texture_grid->grid_image_size().w(); i++) {
+      for (INT64 j=0L; j < texture_grid->grid_image_size().h(); j++) {
         auto upperleft_gridsquare=GridCoordinate(i,j);
         auto pixel_0=ViewportPixelCoordinate(0,0);
         auto viewport_pixel_0_grid=GridCoordinate(pixel_0,
@@ -134,7 +134,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
                                                   this->_viewport_pixel_size,
                                                   this->_viewport_grid,
                                                   this->_image_max_size);
-        auto new_viewport_pixel_size=ViewportPixelSize(this->_image_max_size.wpixel(),this->_image_max_size.hpixel());
+        auto new_viewport_pixel_size=ViewportPixelSize(this->_image_max_size.w(),this->_image_max_size.h());
         auto viewport_pixel_coordinate=ViewportPixelCoordinate(upperleft_gridsquare,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
         // TODO: this is where I chose zoom
         auto actual_zoom=zoom_index;
@@ -152,8 +152,8 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
                   texture_square_zoom->all_surfaces_valid()) {
 
                 texture_loaded=true;
-                auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.wpixel()*this->_zoom),
-                                                              (int)round(this->_image_max_size.hpixel()*this->_zoom));
+                auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.w()*this->_zoom),
+                                                              (int)round(this->_image_max_size.h()*this->_zoom));
                 blit_this(drawable_surface.get(),
                           texture_square_zoom,
                           viewport_pixel_coordinate,
@@ -178,8 +178,8 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
             if (texture_square_zoom->display_mutex.try_lock()) {
               if (texture_square_zoom->get_image_filler() &&
                   texture_square_zoom->filler_texture_wrapper()->is_valid()) {
-                auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.wpixel()*this->_zoom),
-                                                              (int)round(this->_image_max_size.hpixel()*this->_zoom));
+                auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.w()*this->_zoom),
+                                                              (int)round(this->_image_max_size.h()*this->_zoom));
                 blit_this(drawable_surface.get(),
                           texture_square_zoom,
                           viewport_pixel_coordinate,
@@ -202,8 +202,8 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
 }
 
 bool ViewPort::do_input(SDLApp* const sdl_app) {
-  auto xgrid=this->_viewport_grid.xgrid();
-  auto ygrid=this->_viewport_grid.ygrid();
+  auto xgrid=this->_viewport_grid.x();
+  auto ygrid=this->_viewport_grid.y();
   auto keep_going=sdl_app->do_input(this->_current_speed_x, this->_current_speed_y,
                                     this->_current_speed_zoom, this->_zoom, this->_zoom_speed,
                                     this->_image_max_size, xgrid, ygrid,
@@ -225,31 +225,31 @@ void ViewPort::update_viewport_info(FLOAT64 xgrid, FLOAT64 ygrid) {
                                                                      this->_viewport_pixel_size,
                                                                      ViewportPixelCoordinate(this->_current_mouse_xpixel,
                                                                                              this->_current_mouse_ypixel),
-                                                                     ViewportPixelCoordinate(this->_viewport_pixel_size.wpixel()/2,
-                                                                                             this->_viewport_pixel_size.hpixel()/2));
+                                                                     ViewportPixelCoordinate(this->_viewport_pixel_size.w()/2,
+                                                                                             this->_viewport_pixel_size.h()/2));
   this->_viewport_current_state_imagegrid_update->UpdateGridValues(this->_zoom,
                                                                    this->_viewport_grid,
                                                                    this->_image_max_size,
                                                                    this->_viewport_pixel_size,
                                                                    ViewportPixelCoordinate(this->_current_mouse_xpixel,
                                                                                            this->_current_mouse_ypixel),
-                                                                   ViewportPixelCoordinate(this->_viewport_pixel_size.wpixel()/2,
-                                                                                           this->_viewport_pixel_size.hpixel()/2));
+                                                                   ViewportPixelCoordinate(this->_viewport_pixel_size.w()/2,
+                                                                                           this->_viewport_pixel_size.h()/2));
 
 }
 
 void ViewPort::adjust_initial_location(const GridSetup* const grid_setup) {
   // adjust initial position for small grids
   FLOAT64 new_xgrid,new_ygrid;
-  if (grid_setup->grid_image_size().wimage() == 1) {
+  if (grid_setup->grid_image_size().w() == 1) {
     new_xgrid=0.5;
   } else {
-    new_xgrid=this->_viewport_grid.xgrid();
+    new_xgrid=this->_viewport_grid.x();
   }
-  if (grid_setup->grid_image_size().himage() == 1) {
+  if (grid_setup->grid_image_size().h() == 1) {
     new_ygrid=0.5;
   } else {
-    new_ygrid=this->_viewport_grid.ygrid();
+    new_ygrid=this->_viewport_grid.y();
   }
   this->update_viewport_info(new_xgrid,new_ygrid);
 }

@@ -109,28 +109,28 @@ FLOAT64 ViewPortTransferState::find_leftmost_visible(const ViewPortCurrentState&
   auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_wpixel=((FLOAT64)MAX_SCREEN_WIDTH/2.0);
-  return viewport_current_state.current_grid_coordinate().xgrid()-(half_wpixel/viewport_current_state.image_max_size().wpixel()/max_zoom_this_level);
+  return viewport_current_state.current_grid_coordinate().x()-(half_wpixel/viewport_current_state.image_max_size().w()/max_zoom_this_level);
 }
 
 FLOAT64 ViewPortTransferState::find_rightmost_visible(const ViewPortCurrentState& viewport_current_state) {
   auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_wpixel=((FLOAT64)MAX_SCREEN_WIDTH/2.0);
-  return viewport_current_state.current_grid_coordinate().xgrid()+(half_wpixel/viewport_current_state.image_max_size().wpixel()/max_zoom_this_level);
+  return viewport_current_state.current_grid_coordinate().x()+(half_wpixel/viewport_current_state.image_max_size().w()/max_zoom_this_level);
 }
 
 FLOAT64 ViewPortTransferState::find_topmost_visible(const ViewPortCurrentState& viewport_current_state) {
   auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_hpixel=((FLOAT64)MAX_SCREEN_HEIGHT/2.0);
-  return viewport_current_state.current_grid_coordinate().ygrid()-(half_hpixel/viewport_current_state.image_max_size().hpixel()/max_zoom_this_level);
+  return viewport_current_state.current_grid_coordinate().y()-(half_hpixel/viewport_current_state.image_max_size().h()/max_zoom_this_level);
 }
 
 FLOAT64 ViewPortTransferState::find_bottommost_visible(const ViewPortCurrentState& viewport_current_state) {
   auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_hpixel=((FLOAT64)MAX_SCREEN_HEIGHT/2.0);
-  return viewport_current_state.current_grid_coordinate().ygrid()+(half_hpixel/viewport_current_state.image_max_size().hpixel()/max_zoom_this_level);
+  return viewport_current_state.current_grid_coordinate().y()+(half_hpixel/viewport_current_state.image_max_size().h()/max_zoom_this_level);
 }
 
 bool ViewPortTransferState::grid_index_visible(INT64 i, INT64 j,

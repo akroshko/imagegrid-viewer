@@ -33,8 +33,8 @@ void TextureUpdate::find_current_textures(const ImageGrid* const grid,
   // don't do anything here if viewport_current_state hasn't been initialized
   // find the texture grid textures
   if (!viewport_current_state.current_grid_coordinate().invalid()) {
-    for (INT64 j=0L; j < texture_grid->grid_image_size().himage(); j++) {
-      for (INT64 i=0L; i < texture_grid->grid_image_size().wimage(); i++) {
+    for (INT64 j=0L; j < texture_grid->grid_image_size().h(); j++) {
+      for (INT64 i=0L; i < texture_grid->grid_image_size().w(); i++) {
         auto grid_index=GridIndex(i,j);
         auto grid_square_visible=this->_grid_square_visible(i,j,viewport_current_state);
         auto current_texture_grid_square=texture_grid->squares[i][j].get();
@@ -77,8 +77,8 @@ void TextureUpdate::find_current_textures(const ImageGrid* const grid,
     MetadataInfo metadata_info;
     auto metadata_name=std::string("pixel_only");
     imagegrid_metadata.get_metadata(grid,metadata_name,cursor_grid,metadata_info);
-    overlay_sstream << "Grid: " << metadata_info.pixel_coordinate.xpixel() << " "
-                                << metadata_info.pixel_coordinate.ypixel();
+    overlay_sstream << "Grid: " << metadata_info.pixel_coordinate.x() << " "
+                                << metadata_info.pixel_coordinate.y();
     // lock the overlay texture
     std::unique_lock<std::mutex> overlay_lock(texture_overlay->display_mutex, std::defer_lock);
     if (overlay_lock.try_lock()) {
@@ -190,8 +190,8 @@ void TextureUpdate::add_filler_textures(bool grid_square_visible,
 
 bool TextureUpdate::_grid_square_visible(INT64 i, INT64 j,
                                          const ViewPortCurrentState& viewport_current_state) {
-  auto xgrid=viewport_current_state.current_grid_coordinate().xgrid();
-  auto ygrid=viewport_current_state.current_grid_coordinate().ygrid();
+  auto xgrid=viewport_current_state.current_grid_coordinate().x();
+  auto ygrid=viewport_current_state.current_grid_coordinate().y();
   auto return_value=(ViewPortTransferState::grid_index_visible(i, j,
                                                                viewport_current_state) ||
                      (i >= floor(xgrid)-1 && i <= floor(xgrid)+1 &&
@@ -243,8 +243,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
           if (source_data) {
             auto source_zoom_out_shift=source_square->zoom_out_shift();
             // set pixel size for whole grid square that actually gets displayed
-            dest_square->_texture_display_wpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().wpixel() >> zoom_out_shift;
-            dest_square->_texture_display_hpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().hpixel() >> zoom_out_shift;
+            dest_square->_texture_display_wpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().w() >> zoom_out_shift;
+            dest_square->_texture_display_hpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().h() >> zoom_out_shift;
             auto zoom_left_shift=zoom_out_shift-source_zoom_out_shift;
             auto source_texture_size=shift_left_signed(tile_pixel_size,zoom_left_shift);
             // which tile is the origin of the source is one
