@@ -19,8 +19,10 @@
 // C headers
 #include <cmath>
 
-TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update) {
+TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update,
+                             const GridPixelSize& grid_pixel_size) {
   this->_viewport_current_state_texturegrid_update=viewport_current_state_texturegrid_update;
+  this->row_buffer_temp=std::make_unique<INT64[]>(grid_pixel_size.w()*3);
 }
 
 void TextureUpdate::find_current_textures(const ImageGrid* const grid,
@@ -95,15 +97,15 @@ void TextureUpdate::load_new_textures(bool grid_square_visible,
                                       std::atomic<bool>& keep_running) {
   auto max_zoom_index=texture_grid_square->parent_grid()->textures_zoom_index_length()-1;
   auto current_zoom_index=ViewPortTransferState::find_zoom_index_bounded(viewport_current_state.zoom(),0,max_zoom_index);
-  for (INT64 zoom_index=0; zoom_index <= max_zoom_index; zoom_index++) {
+  const int zoom_index_number=2;
+  INT64 zoom_index_array[zoom_index_number]={current_zoom_index,max_zoom_index};
+  for (INT64 zi=0; zi < zoom_index_number; zi++) {
     if (!keep_running ||
         (texture_copy_count >= LOAD_TEXTURES_BATCH)) {
       break;
     }
     // only load/update current zoom and max_zoom
-    if (zoom_index != max_zoom_index && zoom_index != current_zoom_index) {
-      continue;
-    }
+    auto zoom_index=zoom_index_array[zi];
     auto dest_square=texture_grid_square->texture_array[zoom_index].get();
     auto load_all=(zoom_index == max_zoom_index);
     if (load_all || grid_square_visible) {
@@ -116,21 +118,23 @@ void TextureUpdate::load_new_textures(bool grid_square_visible,
              dest_square->last_load_index>load_index)) {
           std::unique_lock<std::mutex> load_lock(image_square->load_mutex, std::defer_lock);
           if (load_lock.try_lock()) {
-            std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
-            if (display_lock.try_lock()) {
-              // try same condition again after all locks aquired
-              if (image_square->is_loaded &&
-                  (!dest_square->is_loaded ||
-                   dest_square->last_load_index>load_index)) {
-                texture_copy_successful=this->load_texture(dest_square,
-                                                           image_square,
-                                                           zoom_index);
-                if (texture_copy_successful) {
-                  dest_square->set_image_loaded(load_index);
-                  texture_copy_count+=1;
+            // try same conditions again after lock aquired
+            if (image_square->is_loaded) {
+              std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
+              if (display_lock.try_lock()) {
+                if (!dest_square->is_loaded ||
+                    dest_square->last_load_index>load_index) {
+                  texture_copy_successful=this->load_texture(dest_square,
+                                                             image_square,
+                                                             zoom_index,
+                                                             this->row_buffer_temp.get());
+                  if (texture_copy_successful) {
+                    dest_square->set_image_loaded(load_index);
+                    texture_copy_count+=1;
+                  }
                 }
+                display_lock.unlock();
               }
-              display_lock.unlock();
             }
             load_lock.unlock();
           }
@@ -201,145 +205,139 @@ bool TextureUpdate::_grid_square_visible(INT64 i, INT64 j,
 
 bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                                   ImageGridSquareZoomLevel* const source_square,
-                                  INT64 zoom_out_shift) {
+                                  INT64 zoom_out_shift,
+                                  INT64* const row_buffer) {
   INT64 subimages_w=source_square->sub_w();
   INT64 subimages_h=source_square->sub_h();
   // TODO: change how this notifies about valid/invalid textures
   bool any_successful=false;
   dest_square->_source_square=source_square;
-  dest_square->unload_all_textures();
-  auto tile_pixel_size=TILE_PIXEL_BASE_SIZE >> zoom_out_shift;
-  dest_square->create_surfaces(tile_pixel_size);
+  // TODO: double check this is unnecessary
+  // dest_square->unload_all_textures();
+  dest_square->_texture_display_wpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().w() >> zoom_out_shift;
+  dest_square->_texture_display_hpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().h() >> zoom_out_shift;
+  auto dest_tile_size=TILE_PIXEL_BASE_SIZE;
+  auto next_dest_tile_size=dest_tile_size >> 1L;
+  while (next_dest_tile_size > dest_square->_texture_display_wpixel ||
+         next_dest_tile_size > dest_square->_texture_display_hpixel) {
+    dest_tile_size >>= 1L;
+    next_dest_tile_size >>= 1L;
+  }
+  dest_square->create_surfaces(dest_tile_size);
+  // TODO: doesn't seem to be necessary, but check for artifacts
+  // dest_square->clear_all_surfaces();
   // skip if can't load texture
   if (dest_square->all_surfaces_valid()) {
-    auto all_lock_successful=dest_square->lock_all_surfaces();
-    if (all_lock_successful) {
-      bool no_data=true;
-      // see if this square should be grayed out
-      for (INT64 i_sub=0; i_sub < subimages_w; i_sub++) {
-        for (INT64 j_sub=0; j_sub < subimages_h; j_sub++) {
-          auto sub_index=SubGridIndex(i_sub,j_sub);
-          auto source_data=source_square->get_rgba_data(sub_index);
-          if (source_data) {
-            no_data=false;
-          }
-        }
-      }
-      // zero out any array
-      if (no_data) {
-        dest_square->clear_all_surfaces();
-      }
-      // a working buffer for copying, conservatively sized
-      auto row_temp_buffer=std::make_unique<INT64[]>(tile_pixel_size*3);
-      // everything is read, loop over
-      for (INT64 i_sub=0; i_sub < subimages_w; i_sub++) {
-        for (INT64 j_sub=0; j_sub < subimages_h; j_sub++) {
-          auto sub_index=SubGridIndex(i_sub,j_sub);
-          auto source_data=source_square->get_rgba_data(sub_index);
-          auto source_wpixel=(INT64)source_square->rgba_wpixel(sub_index);
-          auto source_hpixel=(INT64)source_square->rgba_hpixel(sub_index);
-          auto source_data_origin_x=source_square->rgba_xpixel_origin(sub_index);
-          auto source_data_origin_y=source_square->rgba_ypixel_origin(sub_index);
-          if (source_data) {
-            auto source_zoom_out_shift=source_square->zoom_out_shift();
-            // set pixel size for whole grid square that actually gets displayed
-            dest_square->_texture_display_wpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().w() >> zoom_out_shift;
-            dest_square->_texture_display_hpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().h() >> zoom_out_shift;
-            auto zoom_left_shift=zoom_out_shift-source_zoom_out_shift;
-            auto source_texture_size=shift_left_signed(tile_pixel_size,zoom_left_shift);
-            // which tile is the origin of the source is one
-            auto tile_origin_i=source_data_origin_x/source_texture_size;
-            auto tile_origin_j=source_data_origin_y/source_texture_size;
-            // which tile the source ends on
-            auto tile_end_i=(source_data_origin_x+source_wpixel)/source_texture_size;
-            auto tile_end_j=(source_data_origin_y+source_hpixel)/source_texture_size;
-            // how large is the source on the first tile
-            auto tile_pixel_size_source=TILE_PIXEL_BASE_SIZE >> source_zoom_out_shift;
-            auto source_end_x_first=tile_pixel_size_source-(source_data_origin_x % tile_pixel_size_source);
-            auto source_end_y_first=tile_pixel_size_source-(source_data_origin_y % tile_pixel_size_source);
-            for (INT64 ti=tile_origin_i; ti <= tile_end_i; ti++) {
-              for (INT64 tj=tile_origin_j; tj <= tile_end_j; tj++) {
-                // what is the x coordinate of the source that starts the current tile
-                // this doesn't get used and/or gets reset in cases where the 1 subtraction would be zero
-                auto current_tile_source_start_x=(ti-tile_origin_i-1)*source_texture_size+source_end_x_first;
-                auto current_tile_source_start_y=(tj-tile_origin_j-1)*source_texture_size+source_end_y_first;
-                // find source coordinates for this particular tile
-                // now get the pixel range for this tile
-                INT64 current_tile_source_wpixel,current_tile_source_hpixel;
-                // where on the destination does the the current tile start
-                auto dest_start_x=shift_right_signed(source_data_origin_x,zoom_left_shift) % tile_pixel_size;
-                auto dest_start_y=shift_right_signed(source_data_origin_y,zoom_left_shift) % tile_pixel_size;
-                // find tile i coordinates
-                if (ti == tile_origin_i && ti == tile_end_i) {
-                  current_tile_source_start_x=0;
-                  current_tile_source_wpixel=source_wpixel;
-                  // dest_start_x=use default
-                } else if (ti == tile_origin_i) {
-                  current_tile_source_start_x=0;
-                  current_tile_source_wpixel=source_end_x_first;
-                  // dest_start_x=use default
-                } else if (ti == tile_end_i) {
-                  // current_tile_source_start_x=use default
-                  current_tile_source_wpixel=(source_wpixel-source_end_x_first)%source_texture_size;
-                  dest_start_x=0;
-                } else {
-                  // current_tile_source_start_x=use default
-                  current_tile_source_wpixel=source_texture_size;
-                  dest_start_x=0;
-                }
-                // find tile j coordinates
-                if (tj == tile_origin_j && tj == tile_end_j) {
-                  current_tile_source_start_y=0;
-                  current_tile_source_hpixel=source_hpixel;
-                  // dest_start_y=use default
-                } else if (tj == tile_origin_j) {
-                  current_tile_source_start_y=0;
-                  current_tile_source_hpixel=source_end_y_first;
-                  // dest_start_y=use default
-                } else if (tj == tile_end_j) {
-                  // current_tile_source_start_y=use default
-                  current_tile_source_hpixel=(source_hpixel-source_end_y_first)%source_texture_size;
-                  dest_start_y=0;
-                } else {
-                  // current_tile_source_start_y=use default
-                  current_tile_source_hpixel=source_texture_size;
-                  dest_start_y=0;
-                }
-                auto dest_array=dest_square->get_rgba_pixels(ti,tj);
-                auto wpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_aligned();
-                auto hpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_aligned();
-                auto wpixel_visible=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_visible();
-                auto hpixel_visible=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_visible();
-                if (zoom_left_shift >= 0) {
-                  buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
-                                             current_tile_source_start_x, current_tile_source_start_y,
-                                             current_tile_source_wpixel, current_tile_source_hpixel,
-                                             (PIXEL_RGBA*)dest_array,
-                                             wpixel_aligned,
-                                             hpixel_aligned,
-                                             wpixel_visible,
-                                             hpixel_visible,
-                                             dest_start_x, dest_start_y,
-                                             zoom_left_shift,
-                                             row_temp_buffer.get());
-                } else {
-                  buffer_copy_expand_generic(source_data,source_wpixel,source_hpixel,
-                                             current_tile_source_start_x, current_tile_source_start_y,
-                                             current_tile_source_wpixel, current_tile_source_hpixel,
-                                             (PIXEL_RGBA*)dest_array,
-                                             wpixel_aligned,
-                                             hpixel_aligned,
-                                             wpixel_visible,
-                                             hpixel_visible,
-                                             dest_start_x, dest_start_y,
-                                             -zoom_left_shift);
-                }
+    // everything is read, loop over
+    for (INT64 i_sub=0; i_sub < subimages_w; i_sub++) {
+      for (INT64 j_sub=0; j_sub < subimages_h; j_sub++) {
+        auto sub_index=SubGridIndex(i_sub,j_sub);
+        auto source_data=source_square->get_rgba_data(sub_index);
+        auto source_wpixel=(INT64)source_square->rgba_wpixel(sub_index);
+        auto source_hpixel=(INT64)source_square->rgba_hpixel(sub_index);
+        auto source_data_origin_x=source_square->rgba_xpixel_origin(sub_index);
+        auto source_data_origin_y=source_square->rgba_ypixel_origin(sub_index);
+        if (source_data) {
+          auto source_zoom_out_shift=source_square->zoom_out_shift();
+          auto zoom_left_shift=zoom_out_shift-source_zoom_out_shift;
+          auto source_texture_size=shift_left_signed(dest_tile_size,zoom_left_shift);
+          // which tile is the origin of the source is one
+          auto tile_origin_i=source_data_origin_x/source_texture_size;
+          auto tile_origin_j=source_data_origin_y/source_texture_size;
+          // which tile the source ends on
+          auto tile_end_i=(source_data_origin_x+source_wpixel)/source_texture_size;
+          auto tile_end_j=(source_data_origin_y+source_hpixel)/source_texture_size;
+          // how large is the source on the first tile
+          // auto tile_pixel_size_source=TILE_PIXEL_BASE_SIZE >> source_zoom_out_shift;
+          // auto tile_pixel_size_source=TILE_PIXEL_BASE_SIZE;
+          auto source_end_x_first=source_texture_size-(source_data_origin_x % source_texture_size);
+          auto source_end_y_first=source_texture_size-(source_data_origin_y % source_texture_size);
+          for (INT64 ti=tile_origin_i; ti <= tile_end_i; ti++) {
+            for (INT64 tj=tile_origin_j; tj <= tile_end_j; tj++) {
+              // TODO: get return code from this
+              // TODO: use RAII
+              dest_square->lock_surface(ti, tj);
+              // what is the x coordinate of the source that starts the current tile
+              // this doesn't get used and/or gets reset in cases where the 1 subtraction would be zero
+              auto current_tile_source_start_x=(ti-tile_origin_i-1)*source_texture_size+source_end_x_first;
+              auto current_tile_source_start_y=(tj-tile_origin_j-1)*source_texture_size+source_end_y_first;
+              // find source coordinates for this particular tile
+              // now get the pixel range for this tile
+              INT64 current_tile_source_wpixel,current_tile_source_hpixel;
+              // where on the destination does the the current tile start
+              auto dest_start_x=shift_right_signed(source_data_origin_x,zoom_left_shift) % dest_tile_size;
+              auto dest_start_y=shift_right_signed(source_data_origin_y,zoom_left_shift) % dest_tile_size;
+              // find tile i coordinates
+              if (ti == tile_origin_i && ti == tile_end_i) {
+                current_tile_source_start_x=0;
+                current_tile_source_wpixel=source_wpixel;
+                // dest_start_x=use default
+              } else if (ti == tile_origin_i) {
+                current_tile_source_start_x=0;
+                current_tile_source_wpixel=source_end_x_first;
+                // dest_start_x=use default
+              } else if (ti == tile_end_i) {
+                // current_tile_source_start_x=use default
+                current_tile_source_wpixel=(source_wpixel-source_end_x_first)%source_texture_size;
+                dest_start_x=0;
+              } else {
+                // current_tile_source_start_x=use default
+                current_tile_source_wpixel=source_texture_size;
+                dest_start_x=0;
               }
+              // find tile j coordinates
+              if (tj == tile_origin_j && tj == tile_end_j) {
+                current_tile_source_start_y=0;
+                current_tile_source_hpixel=source_hpixel;
+                // dest_start_y=use default
+              } else if (tj == tile_origin_j) {
+                current_tile_source_start_y=0;
+                current_tile_source_hpixel=source_end_y_first;
+                // dest_start_y=use default
+              } else if (tj == tile_end_j) {
+                // current_tile_source_start_y=use default
+                current_tile_source_hpixel=(source_hpixel-source_end_y_first)%source_texture_size;
+                dest_start_y=0;
+              } else {
+                // current_tile_source_start_y=use default
+                current_tile_source_hpixel=source_texture_size;
+                dest_start_y=0;
+              }
+              auto dest_array=dest_square->get_rgba_pixels(ti,tj);
+              auto wpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_aligned();
+              auto hpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_aligned();
+              auto wpixel_visible=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_visible();
+              auto hpixel_visible=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_visible();
+              if (zoom_left_shift >= 0) {
+                buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
+                                           current_tile_source_start_x, current_tile_source_start_y,
+                                           current_tile_source_wpixel, current_tile_source_hpixel,
+                                           (PIXEL_RGBA*)dest_array,
+                                           wpixel_aligned,
+                                           hpixel_aligned,
+                                           wpixel_visible,
+                                           hpixel_visible,
+                                           dest_start_x, dest_start_y,
+                                           zoom_left_shift,
+                                           row_buffer);
+              } else {
+                buffer_copy_expand_generic(source_data,source_wpixel,source_hpixel,
+                                           current_tile_source_start_x, current_tile_source_start_y,
+                                           current_tile_source_wpixel, current_tile_source_hpixel,
+                                           (PIXEL_RGBA*)dest_array,
+                                           wpixel_aligned,
+                                           hpixel_aligned,
+                                           wpixel_visible,
+                                           hpixel_visible,
+                                           dest_start_x, dest_start_y,
+                                           -zoom_left_shift);
+              }
+              dest_square->unlock_surface(ti, tj);
             }
           }
         }
-        any_successful=true;
       }
+      any_successful=true;
     }
   }
   dest_square->unlock_all_surfaces();

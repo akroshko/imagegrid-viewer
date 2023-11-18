@@ -9,6 +9,7 @@
 #include "c_sdl2/sdl2.hpp"
 // C++ headers
 #include <atomic>
+#include <chrono>
 #include <iostream>
 #include <mutex>
 #include <vector>
@@ -118,84 +119,86 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
   auto zoom_index=ViewPortTransferState::find_zoom_index_bounded(this->_zoom,0,max_zoom_index);
   ////////////////////////////////////////////////////////////////////////////////
   // now loop over grid squares
-  // get the lock on the overlay
-  // TODO: for now don't display if I can't get overlay lock
-  std::unique_lock<std::mutex> overlay_lock(texture_overlay->display_mutex, std::defer_lock);
-  if (overlay_lock.try_lock()) {
-    auto viewport_pixel_size=ViewportPixelSize(this->_current_window_w,this->_current_window_h);
-    // this draws the surrface when it goes out of scope
-    std::unique_ptr<SDLDrawableSurface> drawable_surface=std::make_unique<SDLDrawableSurface>(sdl_app,viewport_pixel_size);
-    for (INT64 i=0L; i < texture_grid->grid_image_size().w(); i++) {
-      for (INT64 j=0L; j < texture_grid->grid_image_size().h(); j++) {
-        auto upperleft_gridsquare=GridCoordinate(i,j);
-        auto pixel_0=ViewportPixelCoordinate(0,0);
-        auto viewport_pixel_0_grid=GridCoordinate(pixel_0,
-                                                  this->_zoom,
-                                                  this->_viewport_pixel_size,
-                                                  this->_viewport_grid,
-                                                  this->_image_max_size);
-        auto new_viewport_pixel_size=ViewportPixelSize(this->_image_max_size.w(),this->_image_max_size.h());
-        auto viewport_pixel_coordinate=ViewportPixelCoordinate(upperleft_gridsquare,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
-        // TODO: this is where I chose zoom
-        auto actual_zoom=zoom_index;
-        // for testing max zoom
-        bool texture_loaded=false;
-        do {
-          auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[actual_zoom].get();
-          // filler should never get past here
-          if (texture_square_zoom->is_loaded &&
-              texture_square_zoom->is_displayable) {
-            // TODO: would like more RAII way of dealing with this mutex
-            if (texture_square_zoom->display_mutex.try_lock()) {
-              if (texture_square_zoom->is_loaded &&
-                  texture_square_zoom->is_displayable &&
-                  texture_square_zoom->all_surfaces_valid()) {
-
-                texture_loaded=true;
-                auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.w()*this->_zoom),
-                                                              (int)round(this->_image_max_size.h()*this->_zoom));
-                blit_this(drawable_surface.get(),
-                          texture_square_zoom,
-                          viewport_pixel_coordinate,
-                          grid_image_size_zoomed);
-                texture_square_zoom->display_mutex.unlock();
-              } else {
-                texture_loaded=false;
-                texture_square_zoom->display_mutex.unlock();
-                MSG("Couldn't lock normal: " << i << " " << j);
-              }
+  auto viewport_pixel_size=ViewportPixelSize(this->_current_window_w,this->_current_window_h);
+  // this draws the surface when it goes out of scope
+  std::unique_ptr<SDLDrawableSurface> drawable_surface=std::make_unique<SDLDrawableSurface>(sdl_app,viewport_pixel_size);
+  auto pixel_0=ViewportPixelCoordinate(0,0);
+  auto viewport_pixel_0_grid=GridCoordinate(pixel_0,
+                                            this->_zoom,
+                                            this->_viewport_pixel_size,
+                                            this->_viewport_grid,
+                                            this->_image_max_size);
+  auto new_viewport_pixel_size=ViewportPixelSize(this->_image_max_size.w(),this->_image_max_size.h());
+  for (INT64 i=0L; i < texture_grid->grid_image_size().w(); i++) {
+    for (INT64 j=0L; j < texture_grid->grid_image_size().h(); j++) {
+      auto upperleft_gridcoordinate=GridCoordinate(i,j);
+      auto lowerright_gridcoordinate=GridCoordinate(i+1,j+1);
+      auto viewport_pixel_coordinate_upperleft=ViewportPixelCoordinate(upperleft_gridcoordinate,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
+      auto viewport_pixel_coordinate_lowerright=ViewportPixelCoordinate(lowerright_gridcoordinate,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
+      // TODO: possibly add some padding here
+      if (viewport_pixel_coordinate_lowerright.x() < 0 || viewport_pixel_coordinate_lowerright.y() < 0 ||
+          viewport_pixel_coordinate_upperleft.x() > MAX_SCREEN_WIDTH || viewport_pixel_coordinate_upperleft.y() > MAX_SCREEN_HEIGHT) {
+            continue;
+      }
+      auto actual_zoom=zoom_index;
+      // for testing max zoom
+      bool texture_loaded=false;
+      do {
+        auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[actual_zoom].get();
+        // filler should never get past here
+        if (texture_square_zoom->is_loaded &&
+            texture_square_zoom->is_displayable) {
+          // TODO: would like more RAII way of dealing with this mutex
+          if (texture_square_zoom->display_mutex.try_lock()) {
+            if (texture_square_zoom->is_loaded &&
+                texture_square_zoom->is_displayable &&
+                texture_square_zoom->all_surfaces_valid()) {
+              texture_loaded=true;
+              auto grid_image_size_zoomed=ViewportPixelSize((INT64)round(this->_image_max_size.w()*this->_zoom),
+                                                            (INT64)round(this->_image_max_size.h()*this->_zoom));
+              blit_this(drawable_surface.get(),
+                        texture_square_zoom,
+                        viewport_pixel_coordinate_upperleft,
+                        grid_image_size_zoomed);
+              texture_square_zoom->display_mutex.unlock();
+            } else {
+              texture_loaded=false;
+              texture_square_zoom->display_mutex.unlock();
+              MSG("Couldn't access surface: " << i << " " << j << " " << actual_zoom);
             }
           }
-          // TODO: else raise error if things are terrible
-          actual_zoom++;
-        } while ((actual_zoom <= max_zoom_index) && !texture_loaded);
-        // texture didn't load load so do filler
-        if (!texture_loaded) {
-          // go through loop again
-          auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[zoom_index].get();
-          if (texture_square_zoom->get_image_filler()) {
-            // TODO: would like more RAII way of dealing with this mutex
-            if (texture_square_zoom->display_mutex.try_lock()) {
-              if (texture_square_zoom->get_image_filler() &&
-                  texture_square_zoom->filler_texture_wrapper()->is_valid()) {
-                auto grid_image_size_zoomed=ViewportPixelSize((int)round(this->_image_max_size.w()*this->_zoom),
-                                                              (int)round(this->_image_max_size.h()*this->_zoom));
-                blit_this(drawable_surface.get(),
-                          texture_square_zoom,
-                          viewport_pixel_coordinate,
-                          grid_image_size_zoomed);
-                texture_square_zoom->display_mutex.unlock();
-              } else {
-                texture_square_zoom->display_mutex.unlock();
-              }
-            } else {
-              // TODO: this should never happen, so this error is in here while I investigate
-              MSG("Couldn't lock filler: " << i << " " << j);
+        }
+        // TODO: else raise error if things are terrible
+        actual_zoom++;
+      } while ((actual_zoom <= max_zoom_index) && !texture_loaded);
+      // texture didn't load load so do filler
+      if (!texture_loaded) {
+        auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[zoom_index].get();
+        if (texture_square_zoom->get_image_filler()) {
+          // TODO: would like more RAII way of dealing with this mutex
+          if (texture_square_zoom->display_mutex.try_lock()) {
+            if (texture_square_zoom->get_image_filler() &&
+                texture_square_zoom->filler_texture_wrapper()->is_valid()) {
+              auto grid_image_size_zoomed=ViewportPixelSize((INT64)round(this->_image_max_size.w()*this->_zoom),
+                                                            (INT64)round(this->_image_max_size.h()*this->_zoom));
+              blit_this(drawable_surface.get(),
+                        texture_square_zoom,
+                        viewport_pixel_coordinate_upperleft,
+                        grid_image_size_zoomed);
             }
+            texture_square_zoom->display_mutex.unlock();
+          } else {
+            // TODO: this should never happen, so this error is in here while I investigate
+            MSG("Couldn't lock filler: " << i << " " << j);
           }
         }
       }
     }
+  }
+  // I guess we don't get an overlay if we don't get the lock
+  // Could just discard the surface
+  std::unique_lock<std::mutex> overlay_lock(texture_overlay->display_mutex, std::defer_lock);
+  if (overlay_lock.try_lock()) {
     texture_overlay->draw_overlay(drawable_surface.get());
     overlay_lock.unlock();
   }

@@ -515,9 +515,8 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
   INT64 load_count=0;
   auto iterator_visible=this->grid_setup()->get_iterator_visible(viewport_current_state);
   // we are looking at if things are not loaded
-  while (keep_trying) {
+  while (keep_trying && load_count < LOAD_FILES_BATCH && keep_running ) {
     auto grid_index=iterator_visible->get_next();
-    if (!keep_running) { break; }
     keep_trying=(!grid_index->invalid());
     if (keep_trying) {
       if (this->_check_bounds(grid_index.get()) && grid_setup->square_has_data(grid_index.get())) {
@@ -527,24 +526,23 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
                                                 zoom_index_lower_limit,
                                                 load_all, grid_setup);
         if (load_successful) { load_count++; }
-        if (load_count >= LOAD_FILES_BATCH) { keep_trying=false; }
       }
     }
   }
-  auto iterator_normal=this->grid_setup()->get_iterator_full(viewport_current_state);
-  keep_trying=(!(load_count >= LOAD_FILES_BATCH || !keep_running));
-  while (keep_trying) {
-    auto grid_index=iterator_normal->get_next();
-    if (!keep_running) { break; }
-    keep_trying=(!grid_index->invalid());
-    if (keep_trying) {
-      if (this->_check_bounds(grid_index.get()) && grid_setup->square_has_data(grid_index.get())) {
-        auto load_successful=this->_load_square(viewport_current_state,
-                                                grid_index.get(),
-                                                zoom_index_lower_limit,
-                                                load_all, grid_setup);
-        if (load_successful) { load_count++; }
-        if (load_count >= LOAD_FILES_BATCH) { keep_trying=false; }
+  keep_trying=(load_count < LOAD_FILES_BATCH && keep_running);
+  if (keep_trying) {
+    auto iterator_normal=this->grid_setup()->get_iterator_full(viewport_current_state);
+    while (keep_trying && load_count < LOAD_FILES_BATCH && keep_running) {
+      auto grid_index=iterator_normal->get_next();
+      keep_trying=(!grid_index->invalid());
+      if (keep_trying) {
+        if (this->_check_bounds(grid_index.get()) && grid_setup->square_has_data(grid_index.get())) {
+          auto load_successful=this->_load_square(viewport_current_state,
+                                                  grid_index.get(),
+                                                  zoom_index_lower_limit,
+                                                  load_all, grid_setup);
+          if (load_successful) { load_count++; }
+        }
       }
     }
   }

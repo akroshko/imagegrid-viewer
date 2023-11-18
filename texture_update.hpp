@@ -23,7 +23,8 @@ public:
   /**
    * @param The object that transfers viewport state.
    */
-  TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update);
+  TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update,
+                const GridPixelSize& grid_pixel_size);
   ~TextureUpdate()=default;
   TextureUpdate(const TextureUpdate&)=delete;
   TextureUpdate(const TextureUpdate&&)=delete;
@@ -93,7 +94,9 @@ public:
    */
   static bool load_texture(TextureGridSquareZoomLevel* dest_square,
                            ImageGridSquareZoomLevel* source_square,
-                           INT64 zoom_out_shift);
+                           INT64 zoom_out_shift,
+                           INT64* const row_buffer);
+  std::unique_ptr <INT64[]> row_buffer_temp;
 private:
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;

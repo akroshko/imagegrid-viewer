@@ -15,13 +15,16 @@
 #include <cmath>
 
 TextureGridSquareZoomLevel::TextureGridSquareZoomLevel (TextureGridSquare* parent_square,
-                                                        const GridPixelSize& image_max_pixel_size) {
-  this->_tile_w=image_max_pixel_size.w()/TILE_PIXEL_BASE_SIZE;
-  if ((image_max_pixel_size.w() % TILE_PIXEL_BASE_SIZE) != 0) {
+                                                        const GridPixelSize& image_max_pixel_size,
+                                                        INT64 zoom_out_shift) {
+  auto wpixel=image_max_pixel_size.w() >> zoom_out_shift;
+  auto hpixel=image_max_pixel_size.h() >> zoom_out_shift;
+  this->_tile_w=wpixel/TILE_PIXEL_BASE_SIZE;
+  if (wpixel % TILE_PIXEL_BASE_SIZE != 0) {
     this->_tile_w+=1;
   }
-  this->_tile_h=image_max_pixel_size.h()/TILE_PIXEL_BASE_SIZE;
-  if ((image_max_pixel_size.h() % TILE_PIXEL_BASE_SIZE) != 0) {
+  this->_tile_h=hpixel/TILE_PIXEL_BASE_SIZE;
+  if (hpixel % TILE_PIXEL_BASE_SIZE != 0) {
     this->_tile_h+=1;
   }
   auto tile_num=this->_tile_w*this->_tile_h;
@@ -89,6 +92,17 @@ bool TextureGridSquareZoomLevel::all_surfaces_valid () {
   return all_valid;
 }
 
+bool TextureGridSquareZoomLevel::lock_surface (INT64 i, INT64 j) {
+  auto tile_index=j*this->_tile_w+i;
+  auto lock_surface_return=this->_display_texture_wrapper[tile_index]->lock_surface();
+  return (!lock_surface_return);
+}
+
+void TextureGridSquareZoomLevel::unlock_surface (INT64 i, INT64 j) {
+  auto tile_index=j*this->_tile_w+i;
+  this->_display_texture_wrapper[tile_index]->unlock_surface();
+}
+
 bool TextureGridSquareZoomLevel::lock_all_surfaces () {
   auto all_lock_successful=true;
   auto tile_num=this->_tile_w*this->_tile_h;
@@ -149,7 +163,8 @@ TextureGridSquare::TextureGridSquare (TextureGrid* parent_grid,
   this->texture_array=std::make_unique<std::unique_ptr<TextureGridSquareZoomLevel>[]>(zoom_index_length);
   for (auto i=0L; i < zoom_index_length; i++) {
     this->texture_array[i]=std::make_unique<TextureGridSquareZoomLevel>(this,
-                                                                        image_max_pixel_size);
+                                                                        image_max_pixel_size,
+                                                                        i);
   }
 }
 

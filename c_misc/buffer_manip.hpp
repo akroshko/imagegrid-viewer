@@ -21,7 +21,7 @@
 void buffer_copy_reduce_tiff (const uint32_t* const source_buffer, INT64 source_w, INT64 source_h,
                               PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
                               INT64 zoom_out_shift,
-                              INT64* row_buffer);
+                              INT64* const row_buffer);
 
 /**
  * Copy an RGBA buffer from tiff files.  A "safe" version that should
@@ -52,7 +52,7 @@ void buffer_copy_noreduce_tiff_safe (const uint32_t* const source_buffer, INT64 
  */
 void buffer_copy_reduce_2_tiff_safe (const uint32_t* const source_buffer, INT64 source_w, INT64 source_h,
                                      PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
-                                     INT64* row_buffer);
+                                     INT64* const row_buffer);
 
 /**
  * Copy and reduce size by maximum factor of 8 an RGBA buffer from
@@ -72,7 +72,7 @@ void buffer_copy_reduce_2_tiff_safe (const uint32_t* const source_buffer, INT64 
 void buffer_copy_reduce_max_8_tiff_safe (const uint32_t* const source_buffer, INT64 source_w, INT64 source_h,
                                          PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
                                          INT64 zoom_out_shift,
-                                         INT64* row_buffer);
+                                         INT64* const row_buffer);
 
 /**
  * Copy and reduce size of an RGBA buffer from tiff files.  A "safe"
@@ -91,7 +91,7 @@ void buffer_copy_reduce_max_8_tiff_safe (const uint32_t* const source_buffer, IN
 void buffer_copy_reduce_tiff_safe (const uint32_t* const source_buffer, INT64 source_w, INT64 source_h,
                                    PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
                                    INT64 zoom_out_shift,
-                                   INT64* row_buffer);
+                                   INT64* const row_buffer);
 
 /**
  * Copy and reduce size of a generic RGBA buffer.
@@ -121,7 +121,7 @@ void buffer_copy_reduce_generic (const PIXEL_RGBA* const source_buffer, INT64 so
                                  INT64 dest_w_visible, INT64 dest_h_visible,
                                  INT64 dest_start_x, INT64 dest_start_y,
                                  INT64 zoom_out_shift,
-                                 INT64* row_buffer);
+                                 INT64* const row_buffer);
 
 /**
  * Copy without reducing size of a generic RGBA buffer. A "safe"
@@ -177,7 +177,7 @@ void buffer_copy_reduce_2_generic_safe (const PIXEL_RGBA* const source_buffer, I
                                         INT64 dest_w, INT64 dest_h,
                                         INT64 dest_w_visible, INT64 dest_h_visible,
                                         INT64 dest_start_x, INT64 dest_start_y,
-                                        INT64* row_buffer);
+                                        INT64* const row_buffer);
 
 
 /**
@@ -209,7 +209,7 @@ void buffer_copy_reduce_max_8_generic_safe (const PIXEL_RGBA* const source_buffe
                                             INT64 dest_w_visible, INT64 dest_h_visible,
                                             INT64 dest_start_x, INT64 dest_start_y,
                                             INT64 zoom_out_shift,
-                                            INT64* row_buffer);
+                                            INT64* const row_buffer);
 
 /**
  * Copy and reduce size of a generic RGBA buffer. A "safe" version
@@ -240,7 +240,7 @@ void buffer_copy_reduce_generic_safe (const PIXEL_RGBA* const source_buffer, INT
                                       INT64 dest_w_visible, INT64 dest_h_visible,
                                       INT64 dest_start_x, INT64 dest_start_y,
                                       INT64 zoom_out_shift,
-                                      INT64* row_buffer);
+                                      INT64* const row_buffer);
 
 /**
  * Copy and expand size of a generic RGBA buffer.

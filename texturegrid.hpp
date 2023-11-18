@@ -28,7 +28,8 @@ class TextureGridSquareZoomLevel {
 public:
   TextureGridSquareZoomLevel()=delete;
   TextureGridSquareZoomLevel(TextureGridSquare* parent_square,
-                             const GridPixelSize& image_max_pixel_size);
+                             const GridPixelSize& image_max_pixel_size,
+                             INT64 zoom_out_shift);
   ~TextureGridSquareZoomLevel();
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&)=delete;
   TextureGridSquareZoomLevel(const TextureGridSquareZoomLevel&&)=delete;
@@ -77,8 +78,22 @@ public:
   void create_surfaces(INT64 tile_pixel_size);
   /** @return If all surfaces are valid. */
   bool all_surfaces_valid ();
+  /**
+   * Lock one surface.
+   *
+   * @param i The x index of the surface to lock.
+   * @param j The y index of the surface to lock.
+   * @return If the surface was locked successfully.
+   */
+  bool lock_surface (INT64 i, INT64 j);
   /** @return If locking all surfaces was successful. */
   bool lock_all_surfaces ();
+  /**
+   * Unlock one surface.
+   * @param i The x index of the surface to lock.
+   * @param j The y index of the surface to lock.
+   */
+  void unlock_surface (INT64 i, INT64 j);
   /** Unlock all surfaces. */
   void unlock_all_surfaces ();
   /** Clear all surfaces. */

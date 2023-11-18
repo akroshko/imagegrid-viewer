@@ -28,11 +28,6 @@ INT64 reduce_and_pad(INT64 x, INT64 reduction_factor);
 INT64 pad (INT64 x, INT64 pad_size);
 
 /**
- * Sleep and yield current thread.
- */
-void sleep_thread();
-
-/**
  * Check whether a filename is valid.
  *
  * Just checks whether name is empty string for now, but could

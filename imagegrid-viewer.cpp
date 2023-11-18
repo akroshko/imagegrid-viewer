@@ -160,7 +160,6 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup* const grid_setup) {
   this->viewport_current_state_imagegrid_update=std::make_shared<ViewPortTransferState>();
   this->viewport=std::make_unique<ViewPort>(this->viewport_current_state_texturegrid_update,
                                             this->viewport_current_state_imagegrid_update);
-  this->texture_update=std::make_unique<TextureUpdate>(this->viewport_current_state_texturegrid_update);
   this->grid=std::make_unique<ImageGrid>();
   // this is where the the info on the grid is loaded
   // the actual image data is loaded seperately in it's own thread
@@ -176,6 +175,8 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup* const grid_setup) {
     this->texture_grid->init_filler_squares(grid_setup,
                                             this->grid->zoom_index_length(),
                                             this->grid->get_image_max_pixel_size());
+    this->texture_update=std::make_unique<TextureUpdate>(this->viewport_current_state_texturegrid_update,
+                                                         this->grid->get_image_max_pixel_size());
     // adjust initial position to a sensible default depending on how
     // many images are loaded
     this->viewport->adjust_initial_location(grid_setup);
@@ -247,7 +248,8 @@ private:
     // this->_all_loaded=true;
     while (this->_keep_running) {
       this->_grid->load_grid(this->_grid_setup,this->_keep_running);
-      sleep_thread();
+      std::this_thread::yield();
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     MSG("Ending execution in UpdateImageGridThread.");
   }
@@ -314,7 +316,6 @@ private:
                                                    this->_texture_grid,
                                                    this->_texture_overlay,
                                                    this->_keep_running);
-      sleep_thread();
     }
     MSG("Ending execution in UpdateTextureThread.");
   }

@@ -27,7 +27,7 @@ typedef unsigned char (*rgb_extract)(unsigned char);
 void buffer_copy_reduce_tiff (const uint32_t* const source_buffer, INT64 source_w, INT64 source_h,
                               PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
                               INT64 zoom_out_shift,
-                              INT64* row_buffer) {
+                              INT64* const row_buffer) {
   if (zoom_out_shift == 0) {
     buffer_copy_noreduce_tiff_safe(source_buffer, source_w, source_h,
                                    dest_buffer, dest_w, dest_h);
@@ -70,7 +70,7 @@ void buffer_copy_noreduce_tiff_safe (const uint32_t* const source_buffer, INT64 
 // will definitely have an optimized reduce-by-2
 void buffer_copy_reduce_2_tiff_safe (const uint32_t* const source_buffer, INT64 source_w, INT64 source_h,
                                      PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
-                                     INT64* row_buffer) {
+                                     INT64* const row_buffer) {
   // the loops in this function ensure memory is accessed sequentially
   auto block_average_shift=2;
   for (INT64 bsj=0; bsj < source_h; bsj+=2) {
@@ -103,7 +103,7 @@ void buffer_copy_reduce_2_tiff_safe (const uint32_t* const source_buffer, INT64 
 void buffer_copy_reduce_max_8_tiff_safe (const uint32_t* const source_buffer, INT64 source_w, INT64 source_h,
                                          PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
                                          INT64 zoom_out_shift,
-                                         INT64* row_buffer) {
+                                         INT64* const row_buffer) {
   // the loops in this function ensure memory is accessed sequentially
   auto block_average_shift=zoom_out_shift*2;
   auto zoom_out=1L << zoom_out_shift;
@@ -136,7 +136,7 @@ void buffer_copy_reduce_max_8_tiff_safe (const uint32_t* const source_buffer, IN
 void buffer_copy_reduce_tiff_safe (const uint32_t* const source_buffer, INT64 source_w, INT64 source_h,
                                    PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
                                    INT64 zoom_out_shift,
-                                   INT64* row_buffer) {
+                                   INT64* const row_buffer) {
   // the loops in this function ensure memory is accessed sequentially
   auto block_average_shift=2*zoom_out_shift;
   auto zoom_out=1L << zoom_out_shift;
@@ -173,7 +173,7 @@ void buffer_copy_reduce_generic (const PIXEL_RGBA* const source_buffer, INT64 so
                                  INT64 dest_w_visible, INT64 dest_h_visible,
                                  INT64 dest_start_x, INT64 dest_start_y,
                                  INT64 zoom_out_shift,
-                                 INT64* row_buffer) {
+                                 INT64* const row_buffer) {
   if (zoom_out_shift == 0) {
     buffer_copy_noreduce_generic_safe(source_buffer, source_w, source_h,
                                       source_start_x, source_start_y,
@@ -248,7 +248,7 @@ void buffer_copy_reduce_2_generic_safe (const PIXEL_RGBA* const source_buffer, I
                                         INT64 dest_w, INT64 dest_h,
                                         INT64 dest_w_visible, INT64 dest_h_visible,
                                         INT64 dest_start_x, INT64 dest_start_y,
-                                        INT64* row_buffer) {
+                                        INT64* const row_buffer) {
   // di:=destination i
   // dj:=destination j
   // bsi:=source i at beginning of block
@@ -309,7 +309,7 @@ void buffer_copy_reduce_max_8_generic_safe (const PIXEL_RGBA* const source_buffe
                                             INT64 dest_w_visible, INT64 dest_h_visible,
                                             INT64 dest_start_x, INT64 dest_start_y,
                                             INT64 zoom_out_shift,
-                                            INT64* row_buffer) {
+                                            INT64* const row_buffer) {
   // di:=destination i
   // dj:=destination j
   // bsi:=source i at beginning of block
@@ -370,7 +370,7 @@ void buffer_copy_reduce_generic_safe (const PIXEL_RGBA* const source_buffer, INT
                                       INT64 dest_w_visible, INT64 dest_h_visible,
                                       INT64 dest_start_x, INT64 dest_start_y,
                                       INT64 zoom_out_shift,
-                                      INT64* row_buffer) {
+                                      INT64* const row_buffer) {
   // di:=destination i
   // dj:=destination j
   // bsi:=source i at beginning of block

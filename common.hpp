@@ -136,10 +136,8 @@ const double INITIAL_Y=1.5;
 const INT64 MAX_MIN_SCALED_IMAGE_SIZE=32;
 
 // size of the individual textures
-const INT64 TILE_PIXEL_BASE_SIZE=2048;
-// for debugging
-// const INT64 TILE_PIXEL_BASE_SIZE=8192;
-// const INT64 TILE_PIXEL_BASE_SIZE=16384;
+const INT64 TILE_PIXEL_BASE_SIZE=512;
+// const INT64 TILE_PIXEL_BASE_SIZE=2048;
 
 // some placeholder values
 // rather than zero, this should make sure that any use of initialized class members becomes obvious
@@ -147,8 +145,8 @@ const INT64 TILE_PIXEL_BASE_SIZE=2048;
 const INT64 INVALID_PIXEL_VALUE=INT_MIN;
 
 // these are things that should probably be done more smartly later
-const INT64 LOAD_FILES_BATCH=1;
-const INT64 LOAD_TEXTURES_BATCH=8;
+const INT64 LOAD_FILES_BATCH=2;
+const INT64 LOAD_TEXTURES_BATCH=4;
 
 // the filler color
 const PIXEL_RGBA FILLER_LEVEL=0xFF404040;
