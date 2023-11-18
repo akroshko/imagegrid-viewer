@@ -309,7 +309,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
               auto wpixel_visible=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_visible();
               auto hpixel_visible=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_visible();
               if (zoom_left_shift >= 0) {
-                buffer_copy_reduce_generic(source_data,source_wpixel,source_hpixel,
+                buffer_copy_reduce_standard(source_data,source_wpixel,source_hpixel,
                                            current_tile_source_start_x, current_tile_source_start_y,
                                            current_tile_source_wpixel, current_tile_source_hpixel,
                                            (PIXEL_RGBA*)dest_array,

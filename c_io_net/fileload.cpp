@@ -380,7 +380,7 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
             size_t npixels_reduced=w_reduced*h_reduced;
             file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
             std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
-            buffer_copy_reduce_generic((PIXEL_RGBA*)png_raster,
+            buffer_copy_reduce_standard((PIXEL_RGBA*)png_raster,
                                        png_width,png_height,
                                        0,0,
                                        png_width,png_height,
@@ -512,7 +512,7 @@ bool load_png_as_rgba(const std::string& filename,
           size_t npixels_reduced=w_reduced*h_reduced;
           file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
           std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
-          buffer_copy_reduce_generic((PIXEL_RGBA*)raster,width,height,
+          buffer_copy_reduce_standard((PIXEL_RGBA*)raster,width,height,
                                      0,0,
                                      width,height,
                                      file_data->rgba_data[sub_index_arr],
