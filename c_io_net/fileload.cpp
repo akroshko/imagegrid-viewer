@@ -380,17 +380,19 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
             size_t npixels_reduced=w_reduced*h_reduced;
             file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
             std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
+            auto source_size=BufferPixelSize(png_width,png_height);
+            auto dest_size=BufferPixelSize(w_reduced,h_reduced);
             buffer_copy_reduce_standard((PIXEL_RGBA*)png_raster,
-                                       png_width,png_height,
-                                       0,0,
-                                       png_width,png_height,
-                                       file_data->rgba_data[sub_index_arr],
-                                       w_reduced,h_reduced,
-                                       w_reduced,h_reduced,
-                                       0,0,
-                                       // TODO: get rid of this float
-                                       (INT64)floor(log2(actual_zoom_out)),
-                                       row_temp_buffer);
+                                        source_size,
+                                        BufferPixelCoordinate(0,0),
+                                        source_size,
+                                        file_data->rgba_data[sub_index_arr],
+                                        dest_size,
+                                        dest_size,
+                                        BufferPixelCoordinate(0,0),
+                                        // TODO: get rid of this float
+                                        (INT64)floor(log2(actual_zoom_out)),
+                                        row_temp_buffer);
             // // DEBUGGING!!!
             // std::filesystem::path cached_filename_test(cached_filename);
             // write_png_text("/home/main/tmp-test/"+std::to_string((INT64)floor(log2(actual_zoom_out)))+"_"+cached_filename_test.filename().string(),"",w_reduced,h_reduced,0,0,file_data->rgba_data[sub_index_arr]);
@@ -441,8 +443,12 @@ bool load_tiff_as_rgba(const std::string& filename,
           auto npixels_reduced=w_reduced*h_reduced;
           file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
           std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
-          buffer_copy_reduce_tiff(raster,tiff_width,tiff_height,
-                                  file_data->rgba_data[sub_index_arr],w_reduced,h_reduced,
+          auto source_size=BufferPixelSize(tiff_width,tiff_height);
+          auto dest_size=BufferPixelSize(w_reduced,h_reduced);
+          buffer_copy_reduce_tiff(raster,
+                                  source_size,
+                                  file_data->rgba_data[sub_index_arr],
+                                  dest_size,
                                   // TODO: get rid of this floating point
                                   floor(log2(zoom_out)),
                                   row_temp_buffer);
@@ -512,16 +518,19 @@ bool load_png_as_rgba(const std::string& filename,
           size_t npixels_reduced=w_reduced*h_reduced;
           file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
           std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
-          buffer_copy_reduce_standard((PIXEL_RGBA*)raster,width,height,
-                                     0,0,
-                                     width,height,
-                                     file_data->rgba_data[sub_index_arr],
-                                     w_reduced,h_reduced,
-                                     w_reduced,h_reduced,
-                                     0,0,
-                                     // TODO: get rid of this float
-                                     (INT64)floor(log2(zoom_out)),
-                                     row_temp_buffer);
+          auto source_size=BufferPixelSize(width,height);
+          auto dest_size=BufferPixelSize(w_reduced,h_reduced);
+          buffer_copy_reduce_standard((PIXEL_RGBA*)raster,
+                                      source_size,
+                                      BufferPixelCoordinate(0,0),
+                                      source_size,
+                                      file_data->rgba_data[sub_index_arr],
+                                      dest_size,
+                                      dest_size,
+                                      BufferPixelCoordinate(0,0),
+                                      // TODO: get rid of this float
+                                      (INT64)floor(log2(zoom_out)),
+                                      row_temp_buffer);
           success=true;
         }
       }
@@ -663,7 +672,7 @@ bool get_tiff_from_nts_file(const std::string& filename,
   char zip_tiff_name[PATH_BUFFER_SIZE];
   char tiff_temp_filename[PATH_BUFFER_SIZE];
   // TODO: I need to find the best way to get a temp path
-  strncpy(tiff_temp_filename,TEMP_TEMPLATE_TIF,PATH_BUFFER_SIZE);
+  strncpy(tiff_temp_filename,TEMP_TEMPLATE_TIF,PATH_BUFFER_SIZE-1);
   if (!(zip_struct=zip_open(zip_name,ZIP_RDONLY,&zip_error))) {
     zip_error_t error;
     zip_error_init_with_code(&error, zip_error);
@@ -684,7 +693,7 @@ bool get_tiff_from_nts_file(const std::string& filename,
       const char* zip_internal_name_temp;
       zip_internal_name_temp=zip_get_name(zip_struct,i,0);
       if (zip_internal_name_temp) {
-        strncpy(zip_internal_name,zip_internal_name_temp,PATH_BUFFER_SIZE);
+        strncpy(zip_internal_name,zip_internal_name_temp,PATH_BUFFER_SIZE-1);
         int zip_internal_name_length=strnlen(zip_internal_name,PATH_BUFFER_SIZE);
         const char* suffix=NTS_TIF_INTERNAL_EXTENSION;
         const unsigned int suffix_length=strlen(suffix);

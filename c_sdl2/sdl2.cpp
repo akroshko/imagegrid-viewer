@@ -167,7 +167,7 @@ SDL_PixelFormat* SDLApp::format() const {
 }
 
 SDLDrawableSurface::SDLDrawableSurface(SDLApp* const sdl_app,
-                                       const ViewportPixelSize& viewport_pixel_size) {
+                                       const BufferPixelSize& viewport_pixel_size) {
   this->_sdl_app=sdl_app;
   if ((this->_screen_surface=SDL_GetWindowSurface(sdl_app->window()))) {
     SDL_Rect screen_rect;
@@ -280,8 +280,8 @@ INT64 SDLDisplayTextureWrapper::texture_hpixel_visible() const {
 void SDLDisplayTextureWrapper::blit_texture(SDLDrawableSurface* drawable_surface,
                                             INT64 texture_wpixel,
                                             INT64 texture_hpixel,
-                                            const ViewportPixelCoordinate& viewport_pixel_coordinate,
-                                            const ViewportPixelSize& image_pixel_size_viewport) {
+                                            const BufferPixelCoordinate& viewport_pixel_coordinate,
+                                            const BufferPixelSize& image_pixel_size_viewport) {
   SDL_Rect texture_rect;
   texture_rect.x=0;
   texture_rect.y=0;

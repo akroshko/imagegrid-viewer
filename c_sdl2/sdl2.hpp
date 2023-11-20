@@ -81,7 +81,7 @@ private:
 class SDLDrawableSurface {
 public:
   SDLDrawableSurface(SDLApp* const sdl_app,
-                     const ViewportPixelSize& viewport_pixel_size);
+                     const BufferPixelSize& viewport_pixel_size);
   ~SDLDrawableSurface();
   /** @return The drawable screen surface. */
   SDL_Surface* screen_surface();
@@ -157,8 +157,8 @@ public:
   void blit_texture(SDLDrawableSurface* drawable_surface,
                     INT64 texture_wpixel,
                     INT64 texture_hpixel,
-                    const ViewportPixelCoordinate& viewport_pixel_coordinate,
-                    const ViewportPixelSize& image_pixel_size_viewport);
+                    const BufferPixelCoordinate& viewport_pixel_coordinate,
+                    const BufferPixelSize& image_pixel_size_viewport);
 private:
   SDL_Surface* _display_texture=nullptr;
   INT64 _wpixel_visible;

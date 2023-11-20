@@ -1,11 +1,25 @@
 #ifdef NOREDUCE_FUNCNAME
-void (NOREDUCE_FUNCNAME) (SOURCE_TYPE source_buffer, INT64 source_w, INT64 source_h,
-                          INT64 source_start_x, INT64 source_start_y,
-                          INT64 source_copy_w, INT64 source_copy_h,
+void (NOREDUCE_FUNCNAME) (SOURCE_TYPE source_buffer,
+                          const BufferPixelSize& source_size,
+                          const BufferPixelCoordinate& source_start,
+                          const BufferPixelSize& source_copy_size,
                           PIXEL_RGBA* const dest_buffer,
-                          INT64 dest_w, INT64 dest_h,
-                          INT64 dest_w_visible, INT64 dest_h_visible,
-                          INT64 dest_start_x, INT64 dest_start_y) {
+                          const BufferPixelSize& dest_size,
+                          const BufferPixelSize& dest_size_visible,
+                          const BufferPixelCoordinate& dest_start) {
+  auto source_w=source_size.w();
+  auto source_h=source_size.h();
+  auto source_start_x=source_start.x();
+  auto source_start_y=source_start.y();
+  auto source_copy_w=source_copy_size.w();
+  auto source_copy_h=source_copy_size.h();
+  auto dest_w=dest_size.w();
+  // auto dest_h=dest_size.h();
+  auto dest_w_visible=dest_size_visible.w();
+  auto dest_h_visible=dest_size_visible.h();
+  auto dest_start_x=dest_start.x();
+  auto dest_start_y=dest_start.y();
+
   for (INT64 sj=source_start_y, dj=dest_start_y;
        sj < source_start_y+source_copy_h;
        sj++, dj++) {
@@ -28,14 +42,28 @@ void (NOREDUCE_FUNCNAME) (SOURCE_TYPE source_buffer, INT64 source_w, INT64 sourc
 #endif
 
 #ifdef REDUCE2_FUNCNAME
-void (REDUCE2_FUNCNAME) (SOURCE_TYPE source_buffer, INT64 source_w, INT64 source_h,
-                         INT64 source_start_x, INT64 source_start_y,
-                         INT64 source_copy_w, INT64 source_copy_h,
+void (REDUCE2_FUNCNAME) (SOURCE_TYPE source_buffer,
+                         const BufferPixelSize& source_size,
+                         const BufferPixelCoordinate& source_start,
+                         const BufferPixelSize& source_copy_size,
                          PIXEL_RGBA* dest_buffer,
-                         INT64 dest_w, INT64 dest_h,
-                         INT64 dest_w_visible, INT64 dest_h_visible,
-                         INT64 dest_start_x, INT64 dest_start_y,
+                         const BufferPixelSize& dest_size,
+                         const BufferPixelSize& dest_size_visible,
+                         const BufferPixelCoordinate& dest_start,
                          INT64* const row_buffer) {
+  auto source_w=source_size.w();
+  // auto source_h=source_size.h();
+  auto source_start_x=source_start.x();
+  auto source_start_y=source_start.y();
+  auto source_copy_w=source_copy_size.w();
+  auto source_copy_h=source_copy_size.h();
+  auto dest_w=dest_size.w();
+  // auto dest_h=dest_size.h();
+  auto dest_w_visible=dest_size_visible.w();
+  auto dest_h_visible=dest_size_visible.h();
+  auto dest_start_x=dest_start.x();
+  auto dest_start_y=dest_start.y();
+
   // di:=destination i
   // dj:=destination j
   // bsi:=source i at beginning of block
@@ -87,15 +115,29 @@ void (REDUCE2_FUNCNAME) (SOURCE_TYPE source_buffer, INT64 source_w, INT64 source
 #endif
 
 #ifdef REDUCE_MAX_8_FUNCNAME
-void (REDUCE_MAX_8_FUNCNAME) (SOURCE_TYPE source_buffer, INT64 source_w, INT64 source_h,
-                              INT64 source_start_x, INT64 source_start_y,
-                              INT64 source_copy_w, INT64 source_copy_h,
+void (REDUCE_MAX_8_FUNCNAME) (SOURCE_TYPE source_buffer,
+                              const BufferPixelSize& source_size,
+                              const BufferPixelCoordinate& source_start,
+                              const BufferPixelSize& source_copy_size,
                               PIXEL_RGBA* dest_buffer,
-                              INT64 dest_w, INT64 dest_h,
-                              INT64 dest_w_visible, INT64 dest_h_visible,
-                              INT64 dest_start_x, INT64 dest_start_y,
+                              const BufferPixelSize& dest_size,
+                              const BufferPixelSize& dest_size_visible,
+                              const BufferPixelCoordinate& dest_start,
                               INT64 zoom_out_shift,
                               INT64* const row_buffer) {
+  auto source_w=source_size.w();
+  // auto source_h=source_size.h();
+  auto source_start_x=source_start.x();
+  auto source_start_y=source_start.y();
+  auto source_copy_w=source_copy_size.w();
+  auto source_copy_h=source_copy_size.h();
+  auto dest_w=dest_size.w();
+  // auto dest_h=dest_size.h();
+  auto dest_w_visible=dest_size_visible.w();
+  auto dest_h_visible=dest_size_visible.h();
+  auto dest_start_x=dest_start.x();
+  auto dest_start_y=dest_start.y();
+
   // di:=destination i
   // dj:=destination j
   // bsi:=source i at beginning of block
@@ -148,15 +190,29 @@ void (REDUCE_MAX_8_FUNCNAME) (SOURCE_TYPE source_buffer, INT64 source_w, INT64 s
 #endif
 
 #ifdef REDUCE_ALL_FUNCNAME
-void (REDUCE_ALL_FUNCNAME) (SOURCE_TYPE source_buffer, INT64 source_w, INT64 source_h,
-                            INT64 source_start_x, INT64 source_start_y,
-                            INT64 source_copy_w, INT64 source_copy_h,
+void (REDUCE_ALL_FUNCNAME) (SOURCE_TYPE source_buffer,
+                            const BufferPixelSize& source_size,
+                            const BufferPixelCoordinate& source_start,
+                            const BufferPixelSize& source_copy_size,
                             PIXEL_RGBA* dest_buffer,
-                            INT64 dest_w, INT64 dest_h,
-                            INT64 dest_w_visible, INT64 dest_h_visible,
-                            INT64 dest_start_x, INT64 dest_start_y,
+                            const BufferPixelSize& dest_size,
+                            const BufferPixelSize& dest_size_visible,
+                            const BufferPixelCoordinate& dest_start,
                             INT64 zoom_out_shift,
                             INT64* const row_buffer) {
+  auto source_w=source_size.w();
+  // auto source_h=source_size.h();
+  auto source_start_x=source_start.x();
+  auto source_start_y=source_start.y();
+  auto source_copy_w=source_copy_size.w();
+  auto source_copy_h=source_copy_size.h();
+  auto dest_w=dest_size.w();
+  // auto dest_h=dest_size.h();
+  auto dest_w_visible=dest_size_visible.w();
+  auto dest_h_visible=dest_size_visible.h();
+  auto dest_start_x=dest_start.x();
+  auto dest_start_y=dest_start.y();
+
   // di:=destination i
   // dj:=destination j
   // bsi:=source i at beginning of block

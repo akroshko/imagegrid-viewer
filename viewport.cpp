@@ -20,10 +20,10 @@
 
 void blit_this(SDLDrawableSurface* screen_surface,
                TextureGridSquareZoomLevel* const blit_square,
-               const ViewportPixelCoordinate &l_viewport_pixel_coordinate,
-               const ViewportPixelSize& grid_image_size_zoomed) {
-   auto viewport_pixel_coordinate=ViewportPixelCoordinate(l_viewport_pixel_coordinate);
-   auto image_pixel_size_viewport=ViewportPixelSize(grid_image_size_zoomed);
+               const BufferPixelCoordinate &l_viewport_pixel_coordinate,
+               const BufferPixelSize& grid_image_size_zoomed) {
+   auto viewport_pixel_coordinate=BufferPixelCoordinate(l_viewport_pixel_coordinate);
+   auto image_pixel_size_viewport=BufferPixelSize(grid_image_size_zoomed);
    if (blit_square->get_image_filler()) {
     auto texture_wpixel=blit_square->filler_texture_wrapper()->texture_wpixel_visible();
     auto texture_hpixel=blit_square->filler_texture_wrapper()->texture_hpixel_visible();
@@ -80,9 +80,9 @@ void blit_this(SDLDrawableSurface* screen_surface,
           vp_ypixel_end=ceil_minus_one((j+1)*vp_hpixel_base);
           vp_hpixel=vp_ypixel_end-vp_ypixel_start;
         }
-        auto viewport_pixel_coordinate_local=ViewportPixelCoordinate((INT64)((FLOAT64)viewport_pixel_coordinate.x()+vp_xpixel_start),
+        auto viewport_pixel_coordinate_local=BufferPixelCoordinate((INT64)((FLOAT64)viewport_pixel_coordinate.x()+vp_xpixel_start),
                                                                      (INT64)((FLOAT64)viewport_pixel_coordinate.y()+vp_ypixel_start));
-        auto viewport_pixel_size=ViewportPixelSize((INT64)vp_wpixel,
+        auto viewport_pixel_size=BufferPixelSize((INT64)vp_wpixel,
                                                    (INT64)vp_hpixel);
         blit_square->display_texture_wrapper(i,j)->blit_texture(screen_surface,
                                                                 (INT64)texture_wpixel,
@@ -119,22 +119,22 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
   auto zoom_index=ViewPortTransferState::find_zoom_index_bounded(this->_zoom,0,max_zoom_index);
   ////////////////////////////////////////////////////////////////////////////////
   // now loop over grid squares
-  auto viewport_pixel_size=ViewportPixelSize(this->_current_window_w,this->_current_window_h);
+  auto viewport_pixel_size=BufferPixelSize(this->_current_window_w,this->_current_window_h);
   // this draws the surface when it goes out of scope
   std::unique_ptr<SDLDrawableSurface> drawable_surface=std::make_unique<SDLDrawableSurface>(sdl_app,viewport_pixel_size);
-  auto pixel_0=ViewportPixelCoordinate(0,0);
+  auto pixel_0=BufferPixelCoordinate(0,0);
   auto viewport_pixel_0_grid=GridCoordinate(pixel_0,
                                             this->_zoom,
                                             this->_viewport_pixel_size,
                                             this->_viewport_grid,
                                             this->_image_max_size);
-  auto new_viewport_pixel_size=ViewportPixelSize(this->_image_max_size.w(),this->_image_max_size.h());
+  auto new_viewport_pixel_size=BufferPixelSize(this->_image_max_size.w(),this->_image_max_size.h());
   for (INT64 i=0L; i < texture_grid->grid_image_size().w(); i++) {
     for (INT64 j=0L; j < texture_grid->grid_image_size().h(); j++) {
       auto upperleft_gridcoordinate=GridCoordinate(i,j);
       auto lowerright_gridcoordinate=GridCoordinate(i+1,j+1);
-      auto viewport_pixel_coordinate_upperleft=ViewportPixelCoordinate(upperleft_gridcoordinate,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
-      auto viewport_pixel_coordinate_lowerright=ViewportPixelCoordinate(lowerright_gridcoordinate,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
+      auto viewport_pixel_coordinate_upperleft=BufferPixelCoordinate(upperleft_gridcoordinate,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
+      auto viewport_pixel_coordinate_lowerright=BufferPixelCoordinate(lowerright_gridcoordinate,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
       // TODO: possibly add some padding here
       if (viewport_pixel_coordinate_lowerright.x() < 0 || viewport_pixel_coordinate_lowerright.y() < 0 ||
           viewport_pixel_coordinate_upperleft.x() > MAX_SCREEN_WIDTH || viewport_pixel_coordinate_upperleft.y() > MAX_SCREEN_HEIGHT) {
@@ -154,7 +154,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
                 texture_square_zoom->is_displayable &&
                 texture_square_zoom->all_surfaces_valid()) {
               texture_loaded=true;
-              auto grid_image_size_zoomed=ViewportPixelSize((INT64)round(this->_image_max_size.w()*this->_zoom),
+              auto grid_image_size_zoomed=BufferPixelSize((INT64)round(this->_image_max_size.w()*this->_zoom),
                                                             (INT64)round(this->_image_max_size.h()*this->_zoom));
               blit_this(drawable_surface.get(),
                         texture_square_zoom,
@@ -179,7 +179,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
           if (texture_square_zoom->display_mutex.try_lock()) {
             if (texture_square_zoom->get_image_filler() &&
                 texture_square_zoom->filler_texture_wrapper()->is_valid()) {
-              auto grid_image_size_zoomed=ViewportPixelSize((INT64)round(this->_image_max_size.w()*this->_zoom),
+              auto grid_image_size_zoomed=BufferPixelSize((INT64)round(this->_image_max_size.w()*this->_zoom),
                                                             (INT64)round(this->_image_max_size.h()*this->_zoom));
               blit_this(drawable_surface.get(),
                         texture_square_zoom,
@@ -219,24 +219,24 @@ bool ViewPort::do_input(SDLApp* const sdl_app) {
 
 void ViewPort::update_viewport_info(FLOAT64 xgrid, FLOAT64 ygrid) {
   this->_viewport_grid=GridCoordinate(xgrid,ygrid);
-  this->_viewport_pixel_size=ViewportPixelSize(this->_current_window_w,this->_current_window_h);
+  this->_viewport_pixel_size=BufferPixelSize(this->_current_window_w,this->_current_window_h);
   // update the viewport
   // TODO: too much duplicate code here
   this->_viewport_current_state_texturegrid_update->UpdateGridValues(this->_zoom,
                                                                      this->_viewport_grid,
                                                                      this->_image_max_size,
                                                                      this->_viewport_pixel_size,
-                                                                     ViewportPixelCoordinate(this->_current_mouse_xpixel,
+                                                                     BufferPixelCoordinate(this->_current_mouse_xpixel,
                                                                                              this->_current_mouse_ypixel),
-                                                                     ViewportPixelCoordinate(this->_viewport_pixel_size.w()/2,
+                                                                     BufferPixelCoordinate(this->_viewport_pixel_size.w()/2,
                                                                                              this->_viewport_pixel_size.h()/2));
   this->_viewport_current_state_imagegrid_update->UpdateGridValues(this->_zoom,
                                                                    this->_viewport_grid,
                                                                    this->_image_max_size,
                                                                    this->_viewport_pixel_size,
-                                                                   ViewportPixelCoordinate(this->_current_mouse_xpixel,
+                                                                   BufferPixelCoordinate(this->_current_mouse_xpixel,
                                                                                            this->_current_mouse_ypixel),
-                                                                   ViewportPixelCoordinate(this->_viewport_pixel_size.w()/2,
+                                                                   BufferPixelCoordinate(this->_viewport_pixel_size.w()/2,
                                                                                            this->_viewport_pixel_size.h()/2));
 
 }

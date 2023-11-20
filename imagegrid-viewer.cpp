@@ -166,17 +166,17 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup* const grid_setup) {
   this->grid->read_grid_info(grid_setup, this->viewport_current_state_imagegrid_update);
   auto read_images_successful=this->grid->read_grid_info_successful();
   if (read_images_successful) {
-    this->viewport->set_image_max_size(this->grid->get_image_max_pixel_size());
+    this->viewport->set_image_max_size(this->grid->image_max_pixel_size());
     // TODO: this is where I should init the textures
     this->texture_grid=std::make_unique<TextureGrid>(grid_setup,
-                                                     this->grid->get_image_max_pixel_size(),
+                                                     this->grid->image_max_pixel_size(),
                                                      this->grid->zoom_index_length());
     this->texture_overlay=std::make_unique<TextureOverlay>();
     this->texture_grid->init_filler_squares(grid_setup,
                                             this->grid->zoom_index_length(),
-                                            this->grid->get_image_max_pixel_size());
+                                            this->grid->image_max_pixel_size());
     this->texture_update=std::make_unique<TextureUpdate>(this->viewport_current_state_texturegrid_update,
-                                                         this->grid->get_image_max_pixel_size());
+                                                         this->grid->image_max_pixel_size());
     // adjust initial position to a sensible default depending on how
     // many images are loaded
     this->viewport->adjust_initial_location(grid_setup);

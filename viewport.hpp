@@ -27,8 +27,8 @@
  */
 void blit_this(SDLDrawableSurface* screen_surface,
                TextureGridSquareZoomLevel* const blit_square,
-               const ViewportPixelCoordinate& l_viewport_pixel_coordinate,
-               const ViewportPixelSize& grid_image_size_zoomed);
+               const BufferPixelCoordinate& l_viewport_pixel_coordinate,
+               const BufferPixelSize& grid_image_size_zoomed);
 
 /**
  * Class that represents a viewport.
@@ -76,7 +76,7 @@ public:
 private:
   GridPixelSize _image_max_size;
   /** The current size of the window in pixels. */
-  ViewportPixelSize _viewport_pixel_size;
+  BufferPixelSize _viewport_pixel_size;
   /** the grid coordinates of the center of the viewport */
   GridCoordinate _viewport_grid;
   /** the zoom out value, 1.0 indicates all pixels are 1:1, 0.5 indicates zoomed out by a factor of 2 */

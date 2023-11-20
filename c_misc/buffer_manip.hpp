@@ -22,16 +22,16 @@
  * Copy and reduce size of an RGBA buffer from tiff files.
  *
  * @param source_buffer The source buffer from libtiff.
- * @param source_w The width of the libtiff source pixels.
- * @param source_h The height of the libtiff source pixels.
+ * @param source_size The size of the source buffer from libtiff.
  * @param dest_buffer The destination buffer.
- * @param dest_w The width of the destination buffer in pixels.
- * @param dest_h The height of the destination buffer in pixels.
+ * @param dest_size The size of the destination buffer.
  * @param zoom_out_shift The factor to reduce the image by as a bit shift.
  * @param row_buffer A working buffer of size at least (source_copy_w >> zoom_out_shift)*3).
  */
-void buffer_copy_reduce_tiff (const uint32_t* const source_buffer, INT64 source_w, INT64 source_h,
-                              PIXEL_RGBA* dest_buffer, INT64 dest_w, INT64 dest_h,
+void buffer_copy_reduce_tiff (const uint32_t* const source_buffer,
+                              const BufferPixelSize& source_size,
+                              PIXEL_RGBA* dest_buffer,
+                              const BufferPixelSize& dest_size,
                               INT64 zoom_out_shift,
                               INT64* const row_buffer);
 
@@ -52,31 +52,26 @@ void buffer_copy_reduce_tiff (const uint32_t* const source_buffer, INT64 source_
  * Copy and reduce size of a generic RGBA buffer.
  *
  * @param source_buffer The source buffer.
- * @param source_w The width of the source pixels.
- * @param source_h The height of the source pixels.
- * @param source_start_x The x coordinate on the source to start from.
- * @param source_start_y The y coordinate on the source to start from.
- * @param source_copy_w The width of the source to copy.
- * @param source_copy_h The height of the source to copy.
+ * @param source_size The size of the source buffer.
+ * @param source_start The location on the source buffer to start copying.
+ * @param source_copy_size The size of the source buffer to copy.
  * @param dest_buffer The destination buffer.
- * @param dest_w The width of the destination buffer in pixels.
- * @param dest_h The height of the destination buffer in pixels.
- * @param dest_w_visible The max width to use in the destination buffer.
- * @param dest_h_visible The max height to use in the destination buffer.
- * @param dest_start_x An x offset for the origin.
- * @param dest_start_y A y offset for the origin.
+ * @param dest_size The size of the destination buffer.
+ * @param dest_size_visible The visible size of the destination buffer.
+ * @param dest_start Where to start copying to on the destination buffer.
  * @param zoom_out_shift The factor to reduce the image by as a bit shift.
  * @param row_buffer A working buffer of size at least (source_copy_w >> zoom_out_shift)*3).
  */
-void buffer_copy_reduce_standard (const PIXEL_RGBA* const source_buffer, INT64 source_w, INT64 source_h,
-                                 INT64 source_start_x, INT64 source_start_y,
-                                 INT64 source_copy_w, INT64 source_copy_h,
-                                 PIXEL_RGBA* dest_buffer,
-                                 INT64 dest_w, INT64 dest_h,
-                                 INT64 dest_w_visible, INT64 dest_h_visible,
-                                 INT64 dest_start_x, INT64 dest_start_y,
-                                 INT64 zoom_out_shift,
-                                 INT64* const row_buffer);
+void buffer_copy_reduce_standard (const PIXEL_RGBA* const source_buffer,
+                                  const BufferPixelSize& source_size,
+                                  const BufferPixelCoordinate& source_start,
+                                  const BufferPixelSize& source_copy_size,
+                                  PIXEL_RGBA* dest_buffer,
+                                  const BufferPixelSize& dest_size,
+                                  const BufferPixelSize& dest_size_visible,
+                                  const BufferPixelCoordinate& dest_start,
+                                  INT64 zoom_out_shift,
+                                  INT64* const row_buffer);
 
 #define SOURCE_TYPE GENERIC_SOURCE_TYPE
 #define NOREDUCE_FUNCNAME GENERIC_NOREDUCE_FUNCNAME
@@ -94,28 +89,23 @@ void buffer_copy_reduce_standard (const PIXEL_RGBA* const source_buffer, INT64 s
  * Copy and expand size of a generic RGBA buffer.
  *
  * @param source_buffer The source buffer.
- * @param source_w The width of the source pixels.
- * @param source_h The height of the source pixels.
- * @param source_start_x The x coordinate on the source to start from.
- * @param source_start_y The y coordinate on the source to start from.
- * @param source_copy_w The width of the source to copy.
- * @param source_copy_h The height of the source to copy.
+ * @param source_size The size of the source buffer.
+ * @param source_start The location on the source buffer to start copying.
+ * @param source_copy_size The size of the source buffer to copy.
  * @param dest_buffer The destination buffer.
- * @param dest_w The width of the destination buffer in pixels.
- * @param dest_h The height of the destination buffer in pixels.
- * @param dest_w_visible The max width to use in the destination buffer.
- * @param dest_h_visible The max height to use in the destination buffer.
- * @param dest_start_x An x offset for the origin.
- * @param dest_start_y A y offset for the origin.
+ * @param dest_size The size of the destination buffer.
+ * @param dest_size_visible The visible size of the destination buffer.
+ * @param dest_start Where to start copying to on the destination buffer.
  * @param zoom_in_shift The factor to expand the image by as a bit shift.
  */
-void buffer_copy_expand_generic (const PIXEL_RGBA* const source_buffer, INT64 source_w, INT64 source_h,
-                                 INT64 source_start_x, INT64 source_start_y,
-                                 INT64 source_copy_w, INT64 source_copy_h,
+void buffer_copy_expand_generic (const PIXEL_RGBA* const source_buffer,
+                                 const BufferPixelSize& source_size,
+                                 const BufferPixelCoordinate& source_start,
+                                 const BufferPixelSize& source_copy_size,
                                  PIXEL_RGBA* dest_buffer,
-                                 INT64 dest_w, INT64 dest_h,
-                                 INT64 dest_w_visible, INT64 dest_h_visible,
-                                 INT64 dest_start_x, INT64 dest_start_y,
+                                 const BufferPixelSize& dest_size,
+                                 const BufferPixelSize& dest_size_visible,
+                                 const BufferPixelCoordinate& dest_start,
                                  INT64 zoom_in_shift);
 
 /**
@@ -123,28 +113,22 @@ void buffer_copy_expand_generic (const PIXEL_RGBA* const source_buffer, INT64 so
  * that should work with any zoom_index and on any 64-bit platform.
  *
  * @param source_buffer The source buffer.
- * @param source_w The width of the image pixels.
- * @param source_h The height of the image pixels.
- * @param source_start_x The x coordinate on the source to start from.
- * @param source_start_y The y coordinate on the source to start from.
- * @param source_copy_w The width of the source to copy.
- * @param source_copy_h The height of the source to copy.
+ * @param source_size
+ * @param source_start
+ * @param source_copy_size
  * @param dest_buffer The destination buffer.
- * @param dest_w The width of the destination buffer in pixels.
- * @param dest_h The height of the destination buffer in pixels.
- * @param dest_w_visible The max width to use in the destination buffer.
- * @param dest_h_visible The max height to use in the destination buffer.
- * @param source_start_x The x coordinate on the source to start from.
- * @param source_start_y The y coordinate on the source to start from.
+ * @param dest_size
+ * @param dest_size_visible
+ * @param dest_start
  * @param zoom_in_shift The factor to expand the image by as a bit shift.
  */
-void buffer_copy_expand_generic_safe (const PIXEL_RGBA* const source_buffer, INT64 source_w, INT64 source_h,
-                                      INT64 source_start_x, INT64 source_start_y,
-                                      INT64 source_copy_w, INT64 source_copy_h,
+void buffer_copy_expand_generic_safe (const PIXEL_RGBA* const source_buffer,
+                                      const BufferPixelSize& source_size,
+                                      const BufferPixelCoordinate& source_start,
+                                      const BufferPixelSize& source_copy_size,
                                       PIXEL_RGBA* dest_buffer,
-                                      INT64 dest_w, INT64 dest_h,
-                                      INT64 dest_w_visible, INT64 dest_h_visible,
-                                      INT64 dest_start_x, INT64 dest_start_y,
+                                      const BufferPixelSize& dest_size,
+                                      const BufferPixelSize& dest_size_visible,
+                                      const BufferPixelCoordinate& dest_start,
                                       INT64 zoom_in_shift);
-
 #endif

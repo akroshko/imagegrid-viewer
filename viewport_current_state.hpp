@@ -17,9 +17,9 @@ public:
   ViewPortCurrentState(GridCoordinate current_grid_coordinate,
                        GridPixelSize image_max_size,
                        FLOAT64 zoom,
-                       ViewportPixelSize screen_size,
-                       ViewportPixelCoordinate pointer_pixel_coordinate,
-                       ViewportPixelCoordinate center_pixel_coordinate);
+                       BufferPixelSize screen_size,
+                       BufferPixelCoordinate pointer_pixel_coordinate,
+                       BufferPixelCoordinate center_pixel_coordinate);
   // these are enabled because this class is used for data transfer
   // and created and returned from a function
   ViewPortCurrentState(ViewPortCurrentState&)=default;
@@ -32,17 +32,17 @@ public:
   /** @return The current zoom. */
   FLOAT64 zoom() const;
   /** @return The current screen size. */
-  ViewportPixelSize screen_size() const;
-  ViewportPixelCoordinate pointer() const;
-  ViewportPixelCoordinate center() const;
+  BufferPixelSize screen_size() const;
+  BufferPixelCoordinate pointer() const;
+  BufferPixelCoordinate center() const;
 private:
   friend class ViewPortTransferState;
   GridCoordinate _current_grid_coordinate;
   GridPixelSize _image_max_size;
   FLOAT64 _zoom;
-  ViewportPixelSize _screen_size;
-  ViewportPixelCoordinate _pointer_pixel_coordinate;
-  ViewportPixelCoordinate _center_pixel_coordinate;
+  BufferPixelSize _screen_size;
+  BufferPixelCoordinate _pointer_pixel_coordinate;
+  BufferPixelCoordinate _center_pixel_coordinate;
 };
 
 /**
@@ -62,9 +62,9 @@ public:
   void UpdateGridValues(FLOAT64 zoom,
                         const GridCoordinate& grid,
                         const GridPixelSize& max_image_size,
-                        const ViewportPixelSize& screen_size,
-                        const ViewportPixelCoordinate& pointer_pixel_coordinate,
-                        const ViewportPixelCoordinate& center_pixel_coordinate);
+                        const BufferPixelSize& screen_size,
+                        const BufferPixelCoordinate& pointer_pixel_coordinate,
+                        const BufferPixelCoordinate& center_pixel_coordinate);
   ViewPortCurrentState GetGridValues();
   /**
    * Find zoom index from a zoom value.
@@ -139,9 +139,9 @@ private:
   GridCoordinate _grid;
   GridPixelSize _image_max_size;
   GridCoordinate _grid_last;
-  ViewportPixelSize _screen_size;
-  ViewportPixelCoordinate _pointer_pixel_coordinate;
-  ViewportPixelCoordinate _center_pixel_coordinate;
+  BufferPixelSize _screen_size;
+  BufferPixelCoordinate _pointer_pixel_coordinate;
+  BufferPixelCoordinate _center_pixel_coordinate;
   std::mutex _using_mutex;
 };
 

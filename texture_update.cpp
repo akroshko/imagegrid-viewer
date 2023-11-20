@@ -191,7 +191,6 @@ void TextureUpdate::add_filler_textures(bool grid_square_visible,
   }
 }
 
-
 bool TextureUpdate::_grid_square_visible(INT64 i, INT64 j,
                                          const ViewPortCurrentState& viewport_current_state) {
   auto xgrid=viewport_current_state.current_grid_coordinate().x();
@@ -214,8 +213,9 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
   dest_square->_source_square=source_square;
   // TODO: double check this is unnecessary
   // dest_square->unload_all_textures();
-  dest_square->_texture_display_wpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().w() >> zoom_out_shift;
-  dest_square->_texture_display_hpixel=source_square->parent_square()->parent_grid()->get_image_max_pixel_size().h() >> zoom_out_shift;
+  GridPixelSize texture_display_size=source_square->parent_square()->parent_grid()->image_max_pixel_size() >> zoom_out_shift;
+  dest_square->_texture_display_wpixel=texture_display_size.w();
+  dest_square->_texture_display_hpixel=texture_display_size.h();
   auto dest_tile_size=TILE_PIXEL_BASE_SIZE;
   auto next_dest_tile_size=dest_tile_size >> 1L;
   while (next_dest_tile_size > dest_square->_texture_display_wpixel ||
@@ -233,8 +233,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
       for (INT64 j_sub=0; j_sub < subimages_h; j_sub++) {
         auto sub_index=SubGridIndex(i_sub,j_sub);
         auto source_data=source_square->get_rgba_data(sub_index);
-        auto source_wpixel=(INT64)source_square->rgba_wpixel(sub_index);
-        auto source_hpixel=(INT64)source_square->rgba_hpixel(sub_index);
+        auto source_wpixel=source_square->rgba_wpixel(sub_index);
+        auto source_hpixel=source_square->rgba_hpixel(sub_index);
         auto source_data_origin_x=source_square->rgba_xpixel_origin(sub_index);
         auto source_data_origin_y=source_square->rgba_ypixel_origin(sub_index);
         if (source_data) {
@@ -248,8 +248,6 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
           auto tile_end_i=(source_data_origin_x+source_wpixel)/source_texture_size;
           auto tile_end_j=(source_data_origin_y+source_hpixel)/source_texture_size;
           // how large is the source on the first tile
-          // auto tile_pixel_size_source=TILE_PIXEL_BASE_SIZE >> source_zoom_out_shift;
-          // auto tile_pixel_size_source=TILE_PIXEL_BASE_SIZE;
           auto source_end_x_first=source_texture_size-(source_data_origin_x % source_texture_size);
           auto source_end_y_first=source_texture_size-(source_data_origin_y % source_texture_size);
           for (INT64 ti=tile_origin_i; ti <= tile_end_i; ti++) {
@@ -303,33 +301,35 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
                 current_tile_source_hpixel=source_texture_size;
                 dest_start_y=0;
               }
+              auto source_size=BufferPixelSize(source_wpixel,source_hpixel);
+              auto source_start=BufferPixelCoordinate(current_tile_source_start_x, current_tile_source_start_y);
+              auto source_copy_size=BufferPixelSize(current_tile_source_wpixel, current_tile_source_hpixel);
               auto dest_array=dest_square->get_rgba_pixels(ti,tj);
-              auto wpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_aligned();
-              auto hpixel_aligned=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_aligned();
-              auto wpixel_visible=dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_visible();
-              auto hpixel_visible=dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_visible();
+              auto dest_size=BufferPixelSize(dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_aligned(),
+                                             dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_aligned());
+              auto dest_size_visible=BufferPixelSize(dest_square->display_texture_wrapper(ti,tj)->texture_wpixel_visible(),
+                                                     dest_square->display_texture_wrapper(ti,tj)->texture_hpixel_visible());
+              auto dest_start=BufferPixelCoordinate(dest_start_x, dest_start_y);
               if (zoom_left_shift >= 0) {
-                buffer_copy_reduce_standard(source_data,source_wpixel,source_hpixel,
-                                           current_tile_source_start_x, current_tile_source_start_y,
-                                           current_tile_source_wpixel, current_tile_source_hpixel,
-                                           (PIXEL_RGBA*)dest_array,
-                                           wpixel_aligned,
-                                           hpixel_aligned,
-                                           wpixel_visible,
-                                           hpixel_visible,
-                                           dest_start_x, dest_start_y,
-                                           zoom_left_shift,
-                                           row_buffer);
+                buffer_copy_reduce_standard(source_data,
+                                            source_size,
+                                            source_start,
+                                            source_copy_size,
+                                            (PIXEL_RGBA*)dest_array,
+                                            dest_size,
+                                            dest_size_visible,
+                                            dest_start,
+                                            zoom_left_shift,
+                                            row_buffer);
               } else {
-                buffer_copy_expand_generic(source_data,source_wpixel,source_hpixel,
-                                           current_tile_source_start_x, current_tile_source_start_y,
-                                           current_tile_source_wpixel, current_tile_source_hpixel,
+                buffer_copy_expand_generic(source_data,
+                                           source_size,
+                                           source_start,
+                                           source_copy_size,
                                            (PIXEL_RGBA*)dest_array,
-                                           wpixel_aligned,
-                                           hpixel_aligned,
-                                           wpixel_visible,
-                                           hpixel_visible,
-                                           dest_start_x, dest_start_y,
+                                           dest_size,
+                                           dest_size_visible,
+                                           dest_start,
                                            -zoom_left_shift);
               }
               dest_square->unlock_surface(ti, tj);

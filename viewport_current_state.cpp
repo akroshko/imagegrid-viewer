@@ -7,12 +7,14 @@
 // C headers
 #include <cmath>
 
+// I'm purposely not using pass by reference here because I want new
+// objects each time the state is updated
 ViewPortCurrentState::ViewPortCurrentState(GridCoordinate current_grid_coordinate,
                                            GridPixelSize image_max_size,
                                            FLOAT64 zoom,
-                                           ViewportPixelSize screen_size,
-                                           ViewportPixelCoordinate pointer_pixel_coordinate,
-                                           ViewportPixelCoordinate center_pixel_coordinate) {
+                                           BufferPixelSize screen_size,
+                                           BufferPixelCoordinate pointer_pixel_coordinate,
+                                           BufferPixelCoordinate center_pixel_coordinate) {
   this->_current_grid_coordinate=current_grid_coordinate;
   this->_image_max_size=image_max_size;
   this->_zoom=zoom;
@@ -33,15 +35,15 @@ FLOAT64 ViewPortCurrentState::zoom () const {
   return this->_zoom;
 }
 
-ViewportPixelSize ViewPortCurrentState::screen_size () const {
+BufferPixelSize ViewPortCurrentState::screen_size () const {
   return this->_screen_size;
 }
 
-ViewportPixelCoordinate ViewPortCurrentState::pointer() const {
+BufferPixelCoordinate ViewPortCurrentState::pointer() const {
   return this->_pointer_pixel_coordinate;
 }
 
-ViewportPixelCoordinate ViewPortCurrentState::center() const {
+BufferPixelCoordinate ViewPortCurrentState::center() const {
   return this->_center_pixel_coordinate;
 }
 
@@ -52,25 +54,25 @@ ViewPortTransferState::ViewPortTransferState () {
 void ViewPortTransferState::UpdateGridValues(FLOAT64 zoom,
                                              const GridCoordinate& gridarg,
                                              const GridPixelSize& image_max_size,
-                                             const ViewportPixelSize& screen_size,
-                                             const ViewportPixelCoordinate& pointer_pixel_coordinate,
-                                             const ViewportPixelCoordinate& center_pixel_coordinate) {
+                                             const BufferPixelSize& screen_size,
+                                             const BufferPixelCoordinate& pointer_pixel_coordinate,
+                                             const BufferPixelCoordinate& center_pixel_coordinate) {
   std::lock_guard<std::mutex> guard(this->_using_mutex);
   this->_zoom=zoom;
   this->_grid=GridCoordinate(gridarg);
   this->_image_max_size=GridPixelSize(image_max_size);
   this->_grid_last=GridCoordinate(gridarg);
-  this->_screen_size=ViewportPixelSize(screen_size);
+  this->_screen_size=BufferPixelSize(screen_size);
   this->_pointer_pixel_coordinate=pointer_pixel_coordinate;
   this->_center_pixel_coordinate=center_pixel_coordinate;
 }
 
 ViewPortCurrentState ViewPortTransferState::GetGridValues() {
   std::lock_guard<std::mutex> guard(this->_using_mutex);
-  auto viewport_current_state=ViewPortCurrentState(GridCoordinate(this->_grid),
-                                                   GridPixelSize(this->_image_max_size),
+  auto viewport_current_state=ViewPortCurrentState(this->_grid,
+                                                   this->_image_max_size,
                                                    this->_zoom,
-                                                   this->_screen_size=ViewportPixelSize(_screen_size),
+                                                   this->_screen_size,
                                                    this->_pointer_pixel_coordinate,
                                                    this->_center_pixel_coordinate);
   return viewport_current_state;

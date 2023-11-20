@@ -69,14 +69,14 @@ public:
    * @param sub_index The index of the subgrid.
    * @return The width in pixels.
    */
-  size_t rgba_wpixel(const SubGridIndex& sub_index) const;
+  INT64 rgba_wpixel(const SubGridIndex& sub_index) const;
   /**
    * Get the zoomed height in pixels of RGBA array.
    *
    * @param sub_index The index of the subgrid.
    * @return The height in pixels.
    */
-  size_t rgba_hpixel(const SubGridIndex& sub_index) const;
+  INT64 rgba_hpixel(const SubGridIndex& sub_index) const;
   /**
    * Get the zoomed x coordinate of the origin of this image within
    * the grid square.
@@ -128,11 +128,10 @@ private:
   std::unique_ptr<PIXEL_RGBA*[]> _rgba_data;
   // TOOD: will eventually use an object from coordinates.hpp, but for
   // now I want this freedom
-  std::unique_ptr<size_t[]> _rgba_wpixel;
-  std::unique_ptr<size_t[]> _rgba_hpixel;
+  std::unique_ptr<INT64[]> _rgba_wpixel;
+  std::unique_ptr<INT64[]> _rgba_hpixel;
   // not scaled, but they need to be here for now
-  INT64 _max_sub_wpixel=-1;
-  INT64 _max_sub_hpixel=-1;
+  GridPixelSize _max_sub_size;
   // the origin foreach
   std::unique_ptr<INT64[]> _rgba_xpixel_origin;
   std::unique_ptr<INT64[]> _rgba_ypixel_origin;
@@ -181,12 +180,10 @@ private:
   ImageGrid* _parent_grid;
   GridSetup* _grid_setup;
   GridIndex _grid_index;
-  INT64 _square_wpixel;
-  INT64 _square_hpixel;
+  GridPixelSize _square_size;
   std::unique_ptr<INT64[]> _subimages_wpixel;
   std::unique_ptr<INT64[]> _subimages_hpixel;
-  INT64 _max_sub_wpixel;
-  INT64 _max_sub_hpixel;
+  GridPixelSize _max_sub_size;
   /**
    * Read in a the file cooresponing to this square.
    */
@@ -223,7 +220,7 @@ public:
   void load_grid(const GridSetup* grid_setup,
                  std::atomic<bool>& keep_running);
 
-  GridPixelSize get_image_max_pixel_size() const;
+  GridPixelSize image_max_pixel_size() const;
   ImageGridSquare* squares(const GridIndex& grid_index) const;
   ImageGridSquare* squares(const GridIndex* grid_index) const;
   /** @return Whether read_grid_info was successful. */

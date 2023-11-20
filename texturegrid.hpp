@@ -37,9 +37,6 @@ public:
   TextureGridSquareZoomLevel& operator=(const TextureGridSquareZoomLevel&&)=delete;
   /**
    * Unload the texture for this square.  Also resets any state.
-   *
-   * @param tile_i
-   * @param tile_j
    */
   void unload_all_textures();
   /**
@@ -130,8 +127,7 @@ private:
   friend class TextureGrid;
   friend class TextureGridSquare;
   TextureGridSquare* _parent_square;
-  INT64 _tile_w=INT_MIN;
-  INT64 _tile_h=INT_MIN;
+  BufferTileSize _tile_size;
   // the actual display texture
   std::unique_ptr<std::unique_ptr<SDLDisplayTextureWrapper>[]> _display_texture_wrapper;
   // the filler texture

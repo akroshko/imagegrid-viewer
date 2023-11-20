@@ -16,8 +16,75 @@ class GridIndex;
 class SubGridIndex;
 class GridPixelSize;
 class ImagePixelCoordinate;
-class ViewportPixelSize;
-class ViewportPixelCoordinate;
+class BufferPixelSize;
+class BufferPixelCoordinate;
+
+template <typename T>
+class CoordinatePair;
+
+template <typename T>
+CoordinatePair<T> operator+(const CoordinatePair<T>& coordinate_pair, const T& scalar) {
+  CoordinatePair<T> result;
+  result._x1=coordinate_pair._x1+scalar;
+  result._x2=coordinate_pair._x2+scalar;
+  return result;
+}
+
+template <typename T>
+CoordinatePair<T> operator+(const CoordinatePair<T>& coordinate_pair_1, const CoordinatePair<T>& coordinate_pair_2) {
+  CoordinatePair<T> result;
+  result._x1=coordinate_pair_1._x1+coordinate_pair_2._x1;
+  result._x2=coordinate_pair_1._x2+coordinate_pair_2._x2;
+  return result;
+}
+
+template <typename T>
+CoordinatePair<T> operator-(const CoordinatePair<T>& coordinate_pair, const T& scalar) {
+  CoordinatePair<T> result;
+  result._x1=coordinate_pair._x1-scalar;
+  result._x2=coordinate_pair._x2-scalar;
+  return result;
+}
+
+template <typename T>
+CoordinatePair<T> operator-(const CoordinatePair<T>& coordinate_pair_1, const CoordinatePair<T>& coordinate_pair_2) {
+  CoordinatePair<T> result;
+  result._x1=coordinate_pair_1._x1-coordinate_pair_2._x1;
+  result._x2=coordinate_pair_1._x2-coordinate_pair_2._x2;
+  return result;
+}
+
+template <typename T>
+CoordinatePair<T> operator*(const CoordinatePair<T>& coordinate_pair,  const T& scalar) {
+  CoordinatePair<T> result;
+  result._x1=coordinate_pair._x1*scalar;
+  result._x2=coordinate_pair._x2*scalar;
+  return result;
+}
+
+template <typename T>
+CoordinatePair<T> operator*(const CoordinatePair<T>& coordinate_pair_1, const CoordinatePair<T>& coordinate_pair_2) {
+  CoordinatePair<T> result;
+  result._x1=coordinate_pair_1._x1*coordinate_pair_2._x1;
+  result._x2=coordinate_pair_1._x2*coordinate_pair_2._x2;
+  return result;
+}
+
+template <typename T>
+CoordinatePair<T> operator/(const CoordinatePair<T>& coordinate_pair, const T& scalar) {
+  CoordinatePair<T> result;
+  result._x1=coordinate_pair._x1/scalar;
+  result._x2=coordinate_pair._x2/scalar;
+  return result;
+}
+
+template <typename T>
+CoordinatePair<T> operator/(const CoordinatePair<T>& coordinate_pair_1, const CoordinatePair<T>& coordinate_pair_2) {
+  CoordinatePair<T> result;
+  result._x1=coordinate_pair_1._x1/coordinate_pair_2._x1;
+  result._x2=coordinate_pair_1._x2/coordinate_pair_2._x2;
+  return result;
+}
 
 /**
  * A coordinate consisting of a pair of components.
@@ -26,18 +93,21 @@ template <typename T>
 class CoordinatePair {
 public:
   CoordinatePair()=default;
+  CoordinatePair(const CoordinatePair& coordinate_pair);
+  CoordinatePair& operator=(const CoordinatePair& coordinate_pair);
   /**
    * @param x1 The first component of the coordinate pair, typically x or width.
    * @param x2 The second component of the coordinate pair, typically y or height.
    */
   CoordinatePair (T x1, T x2);
-  CoordinatePair(const CoordinatePair& coordinate_pair);
-  CoordinatePair& operator=(const CoordinatePair& coordinate_pair);
-  // TODO: not implemented yet
-  CoordinatePair& operator+(const CoordinatePair& coordinate_pair);
-  CoordinatePair& operator-(const CoordinatePair& coordinate_pair);
-  CoordinatePair& operator*(const CoordinatePair& coordinate_pair);
-  CoordinatePair& operator/(const CoordinatePair& coordinate_pair);
+  friend CoordinatePair operator+ <>(const CoordinatePair& coordinate_pair, const T& scalar);
+  friend CoordinatePair operator+ <>(const CoordinatePair& coordinate_pair_1, const CoordinatePair& coordinate_pair_2);
+  friend CoordinatePair operator- <>(const CoordinatePair& coordinate_pair, const T& scalar);
+  friend CoordinatePair operator- <>(const CoordinatePair& coordinate_pair_1, const CoordinatePair& coordinate_pair_2);
+  friend CoordinatePair operator* <>(const CoordinatePair& coordinate_pair, const T& scalar);
+  friend CoordinatePair operator* <>(const CoordinatePair& coordinate_pair_1, const CoordinatePair& coordinate_pair_2);
+  friend CoordinatePair operator/ <>(const CoordinatePair& coordinate_pair, const T& scalar);
+  friend CoordinatePair operator/ <>(const CoordinatePair& coordinate_pair_1, const CoordinatePair& coordinate_pair_2);
 protected:
   T _x1;
   T _x2;
@@ -66,10 +136,53 @@ CoordinatePair<T>& CoordinatePair<T>::operator=(const CoordinatePair& coordinate
 };
 
 template <typename T>
+class CoordinatePairINT;
+
+template <typename T>
+CoordinatePairINT<T> operator>>(const CoordinatePairINT<T>& coordinate_pair, const INT64 right_shift) {
+  CoordinatePairINT<T> result;
+  result._x1=coordinate_pair._x1 >> right_shift;
+  result._x2=coordinate_pair._x2 >> right_shift;
+  return result;
+}
+
+template <typename T>
+CoordinatePairINT<T> operator%(const CoordinatePairINT<T>& coordinate_pair, const INT64 divisor) {
+  CoordinatePairINT<T> result;
+  result._x1=coordinate_pair._x1 % divisor;
+  result._x2=coordinate_pair._x2 % divisor;
+  return result;
+}
+
+template <typename T>
+CoordinatePairINT<T> operator%(const CoordinatePairINT<T>& coordinate_pair_1, const CoordinatePairINT<T>& coordinate_pair_2) {
+  CoordinatePairINT<T> result;
+  result._x1=coordinate_pair_1._x1 % coordinate_pair_2._x1;
+  result._x2=coordinate_pair_2._x2 % coordinate_pair_2._x2;
+  return result;
+}
+
+template <typename T>
+CoordinatePairINT<T> operator<<(const CoordinatePairINT<T>& coordinate_pair, const INT64 left_shift) {
+  CoordinatePairINT<T> result;
+  result._x1=coordinate_pair._x1 << left_shift;
+  result._x2=coordinate_pair._x2 << left_shift;
+  return result;
+}
+
+template <typename T>
 class CoordinatePairINT : public CoordinatePair<T> {
 public:
   CoordinatePairINT();
+  CoordinatePairINT(const CoordinatePair<T>& coordinate_pair) : CoordinatePair<T>(coordinate_pair) {};
+  CoordinatePairINT(const CoordinatePairINT& coordinate_pair) : CoordinatePair<T>(coordinate_pair) {};
   CoordinatePairINT(T x1, T x2) : CoordinatePair<T>(x1, x2) {};
+  using CoordinatePair<T>::operator=;
+  CoordinatePairINT& operator=(const CoordinatePairINT& coordinate_size)=default;
+  friend CoordinatePairINT operator% <>(const CoordinatePairINT& coordinate_pair, const INT64 divisor);
+  friend CoordinatePairINT operator% <>(const CoordinatePairINT& coordinate_pair_1, const CoordinatePairINT<T>& coordinate_pair_2);
+  friend CoordinatePairINT operator>> <>(const CoordinatePairINT& coordinate_pair, const INT64 right_shift);
+  friend CoordinatePairINT operator<< <>(const CoordinatePairINT& coordinate_pair, const INT64 right_shift);
 };
 
 template <typename T>
@@ -82,7 +195,11 @@ template <typename T>
 class CoordinatePairFLOAT : public CoordinatePair<FLOAT64> {
 public:
   CoordinatePairFLOAT();
+  CoordinatePairFLOAT(const CoordinatePair<T>& coordinate_pair) : CoordinatePair<T>(coordinate_pair) {};
+  CoordinatePairFLOAT(const CoordinatePairFLOAT& coordinate_pair) : CoordinatePair<T>(coordinate_pair) {};
   CoordinatePairFLOAT(T x1, T x2) : CoordinatePair<T>(x1, x2) {};
+  using CoordinatePair<T>::operator=;
+  CoordinatePairFLOAT& operator=(const CoordinatePairFLOAT& coordinate_size)=default;
 };
 
 template <typename T>
@@ -100,6 +217,11 @@ CoordinatePairFLOAT<T>::CoordinatePairFLOAT () {
 class GridImageSize : public CoordinatePairINT<INT64> {
 public:
   GridImageSize()=default;
+  GridImageSize(const CoordinatePair<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
+  GridImageSize(const CoordinatePairINT<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
+  GridImageSize(const GridImageSize& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
+  using CoordinatePairINT<INT64>::operator=;
+  GridImageSize& operator=(const GridImageSize& grid_image_size)=default;
   /**
    * @param w The width of the grid in images.
    * @param h The height of the grid in images.
@@ -121,6 +243,11 @@ public:
 class GridCoordinateSize : public CoordinatePairFLOAT<FLOAT64> {
 public:
   GridCoordinateSize()=default;
+  GridCoordinateSize(const CoordinatePair<FLOAT64>& grid_coordinate_size) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate_size) {};
+  GridCoordinateSize(const CoordinatePairFLOAT<FLOAT64>& grid_coordinate_size) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate_size) {};
+  GridCoordinateSize(const GridCoordinateSize& grid_coordinate_size) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate_size) {};
+  using CoordinatePairFLOAT<FLOAT64>::operator=;
+  GridCoordinateSize& operator=(const GridCoordinateSize& grid_coordinate_size)=default;
   /**
    * @param w The width on the grid.
    * @param h The height on the grid.
@@ -142,24 +269,29 @@ public:
 class GridCoordinate : public CoordinatePairFLOAT<FLOAT64> {
 public:
   GridCoordinate()=default;
+  GridCoordinate(const CoordinatePair<FLOAT64>& grid_coordinate) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate) {};
+  GridCoordinate(const CoordinatePairFLOAT<FLOAT64>& grid_coordinate) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate) {};
+  GridCoordinate(const GridCoordinate& grid_coordinate) :  CoordinatePairFLOAT<FLOAT64>(grid_coordinate) {};
+  using CoordinatePairFLOAT<FLOAT64>::operator=;
+  GridCoordinate& operator=(const GridCoordinate& grid_coordinate)=default;
   /**
    * @param x The x coordinate on the grid.
    * @param y The y coordinate on the grid.
    */
-  GridCoordinate(const FLOAT64 x, FLOAT64 y) : CoordinatePairFLOAT<FLOAT64>(x, y) {};
+  GridCoordinate(const FLOAT64 x, const FLOAT64 y) : CoordinatePairFLOAT<FLOAT64>(x, y) {};
   /**
-   * Convert from viewport pixel coordinates to grid coordinates.
+   * Convert from buffer pixel coordinates to grid coordinates.
    *
-   * @param viewport_pixel_coordinate
+   * @param buffer_pixel_coordinate
    * @param zoom
-   * @param viewport_pixel_size
-   * @param viewport_grid_coordinate
+   * @param buffer_pixel_size
+   * @param buffer_grid_coordinate
    * @param max_image_pixel_size
    */
-  GridCoordinate(ViewportPixelCoordinate& viewport_pixel_coordinate,
+  GridCoordinate(BufferPixelCoordinate& buffer_pixel_coordinate,
                  FLOAT64 zoom,
-                 ViewportPixelSize& viewport_pixel_size,
-                 GridCoordinate& viewport_grid_coordinate,
+                 BufferPixelSize& buffer_pixel_size,
+                 GridCoordinate& buffer_grid_coordinate,
                  GridPixelSize& max_image_pixel_size);
   /** @return The x coordinate. */
   FLOAT64 x() const;
@@ -176,12 +308,16 @@ public:
 class GridIndex : public CoordinatePairINT<INT64> {
 public:
   GridIndex()=default;
+  GridIndex(const CoordinatePair<INT64>& grid_index) : CoordinatePairINT<INT64>(grid_index) {};
+  GridIndex(const CoordinatePairINT<INT64>& grid_index) : CoordinatePairINT<INT64>(grid_index) {};
+  GridIndex(const GridIndex& grid_index) : CoordinatePairINT<INT64>(grid_index) {};
+  GridIndex& operator=(const GridIndex& grid_index)=default;
   /**
    * @param i The i index on the grid.
    * @param j The j index on the grid.
    */
-  GridIndex(const INT64 i, INT64 j) : CoordinatePairINT<INT64>(i, j) {};
-  GridIndex(ViewportPixelCoordinate& viewport_pixel_coordinate);
+  GridIndex(const INT64 i, const INT64 j) : CoordinatePairINT<INT64>(i, j) {};
+
   /** @return The i index. */
   INT64 i() const;
   /** @return The j index. */
@@ -203,11 +339,16 @@ public:
 class SubGridIndex : public CoordinatePairINT<INT64> {
 public:
   SubGridIndex()=default;
+  SubGridIndex(const CoordinatePair<INT64>& subgrid_index) : CoordinatePairINT<INT64>(subgrid_index) {};
+  SubGridIndex(const CoordinatePairINT<INT64>& subgrid_index) : CoordinatePairINT<INT64>(subgrid_index) {};
+  SubGridIndex(const SubGridIndex& subgrid_index) : CoordinatePairINT<INT64>(subgrid_index) {};
+  using CoordinatePairINT<INT64>::operator=;
+  SubGridIndex& operator=(const SubGridIndex& subgrid_index)=default;
   /**
    * @param i The i index on the subgrid.
    * @param j The j index on the subgrid.
    */
-  SubGridIndex(const INT64 i, INT64 j) : CoordinatePairINT<INT64>(i, j) {};
+  SubGridIndex(const INT64 i, const INT64 j) : CoordinatePairINT<INT64>(i, j) {};
   /** @return The i index. */
   INT64 i() const;
   /** @return The j index. */
@@ -224,11 +365,16 @@ public:
 class GridPixelSize : public CoordinatePairINT<INT64> {
 public:
   GridPixelSize()=default;
+  GridPixelSize(const CoordinatePair<INT64>& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
+  GridPixelSize(const CoordinatePairINT<INT64>& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
+  GridPixelSize(const GridPixelSize& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
+  using CoordinatePairINT<INT64>::operator=;
+  GridPixelSize& operator=(const GridPixelSize& grid_pixel_size)=default;
   /**
    * @param w The width in pixels.
    * @param h The height in pixels.
    */
-  GridPixelSize(INT64 w, INT64 h) : CoordinatePairINT<INT64>(w, h) {};
+  GridPixelSize(const INT64 w, const INT64 h) : CoordinatePairINT<INT64>(w, h) {};
   /** @return The width in pixels. */
   INT64 w() const;
   /** @return The height in pixels. */
@@ -243,11 +389,16 @@ public:
 class ImagePixelCoordinate : public CoordinatePairINT<INT64> {
 public:
   ImagePixelCoordinate()=default;
+  ImagePixelCoordinate(const CoordinatePair<INT64>& image_pixel_coordinate) : CoordinatePairINT<INT64>(image_pixel_coordinate) {};
+  ImagePixelCoordinate(const CoordinatePairINT<INT64>& image_pixel_coordinate) : CoordinatePairINT<INT64>(image_pixel_coordinate) {};
+  ImagePixelCoordinate(const ImagePixelCoordinate& image_pixel_coordinate) : CoordinatePairINT<INT64>(image_pixel_coordinate) {};
+  using CoordinatePairINT<INT64>::operator=;
+  ImagePixelCoordinate& operator=(const ImagePixelCoordinate& image_pixel_coordinate)=default;
   /**
    * @param x The x coordinate in pixels.
    * @param y The y coorindate in pixels.
    */
-  ImagePixelCoordinate(INT64 x, INT64 y) : CoordinatePairINT<INT64>(x, y) {};
+  ImagePixelCoordinate(const INT64 x, const INT64 y) : CoordinatePairINT<INT64>(x, y) {};
   /**
    * Initialize a pixel coordinate on an image with an image grid coordinate.
    *
@@ -263,16 +414,21 @@ public:
 };
 
 /**
- * Represents a size on the viewport in pixels.
+ * Represents the number of tiles representing a buffer.
  */
-class ViewportPixelSize : public CoordinatePairINT<INT64> {
+class BufferTileSize : public CoordinatePairINT<INT64> {
 public:
-  ViewportPixelSize()=default;
+  BufferTileSize()=default;
+  BufferTileSize(const CoordinatePair<INT64>& buffer_tile_size) : CoordinatePairINT<INT64>( buffer_tile_size) {};
+  BufferTileSize(const CoordinatePairINT<INT64>& buffer_tile_size) : CoordinatePairINT<INT64>( buffer_tile_size) {};
+  BufferTileSize(const BufferTileSize& buffer_tile_size) : CoordinatePairINT<INT64>(buffer_tile_size) {};
+  using CoordinatePairINT<INT64>::operator=;
+  BufferTileSize& operator=(const BufferTileSize& buffer_tile_size)=default;
   /**
-   * @param w The width in pixels.
-   * @param h The height in pixels.
+   * @param w The number of tiles wide.
+   * @param h The number of tiles high.
    */
-  ViewportPixelSize(INT64 w, INT64 h) : CoordinatePairINT<INT64>(w, h) {};
+  BufferTileSize(const INT64 w, const INT64 h) : CoordinatePairINT<INT64>(w, h) {};
   /** @return The width in pixels. */
   INT64 w() const;
   /** @return The height in pixels. */
@@ -280,17 +436,44 @@ public:
 };
 
 /**
- * Represents a coorindate on the viewport in pixels using the upper
- * left corner as the origin.
+ * Represents a size in a buffer.
  */
-class ViewportPixelCoordinate : public CoordinatePairINT<INT64> {
+class BufferPixelSize : public CoordinatePairINT<INT64> {
 public:
-  ViewportPixelCoordinate()=default;
+  BufferPixelSize()=default;
+  BufferPixelSize(const CoordinatePair<INT64>& viewport_pixel_size) : CoordinatePairINT<INT64>( viewport_pixel_size) {};
+  BufferPixelSize(const CoordinatePairINT<INT64>& viewport_pixel_size) : CoordinatePairINT<INT64>( viewport_pixel_size) {};
+  BufferPixelSize(const BufferPixelSize& viewport_pixel_size) : CoordinatePairINT<INT64>(viewport_pixel_size) {};
+  using CoordinatePairINT<INT64>::operator=;
+  BufferPixelSize& operator=(const BufferPixelSize& viewport_pixel_size)=default;
+  /**
+   * @param w The width in pixels.
+   * @param h The height in pixels.
+   */
+  BufferPixelSize(const INT64 w, const INT64 h) : CoordinatePairINT<INT64>(w, h) {};
+  /** @return The width in pixels. */
+  INT64 w() const;
+  /** @return The height in pixels. */
+  INT64 h() const;
+};
+
+/**
+ * Represents a coorindate in a buffer in pixels using the upper left
+ * corner as the origin.
+ */
+class BufferPixelCoordinate : public CoordinatePairINT<INT64> {
+public:
+  BufferPixelCoordinate()=default;
+  BufferPixelCoordinate(const CoordinatePair<INT64>& viewport_pixel_coordinate ) : CoordinatePairINT<INT64>(viewport_pixel_coordinate) {};
+  BufferPixelCoordinate(const CoordinatePairINT<INT64>& viewport_pixel_coordinate ) : CoordinatePairINT<INT64>(viewport_pixel_coordinate) {};
+  BufferPixelCoordinate(const BufferPixelCoordinate& viewport_pixel_coordinate) : CoordinatePairINT<INT64>(viewport_pixel_coordinate) {};
+  using CoordinatePairINT<INT64>::operator=;
+  BufferPixelCoordinate& operator=(const BufferPixelCoordinate& viewport_pixel_coordinate)=default;
   /**
    * @param x The x coordinate in pixels.
    * @param y The y coorindate in pixels.
    */
-  ViewportPixelCoordinate(INT64 x, INT64 y) : CoordinatePairINT<INT64>(x, y) {};
+  BufferPixelCoordinate(const INT64 x, const INT64 y) : CoordinatePairINT<INT64>(x, y) {};
   /**
    * Convert a grid coordinate to a viewport pixel coordinate.
    *
@@ -299,12 +482,12 @@ public:
    *             image grid and viewport.
    * @param grid_coordinate_pixel_0 The grid coordinate of the origin
    *                                of the viewport.
-   * @param viewport_pixel_size The size of the viewport in pixels.
+   * @param buffer_pixel_size The size of the viewport in pixels.
    */
-  ViewportPixelCoordinate(GridCoordinate& grid_coordinate,
+  BufferPixelCoordinate(GridCoordinate& grid_coordinate,
                           FLOAT64 zoom,
                           GridCoordinate& grid_coordinate_pixel_0,
-                          ViewportPixelSize& viewport_pixel_size);
+                          BufferPixelSize& buffer_pixel_size);
   /** @return The x coordinate in pixels. */
   INT64 x() const;
   /** @return The y coordinate in pixels. */

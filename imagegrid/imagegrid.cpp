@@ -26,11 +26,10 @@
 ImageGridSquareZoomLevel::ImageGridSquareZoomLevel(ImageGridSquare* parent_square,
                                                    INT64 zoom_out) {
   this->_parent_square=parent_square;
-  this->_max_sub_wpixel=this->_parent_square->_max_sub_wpixel/zoom_out;
-  this->_max_sub_hpixel=this->_parent_square->_max_sub_hpixel/zoom_out;
+  this->_max_sub_size=this->_parent_square->_max_sub_size/zoom_out;
   this->_zoom_out=zoom_out;
-  this->_rgba_wpixel=std::make_unique<size_t[]>(this->sub_w()*this->sub_h());
-  this->_rgba_hpixel=std::make_unique<size_t[]>(this->sub_w()*this->sub_h());
+  this->_rgba_wpixel=std::make_unique<INT64[]>(this->sub_w()*this->sub_h());
+  this->_rgba_hpixel=std::make_unique<INT64[]>(this->sub_w()*this->sub_h());
   this->_rgba_xpixel_origin=std::make_unique<INT64[]>(this->sub_w()*this->sub_h());
   this->_rgba_ypixel_origin=std::make_unique<INT64[]>(this->sub_w()*this->sub_h());
   this->_rgba_data=std::make_unique<PIXEL_RGBA*[]>(this->sub_w()*this->sub_h());
@@ -126,8 +125,8 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
           auto sub_index=SubGridIndex(sub_i,sub_j);
           if (grid_square->grid_setup()->subgrid_has_data(grid_square->_grid_index,
                                                           sub_index)) {
-            auto origin_x=sub_i*(data_pair.first->_max_sub_wpixel);
-            auto origin_y=sub_j*(data_pair.first->_max_sub_hpixel);
+            auto origin_x=sub_i*(data_pair.first->_max_sub_size.w());
+            auto origin_y=sub_j*(data_pair.first->_max_sub_size.w());
             auto sub_i_arr=sub_j*sub_w+sub_i;
             data_pair.first->_rgba_wpixel[sub_i_arr]=data_pair.second->rgba_wpixel[sub_i_arr];
             data_pair.first->_rgba_hpixel[sub_i_arr]=data_pair.second->rgba_hpixel[sub_i_arr];
@@ -169,11 +168,11 @@ INT64 ImageGridSquareZoomLevel::zoom_out() const {
   return this->_zoom_out;
 }
 
-size_t ImageGridSquareZoomLevel::rgba_wpixel(const SubGridIndex& sub_index) const {
+INT64 ImageGridSquareZoomLevel::rgba_wpixel(const SubGridIndex& sub_index) const {
   return this->_rgba_wpixel[_sub_i_arr(sub_index)];
 }
 
-size_t ImageGridSquareZoomLevel::rgba_hpixel(const SubGridIndex& sub_index) const {
+INT64 ImageGridSquareZoomLevel::rgba_hpixel(const SubGridIndex& sub_index) const {
   return this->_rgba_hpixel[_sub_i_arr(sub_index)];
 }
 
@@ -198,11 +197,11 @@ INT64 ImageGridSquareZoomLevel::sub_h() const {
 }
 
 INT64 ImageGridSquareZoomLevel::max_sub_wpixel() const {
-  return this->_max_sub_wpixel;
+  return this->_max_sub_size.w();
 }
 
 INT64 ImageGridSquareZoomLevel::max_sub_hpixel() const {
-  return this->_max_sub_hpixel;
+  return this->_max_sub_size.w();
 }
 
 ImageGridSquare* ImageGridSquareZoomLevel::parent_square() {
@@ -262,10 +261,14 @@ void ImageGridSquare::_read_data() {
       }
     }
   }
-  this->_square_wpixel=max_sub_wpixel*sub_w;
-  this->_square_hpixel=max_sub_hpixel*sub_h;
-  this->_max_sub_wpixel=max_sub_wpixel;
-  this->_max_sub_hpixel=max_sub_hpixel;
+  this->_square_size=GridPixelSize(max_sub_wpixel*sub_w,
+                                    max_sub_hpixel*sub_h);
+  // this->_square_wpixel=max_sub_wpixel*sub_w;
+  // this->_square_hpixel=max_sub_hpixel*sub_h;
+  this->_max_sub_size=GridPixelSize(max_sub_wpixel,
+                                    max_sub_hpixel);
+  // this->_max_sub_wpixel=max_sub_wpixel;
+  // this->_max_sub_hpixel=max_sub_hpixel;
 }
 
 void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
@@ -284,8 +287,8 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
     for (INT64 j=0; j<grid_himage;j++) {
       this->_squares[i][j]=std::make_unique<ImageGridSquare>(grid_setup,this,GridIndex(i,j));
       // set the RGBA of the surface
-      auto rgba_wpixel=this->_squares[i][j]->_square_wpixel;
-      auto rgba_hpixel=this->_squares[i][j]->_square_hpixel;
+      auto rgba_wpixel=this->_squares[i][j]->_square_size.w();
+      auto rgba_hpixel=this->_squares[i][j]->_square_size.h();
       if ((INT64)rgba_wpixel > new_wpixel) {
         new_wpixel=(INT64)rgba_wpixel;
       }
@@ -378,15 +381,12 @@ bool ImageGrid::_check_load(const ViewPortCurrentState& viewport_current_state,
   auto j=grid_index->j();
   auto current_grid_x=viewport_current_state.current_grid_coordinate().x();
   auto current_grid_y=viewport_current_state.current_grid_coordinate().y();
-  auto screen_width=viewport_current_state.screen_size().h();
-  auto screen_height=viewport_current_state.screen_size().w();
-  auto viewport_current_state_new=ViewPortCurrentState(GridCoordinate(current_grid_x,current_grid_y),
-                                                       GridPixelSize(this->_image_max_size.w(),
-                                                                     this->_image_max_size.h()),
+  auto viewport_current_state_new=ViewPortCurrentState(viewport_current_state.current_grid_coordinate(),
+                                                       this->_image_max_size,
                                                        ViewPortTransferState::find_zoom_upper(zoom_index),
-                                                       ViewportPixelSize(screen_width,screen_height),
-                                                       ViewportPixelCoordinate(0,0),
-                                                       ViewportPixelCoordinate(0,0));
+                                                       viewport_current_state.screen_size(),
+                                                       BufferPixelCoordinate(0,0),
+                                                       BufferPixelCoordinate(0,0));
   auto return_value=((zoom_index == this->_zoom_index_length-1 ||
                       (zoom_index >= zoom_index_lower_limit &&
                        ViewPortTransferState::grid_index_visible(i,j,
@@ -564,7 +564,7 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
   // }
 }
 
-GridPixelSize ImageGrid::get_image_max_pixel_size() const {
+GridPixelSize ImageGrid::image_max_pixel_size() const {
   return this->_image_max_size;
 }
 
@@ -594,9 +594,9 @@ void ImageGrid::setup_grid_cache(GridSetup* const grid_setup) {
       this->_load_square(ViewPortCurrentState(GridCoordinate(0.0,0.0),
                                               GridPixelSize(0,0),
                                               0.0,
-                                              ViewportPixelSize(0,0),
-                                              ViewportPixelCoordinate(0,0),
-                                              ViewportPixelCoordinate(0,0)),
+                                              BufferPixelSize(0,0),
+                                              BufferPixelCoordinate(0,0),
+                                              BufferPixelCoordinate(0,0)),
                          &grid_index,
                          0L,true,grid_setup);
       // TODO: eventually cache this out as tiles that fit in 128x128 and 512x512

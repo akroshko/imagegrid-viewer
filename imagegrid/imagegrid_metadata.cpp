@@ -20,7 +20,7 @@ void ImageGridMetadata::get_metadata(const ImageGrid* const imagegrid,
                                      MetadataInfo& metadata_info) {
   if (metadata_name == "pixel_only") {
     // mirror incoming data for now
-    auto max_pixel_size=imagegrid->get_image_max_pixel_size();
+    auto max_pixel_size=imagegrid->image_max_pixel_size();
     auto image_pixel_coordinate=ImagePixelCoordinate(metadata_grid_coordinate,
                                                      max_pixel_size);
     metadata_info.pixel_coordinate=ImagePixelCoordinate(image_pixel_coordinate.x(),

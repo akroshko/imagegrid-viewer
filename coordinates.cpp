@@ -23,25 +23,24 @@ FLOAT64 GridCoordinateSize::h() const {
   return this->_x2;
 }
 
-GridCoordinate::GridCoordinate(ViewportPixelCoordinate& viewport_pixel_coordinate,
+GridCoordinate::GridCoordinate(BufferPixelCoordinate& buffer_pixel_coordinate,
                                FLOAT64 zoom,
-                               ViewportPixelSize& viewport_pixel_size,
-                               GridCoordinate& viewport_grid_coordinate,
+                               BufferPixelSize& buffer_pixel_size,
+                               GridCoordinate& buffer_grid_coordinate,
                                GridPixelSize& max_image_pixel_size) {
-  auto viewport_x=viewport_grid_coordinate.x();
-  auto viewport_y=viewport_grid_coordinate.y();
+  auto buffer_x=buffer_grid_coordinate.x();
+  auto buffer_y=buffer_grid_coordinate.y();
   auto max_image_wpixel=max_image_pixel_size.w();
   auto max_image_hpixel=max_image_pixel_size.h();
-  auto half_width=viewport_pixel_size.w()/2.0;
-  auto half_height=viewport_pixel_size.h()/2.0;
-  auto viewport_horizontal_distance_grid=(half_width/(FLOAT64)max_image_wpixel/zoom);
-  auto viewport_vertical_distance_grid=(half_height/(FLOAT64)max_image_hpixel/zoom);
-  auto viewport_left_grid=viewport_x-viewport_horizontal_distance_grid;
-  auto viewport_top_grid=viewport_y-viewport_vertical_distance_grid;
-  this->_x1=(viewport_left_grid+((FLOAT64)viewport_pixel_coordinate.x()/(FLOAT64)max_image_wpixel/zoom));
-  this->_x2=(viewport_top_grid+((FLOAT64)viewport_pixel_coordinate.y()/(FLOAT64)max_image_hpixel/zoom));
+  auto half_width=buffer_pixel_size.w()/2.0;
+  auto half_height=buffer_pixel_size.h()/2.0;
+  auto buffer_horizontal_distance_grid=(half_width/(FLOAT64)max_image_wpixel/zoom);
+  auto buffer_vertical_distance_grid=(half_height/(FLOAT64)max_image_hpixel/zoom);
+  auto buffer_left_grid=buffer_x-buffer_horizontal_distance_grid;
+  auto buffer_top_grid=buffer_y-buffer_vertical_distance_grid;
+  this->_x1=(buffer_left_grid+((FLOAT64)buffer_pixel_coordinate.x()/(FLOAT64)max_image_wpixel/zoom));
+  this->_x2=(buffer_top_grid+((FLOAT64)buffer_pixel_coordinate.y()/(FLOAT64)max_image_hpixel/zoom));
 }
-
 
 FLOAT64 GridCoordinate::x() const {
   return this->_x1;
@@ -96,25 +95,33 @@ INT64 ImagePixelCoordinate::y() const {
   return this->_x2;
 }
 
-ViewportPixelCoordinate::ViewportPixelCoordinate(GridCoordinate& grid_coordinate, FLOAT64 zoom,
-                                                 GridCoordinate& grid_coordinate_pixel_0,
-                                                 ViewportPixelSize& viewport_pixel_size) {
-  this->_x1=(INT64)round((grid_coordinate.x() - grid_coordinate_pixel_0.x())*viewport_pixel_size.w()*zoom);
-  this->_x2=(INT64)round((grid_coordinate.y() - grid_coordinate_pixel_0.y())*viewport_pixel_size.h()*zoom);
+BufferPixelCoordinate::BufferPixelCoordinate(GridCoordinate& grid_coordinate, FLOAT64 zoom,
+                                             GridCoordinate& grid_coordinate_pixel_0,
+                                             BufferPixelSize& buffer_pixel_size) {
+  this->_x1=(INT64)round((grid_coordinate.x() - grid_coordinate_pixel_0.x())*buffer_pixel_size.w()*zoom);
+  this->_x2=(INT64)round((grid_coordinate.y() - grid_coordinate_pixel_0.y())*buffer_pixel_size.h()*zoom);
 }
 
-INT64 ViewportPixelCoordinate::x() const {
+INT64 BufferTileSize::w() const {
   return this->_x1;
 }
 
-INT64 ViewportPixelCoordinate::y() const {
+INT64 BufferTileSize::h() const {
   return this->_x2;
 }
 
-INT64 ViewportPixelSize::w() const {
+INT64 BufferPixelCoordinate::x() const {
   return this->_x1;
 }
 
-INT64 ViewportPixelSize::h() const {
+INT64 BufferPixelCoordinate::y() const {
+  return this->_x2;
+}
+
+INT64 BufferPixelSize::w() const {
+  return this->_x1;
+}
+
+INT64 BufferPixelSize::h() const {
   return this->_x2;
 }
