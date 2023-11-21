@@ -66,6 +66,14 @@ bool GridIndex::invalid() const {
   return (this->_x1 == INVALID_PIXEL_VALUE || this->_x2 == INVALID_PIXEL_VALUE);
 }
 
+INT64 SubGridImageSize::w() const {
+  return this->_x1;
+}
+
+INT64 SubGridImageSize::h() const {
+  return this->_x2;
+}
+
 INT64 SubGridIndex::i() const {
   return this->_x1;
 }
@@ -100,6 +108,14 @@ BufferPixelCoordinate::BufferPixelCoordinate(GridCoordinate& grid_coordinate, FL
                                              BufferPixelSize& buffer_pixel_size) {
   this->_x1=(INT64)round((grid_coordinate.x() - grid_coordinate_pixel_0.x())*buffer_pixel_size.w()*zoom);
   this->_x2=(INT64)round((grid_coordinate.y() - grid_coordinate_pixel_0.y())*buffer_pixel_size.h()*zoom);
+}
+
+INT64 BufferTileIndex::i() const {
+  return this->_x1;
+}
+
+INT64 BufferTileIndex::j() const {
+  return this->_x2;
 }
 
 INT64 BufferTileSize::w() const {

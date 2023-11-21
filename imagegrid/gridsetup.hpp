@@ -51,10 +51,8 @@ public:
    */
   bool use_cache() const;
   // The items allow access to the underlying data.
-  /** @return The width of the imagegrid. */
-  INT64 grid_w() const;
-  /** @return The height of the imagegrid. */
-  INT64 grid_h() const;
+  /** @return The size of the imagegrid. */
+  GridImageSize grid_size() const;
   /**
    * Check if a grid square has data.
    *
@@ -70,19 +68,12 @@ public:
    */
   bool square_has_data(const GridIndex* grid_index) const;
   /**
-   * Get the width of the subgrid for a grid square.
+   * Get the size of the subgrid for a grid square.
    *
    * @param grid_index The index of the grid square.
-   * @return The width of the subgrid.
+   * @return The size of the subgrid.
    */
-  INT64 sub_w(const GridIndex& grid_index) const;
-  /**
-   * Get the height of the subgrid for a grid square.
-   *
-   * @param grid_index The index of the grid square.
-   * @return The height of the subgrid.
-   */
-  INT64 sub_h(const GridIndex& grid_index) const;
+  SubGridImageSize sub_size(const GridIndex& grid_index) const;
   /**
    * Check if a particular subgrid square has.
    *

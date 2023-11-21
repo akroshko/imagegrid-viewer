@@ -327,6 +327,29 @@ public:
 };
 
 /**
+ * Represents the size of a subgrid in integer units of images.
+ *
+ */
+class SubGridImageSize : public CoordinatePairINT<INT64> {
+public:
+  SubGridImageSize()=default;
+  SubGridImageSize(const CoordinatePair<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
+  SubGridImageSize(const CoordinatePairINT<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
+  SubGridImageSize(const SubGridImageSize& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
+  using CoordinatePairINT<INT64>::operator=;
+  SubGridImageSize& operator=(const SubGridImageSize& grid_image_size)=default;
+  /**
+   * @param w The width of the subgrid in images.
+   * @param h The height of the subgrid in images.
+   */
+  SubGridImageSize(const INT64 w, const INT64 h) : CoordinatePairINT<INT64>(w, h) {};
+  /** @return The width of the subgrid. */
+  INT64 w() const;
+  /** @return The height of the subgrid. */
+  INT64 h() const;
+};
+
+/**
  * Represents indices with a grid, i.e., subgrid with the origin at
  * the top-right corner.
  *
@@ -436,6 +459,29 @@ public:
 };
 
 /**
+ * Represents the number of tiles representing a buffer.
+ */
+class BufferTileIndex : public CoordinatePairINT<INT64> {
+public:
+  BufferTileIndex()=default;
+  BufferTileIndex(const CoordinatePair<INT64>& buffer_tile_index) : CoordinatePairINT<INT64>( buffer_tile_index) {};
+  BufferTileIndex(const CoordinatePairINT<INT64>& buffer_tile_index) : CoordinatePairINT<INT64>( buffer_tile_index) {};
+  BufferTileIndex(const BufferTileIndex& buffer_tile_index) : CoordinatePairINT<INT64>(buffer_tile_index) {};
+  using CoordinatePairINT<INT64>::operator=;
+  BufferTileIndex& operator=(const BufferTileIndex& buffer_tile_index)=default;
+  /**
+   * @param i The index in the i direction.
+   * @param j The index in the j direction.
+   */
+  BufferTileIndex(const INT64 i, const INT64 j) : CoordinatePairINT<INT64>(i, j) {};
+  /** @return The index in the x direction. */
+  INT64 i() const;
+  /** @return The index in the y direction. */
+  INT64 j() const;
+};
+
+
+/**
  * Represents a size in a buffer.
  */
 class BufferPixelSize : public CoordinatePairINT<INT64> {
@@ -485,9 +531,9 @@ public:
    * @param buffer_pixel_size The size of the viewport in pixels.
    */
   BufferPixelCoordinate(GridCoordinate& grid_coordinate,
-                          FLOAT64 zoom,
-                          GridCoordinate& grid_coordinate_pixel_0,
-                          BufferPixelSize& buffer_pixel_size);
+                        FLOAT64 zoom,
+                        GridCoordinate& grid_coordinate_pixel_0,
+                        BufferPixelSize& buffer_pixel_size);
   /** @return The x coordinate in pixels. */
   INT64 x() const;
   /** @return The y coordinate in pixels. */

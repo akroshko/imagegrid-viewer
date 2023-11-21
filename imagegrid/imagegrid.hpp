@@ -100,30 +100,18 @@ public:
    * @return A pointer to the RGBA data.
    */
   PIXEL_RGBA* get_rgba_data(const SubGridIndex& sub_index) const;
-  /** @return The subgrid width of this square. */
-  INT64 sub_w() const;
-  /** @return The subgrid height of this square. */
-  INT64 sub_h() const;
-  /** @return The max subgrid pixel width for each image at the zoom out of this square. */
-  INT64 max_sub_wpixel() const;
-  /** @return The max subgrid pixel height for each image at the zoom out of this square. */
-  INT64 max_sub_hpixel() const;
-  /** @return The width of this square in pixels. */
-  INT64 square_wpixel() const;
-  /** @return The height of this square in pixels. */
-  INT64 square_hpixel() const;
-  /** @return The width of the imagegrid squares in pixels. */
-  INT64 grid_square_wpixel() const;
-  /** @return The height of the imagegrid squares in pixels. */
-  INT64 grid_square_hpixel() const;
+  /** @return The subgrid size of this square. */
+  SubGridImageSize sub_size() const;
+  // /** @return The max subgrid pixel size for each image at the zoom out of this square. */
+  GridPixelSize max_sub_pixel_size() const;
   /** @return The parent square. */
   ImageGridSquare* parent_square();
 private:
   friend class ImageGrid;
   friend class ImageGridSquare;
   ImageGridSquare* _parent_square;
-  INT64 _sub_i_arr(INT64 sub_i, INT64 sub_j) const;
-  INT64 _sub_i_arr(const SubGridIndex& sub_index) const;
+  INT64 _sub_index_arr(INT64 sub_i, INT64 sub_j) const;
+  INT64 _sub_index_arr(const SubGridIndex& sub_index) const;
   /** The actual RGBA data for this square at the zoom out value. */
   std::unique_ptr<PIXEL_RGBA*[]> _rgba_data;
   // TOOD: will eventually use an object from coordinates.hpp, but for
@@ -164,10 +152,8 @@ public:
   ImageGridSquare& operator=(const ImageGridSquare&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
   std::unique_ptr<std::unique_ptr<ImageGridSquareZoomLevel>[]> image_array;
-  /** @return The subgrid width. */
-  INT64 sub_w() const;
-  /** @return The subgrid height. */
-  INT64 sub_h() const;
+  // /** @return The subgrid size. */
+  SubGridImageSize sub_size() const;
   /** @return The parent image grid. */
   ImageGrid* parent_grid() const;
   /** @return The grid index of this square */

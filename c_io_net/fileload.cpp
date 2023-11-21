@@ -302,8 +302,8 @@ bool test_tiff_cache(const std::string& cached_filename,
     can_cache=false;
     MSG("Cached file does not exist: " << cached_filename);
   }
-  auto sub_w=data_transfer.sub_w;
-  auto sub_h=data_transfer.sub_h;
+  auto sub_w=data_transfer.sub_size.w();
+  auto sub_h=data_transfer.sub_size.h();
   if (can_cache) {
     MSG("Cached file exists: " << cached_filename);
     for (const auto& file_data : data_transfer.data_transfer) {
@@ -326,8 +326,8 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
   auto sub_i=current_subgrid.i();
   auto sub_j=current_subgrid.j();
   auto successful=false;
-  auto sub_w=data_transfer.sub_w;
-  auto sub_h=data_transfer.sub_h;
+  auto sub_w=data_transfer.sub_size.w();
+  auto sub_h=data_transfer.sub_size.h();
   auto sub_index=sub_j*sub_w+sub_i;
   auto original_width=data_transfer.original_rgba_wpixel[sub_index];
   auto original_height=data_transfer.original_rgba_hpixel[sub_index];
@@ -413,7 +413,7 @@ bool load_tiff_as_rgba(const std::string& filename,
                        INT64* row_temp_buffer) {
   auto sub_i=current_subgrid.i();
   auto sub_j=current_subgrid.j();
-  auto sub_w=data_transfer.sub_w;
+  auto sub_w=data_transfer.sub_size.w();
   auto success=false;
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
   if (!tif) {
@@ -486,7 +486,7 @@ bool load_png_as_rgba(const std::string& filename,
                       INT64* row_temp_buffer) {
   auto sub_i=current_subgrid.i();
   auto sub_j=current_subgrid.j();
-  auto sub_w=data_transfer.sub_w;
+  auto sub_w=data_transfer.sub_size.w();
   bool success=false;
   png_image image;
   memset(&image, 0, (sizeof image));

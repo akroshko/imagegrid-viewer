@@ -29,28 +29,24 @@ bool GridSetup::use_cache() const {
   return this->_use_cache;
 }
 
-INT64 GridSetup::grid_w() const {
-  return _grid_image_size.w();
-}
-
-INT64 GridSetup::grid_h() const {
-  return _grid_image_size.h();
+GridImageSize GridSetup::grid_size() const {
+  return this->_grid_image_size;
 }
 
 INT64 GridSetup::_get_grid_index(INT64 i, INT64 j) const {
-  return j*this->grid_w()+i;
+  return j*this->grid_size().w()+i;
 }
 
 INT64 GridSetup::_get_grid_index(const GridIndex& grid_index) const {
   auto i=grid_index.i();
   auto j=grid_index.j();
-  return j*this->grid_w()+i;
+  return j*this->grid_size().w()+i;
 }
 
 INT64 GridSetup::_get_grid_index(const GridIndex* grid_index) const {
   auto i=grid_index->i();
   auto j=grid_index->j();
-  return j*this->grid_w()+i;
+  return j*this->grid_size().w()+i;
 }
 
 INT64 GridSetup::_get_sub_index(INT64 sub_i, INT64 sub_j, INT64 sub_w) const {
@@ -73,14 +69,10 @@ bool GridSetup::square_has_data(const GridIndex* grid_index) const {
   return this->_existing[local_grid_index];
 }
 
-INT64 GridSetup::sub_w(const GridIndex& grid_index) const {
+SubGridImageSize GridSetup::sub_size(const GridIndex& grid_index) const {
   auto local_grid_index=this->_get_grid_index(grid_index);
-  return this->_sub_w[local_grid_index];
-}
-
-INT64 GridSetup::sub_h(const GridIndex& grid_index) const {
-  auto local_grid_index=this->_get_grid_index(grid_index);
-  return this->_sub_h[local_grid_index];
+  return SubGridImageSize(this->_sub_w[local_grid_index],
+                          this->_sub_h[local_grid_index]);
 }
 
 bool GridSetup::subgrid_has_data(const GridIndex& grid_index, const SubGridIndex& sub_index) const {

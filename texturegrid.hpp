@@ -78,51 +78,46 @@ public:
   /**
    * Lock one surface.
    *
-   * @param i The x index of the surface to lock.
-   * @param j The y index of the surface to lock.
+   * @param index The index of the surface to lock.
    * @return If the surface was locked successfully.
    */
-  bool lock_surface (INT64 i, INT64 j);
+  bool lock_surface (const BufferTileIndex& index);
   /** @return If locking all surfaces was successful. */
   bool lock_all_surfaces ();
   /**
    * Unlock one surface.
-   * @param i The x index of the surface to lock.
-   * @param j The y index of the surface to lock.
+
+   * @param index The index of the surface to unlock.
    */
-  void unlock_surface (INT64 i, INT64 j);
+  void unlock_surface (const BufferTileIndex& index);
   /** Unlock all surfaces. */
   void unlock_all_surfaces ();
   /** Clear all surfaces. */
   void clear_all_surfaces ();
   /** Get the RGBA pixels for a particular tile. */
-  void* get_rgba_pixels(INT64 tile_w, INT64 tile_h);
+  PIXEL_RGBA* get_rgba_pixels(const BufferTileIndex& index);
   /**
    * Get the display texture for a tile.
    *
-   * @param tile_i The index in the x direction.
-   * @param tile_j The index in the y direction.
+   * @param index The index of the rile to get the wrapper for.
    */
-  SDLDisplayTextureWrapper* display_texture_wrapper(INT64 tile_i, INT64 tile_j);
+  SDLDisplayTextureWrapper* display_texture_wrapper(const BufferTileIndex& index);
   /**
    * Get the texture used for the filler texture.
    */
   SDLDisplayTextureWrapper* filler_texture_wrapper();
-  /** @return The width in tiles. */
-  INT64 tile_w();
-  /** @return The height in tiles. */
-  INT64 tile_h();
-  /** @return The width in pixels this square actually displays. */
-  INT64 texture_square_wpixel();
-  /** @return The height in pixels this square actually displays. */
-  INT64 texture_square_hpixel();
+  /** @return The size in of the tiles. */
+  BufferTileSize tile_size();
+  /** @return The size in pixels that this square actually displays. */
+  BufferPixelSize texture_square_pixel_size() const;
   // the size of the texture that actually gets displayed
   // this is so the padding and tile sizes do not affect what can be
   // displayed
   // TODO: decide whether TextureUpdate is a friend or do some other
   // solution
-  INT64 _texture_display_wpixel;
-  INT64 _texture_display_hpixel;
+  BufferPixelSize _texture_display_size;
+  // INT64 _texture_display_wpixel;
+  // INT64 _texture_display_hpixel;
 private:
   friend class TextureGrid;
   friend class TextureGridSquare;

@@ -17,17 +17,25 @@
 TextureGridSquareZoomLevel::TextureGridSquareZoomLevel (TextureGridSquare* parent_square,
                                                         const GridPixelSize& image_max_pixel_size,
                                                         INT64 zoom_out_shift) {
-  GridPixelSize image_pixel_size=image_max_pixel_size >> zoom_out_shift;
-  auto tile_w=image_pixel_size.w()/TILE_PIXEL_BASE_SIZE;
-  if (image_pixel_size.w() % TILE_PIXEL_BASE_SIZE != 0) {
+  GridPixelSize texture_display_size=image_max_pixel_size >> zoom_out_shift;
+  // TODO: put in function along with simalur functionality in texture_update.cpp
+  auto texture_tile_size=TILE_PIXEL_BASE_SIZE;
+  auto next_texture_tile_size=texture_tile_size >> 1L;
+  while ((next_texture_tile_size > texture_display_size.w()) ||
+         (next_texture_tile_size > texture_display_size.h())) {
+    texture_tile_size >>= 1L;
+    next_texture_tile_size >>= 1L;
+  }
+  auto tile_w=texture_display_size.w()/texture_tile_size;
+  if (texture_display_size.w() % texture_tile_size != 0) {
     tile_w+=1;
   }
-  auto tile_h=image_pixel_size.h()/TILE_PIXEL_BASE_SIZE;
-  if (image_pixel_size.h() % TILE_PIXEL_BASE_SIZE != 0) {
+  auto tile_h=texture_display_size.h()/texture_tile_size;
+  if (texture_display_size.h() % texture_tile_size != 0) {
     tile_h+=1;
   }
   auto tile_num=tile_w*tile_h;
-  this->_tile_size=BufferTileSize(tile_h,tile_w);
+  this->_tile_size=BufferTileSize(tile_w,tile_h);
   this->_display_texture_wrapper=std::make_unique<std::unique_ptr<SDLDisplayTextureWrapper>[]>(tile_num);
   for (INT64 i=0; i < tile_num; i++) {
     this->_display_texture_wrapper[i]=std::make_unique<SDLDisplayTextureWrapper>();
@@ -67,8 +75,8 @@ bool TextureGridSquareZoomLevel::get_image_filler () const {
   return !this->is_loaded && this->is_displayable;
 }
 
-SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::display_texture_wrapper(INT64 tile_i, INT64 tile_j) {
-  auto tile_index=tile_j*this->_tile_size.w()+tile_i;
+SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::display_texture_wrapper(const BufferTileIndex& index) {
+  auto tile_index=index.j()*this->_tile_size.w()+index.i();
   return this->_display_texture_wrapper[tile_index].get();
 }
 
@@ -92,14 +100,14 @@ bool TextureGridSquareZoomLevel::all_surfaces_valid () {
   return all_valid;
 }
 
-bool TextureGridSquareZoomLevel::lock_surface (INT64 i, INT64 j) {
-  auto tile_index=j*this->_tile_size.w()+i;
+bool TextureGridSquareZoomLevel::lock_surface (const BufferTileIndex& index) {
+  auto tile_index=index.j()*this->_tile_size.w()+index.i();
   auto lock_surface_return=this->_display_texture_wrapper[tile_index]->lock_surface();
   return (!lock_surface_return);
 }
 
-void TextureGridSquareZoomLevel::unlock_surface (INT64 i, INT64 j) {
-  auto tile_index=j*this->_tile_size.w()+i;
+void TextureGridSquareZoomLevel::unlock_surface (const BufferTileIndex& index) {
+  auto tile_index=index.j()*this->_tile_size.w()+index.i();
   this->_display_texture_wrapper[tile_index]->unlock_surface();
 }
 
@@ -133,26 +141,18 @@ SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::filler_texture_wrapper() {
   return this->_filler_texture_wrapper;
 }
 
-void* TextureGridSquareZoomLevel::get_rgba_pixels(INT64 i, INT64 j) {
+PIXEL_RGBA* TextureGridSquareZoomLevel::get_rgba_pixels(const BufferTileIndex& index) {
   // TODO: definitely want an assert here
-  auto tile_index=j*this->_tile_size.w()+i;
-  return this->_display_texture_wrapper[tile_index]->pixels();
+  auto tile_index=index.j()*this->_tile_size.w()+index.i();
+  return (PIXEL_RGBA*)this->_display_texture_wrapper[tile_index]->pixels();
 }
 
-INT64 TextureGridSquareZoomLevel::tile_w() {
-  return this->_tile_size.w();
+BufferTileSize TextureGridSquareZoomLevel::tile_size() {
+  return this->_tile_size;
 }
 
-INT64 TextureGridSquareZoomLevel::tile_h() {
-  return this->_tile_size.h();
-}
-
-INT64 TextureGridSquareZoomLevel::texture_square_wpixel() {
-  return this->_texture_display_wpixel;
-}
-
-INT64 TextureGridSquareZoomLevel::texture_square_hpixel() {
-  return this->_texture_display_hpixel;
+BufferPixelSize TextureGridSquareZoomLevel::texture_square_pixel_size () const {
+  return this->_texture_display_size;
 }
 
 TextureGridSquare::TextureGridSquare (TextureGrid* parent_grid,
@@ -202,8 +202,8 @@ void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
     auto lock_surface_return=this->filler_squares[zoom_index]->lock_surface();
     if (lock_surface_return) {
       auto dest_array=this->filler_squares[zoom_index]->pixels();
-      auto wpixel_aligned=this->filler_squares[zoom_index]->texture_wpixel_aligned();
-      auto hpixel_aligned=this->filler_squares[zoom_index]->texture_hpixel_aligned();
+      auto wpixel_aligned=this->filler_squares[zoom_index]->texture_size_aligned().w();
+      auto hpixel_aligned=this->filler_squares[zoom_index]->texture_size_aligned().h();
       // copy over gray
       for (INT64 l=0L; l < hpixel_aligned; l++) {
         for (INT64 k=0L; k < wpixel_aligned; k++) {

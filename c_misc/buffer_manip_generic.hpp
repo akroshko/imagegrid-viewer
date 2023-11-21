@@ -27,10 +27,9 @@ void (NOREDUCE_FUNCNAME) (SOURCE_TYPE source_buffer,
       for (INT64 si=source_start_x, di=dest_start_x;
            si < source_start_x+source_copy_w;
            si++, di++) {
-        if (di < dest_w_visible && dj < dest_h_visible) {
+        if (di < dest_w_visible) {
           auto dest_pixel=dj*dest_w+di;
-          if (si < source_w && sj < source_h &&
-              di < dest_w_visible && dj < dest_h_visible) {
+          if (si < source_w && sj < source_h) {
             auto source_pixel=sj*source_w+si;
             NOREDUCE_COPY_EXPRESSION;
           }

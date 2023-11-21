@@ -55,10 +55,9 @@ public:
   /**
    * Update the information and observors for the current state of the viewport.
    *
-   * @param xgrid The x grid coordinate to update to.
-   * @param ygrid The y grid coordinate to update to.
+   * @param grid_coordinate The grid coordinate to update to.
    */
-  void update_viewport_info(FLOAT64 xgrid, FLOAT64 ygrid);
+  void update_viewport_info(const GridCoordinate& grid_coordinate);
   /**
    * Adjust initial location.
    *

@@ -261,32 +261,26 @@ void SDLDisplayTextureWrapper::unlock_surface () {
   }
 }
 
-INT64 SDLDisplayTextureWrapper::texture_wpixel_aligned () const {
-  return this->_display_texture->w;
+/** Would rather not make a copy. */
+BufferPixelSize SDLDisplayTextureWrapper::texture_size_aligned () const {
+  return BufferPixelSize(this->_display_texture->w,
+                         this->_display_texture->h);
 }
 
-INT64 SDLDisplayTextureWrapper::texture_hpixel_aligned () const {
-  return this->_display_texture->h;
-}
-
-INT64 SDLDisplayTextureWrapper::texture_wpixel_visible() const {
-  return this->_wpixel_visible;
-}
-
-INT64 SDLDisplayTextureWrapper::texture_hpixel_visible() const {
-  return this->_hpixel_visible;
+BufferPixelSize SDLDisplayTextureWrapper::texture_size_visible() const {
+  return BufferPixelSize(this->_wpixel_visible,
+                         this->_hpixel_visible);
 }
 
 void SDLDisplayTextureWrapper::blit_texture(SDLDrawableSurface* drawable_surface,
-                                            INT64 texture_wpixel,
-                                            INT64 texture_hpixel,
+                                            const BufferPixelSize& texture_size,
                                             const BufferPixelCoordinate& viewport_pixel_coordinate,
                                             const BufferPixelSize& image_pixel_size_viewport) {
   SDL_Rect texture_rect;
   texture_rect.x=0;
   texture_rect.y=0;
-  texture_rect.w=texture_wpixel;
-  texture_rect.h=texture_hpixel;
+  texture_rect.w=texture_size.w();
+  texture_rect.h=texture_size.h();
   SDL_Rect scaled_rect;
   scaled_rect.x=viewport_pixel_coordinate.x();
   scaled_rect.y=viewport_pixel_coordinate.y();

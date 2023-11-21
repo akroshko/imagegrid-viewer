@@ -135,28 +135,22 @@ public:
    * Unlock the surface.
    */
   void unlock_surface();
-  /** @return The width in pixels of the stored texture. */
-  INT64 texture_wpixel_aligned() const;
-  /** @return The height in pixels of the stored texture. */
-  INT64 texture_hpixel_aligned() const;
-  /** @return The width in pixels of the texture before alignment. */
-  INT64 texture_wpixel_visible() const;
-  /** @return The height in pixels of the stored texture before alignment. */
-  INT64 texture_hpixel_visible() const;
+  /** @return The size in pixels of the stored texture. */
+  BufferPixelSize texture_size_aligned () const;
+  /** @return The size in pixels of the texture before alignment. */
+  BufferPixelSize texture_size_visible() const;
   /**
    * Blit a texture to the surface.
    *
    * TODO: texture_wpixel and texture_hpixel will get objects specific to texture coordinates.
    *
    * @param drawable_surface A pointer to the the SDLDrawableSurface to blit to.
-   * @param texture_wpixel
-   * @param texture_hpixel
+   * @param texture_size The visible size of the texture to blit.
    * @param viewport_pixel_coordinate The coorindate to blit to on the viewport.
    * @param image_pixel_size_viewport The size of the texture on the viewport.
    */
   void blit_texture(SDLDrawableSurface* drawable_surface,
-                    INT64 texture_wpixel,
-                    INT64 texture_hpixel,
+                    const BufferPixelSize& texture_size,
                     const BufferPixelCoordinate& viewport_pixel_coordinate,
                     const BufferPixelSize& image_pixel_size_viewport);
 private:
