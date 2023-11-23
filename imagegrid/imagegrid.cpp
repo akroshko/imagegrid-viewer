@@ -24,10 +24,10 @@
 #include <climits>
 
 ImageGridSquareZoomLevel::ImageGridSquareZoomLevel(ImageGridSquare* parent_square,
-                                                   INT64 zoom_out) {
+                                                   INT64 zoom_out_shift) {
   this->_parent_square=parent_square;
-  this->_max_sub_size=this->_parent_square->_max_sub_size/zoom_out;
-  this->_zoom_out=zoom_out;
+  this->_max_sub_size=this->_parent_square->_max_sub_size >> zoom_out_shift;
+  this->_zoom_out_shift=zoom_out_shift;
   this->_rgba_wpixel=std::make_unique<INT64[]>(this->sub_size().w()*this->sub_size().h());
   this->_rgba_hpixel=std::make_unique<INT64[]>(this->sub_size().w()*this->sub_size().h());
   this->_rgba_xpixel_origin=std::make_unique<INT64[]>(this->sub_size().w()*this->sub_size().h());
@@ -60,7 +60,7 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
   for (auto& dest_square : dest_squares) {
     file_data.data_pairs.emplace_back(std::pair<ImageGridSquareZoomLevel* const,
                                       std::shared_ptr<LoadFileZoomLevelData>>(dest_square,std::make_shared<LoadFileZoomLevelData>()));
-    file_data.data_pairs.back().second->zoom_out=dest_square->zoom_out();
+    file_data.data_pairs.back().second->zoom_out_shift=dest_square->zoom_out_shift();
     file_data.data_pairs.back().second->max_sub_wpixel=dest_square->max_sub_pixel_size().w();
     file_data.data_pairs.back().second->max_sub_hpixel=dest_square->max_sub_pixel_size().h();
     data_transfer.data_transfer.emplace_back(file_data.data_pairs.back().second);
@@ -93,7 +93,7 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
       auto sub_index=SubGridIndex(sub_i,sub_j);
       if (grid_square->grid_setup()->subgrid_has_data(grid_square->_grid_index,
                                                       sub_index)) {
-        auto filename=grid_square->grid_setup()->get_filename(grid_square->_grid_index,sub_index);
+        auto filename=grid_square->grid_setup()->filename(grid_square->_grid_index,sub_index);
         if (use_cache) {
           cached_filename=create_cache_filename(filename,"png");
         } else {
@@ -158,13 +158,7 @@ void ImageGridSquareZoomLevel::unload_square() {
 }
 
 INT64 ImageGridSquareZoomLevel::zoom_out_shift() const {
-  // TODO: eliminate this float calculation once shifts are used to
-  // indicate zoom everywhere
-  return (INT64)floor(log2(this->_zoom_out));
-}
-
-INT64 ImageGridSquareZoomLevel::zoom_out() const {
-  return this->_zoom_out;
+  return this->_zoom_out_shift;
 }
 
 INT64 ImageGridSquareZoomLevel::rgba_wpixel(const SubGridIndex& sub_index) const {
@@ -183,7 +177,7 @@ INT64 ImageGridSquareZoomLevel::rgba_ypixel_origin(const SubGridIndex& sub_index
   return this->_rgba_ypixel_origin[this->_sub_index_arr(sub_index)];
 }
 
-PIXEL_RGBA* ImageGridSquareZoomLevel::get_rgba_data(const SubGridIndex& sub_index) const {
+PIXEL_RGBA* ImageGridSquareZoomLevel::rgba_data(const SubGridIndex& sub_index) const {
   return this->_rgba_data[this->_sub_index_arr(sub_index)];
 }
 
@@ -191,25 +185,9 @@ SubGridImageSize ImageGridSquareZoomLevel::sub_size() const {
   return this->_parent_square->sub_size();
 }
 
-// INT64 ImageGridSquareZoomLevel::sub_w() const {
-//   return this->_parent_square->sub_w();
-// }
-//
-// INT64 ImageGridSquareZoomLevel::sub_h() const {
-//   return this->_parent_square->sub_h();
-// }
-
 GridPixelSize ImageGridSquareZoomLevel::max_sub_pixel_size() const {
   return this->_max_sub_size;
 }
-
-// INT64 ImageGridSquareZoomLevel::max_sub_wpixel() const {
-//   return this->_max_sub_size.w();
-// }
-//
-// INT64 ImageGridSquareZoomLevel::max_sub_hpixel() const {
-//   return this->_max_sub_size.h();
-// }
 
 ImageGridSquare* ImageGridSquareZoomLevel::parent_square() {
   return this->_parent_square;
@@ -248,7 +226,7 @@ void ImageGridSquare::_read_data() {
       auto sub_index=SubGridIndex(sub_i,sub_j);
       if (this->grid_setup()->subgrid_has_data(this->_grid_index,
                                                sub_index)) {
-        auto filename=this->_grid_setup->get_filename(this->_grid_index,
+        auto filename=this->_grid_setup->filename(this->_grid_index,
                                                       sub_index);
         // read raw data if no cache or cache unsuccessful
         // TODO: check for success
@@ -270,12 +248,8 @@ void ImageGridSquare::_read_data() {
   }
   this->_square_size=GridPixelSize(max_sub_wpixel*sub_w,
                                     max_sub_hpixel*sub_h);
-  // this->_square_wpixel=max_sub_wpixel*sub_w;
-  // this->_square_hpixel=max_sub_hpixel*sub_h;
   this->_max_sub_size=GridPixelSize(max_sub_wpixel,
                                     max_sub_hpixel);
-  // this->_max_sub_wpixel=max_sub_wpixel;
-  // this->_max_sub_hpixel=max_sub_hpixel;
 }
 
 void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
@@ -309,29 +283,27 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
   auto image_max_size_hpixel=this->_image_max_size.h();
   // allocate temporary buffers to use as a working area
   this->_row_temp_buffer=std::make_unique<INT64[]>(new_wpixel*3);
-  // find how many zoom_step to get whole image grid as a 3x3 grid of original size
+  // find how many zoom_out_shifts to get whole image grid as a 3x3 grid of original size
   // TODO: revise description of why this works
   auto max_scale=(INT64)ceil((FLOAT64)(fmax(image_max_size_wpixel,image_max_size_hpixel))/(FLOAT64)MAX_MIN_SCALED_IMAGE_SIZE);
-  this->_zoom_index_length=(INT64)ceil(log2(max_scale));
-  if (this->_zoom_index_length < 1) {
-    this->_zoom_index_length=1;
+  this->_max_zoom_out_shift=(INT64)ceil(log2(max_scale));
+  if (this->_max_zoom_out_shift < 1) {
+    this->_max_zoom_out_shift=1;
   }
   // diagnostic information
   MSG("max_scale: " << max_scale);
-  MSG("max_zoom_index: " << this->_zoom_index_length);
-  auto zoom_step=ZOOM_STEP;
-  MSG("zoom_step: " << zoom_step);
+  MSG("max_zoom_out_shift: " << this->_max_zoom_out_shift);
   MSG("max_wpixel: " << image_max_size_wpixel);
   MSG("max_hpixel: " << image_max_size_hpixel);
   // add this info to the various data structure
   for (INT64 i=0L; i < this->grid_image_size().w(); i++) {
     for (INT64 j=0L; j < this->grid_image_size().h(); j++) {
-      this->_squares[i][j]->image_array=std::make_unique<std::unique_ptr<ImageGridSquareZoomLevel>[]>(this->_zoom_index_length);
-      INT64 zoom_out=1;
-      for (auto k=0L; k < this->_zoom_index_length; k++) {
+      this->_squares[i][j]->image_array=std::make_unique<std::unique_ptr<ImageGridSquareZoomLevel>[]>(this->_max_zoom_out_shift);
+      INT64 zoom_out_shift=0;
+      for (auto k=0L; k < this->_max_zoom_out_shift; k++) {
         this->_squares[i][j]->image_array[k]=std::make_unique<ImageGridSquareZoomLevel>(this->_squares[i][j].get(),
-                                                                                        zoom_out);
-        zoom_out*=zoom_step;
+                                                                                        zoom_out_shift);
+        zoom_out_shift+=1;
       }
     }
   }
@@ -365,8 +337,8 @@ bool ImageGrid::read_grid_info_successful() const {
   return this->_read_grid_info_successful;
 }
 
-INT64 ImageGrid::zoom_index_length() const {
-  return this->_zoom_index_length;
+INT64 ImageGrid::max_zoom_out_shift() const {
+  return this->_max_zoom_out_shift;
 }
 
 bool ImageGrid::_check_bounds(const GridIndex* grid_index) const {
@@ -377,9 +349,9 @@ bool ImageGrid::_check_bounds(const GridIndex* grid_index) const {
 }
 
 bool ImageGrid::_check_load(const ViewPortCurrentState& viewport_current_state,
-                            INT64 zoom_index,
+                            INT64 zoom_out_shift,
                             const GridIndex* grid_index,
-                            INT64 zoom_index_lower_limit,
+                            INT64 zoom_out_shift_lower_limit,
                             INT64 load_all) {
   auto i=grid_index->i();
   auto j=grid_index->j();
@@ -387,12 +359,12 @@ bool ImageGrid::_check_load(const ViewPortCurrentState& viewport_current_state,
   auto current_grid_y=viewport_current_state.current_grid_coordinate().y();
   auto viewport_current_state_new=ViewPortCurrentState(viewport_current_state.current_grid_coordinate(),
                                                        this->_image_max_size,
-                                                       ViewPortTransferState::find_zoom_upper(zoom_index),
+                                                       ViewPortTransferState::find_zoom_upper(zoom_out_shift),
                                                        viewport_current_state.screen_size(),
                                                        BufferPixelCoordinate(0,0),
                                                        BufferPixelCoordinate(0,0));
-  auto return_value=((zoom_index == this->_zoom_index_length-1 ||
-                      (zoom_index >= zoom_index_lower_limit &&
+  auto return_value=((zoom_out_shift == this->_max_zoom_out_shift-1 ||
+                      (zoom_out_shift >= zoom_out_shift_lower_limit &&
                        ViewPortTransferState::grid_index_visible(i,j,
                                                                  viewport_current_state_new)) ||
                       // only load adjacent grid below zoom limit
@@ -404,28 +376,29 @@ bool ImageGrid::_check_load(const ViewPortCurrentState& viewport_current_state,
 
 bool ImageGrid::_load_square(const ViewPortCurrentState& viewport_current_state,
                              const GridIndex* grid_index,
-                             INT64 zoom_index_lower_limit,
+                             INT64 zoom_out_shift_lower_limit,
                              INT64 load_all, const GridSetup* const grid_setup) {
   // always load if top level
   bool tried_load=false;
   bool never_false=true;
   if (this->_check_bounds(grid_index)) {
-    std::vector<INT64> zoom_index_list;
-    for (INT64 zoom_index=this->_zoom_index_length-1; zoom_index >= 0L; zoom_index--) {
+    std::vector<INT64> zoom_out_shift_list;
+    // this use to be reversed for a reason I can't remember, but I want the squares in ascending order
+    for (INT64 zoom_out_shift=0; zoom_out_shift < this->_max_zoom_out_shift; zoom_out_shift++) {
       if (this->_check_load(viewport_current_state,
-                            zoom_index,
+                            zoom_out_shift,
                             grid_index,
-                            zoom_index_lower_limit,
+                            zoom_out_shift_lower_limit,
                             load_all)) {
-        if (!this->squares(grid_index)->image_array[zoom_index]->is_loaded) {
-          zoom_index_list.push_back(zoom_index);
+        if (!this->squares(grid_index)->image_array[zoom_out_shift]->is_loaded) {
+          zoom_out_shift_list.push_back(zoom_out_shift);
         }
       }
     }
-    if (zoom_index_list.size() > 0) {
+    if (zoom_out_shift_list.size() > 0) {
       auto dest_squares=std::vector<ImageGridSquareZoomLevel*>{};
-      for (const auto& zoom_index : zoom_index_list) {
-        dest_squares.push_back(this->squares(grid_index)->image_array[zoom_index].get());
+      for (const auto& zoom_out_shift_item : zoom_out_shift_list) {
+        dest_squares.push_back(this->squares(grid_index)->image_array[zoom_out_shift_item].get());
       }
       tried_load=true;
       auto load_successful_temp=ImageGridSquareZoomLevel::load_square(this->squares(grid_index),
@@ -451,7 +424,7 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
       auto dest_square_zero=this->squares(grid_index)->image_array[0].get();
       auto full_wpixel=dest_square_zero->rgba_wpixel(sub_index);
       auto full_hpixel=dest_square_zero->rgba_hpixel(sub_index);
-      for (INT64 k=0L; k<this->_zoom_index_length; k++) {
+      for (INT64 k=0L; k<this->_max_zoom_out_shift; k++) {
         if (loaded_cache_size) {
           break;
         }
@@ -459,7 +432,7 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
         // find current size
         auto wpixel=dest_square->rgba_wpixel(sub_index);
         auto hpixel=dest_square->rgba_hpixel(sub_index);
-        auto filename=this->grid_setup()->get_filename(grid_index,sub_index);
+        auto filename=this->grid_setup()->filename(grid_index,sub_index);
         if (check_valid_filename(filename)) {
           // TODO: combine these
           auto filename_png=create_cache_filename(filename,"png");
@@ -493,13 +466,13 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
   // find the grid extents and choose things that should be loaded/unloaded
   // different things for what should be loaded/unloaded
   // load in reverse order of size
-  auto current_zoom_index=ViewPortTransferState::find_zoom_index_bounded(viewport_current_state.zoom(),0.0,this->_zoom_index_length-1);
+  auto current_zoom_out_shift=ViewPortTransferState::find_zoom_out_shift_bounded(viewport_current_state.zoom(),0.0,this->_max_zoom_out_shift-1);
   auto grid_w=this->grid_image_size().w();
   auto grid_h=this->grid_image_size().h();
   auto load_all=false;
-  auto zoom_index_lower_limit=current_zoom_index-1;
+  auto zoom_out_shift_lower_limit=current_zoom_out_shift-1;
   // unload first
-  for (auto zoom_index=this->_zoom_index_length-1; zoom_index >= 0L; zoom_index--) {
+  for (auto zoom_out_shift=this->_max_zoom_out_shift-1; zoom_out_shift >= 0L; zoom_out_shift--) {
     for (INT64 i=0L; i < grid_w; i++) {
       for (INT64 j=0L; j < grid_h; j++) {
         if (!keep_running) {
@@ -507,9 +480,9 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
         }
         auto grid_index=GridIndex(i,j);
         if (!this->_check_load(viewport_current_state,
-                               zoom_index, &grid_index, zoom_index_lower_limit,
+                               zoom_out_shift, &grid_index, zoom_out_shift_lower_limit,
                                load_all)) {
-          this->_squares[i][j]->image_array[zoom_index]->unload_square();
+          this->_squares[i][j]->image_array[zoom_out_shift]->unload_square();
           // always try and unload rest, except top level
         }
       }
@@ -517,7 +490,7 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
   }
   // files actually loaded
   INT64 load_count=0;
-  auto iterator_visible=this->grid_setup()->get_iterator_visible(viewport_current_state);
+  auto iterator_visible=this->grid_setup()->iterator_visible(viewport_current_state);
   // we are looking at if things are not loaded
   while (keep_trying && load_count < LOAD_FILES_BATCH && keep_running ) {
     auto grid_index=iterator_visible->get_next();
@@ -527,7 +500,7 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
 
         auto load_successful=this->_load_square(viewport_current_state,
                                                 grid_index.get(),
-                                                zoom_index_lower_limit,
+                                                zoom_out_shift_lower_limit,
                                                 load_all, grid_setup);
         if (load_successful) { load_count++; }
       }
@@ -535,7 +508,7 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
   }
   keep_trying=(load_count < LOAD_FILES_BATCH && keep_running);
   if (keep_trying) {
-    auto iterator_normal=this->grid_setup()->get_iterator_full(viewport_current_state);
+    auto iterator_normal=this->grid_setup()->iterator_full(viewport_current_state);
     while (keep_trying && load_count < LOAD_FILES_BATCH && keep_running) {
       auto grid_index=iterator_normal->get_next();
       keep_trying=(!grid_index->invalid());
@@ -543,29 +516,13 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
         if (this->_check_bounds(grid_index.get()) && grid_setup->square_has_data(grid_index.get())) {
           auto load_successful=this->_load_square(viewport_current_state,
                                                   grid_index.get(),
-                                                  zoom_index_lower_limit,
+                                                  zoom_out_shift_lower_limit,
                                                   load_all, grid_setup);
           if (load_successful) { load_count++; }
         }
       }
     }
   }
-  // uncomment for something fairly useful for seeing how files load
-  // MSG("================================================================================");
-  // for (auto zoom_index=this->_zoom_index_length-1; zoom_index >= 0L; zoom_index--) {
-  //   MSG("Zoom: " << zoom_index);
-  //   for (INT64 j=0L; j < grid_h; j++) {
-  //     for (INT64 i=0L; i < grid_w; i++) {
-  //       std::cout << this->squares[i][j]->image_array[zoom_index]->is_loaded;
-  //     }
-  //     std::cout << " === ";
-  //     for (INT64 i=0L; i < grid_w; i++) {
-  //       std::cout << this->_check_load(viewport_current_state,
-  //                                      zoom_index,i,j,zoom_index_lower_limit,load_all);
-  //     }
-  //     std::cout << "\n";
-  //   }
-  // }
 }
 
 GridPixelSize ImageGrid::image_max_pixel_size() const {
@@ -606,7 +563,7 @@ void ImageGrid::setup_grid_cache(GridSetup* const grid_setup) {
       // TODO: eventually cache this out as tiles that fit in 128x128 and 512x512
       this->_write_cache(grid_index);
       // unload
-      for (auto k=this->_zoom_index_length-1; k >= 0L; k--) {
+      for (auto k=this->_max_zoom_out_shift-1; k >= 0L; k--) {
         this->_squares[i][j]->image_array[k]->unload_square();
       }
     }

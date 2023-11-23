@@ -31,7 +31,7 @@ public:
   std::unique_ptr<INT64[]> rgba_hpixel;
   INT64 max_sub_wpixel=INT_MIN;
   INT64 max_sub_hpixel=INT_MIN;
-  INT64 zoom_out=INT_MIN;
+  INT64 zoom_out_shift=INT_MIN;
 };
 
 /**

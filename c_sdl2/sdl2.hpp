@@ -177,7 +177,7 @@ public:
    */
   void draw_text(SDLDrawableSurface* drawable_surface, INT64 xpixel, INT64 ypixel);
   /** Get the surface that displays the text. */
-  SDL_Surface* get_surface();
+  SDL_Surface* surface();
 private:
   SDL_Surface* _overlay_message_surface=nullptr;
   TTF_Font* _sdl_current_font=nullptr;

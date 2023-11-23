@@ -340,6 +340,6 @@ void SDLFontTextureWrapper::draw_text(SDLDrawableSurface* drawable_surface,
   }
 }
 
-SDL_Surface* SDLFontTextureWrapper::get_surface() {
+SDL_Surface* SDLFontTextureWrapper::surface() {
   return this->_overlay_message_surface;
 }

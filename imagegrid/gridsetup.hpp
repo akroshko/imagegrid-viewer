@@ -90,17 +90,17 @@ public:
    * @param subgrid_index The subgrid index.
    * @return The filename.
    */
-  std::string get_filename(const GridIndex& grid_index,
+  std::string filename(const GridIndex& grid_index,
                            const SubGridIndex& sub_index) const;
   // getting iterators
-  std::unique_ptr<ImageGridIteratorVisible> get_iterator_visible(const ViewPortCurrentState& viewport_current_state);
-  std::unique_ptr<ImageGridIteratorFull> get_iterator_full(const ViewPortCurrentState& viewport_current_state);
+  std::unique_ptr<ImageGridIteratorVisible> iterator_visible(const ViewPortCurrentState& viewport_current_state);
+  std::unique_ptr<ImageGridIteratorFull> iterator_full(const ViewPortCurrentState& viewport_current_state);
 protected:
-  INT64 _get_grid_index(INT64 i, INT64 j) const;
-  INT64 _get_grid_index(const GridIndex& grid_index) const;
-  INT64 _get_grid_index(const GridIndex* grid_index) const;
-  INT64 _get_sub_index(INT64 sub_i, INT64 sub_j, INT64 sub_w) const;
-  INT64 _get_sub_index(const SubGridIndex& sub_index, INT64 sub_w) const;
+  INT64 _grid_index(INT64 i, INT64 j) const;
+  INT64 _grid_index(const GridIndex& grid_index) const;
+  INT64 _grid_index(const GridIndex* grid_index) const;
+  INT64 _sub_index(INT64 sub_i, INT64 sub_j, INT64 sub_w) const;
+  INT64 _sub_index(const SubGridIndex& sub_index, INT64 sub_w) const;
   bool _successful;
   GridImageSize _grid_image_size;
   std::vector<std::string> _filenames;

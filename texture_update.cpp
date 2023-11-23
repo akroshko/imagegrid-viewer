@@ -95,21 +95,21 @@ void TextureUpdate::load_new_textures(bool grid_square_visible,
                                       TextureGridSquare* const texture_grid_square,
                                       INT64& texture_copy_count,
                                       std::atomic<bool>& keep_running) {
-  auto max_zoom_index=texture_grid_square->parent_grid()->textures_zoom_index_length()-1;
-  auto current_zoom_index=ViewPortTransferState::find_zoom_index_bounded(viewport_current_state.zoom(),0,max_zoom_index);
-  const int zoom_index_number=2;
-  INT64 zoom_index_array[zoom_index_number]={current_zoom_index,max_zoom_index};
-  for (INT64 zi=0; zi < zoom_index_number; zi++) {
+  auto max_zoom_out_shift=texture_grid_square->parent_grid()->textures_zoom_out_shift_length()-1;
+  auto current_zoom_out_shift=ViewPortTransferState::find_zoom_out_shift_bounded(viewport_current_state.zoom(),0,max_zoom_out_shift);
+  const int zoom_out_shift_number=2;
+  INT64 zoom_out_shift_array[zoom_out_shift_number]={current_zoom_out_shift,max_zoom_out_shift};
+  for (INT64 zi=0; zi < zoom_out_shift_number; zi++) {
     if (!keep_running ||
         (texture_copy_count >= LOAD_TEXTURES_BATCH)) {
       break;
     }
     // only load/update current zoom and max_zoom
-    auto zoom_index=zoom_index_array[zi];
-    auto dest_square=texture_grid_square->texture_array[zoom_index].get();
-    auto load_all=(zoom_index == max_zoom_index);
+    auto zoom_out_shift=zoom_out_shift_array[zi];
+    auto dest_square=texture_grid_square->texture_array[zoom_out_shift].get();
+    auto load_all=(zoom_out_shift == max_zoom_out_shift);
     if (load_all || grid_square_visible) {
-      auto load_index=zoom_index;
+      auto load_index=zoom_out_shift;
       bool texture_copy_successful=false;
       do {
         auto image_square=grid_square->image_array[load_index].get();
@@ -126,7 +126,7 @@ void TextureUpdate::load_new_textures(bool grid_square_visible,
                     dest_square->last_load_index>load_index) {
                   texture_copy_successful=this->load_texture(dest_square,
                                                              image_square,
-                                                             zoom_index,
+                                                             zoom_out_shift,
                                                              this->row_buffer_temp.get());
                   if (texture_copy_successful) {
                     dest_square->set_image_loaded(load_index);
@@ -140,7 +140,7 @@ void TextureUpdate::load_new_textures(bool grid_square_visible,
           }
         }
         load_index++;
-      } while (!texture_copy_successful && load_index < grid_square->parent_grid()->zoom_index_length());
+      } while (!texture_copy_successful && load_index < grid_square->parent_grid()->max_zoom_out_shift());
     }
   }
 }
@@ -148,11 +148,11 @@ void TextureUpdate::load_new_textures(bool grid_square_visible,
 void TextureUpdate::clear_textures(bool grid_square_visible,
                                    TextureGridSquare* const texture_grid_square,
                                    std::atomic<bool>& keep_running) {
-  auto max_zoom_index=texture_grid_square->parent_grid()->textures_zoom_index_length()-1;
+  auto max_zoom_out_shift=texture_grid_square->parent_grid()->textures_zoom_out_shift_length()-1;
   // never clear out top level index
-  for (INT64 zoom_index=0L; zoom_index < max_zoom_index; zoom_index++) {
+  for (INT64 zoom_out_shift=0L; zoom_out_shift < max_zoom_out_shift; zoom_out_shift++) {
     if (!keep_running) { break; }
-    auto dest_square=texture_grid_square->texture_array[zoom_index].get();
+    auto dest_square=texture_grid_square->texture_array[zoom_out_shift].get();
     if (!grid_square_visible) {
       // unload anything not visible that is loadable or displayable
       if (dest_square->is_loaded) {
@@ -170,17 +170,17 @@ void TextureUpdate::add_filler_textures(bool grid_square_visible,
                                         const ViewPortCurrentState& viewport_current_state,
                                         TextureGridSquare* const texture_grid_square,
                                         std::atomic<bool>& keep_running) {
-  auto max_zoom_index=texture_grid_square->parent_grid()->textures_zoom_index_length()-1;
-  auto current_zoom_index=ViewPortTransferState::find_zoom_index_bounded(viewport_current_state.zoom(),0,max_zoom_index);
-  for (INT64 zoom_index=max_zoom_index; zoom_index >= 0L; zoom_index--) {
+  auto max_zoom_out_index=texture_grid_square->parent_grid()->textures_zoom_out_shift_length()-1;
+  auto current_zoom_out_shift=ViewPortTransferState::find_zoom_out_shift_bounded(viewport_current_state.zoom(),0,max_zoom_out_index);
+  for (INT64 zoom_out_shift=max_zoom_out_index; zoom_out_shift >= 0L; zoom_out_shift--) {
     if (!keep_running) { break; }
-    if (zoom_index != max_zoom_index && zoom_index != current_zoom_index) {
+    if (zoom_out_shift != max_zoom_out_index && zoom_out_shift != current_zoom_out_shift) {
       continue;
     }
-    auto load_all=(zoom_index == max_zoom_index);
-    auto dest_square=texture_grid_square->texture_array[zoom_index].get();
+    auto load_all=(zoom_out_shift == max_zoom_out_index);
+    auto dest_square=texture_grid_square->texture_array[zoom_out_shift].get();
     if (load_all || grid_square_visible) {
-      if (!dest_square->is_loaded && !dest_square->get_image_filler()) {
+      if (!dest_square->is_loaded && !dest_square->image_filler()) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
         if (display_lock.try_lock()) {
           dest_square->set_image_filler();
@@ -232,7 +232,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
     for (INT64 i_sub=0; i_sub < subimages_w; i_sub++) {
       for (INT64 j_sub=0; j_sub < subimages_h; j_sub++) {
         auto sub_index=SubGridIndex(i_sub,j_sub);
-        auto source_data=source_square->get_rgba_data(sub_index);
+        auto source_data=source_square->rgba_data(sub_index);
         auto source_size=BufferPixelSize(source_square->rgba_wpixel(sub_index),
                                          source_square->rgba_hpixel(sub_index));
         auto source_data_origin_x=source_square->rgba_xpixel_origin(sub_index);

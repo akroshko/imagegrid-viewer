@@ -55,7 +55,7 @@ public:
    *
    * @return Whether this texture is a filler.
    */
-  bool get_image_filler () const;
+  bool image_filler () const;
   // lock when the display_area is being worked on
   std::mutex display_mutex;
   // is a real image/data loaded here
@@ -137,7 +137,7 @@ public:
   TextureGridSquare()=delete;
   TextureGridSquare(TextureGrid* parent_grid,
                     const GridPixelSize& image_max_pixel_size,
-                    INT64 zoom_index_length);
+                    INT64 zoom_out_shift_length);
   ~TextureGridSquare()=default;
   TextureGridSquare(const TextureGridSquare&)=delete;
   TextureGridSquare(const TextureGridSquare&&)=delete;
@@ -155,7 +155,7 @@ private:
   friend class TextureGrid;
   friend class TextureGridSquareZoomLevel;
   TextureGrid* _parent_grid;
-  INT64 _zoom_index_length;
+  INT64 _zoom_out_shift_length;
 };
 
 /**
@@ -170,12 +170,12 @@ public:
    *                   the grid, including the filenames and grid
    *                   size.
    * @param image_max_pixel_size
-   * @param zoom_index_length The length of the array holding
-   *                          progressively zoomed out images.
+   * @param zoom_out_shift_length The length of the array holding
+   *                              progressively zoomed out images.
    */
   TextureGrid(const GridSetup* grid_setup,
               const GridPixelSize& image_max_pixel_size,
-              INT64 zoom_index_length);
+              INT64 zoom_out_shift_length);
   ~TextureGrid()=default;
   TextureGrid(const TextureGrid&)=delete;
   TextureGrid(const TextureGrid&&)=delete;
@@ -188,23 +188,23 @@ public:
   /** @return The size of the grid in images. */
   GridImageSize grid_image_size() const;
   /** @return The length of texture zoom array. */
-  INT64 textures_zoom_index_length() const;
+  INT64 textures_zoom_out_shift_length() const;
   /**
    * @param grid_setup The object holding the data on the images in
    *                   the grid, including the filenames and grid
    *                   size.
-   * @param zoom_index_length The length of the array holding
-   *                          progressively zoomed out images.
+   * @param zoom_out_shift_length The length of the array holding
+   *                              progressively zoomed out images.
    * @param grid_pixel_size The maximum size of images in the grid.
    */
   void init_filler_squares(const GridSetup* const grid_setup,
-                           INT64 zoom_index_length,
+                           INT64 zoom_out_shift_length,
                            const GridPixelSize& grid_pixel_size);
 private:
   /** this size of this grid in number of textures */
   GridImageSize _grid_image_size;
   /** the maximum zoom (maximum number of reductions by a factor of 2) */
-  INT64 _zoom_index_length;
+  INT64 _zoom_out_shift_length;
 };
 
 #endif

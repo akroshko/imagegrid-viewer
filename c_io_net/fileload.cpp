@@ -284,7 +284,6 @@ bool read_tiff_data(const std::string& filename,
     ERROR("load_tiff_as_rgba() Failed to allocate raster for: " << filename);
   } else {
     uint32_t w,h;
-
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
     width=w;
@@ -335,7 +334,7 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
                                  data_transfer);
   if (can_cache) {
     MSG("Using cached file: " << cached_filename);
-    INT64 cached_zoom_out=1;
+    INT64 cached_zoom_out_shift=0;
     // TODO: this could be a problem amongst wildly varying image sizes
     //       solutions are to:
     //           store max width/max height vs zoom_out
@@ -346,9 +345,9 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
     // ImageGrid::_write_cache, there should be a better way once
     // the data structures are revised
     while (sub_w*width_test >= CACHE_MAX_PIXEL_SIZE || sub_h*height_test >= CACHE_MAX_PIXEL_SIZE) {
-      cached_zoom_out*=ZOOM_STEP;
-      width_test=reduce_and_pad(original_width,cached_zoom_out);
-      height_test=reduce_and_pad(original_height,cached_zoom_out);
+      cached_zoom_out_shift+=1;
+      width_test=reduce_and_pad(original_width,1L << cached_zoom_out_shift);
+      height_test=reduce_and_pad(original_height,1L << cached_zoom_out_shift);
     }
     png_image png_image_local;
     memset(&png_image_local, 0, sizeof(png_image_local));
@@ -366,36 +365,54 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
           ERROR("load_tiff_as_rgba() failed to read full png image!");
         } else {
           // TODO: test for mismatched size
-          auto png_width=(size_t)png_image_local.width;
-          auto png_height=(size_t)png_image_local.height;
+          auto png_width=(INT64)png_image_local.width;
+          auto png_height=(INT64)png_image_local.height;
+          INT64 last_zoom_out_shift=INT_MAX;
+          BufferPixelSize last_dest_size;
+          PIXEL_RGBA* last_buffer=nullptr;
           for (const auto& file_data : data_transfer.data_transfer) {
-            auto zoom_out=file_data->zoom_out;
-            auto actual_zoom_out=file_data->zoom_out/cached_zoom_out;
+            auto zoom_out_shift=file_data->zoom_out_shift;
+            auto actual_zoom_out_shift=file_data->zoom_out_shift-cached_zoom_out_shift;
             // TODO: might want to add an assert here but should be safe due to earlier check
-            size_t w_reduced=reduce_and_pad(original_width,zoom_out);
-            size_t h_reduced=reduce_and_pad(original_height,zoom_out);
+            INT64 w_reduced=reduce_and_pad(original_width,1L << zoom_out_shift);
+            INT64 h_reduced=reduce_and_pad(original_height,1L << zoom_out_shift);
             auto sub_index_arr=sub_j*sub_w+sub_i;
             file_data->rgba_wpixel[sub_index_arr]=w_reduced;
             file_data->rgba_hpixel[sub_index_arr]=h_reduced;
-            size_t npixels_reduced=w_reduced*h_reduced;
+            INT64 npixels_reduced=w_reduced*h_reduced;
             file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
             std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
-            auto source_size=BufferPixelSize(png_width,png_height);
-            auto dest_size=BufferPixelSize(w_reduced,h_reduced);
-            buffer_copy_reduce_standard((PIXEL_RGBA*)png_raster,
-                                        source_size,
-                                        BufferPixelCoordinate(0,0),
-                                        source_size,
-                                        file_data->rgba_data[sub_index_arr],
-                                        dest_size,
-                                        dest_size,
-                                        BufferPixelCoordinate(0,0),
-                                        // TODO: get rid of this float
-                                        (INT64)floor(log2(actual_zoom_out)),
-                                        row_temp_buffer);
-            // // DEBUGGING!!!
-            // std::filesystem::path cached_filename_test(cached_filename);
-            // write_png_text("/home/main/tmp-test/"+std::to_string((INT64)floor(log2(actual_zoom_out)))+"_"+cached_filename_test.filename().string(),"",w_reduced,h_reduced,0,0,file_data->rgba_data[sub_index_arr]);
+            if (last_buffer && zoom_out_shift > last_zoom_out_shift) {
+              auto step_zoom_out_shift=actual_zoom_out_shift-last_zoom_out_shift;
+              auto source_size=last_dest_size;
+              auto dest_size=BufferPixelSize(w_reduced,h_reduced);
+              buffer_copy_reduce_standard(last_buffer,
+                                          source_size,
+                                          BufferPixelCoordinate(0,0),
+                                          source_size,
+                                          file_data->rgba_data[sub_index_arr],
+                                          dest_size,
+                                          dest_size,
+                                          BufferPixelCoordinate(0,0),
+                                          step_zoom_out_shift,
+                                          row_temp_buffer);
+            } else {
+              auto source_size=BufferPixelSize(png_width,png_height);
+              auto dest_size=BufferPixelSize(w_reduced,h_reduced);
+              buffer_copy_reduce_standard((PIXEL_RGBA*)png_raster,
+                                          source_size,
+                                          BufferPixelCoordinate(0,0),
+                                          source_size,
+                                          file_data->rgba_data[sub_index_arr],
+                                          dest_size,
+                                          dest_size,
+                                          BufferPixelCoordinate(0,0),
+                                          actual_zoom_out_shift,
+                                          row_temp_buffer);
+            }
+            last_dest_size=BufferPixelSize(w_reduced,h_reduced);
+            last_zoom_out_shift=actual_zoom_out_shift;
+            last_buffer=file_data->rgba_data[sub_index_arr];
           }
         }
         delete[] png_raster;
@@ -425,7 +442,7 @@ bool load_tiff_as_rgba(const std::string& filename,
     size_t npixels;
     uint32_t* raster;
     npixels=tiff_width*tiff_height;
-    raster=(uint32_t*) _TIFFmalloc(npixels * sizeof (uint32_t));
+    raster=(uint32_t*)_TIFFmalloc(npixels*sizeof(uint32_t));
     if (raster == NULL) {
       ERROR("Failed to allocate raster for: " << filename);
     } else {
@@ -433,25 +450,48 @@ bool load_tiff_as_rgba(const std::string& filename,
         ERROR("Failed to read: " << filename);
       } else {
         // convert raster
+        // this assumes zoom_out is coming in ascending order
+        INT64 last_zoom_out_shift=INT_MAX;
+        BufferPixelSize last_dest_size;
+        PIXEL_RGBA* last_buffer=nullptr;
         for (const auto& file_data : data_transfer.data_transfer) {
-          auto zoom_out=file_data->zoom_out;
-          size_t w_reduced=reduce_and_pad(tiff_width,zoom_out);
-          size_t h_reduced=reduce_and_pad(tiff_height,zoom_out);
+          auto zoom_out_shift=file_data->zoom_out_shift;
+          INT64 w_reduced=reduce_and_pad(tiff_width,1L << zoom_out_shift);
+          INT64 h_reduced=reduce_and_pad(tiff_height,1L << zoom_out_shift);
           auto sub_index_arr=sub_j*sub_w+sub_i;
           file_data->rgba_wpixel[sub_index_arr]=w_reduced;
           file_data->rgba_hpixel[sub_index_arr]=h_reduced;
           auto npixels_reduced=w_reduced*h_reduced;
           file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
           std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
-          auto source_size=BufferPixelSize(tiff_width,tiff_height);
-          auto dest_size=BufferPixelSize(w_reduced,h_reduced);
-          buffer_copy_reduce_tiff(raster,
-                                  source_size,
-                                  file_data->rgba_data[sub_index_arr],
-                                  dest_size,
-                                  // TODO: get rid of this floating point
-                                  floor(log2(zoom_out)),
-                                  row_temp_buffer);
+          if (last_buffer && zoom_out_shift > last_zoom_out_shift) {
+            auto step_zoom_out_shift=zoom_out_shift-last_zoom_out_shift;
+            auto source_size=last_dest_size;
+            auto dest_size=BufferPixelSize(w_reduced,h_reduced);
+            buffer_copy_reduce_standard(last_buffer,
+                                        source_size,
+                                        BufferPixelCoordinate(0,0),
+                                        source_size,
+                                        file_data->rgba_data[sub_index_arr],
+                                        dest_size,
+                                        dest_size,
+                                        BufferPixelCoordinate(0,0),
+                                        step_zoom_out_shift,
+                                        row_temp_buffer);
+          } else {
+            auto source_size=BufferPixelSize(tiff_width,tiff_height);
+            auto dest_size=BufferPixelSize(w_reduced,h_reduced);
+            buffer_copy_reduce_tiff(raster,
+                                    source_size,
+                                    file_data->rgba_data[sub_index_arr],
+                                    dest_size,
+                                    zoom_out_shift,
+                                    row_temp_buffer);
+
+          }
+          last_dest_size=BufferPixelSize(w_reduced,h_reduced);
+          last_zoom_out_shift=zoom_out_shift;
+          last_buffer=file_data->rgba_data[sub_index_arr];
         }
         success=true;
       }
@@ -471,8 +511,8 @@ bool read_png_data(const std::string& filename,
   if (png_image_begin_read_from_file(&image, filename.c_str()) == 0) {
     ERROR("read_png_data() failed to read from file: " << filename);
   } else {
-    width=(size_t)image.width;
-    height=(size_t)image.height;
+    width=(INT64)image.width;
+    height=(INT64)image.height;
     png_image_free(&image);
     success=true;
   }
@@ -506,33 +546,54 @@ bool load_png_as_rgba(const std::string& filename,
         ERROR("load_png_as_rgba() failed to read full image!");
       } else {
         // TODO: test for mismatched size
-        auto width=(size_t)image.width;
-        auto height=(size_t)image.height;
+        INT64 width=image.width;
+        INT64 height=image.height;
+        INT64 last_zoom_out_shift=INT_MAX;
+        BufferPixelSize last_dest_size;
+        PIXEL_RGBA* last_buffer=nullptr;
         for (const auto& file_data : data_transfer.data_transfer) {
-          auto zoom_out=file_data->zoom_out;
-          size_t w_reduced=reduce_and_pad(width,zoom_out);
-          size_t h_reduced=reduce_and_pad(height,zoom_out);
+          auto zoom_out_shift=file_data->zoom_out_shift;
+          INT64 w_reduced=reduce_and_pad(width,1L << zoom_out_shift);
+          INT64 h_reduced=reduce_and_pad(height,1L << zoom_out_shift);
           auto sub_index_arr=sub_j*sub_w+sub_i;
           file_data->rgba_wpixel[sub_index_arr]=w_reduced;
           file_data->rgba_hpixel[sub_index_arr]=h_reduced;
-          size_t npixels_reduced=w_reduced*h_reduced;
+          INT64 npixels_reduced=w_reduced*h_reduced;
           file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
           std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
-          auto source_size=BufferPixelSize(width,height);
-          auto dest_size=BufferPixelSize(w_reduced,h_reduced);
-          buffer_copy_reduce_standard((PIXEL_RGBA*)raster,
-                                      source_size,
-                                      BufferPixelCoordinate(0,0),
-                                      source_size,
-                                      file_data->rgba_data[sub_index_arr],
-                                      dest_size,
-                                      dest_size,
-                                      BufferPixelCoordinate(0,0),
-                                      // TODO: get rid of this float
-                                      (INT64)floor(log2(zoom_out)),
-                                      row_temp_buffer);
-          success=true;
+          if (last_buffer && zoom_out_shift > last_zoom_out_shift) {
+            auto step_zoom_out_shift=zoom_out_shift-last_zoom_out_shift;
+            auto source_size=last_dest_size;
+            auto dest_size=BufferPixelSize(w_reduced,h_reduced);
+            buffer_copy_reduce_standard(last_buffer,
+                                        source_size,
+                                        BufferPixelCoordinate(0,0),
+                                        source_size,
+                                        file_data->rgba_data[sub_index_arr],
+                                        dest_size,
+                                        dest_size,
+                                        BufferPixelCoordinate(0,0),
+                                        step_zoom_out_shift,
+                                        row_temp_buffer);
+          } else {
+            auto source_size=BufferPixelSize(width,height);
+            auto dest_size=BufferPixelSize(w_reduced,h_reduced);
+            buffer_copy_reduce_standard((PIXEL_RGBA*)raster,
+                                        source_size,
+                                        BufferPixelCoordinate(0,0),
+                                        source_size,
+                                        file_data->rgba_data[sub_index_arr],
+                                        dest_size,
+                                        dest_size,
+                                        BufferPixelCoordinate(0,0),
+                                        zoom_out_shift,
+                                        row_temp_buffer);
+          }
+          last_dest_size=BufferPixelSize(w_reduced,h_reduced);
+          last_zoom_out_shift=zoom_out_shift;
+          last_buffer=file_data->rgba_data[sub_index_arr];
         }
+        success=true;
       }
       delete[] raster;
     }

@@ -24,7 +24,7 @@ void blit_this(SDLDrawableSurface* screen_surface,
                const BufferPixelSize& grid_image_size_zoomed) {
    auto viewport_pixel_coordinate=BufferPixelCoordinate(l_viewport_pixel_coordinate);
    auto image_pixel_size_viewport=BufferPixelSize(grid_image_size_zoomed);
-   if (blit_square->get_image_filler()) {
+   if (blit_square->image_filler()) {
      blit_square->filler_texture_wrapper()->blit_texture(screen_surface,
                                                          blit_square->filler_texture_wrapper()->texture_size_visible(),
                                                          viewport_pixel_coordinate,
@@ -111,10 +111,10 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
   // lifted out of the old find_viewport_extents_grid function since it's only called from here
   // will be put into function eventually, but I wanted to use new data structures
   // I don't use objects for some things because I want to use FLOAT64 for intermediate calculations
-  auto max_zoom_index=texture_grid->textures_zoom_index_length()-1;
+  auto max_zoom_out_shift=texture_grid->textures_zoom_out_shift_length()-1;
   // TODO refactor this out
-  if (max_zoom_index < 0) { max_zoom_index=0; }
-  auto zoom_index=ViewPortTransferState::find_zoom_index_bounded(this->_zoom,0,max_zoom_index);
+  if (max_zoom_out_shift < 0) { max_zoom_out_shift=0; }
+  auto zoom_out_shift=ViewPortTransferState::find_zoom_out_shift_bounded(this->_zoom,0,max_zoom_out_shift);
   ////////////////////////////////////////////////////////////////////////////////
   // now loop over grid squares
   auto viewport_pixel_size=BufferPixelSize(this->_current_window_w,this->_current_window_h);
@@ -138,7 +138,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
           viewport_pixel_coordinate_upperleft.x() > MAX_SCREEN_WIDTH || viewport_pixel_coordinate_upperleft.y() > MAX_SCREEN_HEIGHT) {
             continue;
       }
-      auto actual_zoom=zoom_index;
+      auto actual_zoom=zoom_out_shift;
       // for testing max zoom
       bool texture_loaded=false;
       do {
@@ -168,14 +168,14 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
         }
         // TODO: else raise error if things are terrible
         actual_zoom++;
-      } while ((actual_zoom <= max_zoom_index) && !texture_loaded);
+      } while ((actual_zoom <= max_zoom_out_shift) && !texture_loaded);
       // texture didn't load load so do filler
       if (!texture_loaded) {
-        auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[zoom_index].get();
-        if (texture_square_zoom->get_image_filler()) {
+        auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[zoom_out_shift].get();
+        if (texture_square_zoom->image_filler()) {
           // TODO: would like more RAII way of dealing with this mutex
           if (texture_square_zoom->display_mutex.try_lock()) {
-            if (texture_square_zoom->get_image_filler() &&
+            if (texture_square_zoom->image_filler() &&
                 texture_square_zoom->filler_texture_wrapper()->is_valid()) {
               auto grid_image_size_zoomed=BufferPixelSize((INT64)round(this->_image_max_size.w()*this->_zoom),
                                                             (INT64)round(this->_image_max_size.h()*this->_zoom));

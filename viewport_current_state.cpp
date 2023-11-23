@@ -78,24 +78,24 @@ ViewPortCurrentState ViewPortTransferState::GetGridValues() {
   return viewport_current_state;
 }
 
-INT64 ViewPortTransferState::find_zoom_index_bounded(FLOAT64 zoom,
-                                                     INT64 min_zoom_index,
-                                                     INT64 max_zoom_index) {
+INT64 ViewPortTransferState::find_zoom_out_shift_bounded(FLOAT64 zoom,
+                                                         INT64 min_zoom_out_shift,
+                                                         INT64 max_zoom_out_shift) {
   auto return_value=floor(log2(1.0/zoom));
-  if (return_value < min_zoom_index) {
-    return_value=min_zoom_index;
+  if (return_value < min_zoom_out_shift) {
+    return_value=min_zoom_out_shift;
   }
-  if (return_value > max_zoom_index) {
-    return_value=max_zoom_index;
+  if (return_value > max_zoom_out_shift) {
+    return_value=max_zoom_out_shift;
   }
   return return_value;
 }
 
-FLOAT64 ViewPortTransferState::find_zoom_upper(INT64 zoom_index) {
-  if (zoom_index < 0) {
-    zoom_index=0;
+FLOAT64 ViewPortTransferState::find_zoom_upper(INT64 zoom_out_shift) {
+  if (zoom_out_shift < 0) {
+    zoom_out_shift=0;
   }
-  return 1.0/(pow(2.0,zoom_index+1));
+  return 1.0/(pow(2.0,zoom_out_shift+1));
 }
 
 FLOAT64 ViewPortTransferState::_find_max_zoom(FLOAT64 zoom) {

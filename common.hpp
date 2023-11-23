@@ -161,11 +161,6 @@ const INT64 OVERLAY_Y=10;
 // overlay font path
 const char OVERLAY_FONT_PATH[]="/usr/share/fonts/truetype/freefont/FreeSans.ttf";
 
-// zoom step
-// I don't see myself moving away from powers of two, but it's nice to
-// have it visible where I make this assumption
-const INT64 ZOOM_STEP=2;
-
 // placeholder in command line arguments for empty file
 const std::string EMPTY_FILE_PLACEHOLDER="[[EMPTY]]";
 

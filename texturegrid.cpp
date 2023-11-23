@@ -71,7 +71,7 @@ void TextureGridSquareZoomLevel::set_image_filler () {
   this->last_load_index=INT_MAX;
 }
 
-bool TextureGridSquareZoomLevel::get_image_filler () const {
+bool TextureGridSquareZoomLevel::image_filler () const {
   return !this->is_loaded && this->is_displayable;
 }
 
@@ -157,11 +157,11 @@ BufferPixelSize TextureGridSquareZoomLevel::texture_square_pixel_size () const {
 
 TextureGridSquare::TextureGridSquare (TextureGrid* parent_grid,
                                       const GridPixelSize& image_max_pixel_size,
-                                      INT64 zoom_index_length) {
+                                      INT64 zoom_out_shift_length) {
   this->_parent_grid=parent_grid;
-  this->_zoom_index_length=zoom_index_length;
-  this->texture_array=std::make_unique<std::unique_ptr<TextureGridSquareZoomLevel>[]>(zoom_index_length);
-  for (auto i=0L; i < zoom_index_length; i++) {
+  this->_zoom_out_shift_length=zoom_out_shift_length;
+  this->texture_array=std::make_unique<std::unique_ptr<TextureGridSquareZoomLevel>[]>(zoom_out_shift_length);
+  for (auto i=0L; i < zoom_out_shift_length; i++) {
     this->texture_array[i]=std::make_unique<TextureGridSquareZoomLevel>(this,
                                                                         image_max_pixel_size,
                                                                         i);
@@ -174,36 +174,36 @@ TextureGrid* TextureGridSquare::parent_grid () const {
 
 TextureGrid::TextureGrid (const GridSetup* const grid_setup,
                           const GridPixelSize& image_max_pixel_size,
-                          INT64 zoom_index_length) {
+                          INT64 zoom_out_shift_length) {
   this->_grid_image_size=GridImageSize(grid_setup->grid_image_size());
-  this->_zoom_index_length=zoom_index_length;
+  this->_zoom_out_shift_length=zoom_out_shift_length;
   this->squares=std::make_unique<std::unique_ptr<std::unique_ptr<TextureGridSquare>[]>[]>(grid_setup->grid_image_size().w());
   for (INT64 i=0L; i < grid_setup->grid_image_size().w(); i++) {
     this->squares[i]=std::make_unique<std::unique_ptr<TextureGridSquare>[]>(grid_setup->grid_image_size().h());
     for (INT64 j=0L; j < grid_setup->grid_image_size().h(); j++) {
-      this->squares[i][j]=std::make_unique<TextureGridSquare>(this,image_max_pixel_size,zoom_index_length);
+      this->squares[i][j]=std::make_unique<TextureGridSquare>(this,image_max_pixel_size,zoom_out_shift_length);
     }
   }
-  this->filler_squares=std::make_unique<std::unique_ptr<SDLDisplayTextureWrapper>[]>(zoom_index_length);
+  this->filler_squares=std::make_unique<std::unique_ptr<SDLDisplayTextureWrapper>[]>(zoom_out_shift_length);
 }
 
 void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
-                                      INT64 zoom_index_length,
+                                      INT64 zoom_out_shift_length,
                                       const GridPixelSize& grid_pixel_size) {
   // fill squares
   // TODO: I may want to defer filling texture squares eventually
   // TODO: this should be built by the time things are ready
   //       may want to add an atomic
-  for (INT64 zoom_index=0L; zoom_index < zoom_index_length; zoom_index++) {
-    auto texture_zoom_reduction=(1L << zoom_index);
+  for (INT64 zoom_out_shift=0L; zoom_out_shift < zoom_out_shift_length; zoom_out_shift++) {
+    auto texture_zoom_reduction=(1L << zoom_out_shift);
     GridPixelSize dest_pixel_size=grid_pixel_size/texture_zoom_reduction;
-    this->filler_squares[zoom_index] = std::make_unique<SDLDisplayTextureWrapper>();
-    this->filler_squares[zoom_index]->create_surface(dest_pixel_size.w(), dest_pixel_size.h());
-    auto lock_surface_return=this->filler_squares[zoom_index]->lock_surface();
+    this->filler_squares[zoom_out_shift] = std::make_unique<SDLDisplayTextureWrapper>();
+    this->filler_squares[zoom_out_shift]->create_surface(dest_pixel_size.w(), dest_pixel_size.h());
+    auto lock_surface_return=this->filler_squares[zoom_out_shift]->lock_surface();
     if (lock_surface_return) {
-      auto dest_array=this->filler_squares[zoom_index]->pixels();
-      auto wpixel_aligned=this->filler_squares[zoom_index]->texture_size_aligned().w();
-      auto hpixel_aligned=this->filler_squares[zoom_index]->texture_size_aligned().h();
+      auto dest_array=this->filler_squares[zoom_out_shift]->pixels();
+      auto wpixel_aligned=this->filler_squares[zoom_out_shift]->texture_size_aligned().w();
+      auto hpixel_aligned=this->filler_squares[zoom_out_shift]->texture_size_aligned().h();
       // copy over gray
       for (INT64 l=0L; l < hpixel_aligned; l++) {
         for (INT64 k=0L; k < wpixel_aligned; k++) {
@@ -211,20 +211,20 @@ void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
           ((PIXEL_RGBA*)dest_array)[dest_index]=FILLER_LEVEL;
         }
       }
-      this->filler_squares[zoom_index]->unlock_surface();
+      this->filler_squares[zoom_out_shift]->unlock_surface();
     }
   }
-  for (INT64 zoom_index=0L; zoom_index < zoom_index_length; zoom_index++) {
+  for (INT64 zoom_out_shift=0L; zoom_out_shift < zoom_out_shift_length; zoom_out_shift++) {
     for (INT64 i=0L; i < grid_setup->grid_image_size().w(); i++) {
       for (INT64 j=0L; j < grid_setup->grid_image_size().h(); j++) {
-        this->squares[i][j]->texture_array[zoom_index]->_filler_texture_wrapper=this->filler_squares[zoom_index].get();
+        this->squares[i][j]->texture_array[zoom_out_shift]->_filler_texture_wrapper=this->filler_squares[zoom_out_shift].get();
       }
     }
   }
 }
 
-INT64 TextureGrid::textures_zoom_index_length() const {
-  return this->_zoom_index_length;
+INT64 TextureGrid::textures_zoom_out_shift_length() const {
+  return this->_zoom_out_shift_length;
 }
 
 GridImageSize TextureGrid::grid_image_size() const {

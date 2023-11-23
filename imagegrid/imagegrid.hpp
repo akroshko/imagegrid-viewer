@@ -61,8 +61,6 @@ public:
   void unload_square();
   /** @return The amount of right shift corresponding how zoomed out this square is. */
   INT64 zoom_out_shift() const;
-  /** @return The amount zoomed out this class represents. */
-  INT64 zoom_out() const;
   /**
    * Get the zoomed width in pixels of RGBA array.
    *
@@ -99,7 +97,7 @@ public:
    * @param sub_index The index of the subgrid.
    * @return A pointer to the RGBA data.
    */
-  PIXEL_RGBA* get_rgba_data(const SubGridIndex& sub_index) const;
+  PIXEL_RGBA* rgba_data(const SubGridIndex& sub_index) const;
   /** @return The subgrid size of this square. */
   SubGridImageSize sub_size() const;
   // /** @return The max subgrid pixel size for each image at the zoom out of this square. */
@@ -123,7 +121,7 @@ private:
   // the origin foreach
   std::unique_ptr<INT64[]> _rgba_xpixel_origin;
   std::unique_ptr<INT64[]> _rgba_ypixel_origin;
-  INT64 _zoom_out;
+  INT64 _zoom_out_shift;
 };
 
 /**
@@ -212,7 +210,7 @@ public:
   /** @return Whether read_grid_info was successful. */
   bool read_grid_info_successful() const;
   /** @return The length of arrays of zoomed image. */
-  INT64 zoom_index_length() const;
+  INT64 max_zoom_out_shift() const;
   /** @return The grid setup object used by this imagegrid. */
   GridSetup* grid_setup() const;
   const GridImageSize grid_image_size() const;
@@ -237,27 +235,27 @@ private:
    * viewport coordinates and zoom out value.
    *
    * @param viewport_current_state The current state of the viewport.
-   * @param zoom_index The zoom index to check.
+   * @param zoom_out_shift The zoom index to check.
    * @param grid_index The index of grid square to check.
-   * @param zoom_index_lower_limit The lower limit of the zoom index
-   *                               for things outside adjacent grid
-   *                               squares.
+   * @param zoom_out_shift_lower_limit The lower limit of the zoom index
+   *                                   for things outside adjacent grid
+   *                                   squares.
    * @param load_all Specify if all valid files are to be loaded.
    * @return If file should be loaded for current conditions.
    */
   bool _check_load(const ViewPortCurrentState& viewport_current_state,
-                   INT64 zoom_index,
+                   INT64 zoom_out_shift,
                    const GridIndex* grid_index,
-                   INT64 zoom_index_lower_limit,
+                   INT64 zoom_out_shift_lower_limit,
                    INT64 load_all);
   /**
    * Actually load the square.
    *
    * @param viewport_current_state The current state of the viewport.
    * @param grid_index The index of grid square to load.
-   * @param zoom_index_lower_limit Do not load if only things that
-   *                               need to be loaded are below this
-   *                               limit
+   * @param zoom_out_shift_lower_limit Do not load if only things that
+   *                                   need to be loaded are below this
+   *                                   limit
    * @param load_all specify if all valid files are to be loaded
    * @param grid_setup The object holding the data on the images in
    *                   the grid, including the filenames and grid
@@ -266,7 +264,7 @@ private:
    */
   bool _load_square(const ViewPortCurrentState& viewport_current_state,
                     const GridIndex* grid_index,
-                    INT64 zoom_index_lower_limit,
+                    INT64 zoom_out_shift_lower_limit,
                     INT64 load_all,
                     const GridSetup* grid_setup);
   /**
@@ -292,9 +290,9 @@ private:
   /** Indicate whether grid info was read properly. */
   bool _read_grid_info_successful=false;
   /** The length of arrays of zoomed image. */
-  INT64 _zoom_index_length;
+  INT64 _max_zoom_out_shift;
   /**
-   * This is a temporar pre-allocated buffer for row copies when loading files.
+   * This is a temporary pre-allocated buffer for row copies when loading files.
    *
    * These will have to be allocated on a pre-thread basis when file
    * loading through this class becomes more multithreaded.

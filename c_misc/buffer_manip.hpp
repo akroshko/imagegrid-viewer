@@ -110,7 +110,7 @@ void buffer_copy_expand_generic (const PIXEL_RGBA* const source_buffer,
 
 /**
  * Copy and expand size of a generic RGBA buffer. A "safe" version
- * that should work with any zoom_index and on any 64-bit platform.
+ * that should work with any zoom_out_shift and on any 64-bit platform.
  *
  * @param source_buffer The source buffer.
  * @param source_size
