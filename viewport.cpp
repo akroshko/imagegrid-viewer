@@ -25,10 +25,7 @@ void blit_this(SDLDrawableSurface* screen_surface,
    auto viewport_pixel_coordinate=BufferPixelCoordinate(l_viewport_pixel_coordinate);
    auto image_pixel_size_viewport=BufferPixelSize(grid_image_size_zoomed);
    if (blit_square->image_filler()) {
-     blit_square->filler_texture_wrapper()->blit_texture(screen_surface,
-                                                         blit_square->filler_texture_wrapper()->texture_size_visible(),
-                                                         viewport_pixel_coordinate,
-                                                         image_pixel_size_viewport);
+     screen_surface->draw_rect(viewport_pixel_coordinate, image_pixel_size_viewport, FILLER_LEVEL);
   } else {
      FLOAT64 texture_square_wpixel=blit_square->texture_square_pixel_size().w();
      FLOAT64 texture_square_hpixel=blit_square->texture_square_pixel_size().h();
@@ -142,7 +139,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
       // for testing max zoom
       bool texture_loaded=false;
       do {
-        auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[actual_zoom].get();
+        auto texture_square_zoom=texture_grid->squares(GridIndex(i,j))->texture_array[actual_zoom].get();
         // filler should never get past here
         if (texture_square_zoom->is_loaded &&
             texture_square_zoom->is_displayable) {
@@ -171,21 +168,24 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
       } while ((actual_zoom <= max_zoom_out_shift) && !texture_loaded);
       // texture didn't load load so do filler
       if (!texture_loaded) {
-        auto texture_square_zoom=texture_grid->squares[i][j]->texture_array[zoom_out_shift].get();
+        auto texture_square_zoom=texture_grid->squares(GridIndex(i,j))->texture_array[zoom_out_shift].get();
         if (texture_square_zoom->image_filler()) {
           // TODO: would like more RAII way of dealing with this mutex
+          // still want a mutex here so indication that texture is to use filler doesn't change
           if (texture_square_zoom->display_mutex.try_lock()) {
-            if (texture_square_zoom->image_filler() &&
-                texture_square_zoom->filler_texture_wrapper()->is_valid()) {
+            if (texture_square_zoom->image_filler()
+                // &&
+                // texture_square_zoom->filler_texture_wrapper()->is_valid()
+              ) {
               auto grid_image_size_zoomed=BufferPixelSize((INT64)round(this->_image_max_size.w()*this->_zoom),
-                                                            (INT64)round(this->_image_max_size.h()*this->_zoom));
+                                                          (INT64)round(this->_image_max_size.h()*this->_zoom));
               blit_this(drawable_surface.get(),
                         texture_square_zoom,
                         viewport_pixel_coordinate_upperleft,
                         grid_image_size_zoomed);
             }
             texture_square_zoom->display_mutex.unlock();
-          } else {
+        } else {
             // TODO: this should never happen, so this error is in here while I investigate
             MSG("Couldn't lock filler: " << i << " " << j);
           }

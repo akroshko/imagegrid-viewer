@@ -17,9 +17,10 @@
  * @param filenames Reference to se a vector of filesnames
  * @param text_filename Referenc to set a filename corresponding to a
  *        text file that contains the parameters for the imagegrid.
+ * @return If arguments were parsed successfully.
  */
-void parse_standard_arguments(int argc, char* const* argv,
+bool parse_standard_arguments(int argc, char* const* argv,
                               INT64& wimage, INT64& himage,
-                              bool& write_cache, bool& use_cache, bool& successful,
+                              bool& write_cache, bool& use_cache,
                               std::string& path_value, std::vector<std::string>& filenames,
                               std::string& text_filename);

@@ -25,7 +25,7 @@ TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_cur
   this->row_buffer_temp=std::make_unique<INT64[]>(grid_pixel_size.w()*3);
 }
 
-void TextureUpdate::find_current_textures(const ImageGrid* const grid,
+void TextureUpdate::find_current_textures(ImageGrid* const grid,
                                           TextureGrid* const texture_grid,
                                           TextureOverlay* const texture_overlay,
                                           std::atomic<bool>& keep_running) {
@@ -39,7 +39,7 @@ void TextureUpdate::find_current_textures(const ImageGrid* const grid,
       for (INT64 i=0L; i < texture_grid->grid_image_size().w(); i++) {
         auto grid_index=GridIndex(i,j);
         auto grid_square_visible=this->_grid_square_visible(i,j,viewport_current_state);
-        auto current_texture_grid_square=texture_grid->squares[i][j].get();
+        auto current_texture_grid_square=texture_grid->squares(GridIndex(i,j));
         this->load_new_textures(grid_square_visible,viewport_current_state,
                                 grid->squares(grid_index),
                                 current_texture_grid_square,
@@ -170,6 +170,9 @@ void TextureUpdate::add_filler_textures(bool grid_square_visible,
                                         const ViewPortCurrentState& viewport_current_state,
                                         TextureGridSquare* const texture_grid_square,
                                         std::atomic<bool>& keep_running) {
+  // this just sets the square as filler for now, but it is likely I
+  // will want to draw something specific for invalid/unloaded squares
+  // in the future
   auto max_zoom_out_index=texture_grid_square->parent_grid()->textures_zoom_out_shift_length()-1;
   auto current_zoom_out_shift=ViewPortTransferState::find_zoom_out_shift_bounded(viewport_current_state.zoom(),0,max_zoom_out_index);
   for (INT64 zoom_out_shift=max_zoom_out_index; zoom_out_shift >= 0L; zoom_out_shift--) {

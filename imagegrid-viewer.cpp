@@ -164,7 +164,7 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup* const grid_setup) {
   // this is where the the info on the grid is loaded
   // the actual image data is loaded seperately in it's own thread
   this->grid->read_grid_info(grid_setup, this->viewport_current_state_imagegrid_update);
-  auto read_images_successful=this->grid->read_grid_info_successful();
+  auto read_images_successful=(this->grid->status() == ImageGridStatus::loaded);
   if (read_images_successful) {
     this->viewport->set_image_max_size(this->grid->image_max_pixel_size());
     // TODO: this is where I should init the textures
@@ -172,9 +172,6 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup* const grid_setup) {
                                                      this->grid->image_max_pixel_size(),
                                                      this->grid->max_zoom_out_shift());
     this->texture_overlay=std::make_unique<TextureOverlay>();
-    this->texture_grid->init_filler_squares(grid_setup,
-                                            this->grid->max_zoom_out_shift(),
-                                            this->grid->image_max_pixel_size());
     this->texture_update=std::make_unique<TextureUpdate>(this->viewport_current_state_texturegrid_update,
                                                          this->grid->image_max_pixel_size());
     // adjust initial position to a sensible default depending on how
@@ -343,7 +340,8 @@ int main(int argc, char* argv[]) {
   // read the command line arguments to fine out what our grid looks
   // like and where the images come from
   auto grid_setup=std::make_unique<GridSetupFromCommandLine>(argc,argv);
-  if (!grid_setup->successful()) {
+  if (grid_setup->status() != GridSetupStatus::loaded) {
+    ERROR("Failed to setup grid information.");
     return 1;
   }
   // set up whole program even when doing cache do to dependencies among objects
@@ -352,7 +350,6 @@ int main(int argc, char* argv[]) {
     // now run the cache
     MSG("Starting cache!");
     imagegrid_viewer_context->grid->setup_grid_cache(grid_setup.get());
-    // grid->setup_grid_cache(grid_setup.get());
     return 0;
   } else {
     // initialize SDL

@@ -83,8 +83,18 @@ public:
   SDLDrawableSurface(SDLApp* const sdl_app,
                      const BufferPixelSize& viewport_pixel_size);
   ~SDLDrawableSurface();
+  // TODO: this should be made a friend and private
   /** @return The drawable screen surface. */
   SDL_Surface* screen_surface();
+  /**
+    * @param viewport_pixel_coordinate The coorindate to draw the rectangle at.
+    * @param rect_pixel_size The size ofthe rectangle.
+    * @param color The color of the rectangle.
+    * @return If successful.
+    */
+  bool draw_rect(const BufferPixelCoordinate& viewport_pixel_coordinate,
+                 const BufferPixelSize& rect_pixel_size,
+                 PIXEL_RGBA color);
 private:
   SDL_Surface* _screen_surface;
   SDLApp* _sdl_app;

@@ -43,10 +43,8 @@ public:
   LoadFileDataTransfer();
   std::vector<std::shared_ptr<LoadFileZoomLevelData>> data_transfer;
   SubGridImageSize sub_size;
-  // INT64 sub_w=INT_MIN;
-  // INT64 sub_h=INT_MIN;
-  std::unique_ptr<size_t[]> original_rgba_wpixel;
-  std::unique_ptr<size_t[]> original_rgba_hpixel;
+  std::unique_ptr<INT64[]> original_rgba_wpixel;
+  std::unique_ptr<INT64[]> original_rgba_hpixel;
 };
 
 /**

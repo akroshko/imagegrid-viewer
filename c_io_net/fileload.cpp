@@ -201,6 +201,7 @@ bool read_data(const std::string& filename,
       height=0;
     } else {
       ERROR("read_data can't read: " << filename);
+      successful=false;
     }
   }
   return successful;
@@ -657,7 +658,7 @@ bool check_empty(const std::string& filename) {
   return std::regex_search(filename,empty_search);
 }
 
-void load_image_grid_from_text (std::string text_file,
+bool load_image_grid_from_text (std::string text_file,
                                 std::list<GridSetupFile>& read_data,
                                 INT64& max_i,
                                 INT64& max_j) {
@@ -670,6 +671,10 @@ void load_image_grid_from_text (std::string text_file,
                                   std::regex_constants::ECMAScript | std::regex_constants::icase);
   // open the text file
   std::ifstream text_fh(text_file);
+  if (!text_fh.is_open()) {
+    ERROR("Failed to open: " << text_file);
+    return false;
+  }
   // read line by line
   std::string line;
   while (std::getline(text_fh, line)) {
@@ -697,6 +702,7 @@ void load_image_grid_from_text (std::string text_file,
       }
     }
   }
+  return true;
 }
 
 std::string create_cache_filename(const std::string& filename, const std::string& extension) {

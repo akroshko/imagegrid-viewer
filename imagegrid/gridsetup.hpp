@@ -11,10 +11,17 @@
 #include "../viewport_current_state.hpp"
 #include "iterators.hpp"
 // C++ headers
+#include <atomic>
 #include <list>
 #include <memory>
 #include <string>
 #include <vector>
+
+enum class GridSetupStatus {
+  not_loaded,
+  load_error,
+  loaded
+};
 
 /**
  * Contains the data required to setup the grid.
@@ -28,10 +35,8 @@ public:
   GridSetup(const GridSetup&&)=delete;
   GridSetup& operator=(const GridSetup&)=delete;
   GridSetup& operator=(const GridSetup&&)=delete;
-  /** Indicate whether setup was successful.
-   * @return Setup was successful.
-   */
-  bool successful() const;
+  /** @return The status of whether things loaded properly. */
+  GridSetupStatus status() const;
   /**
    * The size of the grid loaded.
    *
@@ -101,7 +106,7 @@ protected:
   INT64 _grid_index(const GridIndex* grid_index) const;
   INT64 _sub_index(INT64 sub_i, INT64 sub_j, INT64 sub_w) const;
   INT64 _sub_index(const SubGridIndex& sub_index, INT64 sub_w) const;
-  bool _successful;
+  std::atomic<GridSetupStatus> _status {GridSetupStatus::not_loaded};
   GridImageSize _grid_image_size;
   std::vector<std::string> _filenames;
   std::string _text_filename;
@@ -113,8 +118,7 @@ protected:
   bool _setup_cache=false;
   bool _use_cache=false;
   // some underlying data
-  std::unique_ptr<INT64[]> _sub_w;
-  std::unique_ptr<INT64[]> _sub_h;
+  std::unique_ptr<SubGridImageSize[]> _sub_size;
   std::unique_ptr<bool[]> _existing;
   std::list<GridSetupFile> _read_data;
   std::unique_ptr<std::unique_ptr<std::string[]>[]> _file_data;

@@ -216,8 +216,9 @@ bool check_empty(const std::string& filename);
  * @param read_data The data read from the file.
  * @param max_i Set to the maximum width index found.
  * @param max_j Set to the maximum height index found.
+ * @return If reading was successful.
  */
-void load_image_grid_from_text(std::string text_file,
+bool load_image_grid_from_text(std::string text_file,
                                std::list<GridSetupFile>& read_data,
                                INT64& max_i,INT64& max_j);
 

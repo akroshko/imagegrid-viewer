@@ -102,10 +102,6 @@ public:
    * @param index The index of the rile to get the wrapper for.
    */
   SDLDisplayTextureWrapper* display_texture_wrapper(const BufferTileIndex& index);
-  /**
-   * Get the texture used for the filler texture.
-   */
-  SDLDisplayTextureWrapper* filler_texture_wrapper();
   /** @return The size in of the tiles. */
   BufferTileSize tile_size();
   /** @return The size in pixels that this square actually displays. */
@@ -116,8 +112,6 @@ public:
   // TODO: decide whether TextureUpdate is a friend or do some other
   // solution
   BufferPixelSize _texture_display_size;
-  // INT64 _texture_display_wpixel;
-  // INT64 _texture_display_hpixel;
 private:
   friend class TextureGrid;
   friend class TextureGridSquare;
@@ -125,8 +119,6 @@ private:
   BufferTileSize _tile_size;
   // the actual display texture
   std::unique_ptr<std::unique_ptr<SDLDisplayTextureWrapper>[]> _display_texture_wrapper;
-  // the filler texture
-  SDLDisplayTextureWrapper* _filler_texture_wrapper;
 };
 
 /**
@@ -173,7 +165,7 @@ public:
    * @param zoom_out_shift_length The length of the array holding
    *                              progressively zoomed out images.
    */
-  TextureGrid(const GridSetup* grid_setup,
+  TextureGrid(GridSetup* grid_setup,
               const GridPixelSize& image_max_pixel_size,
               INT64 zoom_out_shift_length);
   ~TextureGrid()=default;
@@ -181,29 +173,18 @@ public:
   TextureGrid(const TextureGrid&&)=delete;
   TextureGrid& operator=(const TextureGrid&)=delete;
   TextureGrid& operator=(const TextureGrid&&)=delete;
-  /** the individual squares */
-  std::unique_ptr<std::unique_ptr<std::unique_ptr<TextureGridSquare>[]>[]> squares;
-  /** fillers for the individual squares. */
-  std::unique_ptr<std::unique_ptr<SDLDisplayTextureWrapper>[]> filler_squares;
+  TextureGridSquare* squares(const GridIndex& grid_index);
   /** @return The size of the grid in images. */
   GridImageSize grid_image_size() const;
   /** @return The length of texture zoom array. */
   INT64 textures_zoom_out_shift_length() const;
-  /**
-   * @param grid_setup The object holding the data on the images in
-   *                   the grid, including the filenames and grid
-   *                   size.
-   * @param zoom_out_shift_length The length of the array holding
-   *                              progressively zoomed out images.
-   * @param grid_pixel_size The maximum size of images in the grid.
-   */
-  void init_filler_squares(const GridSetup* const grid_setup,
-                           INT64 zoom_out_shift_length,
-                           const GridPixelSize& grid_pixel_size);
 private:
+  GridSetup* _grid_setup;
   /** this size of this grid in number of textures */
   GridImageSize _grid_image_size;
-  /** the maximum zoom (maximum number of reductions by a factor of 2) */
+  /** the individual squares */
+  std::unique_ptr<std::unique_ptr<TextureGridSquare>[]> _squares;
+  /** the maximum zoom */
   INT64 _zoom_out_shift_length;
 };
 

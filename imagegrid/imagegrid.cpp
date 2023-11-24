@@ -51,8 +51,8 @@ bool ImageGridSquareZoomLevel::load_square(ImageGridSquare* grid_square,
   auto sub_h=grid_square->sub_size().h();
   data_transfer.sub_size=SubGridImageSize(grid_square->sub_size());
   auto sub_size=sub_w*sub_h;
-  data_transfer.original_rgba_wpixel=std::make_unique<size_t[]>(sub_size);
-  data_transfer.original_rgba_hpixel=std::make_unique<size_t[]>(sub_size);
+  data_transfer.original_rgba_wpixel=std::make_unique<INT64[]>(sub_size);
+  data_transfer.original_rgba_hpixel=std::make_unique<INT64[]>(sub_size);
   for (INT64 sub_i_arr=0; sub_i_arr < sub_size; sub_i_arr++) {
     data_transfer.original_rgba_wpixel[sub_i_arr]=grid_square->_subimages_wpixel[sub_i_arr];
     data_transfer.original_rgba_hpixel[sub_i_arr]=grid_square->_subimages_hpixel[sub_i_arr];
@@ -209,16 +209,21 @@ ImageGridSquare::ImageGridSquare(GridSetup* grid_setup,
   this->_grid_index=GridIndex(grid_index);
   this->_subimages_wpixel=std::make_unique<INT64[]>(this->sub_size().w()*this->sub_size().h());
   this->_subimages_hpixel=std::make_unique<INT64[]>(this->sub_size().w()*this->sub_size().h());
-  this->_read_data();
+  auto read_successful=this->_read_data();
+  if (!read_successful) {
+    this->_status=ImageGridStatus::load_error;
+  } else {
+    this->_status=ImageGridStatus::loading;
+  }
 }
 
-void ImageGridSquare::_read_data() {
+bool ImageGridSquare::_read_data() {
   // default is 1x1 unless otherwise read
   INT64 max_sub_wpixel=1;
   INT64 max_sub_hpixel=1;
   INT64 sub_w=this->_grid_setup->sub_size(this->_grid_index).w();
   INT64 sub_h=this->_grid_setup->sub_size(this->_grid_index).h();
-
+  auto successful=true;
   for (INT64 sub_j=0; sub_j < sub_h; sub_j++) {
     for (INT64 sub_i=0; sub_i < sub_w; sub_i++) {
       INT64 image_wpixel;
@@ -227,13 +232,15 @@ void ImageGridSquare::_read_data() {
       if (this->grid_setup()->subgrid_has_data(this->_grid_index,
                                                sub_index)) {
         auto filename=this->_grid_setup->filename(this->_grid_index,
-                                                      sub_index);
+                                                  sub_index);
         // read raw data if no cache or cache unsuccessful
-        // TODO: check for success
-        read_data(filename,
-                  this->grid_setup()->use_cache(),
-                  image_wpixel,
-                  image_hpixel);
+        auto this_successful=read_data(filename,
+                                       this->grid_setup()->use_cache(),
+                                       image_wpixel,
+                                       image_hpixel);
+        if (!this_successful) {
+          successful=false;
+        }
         auto sub_i_arr=sub_j*sub_w+sub_i;
         this->_subimages_wpixel[sub_i_arr]=image_wpixel;
         this->_subimages_hpixel[sub_i_arr]=image_hpixel;
@@ -250,26 +257,58 @@ void ImageGridSquare::_read_data() {
                                     max_sub_hpixel*sub_h);
   this->_max_sub_size=GridPixelSize(max_sub_wpixel,
                                     max_sub_hpixel);
+  return successful;
+}
+
+
+GridSetup* ImageGridSquare::grid_setup() const {
+  return this->_grid_setup;
+}
+
+SubGridImageSize ImageGridSquare::sub_size() const {
+  return SubGridImageSize(this->grid_setup()->sub_size(this->_grid_index).w(),
+                          this->grid_setup()->sub_size(this->_grid_index).h());
+}
+
+ImageGrid* ImageGridSquare::parent_grid() const {
+  return this->_parent_grid;
+}
+
+const GridIndex* ImageGridSquare::grid_index() const {
+  return &this->_grid_index;
+}
+
+void ImageGrid::read_grid_info(GridSetup* grid_setup, std::shared_ptr<ViewPortTransferState> viewport_current_state_imagegrid_update) {
+  this->_status=ImageGridStatus::loading;
+  this->_grid_setup=grid_setup;
+  this->_viewport_current_state_imagegrid_update=viewport_current_state_imagegrid_update;
+  this->_read_grid_info_setup_squares(grid_setup);
+}
+
+ImageGridStatus ImageGrid::status () const {
+  return this->_status;
 }
 
 void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
   // delayed allocation for the squares
   auto grid_wimage=grid_setup->grid_image_size().w();
   auto grid_himage=grid_setup->grid_image_size().h();
-  this->_squares=std::make_unique<std::unique_ptr<std::unique_ptr<ImageGridSquare>[]>[]>(grid_wimage);
-  for (INT64 i=0L; i < grid_setup->grid_image_size().w(); i++) {
-    this->_squares[i]=std::make_unique<std::unique_ptr<ImageGridSquare>[]>(grid_himage);
-  }
+  this->_squares=std::make_unique<std::unique_ptr<ImageGridSquare>[]>(grid_wimage*grid_himage);
   this->_image_max_size=GridPixelSize(0,0);
   // not ready for an iterator until full sparsity is implemented and tested
   INT64 new_wpixel=INT_MIN;
   INT64 new_hpixel=INT_MIN;
   for (INT64 i=0; i<grid_wimage;i++) {
     for (INT64 j=0; j<grid_himage;j++) {
-      this->_squares[i][j]=std::make_unique<ImageGridSquare>(grid_setup,this,GridIndex(i,j));
+      auto square_index=j*grid_wimage+i;
+      this->_squares[square_index]=std::make_unique<ImageGridSquare>(grid_setup,this,GridIndex(i,j));
+      // TODO: not skipping rest for now, just setting as load error
+      if (this->_squares[square_index]->_status == ImageGridStatus::load_error) {
+        this->_status=ImageGridStatus::load_error;
+      }
       // set the RGBA of the surface
-      auto rgba_wpixel=this->_squares[i][j]->_square_size.w();
-      auto rgba_hpixel=this->_squares[i][j]->_square_size.h();
+      auto rgba_wpixel=this->_squares[square_index]->_square_size.w();
+      auto rgba_hpixel=this->_squares[square_index]->_square_size.h();
       if ((INT64)rgba_wpixel > new_wpixel) {
         new_wpixel=(INT64)rgba_wpixel;
       }
@@ -298,43 +337,23 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
   // add this info to the various data structure
   for (INT64 i=0L; i < this->grid_image_size().w(); i++) {
     for (INT64 j=0L; j < this->grid_image_size().h(); j++) {
-      this->_squares[i][j]->image_array=std::make_unique<std::unique_ptr<ImageGridSquareZoomLevel>[]>(this->_max_zoom_out_shift);
+      auto grid_index=GridIndex(i,j);
+      this->_get_squares(grid_index)->image_array=std::make_unique<std::unique_ptr<ImageGridSquareZoomLevel>[]>(this->_max_zoom_out_shift);
       INT64 zoom_out_shift=0;
       for (auto k=0L; k < this->_max_zoom_out_shift; k++) {
-        this->_squares[i][j]->image_array[k]=std::make_unique<ImageGridSquareZoomLevel>(this->_squares[i][j].get(),
-                                                                                        zoom_out_shift);
+        this->_get_squares(grid_index)->image_array[k]=std::make_unique<ImageGridSquareZoomLevel>(this->_get_squares(grid_index),
+                                                                                                  zoom_out_shift);
         zoom_out_shift+=1;
+      }
+      // if not error set square as loaded
+      if (this->_get_squares(grid_index)->_status != ImageGridStatus::load_error) {
+        this->_get_squares(grid_index)->_status = ImageGridStatus::loaded;
       }
     }
   }
-}
-
-GridSetup* ImageGridSquare::grid_setup() const {
-  return this->_grid_setup;
-}
-
-SubGridImageSize ImageGridSquare::sub_size() const {
-  return SubGridImageSize(this->grid_setup()->sub_size(this->_grid_index).w(),
-                          this->grid_setup()->sub_size(this->_grid_index).h());
-}
-
-ImageGrid* ImageGridSquare::parent_grid() const {
-  return this->_parent_grid;
-}
-
-const GridIndex* ImageGridSquare::grid_index() const {
-  return &this->_grid_index;
-}
-
-void ImageGrid::read_grid_info(GridSetup* grid_setup, std::shared_ptr<ViewPortTransferState> viewport_current_state_imagegrid_update) {
-  this->_grid_setup=grid_setup;
-  this->_viewport_current_state_imagegrid_update=viewport_current_state_imagegrid_update;
-  this->_read_grid_info_setup_squares(grid_setup);
-  this->_read_grid_info_successful=true;
-}
-
-bool ImageGrid::read_grid_info_successful() const {
-  return this->_read_grid_info_successful;
+  if (this->_status != ImageGridStatus::load_error) {
+    this->_status=ImageGridStatus::loaded;
+  }
 }
 
 INT64 ImageGrid::max_zoom_out_shift() const {
@@ -459,6 +478,10 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
   }
 }
 
+ImageGridSquare* ImageGrid::_get_squares(const GridIndex& grid_index) {
+  return this->_squares[grid_index.j()*this->_grid_setup->grid_image_size().w()+grid_index.i()].get();
+}
+
 void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& keep_running) {
   auto keep_trying=true;
   // get information on viewport
@@ -482,7 +505,7 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
         if (!this->_check_load(viewport_current_state,
                                zoom_out_shift, &grid_index, zoom_out_shift_lower_limit,
                                load_all)) {
-          this->_squares[i][j]->image_array[zoom_out_shift]->unload_square();
+          this->_get_squares(grid_index)->image_array[zoom_out_shift]->unload_square();
           // always try and unload rest, except top level
         }
       }
@@ -529,16 +552,12 @@ GridPixelSize ImageGrid::image_max_pixel_size() const {
   return this->_image_max_size;
 }
 
-ImageGridSquare* ImageGrid::squares(const GridIndex& grid_index) const {
-  auto i=grid_index.i();
-  auto j=grid_index.j();
-  return this->_squares[i][j].get();
+ImageGridSquare* ImageGrid::squares(const GridIndex& grid_index) {
+  return this->_get_squares(grid_index);
 }
 
-ImageGridSquare* ImageGrid::squares(const GridIndex* grid_index) const {
-  auto i=grid_index->i();
-  auto j=grid_index->j();
-  return this->_squares[i][j].get();
+ImageGridSquare* ImageGrid::squares(const GridIndex* grid_index) {
+  return this->_get_squares(*grid_index);
 }
 
 void ImageGrid::setup_grid_cache(GridSetup* const grid_setup) {
@@ -564,7 +583,7 @@ void ImageGrid::setup_grid_cache(GridSetup* const grid_setup) {
       this->_write_cache(grid_index);
       // unload
       for (auto k=this->_max_zoom_out_shift-1; k >= 0L; k--) {
-        this->_squares[i][j]->image_array[k]->unload_square();
+        this->_get_squares(grid_index)->image_array[k]->unload_square();
       }
     }
   }

@@ -9,9 +9,9 @@
 #include <string.h>
 #include <getopt.h>
 
-void parse_standard_arguments(int argc, char* const* argv,
+bool parse_standard_arguments(int argc, char* const* argv,
                               INT64& wimage, INT64& himage,
-                              bool& write_cache, bool& use_cache, bool& successful,
+                              bool& write_cache, bool& use_cache,
                               std::string& path_value, std::vector<std::string>& filenames,
                               std::string& text_filename) {
   int opt;
@@ -54,19 +54,16 @@ void parse_standard_arguments(int argc, char* const* argv,
       } else {
         ERROR("Unknown option: " << (char)optopt << std::endl);
       }
-      successful=false;
-      return;
+      return false;
     default:
-      successful=false;
-      return;
+      return false;
     }
   }
   // test for error conditions such as mutually exclusive arguments
   if (size_arg && file_arg) {
-    successful=false;
-    return;
+    return false;
   } else {
-    successful=true;
+    return true;
   }
   // get any files on the end
   if (optind != argc) {
@@ -78,4 +75,5 @@ void parse_standard_arguments(int argc, char* const* argv,
       }
     }
   }
+  return true;
 }

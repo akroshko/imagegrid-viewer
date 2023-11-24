@@ -17,9 +17,19 @@
 // C headers
 #include <cstddef>
 
+/**
+ * The state of each individual component of this data structure.
+ */
 class ImageGrid;
 class ImageGridSquare;
 class ImageGridSquareZoomLevel;
+
+enum class ImageGridStatus {
+  not_loaded,
+  load_error,
+  loading,
+  loaded
+};
 
 /**
  * An individual square on the grid at a particular zoom level.
@@ -107,6 +117,7 @@ public:
 private:
   friend class ImageGrid;
   friend class ImageGridSquare;
+  std::atomic<ImageGridStatus> _status {ImageGridStatus::not_loaded};
   ImageGridSquare* _parent_square;
   INT64 _sub_index_arr(INT64 sub_i, INT64 sub_j) const;
   INT64 _sub_index_arr(const SubGridIndex& sub_index) const;
@@ -161,6 +172,7 @@ public:
 private:
   friend class ImageGrid;
   friend class  ImageGridSquareZoomLevel;
+  std::atomic<ImageGridStatus> _status {ImageGridStatus::not_loaded};
   ImageGrid* _parent_grid;
   GridSetup* _grid_setup;
   GridIndex _grid_index;
@@ -171,7 +183,7 @@ private:
   /**
    * Read in a the file cooresponing to this square.
    */
-  void _read_data();
+  bool _read_data();
 };
 
 /**
@@ -186,6 +198,10 @@ public:
   ImageGrid(const ImageGrid&&)=delete;
   ImageGrid& operator=(const ImageGrid&)=delete;
   ImageGrid& operator=(const ImageGrid&&)=delete;
+  /**
+   * Get the load/error of this grid.
+   */
+  ImageGridStatus status () const;
   /**
    * @param grid_setup The object holding the data on the images in
    *                   the grid, including the filenames and grid
@@ -205,8 +221,8 @@ public:
                  std::atomic<bool>& keep_running);
 
   GridPixelSize image_max_pixel_size() const;
-  ImageGridSquare* squares(const GridIndex& grid_index) const;
-  ImageGridSquare* squares(const GridIndex* grid_index) const;
+  ImageGridSquare* squares(const GridIndex& grid_index);
+  ImageGridSquare* squares(const GridIndex* grid_index);
   /** @return Whether read_grid_info was successful. */
   bool read_grid_info_successful() const;
   /** @return The length of arrays of zoomed image. */
@@ -223,6 +239,10 @@ public:
    */
   void setup_grid_cache(GridSetup* const grid_setup);
 private:
+  friend class ImageGridSquare;
+  friend class ImageGridSquareZoomLevel;
+  std::atomic<ImageGridStatus> _status {ImageGridStatus::not_loaded};
+
   GridSetup* _grid_setup;
   /**
    * Check that particular indices are valid.
@@ -281,14 +301,13 @@ private:
    * @param grid_index The index of grid square to write cache for.
    */
   void _write_cache(const GridIndex& grid_index);
+  ImageGridSquare* _get_squares(const GridIndex& grid_index);
   /** The individual squares in the image grid. */
-  std::unique_ptr<std::unique_ptr<std::unique_ptr<ImageGridSquare>[]>[]> _squares;
+  std::unique_ptr<std::unique_ptr<ImageGridSquare>[]> _squares;
   /** Maximum size of images loaded into the grid. */
   GridPixelSize _image_max_size;
   /** Threadsafe class for getting the state of the viewport. */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_imagegrid_update;
-  /** Indicate whether grid info was read properly. */
-  bool _read_grid_info_successful=false;
   /** The length of arrays of zoomed image. */
   INT64 _max_zoom_out_shift;
   /**

@@ -100,7 +100,7 @@ private:
    * texturegrid_update thread in a threadsafe manner */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;
   /** object for transfering the state of the viewport to the
-   * imagegrid_updte thead in a threadsafe manner */
+   * imagegrid_update thead in a threadsafe manner */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_imagegrid_update;
 };
 

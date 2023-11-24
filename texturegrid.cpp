@@ -137,10 +137,6 @@ void TextureGridSquareZoomLevel::clear_all_surfaces () {
   }
 }
 
-SDLDisplayTextureWrapper* TextureGridSquareZoomLevel::filler_texture_wrapper() {
-  return this->_filler_texture_wrapper;
-}
-
 PIXEL_RGBA* TextureGridSquareZoomLevel::get_rgba_pixels(const BufferTileIndex& index) {
   // TODO: definitely want an assert here
   auto tile_index=index.j()*this->_tile_size.w()+index.i();
@@ -168,59 +164,25 @@ TextureGridSquare::TextureGridSquare (TextureGrid* parent_grid,
   }
 }
 
+
 TextureGrid* TextureGridSquare::parent_grid () const {
   return this->_parent_grid;
 }
 
-TextureGrid::TextureGrid (const GridSetup* const grid_setup,
+TextureGrid::TextureGrid (GridSetup* grid_setup,
                           const GridPixelSize& image_max_pixel_size,
                           INT64 zoom_out_shift_length) {
+  this->_grid_setup=grid_setup;
   this->_grid_image_size=GridImageSize(grid_setup->grid_image_size());
   this->_zoom_out_shift_length=zoom_out_shift_length;
-  this->squares=std::make_unique<std::unique_ptr<std::unique_ptr<TextureGridSquare>[]>[]>(grid_setup->grid_image_size().w());
-  for (INT64 i=0L; i < grid_setup->grid_image_size().w(); i++) {
-    this->squares[i]=std::make_unique<std::unique_ptr<TextureGridSquare>[]>(grid_setup->grid_image_size().h());
-    for (INT64 j=0L; j < grid_setup->grid_image_size().h(); j++) {
-      this->squares[i][j]=std::make_unique<TextureGridSquare>(this,image_max_pixel_size,zoom_out_shift_length);
-    }
+  this->_squares=std::make_unique<std::unique_ptr<TextureGridSquare>[]>(grid_setup->grid_image_size().w()*grid_setup->grid_image_size().h());
+  for (INT64 i=0L; i < grid_setup->grid_image_size().w()*grid_setup->grid_image_size().h(); i++) {
+    this->_squares[i]=std::make_unique<TextureGridSquare>(this,image_max_pixel_size,zoom_out_shift_length);
   }
-  this->filler_squares=std::make_unique<std::unique_ptr<SDLDisplayTextureWrapper>[]>(zoom_out_shift_length);
 }
 
-void TextureGrid::init_filler_squares(const GridSetup* const grid_setup,
-                                      INT64 zoom_out_shift_length,
-                                      const GridPixelSize& grid_pixel_size) {
-  // fill squares
-  // TODO: I may want to defer filling texture squares eventually
-  // TODO: this should be built by the time things are ready
-  //       may want to add an atomic
-  for (INT64 zoom_out_shift=0L; zoom_out_shift < zoom_out_shift_length; zoom_out_shift++) {
-    auto texture_zoom_reduction=(1L << zoom_out_shift);
-    GridPixelSize dest_pixel_size=grid_pixel_size/texture_zoom_reduction;
-    this->filler_squares[zoom_out_shift] = std::make_unique<SDLDisplayTextureWrapper>();
-    this->filler_squares[zoom_out_shift]->create_surface(dest_pixel_size.w(), dest_pixel_size.h());
-    auto lock_surface_return=this->filler_squares[zoom_out_shift]->lock_surface();
-    if (lock_surface_return) {
-      auto dest_array=this->filler_squares[zoom_out_shift]->pixels();
-      auto wpixel_aligned=this->filler_squares[zoom_out_shift]->texture_size_aligned().w();
-      auto hpixel_aligned=this->filler_squares[zoom_out_shift]->texture_size_aligned().h();
-      // copy over gray
-      for (INT64 l=0L; l < hpixel_aligned; l++) {
-        for (INT64 k=0L; k < wpixel_aligned; k++) {
-          auto dest_index=(l*wpixel_aligned+k);
-          ((PIXEL_RGBA*)dest_array)[dest_index]=FILLER_LEVEL;
-        }
-      }
-      this->filler_squares[zoom_out_shift]->unlock_surface();
-    }
-  }
-  for (INT64 zoom_out_shift=0L; zoom_out_shift < zoom_out_shift_length; zoom_out_shift++) {
-    for (INT64 i=0L; i < grid_setup->grid_image_size().w(); i++) {
-      for (INT64 j=0L; j < grid_setup->grid_image_size().h(); j++) {
-        this->squares[i][j]->texture_array[zoom_out_shift]->_filler_texture_wrapper=this->filler_squares[zoom_out_shift].get();
-      }
-    }
-  }
+TextureGridSquare* TextureGrid::squares(const GridIndex& grid_index) {
+  return _squares[grid_index.j()*this->_grid_setup->grid_image_size().w()+grid_index.i()].get();
 }
 
 INT64 TextureGrid::textures_zoom_out_shift_length() const {

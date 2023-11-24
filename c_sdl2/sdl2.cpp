@@ -197,6 +197,24 @@ SDL_Surface* SDLDrawableSurface::screen_surface() {
   return this->_screen_surface;
 }
 
+bool SDLDrawableSurface::draw_rect(const BufferPixelCoordinate& viewport_pixel_coordinate,
+                                   const BufferPixelSize& rect_pixel_size,
+                                   PIXEL_RGBA color) {
+  SDL_Rect screen_rect;
+  screen_rect.x=viewport_pixel_coordinate.x();
+  screen_rect.y=viewport_pixel_coordinate.y();
+  screen_rect.w=rect_pixel_size.w();
+  screen_rect.h=rect_pixel_size.h();
+  if (SDL_FillRect(this->_screen_surface,
+                   &screen_rect,
+                   // TODO: may wish to use SDL_MapRGBA?
+                   color) < 0) {
+    PRINT_SDL_ERROR;
+    return false;
+  }
+  return true;
+}
+
 bool SDLDisplayTextureWrapper::is_valid () const {
   return (this->_display_texture);
 }

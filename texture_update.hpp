@@ -39,7 +39,7 @@ public:
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */
-  void find_current_textures(const ImageGrid* grid,
+  void find_current_textures(ImageGrid* grid,
                              TextureGrid* texture_grid,
                              TextureOverlay* texture_overlay,
                              std::atomic<bool>& keep_running);
