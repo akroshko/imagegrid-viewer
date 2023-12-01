@@ -181,6 +181,10 @@ TextureGrid::TextureGrid (GridSetup* grid_setup,
   }
 }
 
+GridSetup* TextureGrid::grid_setup() const {
+  return this->_grid_setup;
+};
+
 TextureGridSquare* TextureGrid::squares(const GridIndex& grid_index) {
   return _squares[grid_index.j()*this->_grid_setup->grid_image_size().w()+grid_index.i()].get();
 }

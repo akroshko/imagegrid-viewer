@@ -428,8 +428,8 @@ public:
    * @param grid_coordinate The coordinate on the grid.
    * @param grid_pixel_size The pixel size of the images on the grid.
    */
-  ImagePixelCoordinate(GridCoordinate& grid_coordinate,
-                       GridPixelSize& grid_pixel_size);
+  ImagePixelCoordinate(const GridCoordinate& grid_coordinate,
+                       const GridPixelSize& grid_pixel_size);
   /** @return The x coordinate. */
   INT64 x() const;
   /** @return The y coordinate. */

@@ -98,6 +98,31 @@ std::unique_ptr<ImageGridIteratorFull> GridSetup::iterator_full(const ViewPortCu
                                                  viewport_current_state);
 }
 
+void GridSetup::_post_setup() {
+  this->_grid_index_values=std::make_unique<GridIndex[]>(this->grid_size().w()*this->grid_size().h());
+  // set up the grid objects to be resturned by iterators
+  for (INT64 j=0; j < this->grid_size().h(); j++) {
+    for (INT64 i=0; i < this->grid_size().w(); i++) {
+      this->_grid_index_values[j*this->grid_size().w()+i]=GridIndex(i,j);
+    }
+  }
+  this->_subgrid_index_values=std::make_unique<std::unique_ptr<SubGridIndex[]>[]>(this->grid_size().w()*this->grid_size().h());
+  // TODO: could actually use my new iterator here
+  for (INT64 j=0; j < this->grid_size().h(); j++) {
+    for (INT64 i=0; i < this->grid_size().w(); i++) {
+      auto grid_i=j*this->grid_size().w()+i;
+      this->_subgrid_index_values[grid_i]=std::make_unique<SubGridIndex[]>(this->_sub_size[grid_i].w()*this->_sub_size[grid_i].h());
+      // get size for each subgrid
+      for (INT64 sj=0; sj<this->_sub_size[grid_i].h(); sj++) {
+        for (INT64 si=0; si<this->_sub_size[grid_i].w(); si++) {
+          auto subgrid_i=sj*this->_sub_size[grid_i].w()+si;
+          this->_subgrid_index_values[grid_i][subgrid_i]=SubGridIndex(si,sj);
+        }
+      }
+    }
+  }
+}
+
 GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) {
   INT64 wimage, himage;
 
@@ -210,7 +235,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       auto sub_index=this->_sub_index(0, 0, 1);
       this->_file_data[grid_index][sub_index]="";
     }
-    for (INT64 k=0;k < (INT64)this->_filenames.size();k++) {
+    for (INT64 k=0;k<(INT64)this->_filenames.size();k++) {
       INT64 i=k%wimage;
       INT64 j=k/wimage;
       auto grid_index=this->_grid_index(i, j);
@@ -219,7 +244,39 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       this->_existing[grid_index]=true;
     }
   }
+  // TODO: call this a little more automatically
+  GridSetup::_post_setup();
   if (this->_status != GridSetupStatus::load_error) {
     this->_status=GridSetupStatus::loaded;
   }
+}
+
+ImageGridBasicIterator::ImageGridBasicIterator(GridSetup* grid_setup) {
+  this->_grid_setup=grid_setup;
+}
+
+const GridIndex* ImageGridBasicIterator::begin() const {
+  return &this->_grid_setup->_grid_index_values[0];
+}
+
+const GridIndex* ImageGridBasicIterator::end() const {
+  // TODO: don't like indexing out beyond end of array
+  return &this->_grid_setup->_grid_index_values[this->_grid_setup->grid_size().w()*this->_grid_setup->grid_size().h()];
+}
+
+ImageSubGridBasicIterator::ImageSubGridBasicIterator(GridSetup* grid_setup, const GridIndex& grid_index) {
+  this->_grid_setup=grid_setup;
+  this->_grid_index=grid_index;
+}
+
+const SubGridIndex* ImageSubGridBasicIterator::begin() const {
+  auto grid_i=this->_grid_index.j()*this->_grid_setup->grid_size().w()+this->_grid_index.i();
+  return &this->_grid_setup->_subgrid_index_values[grid_i][0];
+}
+
+const SubGridIndex* ImageSubGridBasicIterator::end() const {
+  // TODO: don't like indexing out beyond end of array
+  auto grid_i=this->_grid_index.j()*this->_grid_setup->grid_size().w()+this->_grid_index.i();
+  auto subgrid_i_end=this->_grid_setup->_sub_size[grid_i].w()*this->_grid_setup->_sub_size[grid_i].h();
+  return &this->_grid_setup->_subgrid_index_values[grid_i][subgrid_i_end];
 }

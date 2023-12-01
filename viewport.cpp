@@ -45,34 +45,34 @@ void blit_this(SDLDrawableSurface* screen_surface,
          FLOAT64 vp_hpixel_base=(FLOAT64)image_pixel_size_viewport.h()*(FLOAT64)texture_hpixel_base/(FLOAT64)texture_square_hpixel;
          // if this is the last column
          if (i == blit_square->tile_size().w()-1) {
-           texture_xpixel_start=i*texture_wpixel_base;
+           texture_xpixel_start=(FLOAT64)i*texture_wpixel_base;
            texture_xpixel_end=texture_square_wpixel;
            texture_wpixel=texture_xpixel_end-texture_xpixel_start;
-           vp_xpixel_start=floor(i*vp_wpixel_base);
+           vp_xpixel_start=floor((FLOAT64)i*vp_wpixel_base);
            vp_xpixel_end=(FLOAT64)image_pixel_size_viewport.w();
            vp_wpixel=vp_xpixel_end-vp_xpixel_start;
          } else {
-           texture_xpixel_start=i*texture_wpixel_base;
-           texture_xpixel_end=(i+1)*texture_wpixel_base;
+           texture_xpixel_start=(FLOAT64)i*texture_wpixel_base;
+           texture_xpixel_end=(FLOAT64)(i+1)*texture_wpixel_base;
            texture_wpixel=texture_xpixel_end-texture_xpixel_start;
-           vp_xpixel_start=floor(i*vp_wpixel_base);
-           vp_xpixel_end=ceil_minus_one((i+1)*vp_wpixel_base);
+           vp_xpixel_start=floor((FLOAT64)i*vp_wpixel_base);
+           vp_xpixel_end=ceil_minus_one((FLOAT64)(i+1)*vp_wpixel_base);
            vp_wpixel=vp_xpixel_end-vp_xpixel_start;
          }
          // if this is the last row
          if (j == blit_square->tile_size().h()-1) {
-           texture_ypixel_start=j*texture_hpixel_base;
+           texture_ypixel_start=(FLOAT64)j*texture_hpixel_base;
            texture_ypixel_end=texture_square_hpixel;
            texture_hpixel=texture_ypixel_end-texture_ypixel_start;
-           vp_ypixel_start=floor(j*vp_hpixel_base);
+           vp_ypixel_start=floor((FLOAT64)j*vp_hpixel_base);
            vp_ypixel_end=(FLOAT64)image_pixel_size_viewport.h();
            vp_hpixel=vp_ypixel_end-vp_ypixel_start;
          } else {
-           texture_ypixel_start=j*texture_hpixel_base;
-           texture_ypixel_end=(j+1)*texture_hpixel_base;
+           texture_ypixel_start=(FLOAT64)j*texture_hpixel_base;
+           texture_ypixel_end=(FLOAT64)(j+1)*texture_hpixel_base;
            texture_hpixel=texture_ypixel_end-texture_ypixel_start;
-           vp_ypixel_start=floor(j*vp_hpixel_base);
-           vp_ypixel_end=ceil_minus_one((j+1)*vp_hpixel_base);
+           vp_ypixel_start=floor((FLOAT64)j*vp_hpixel_base);
+           vp_ypixel_end=ceil_minus_one((FLOAT64)(j+1)*vp_hpixel_base);
            vp_hpixel=vp_ypixel_end-vp_ypixel_start;
          }
          auto viewport_pixel_coordinate_local=BufferPixelCoordinate((INT64)((FLOAT64)viewport_pixel_coordinate.x()+vp_xpixel_start),
@@ -124,71 +124,71 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
                                             this->_viewport_grid,
                                             this->_image_max_size);
   auto new_viewport_pixel_size=BufferPixelSize(this->_image_max_size.w(),this->_image_max_size.h());
-  for (INT64 i=0L; i < texture_grid->grid_image_size().w(); i++) {
-    for (INT64 j=0L; j < texture_grid->grid_image_size().h(); j++) {
-      auto upperleft_gridcoordinate=GridCoordinate(i,j);
-      auto lowerright_gridcoordinate=GridCoordinate(i+1,j+1);
-      auto viewport_pixel_coordinate_upperleft=BufferPixelCoordinate(upperleft_gridcoordinate,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
-      auto viewport_pixel_coordinate_lowerright=BufferPixelCoordinate(lowerright_gridcoordinate,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
-      // TODO: possibly add some padding here
-      if (viewport_pixel_coordinate_lowerright.x() < 0 || viewport_pixel_coordinate_lowerright.y() < 0 ||
-          viewport_pixel_coordinate_upperleft.x() > MAX_SCREEN_WIDTH || viewport_pixel_coordinate_upperleft.y() > MAX_SCREEN_HEIGHT) {
-            continue;
-      }
-      auto actual_zoom=zoom_out_shift;
-      // for testing max zoom
-      bool texture_loaded=false;
-      do {
-        auto texture_square_zoom=texture_grid->squares(GridIndex(i,j))->texture_array[actual_zoom].get();
-        // filler should never get past here
-        if (texture_square_zoom->is_loaded &&
-            texture_square_zoom->is_displayable) {
-          // TODO: would like more RAII way of dealing with this mutex
-          if (texture_square_zoom->display_mutex.try_lock()) {
-            if (texture_square_zoom->is_loaded &&
-                texture_square_zoom->is_displayable &&
-                texture_square_zoom->all_surfaces_valid()) {
-              texture_loaded=true;
-              auto grid_image_size_zoomed=BufferPixelSize((INT64)round(this->_image_max_size.w()*this->_zoom),
-                                                            (INT64)round(this->_image_max_size.h()*this->_zoom));
-              blit_this(drawable_surface.get(),
-                        texture_square_zoom,
-                        viewport_pixel_coordinate_upperleft,
-                        grid_image_size_zoomed);
-              texture_square_zoom->display_mutex.unlock();
-            } else {
-              texture_loaded=false;
-              texture_square_zoom->display_mutex.unlock();
-              MSG("Couldn't access surface: " << i << " " << j << " " << actual_zoom);
-            }
+  for (const auto& grid_index : ImageGridBasicIterator(texture_grid->grid_setup())) {
+    auto i=grid_index.i();
+    auto j=grid_index.j();
+    auto upperleft_gridcoordinate=GridCoordinate((FLOAT64)i,(FLOAT64)j);
+    auto lowerright_gridcoordinate=GridCoordinate((FLOAT64)(i+1),(FLOAT64)(j+1));
+    auto viewport_pixel_coordinate_upperleft=BufferPixelCoordinate(upperleft_gridcoordinate,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
+    auto viewport_pixel_coordinate_lowerright=BufferPixelCoordinate(lowerright_gridcoordinate,this->_zoom,viewport_pixel_0_grid,new_viewport_pixel_size);
+    // TODO: possibly add some padding here
+    if (viewport_pixel_coordinate_lowerright.x() < 0 || viewport_pixel_coordinate_lowerright.y() < 0 ||
+        viewport_pixel_coordinate_upperleft.x() > MAX_SCREEN_WIDTH || viewport_pixel_coordinate_upperleft.y() > MAX_SCREEN_HEIGHT) {
+          continue;
+    }
+    auto actual_zoom=zoom_out_shift;
+    // for testing max zoom
+    bool texture_loaded=false;
+    do {
+      auto texture_square_zoom=texture_grid->squares(GridIndex(i,j))->texture_array[actual_zoom].get();
+      // filler should never get past here
+      if (texture_square_zoom->is_loaded &&
+          texture_square_zoom->is_displayable) {
+        // TODO: would like more RAII way of dealing with this mutex
+        if (texture_square_zoom->display_mutex.try_lock()) {
+          if (texture_square_zoom->is_loaded &&
+              texture_square_zoom->is_displayable &&
+              texture_square_zoom->all_surfaces_valid()) {
+            texture_loaded=true;
+            auto grid_image_size_zoomed=BufferPixelSize((INT64)round((FLOAT64)this->_image_max_size.w()*this->_zoom),
+                                                        (INT64)round((FLOAT64)this->_image_max_size.h()*this->_zoom));
+            blit_this(drawable_surface.get(),
+                      texture_square_zoom,
+                      viewport_pixel_coordinate_upperleft,
+                      grid_image_size_zoomed);
+            texture_square_zoom->display_mutex.unlock();
+          } else {
+            texture_loaded=false;
+            texture_square_zoom->display_mutex.unlock();
+            MSG("Couldn't access surface: " << i << " " << j << " " << actual_zoom);
           }
         }
-        // TODO: else raise error if things are terrible
-        actual_zoom++;
-      } while ((actual_zoom <= max_zoom_out_shift) && !texture_loaded);
-      // texture didn't load load so do filler
-      if (!texture_loaded) {
-        auto texture_square_zoom=texture_grid->squares(GridIndex(i,j))->texture_array[zoom_out_shift].get();
-        if (texture_square_zoom->image_filler()) {
-          // TODO: would like more RAII way of dealing with this mutex
-          // still want a mutex here so indication that texture is to use filler doesn't change
-          if (texture_square_zoom->display_mutex.try_lock()) {
-            if (texture_square_zoom->image_filler()
-                // &&
-                // texture_square_zoom->filler_texture_wrapper()->is_valid()
-              ) {
-              auto grid_image_size_zoomed=BufferPixelSize((INT64)round(this->_image_max_size.w()*this->_zoom),
-                                                          (INT64)round(this->_image_max_size.h()*this->_zoom));
-              blit_this(drawable_surface.get(),
-                        texture_square_zoom,
-                        viewport_pixel_coordinate_upperleft,
-                        grid_image_size_zoomed);
-            }
-            texture_square_zoom->display_mutex.unlock();
-        } else {
-            // TODO: this should never happen, so this error is in here while I investigate
-            MSG("Couldn't lock filler: " << i << " " << j);
+      }
+      // TODO: else raise error if things are terrible
+      actual_zoom++;
+    } while ((actual_zoom <= max_zoom_out_shift) && !texture_loaded);
+    // texture didn't load load so do filler
+    if (!texture_loaded) {
+      auto texture_square_zoom=texture_grid->squares(GridIndex(i,j))->texture_array[zoom_out_shift].get();
+      if (texture_square_zoom->image_filler()) {
+        // TODO: would like more RAII way of dealing with this mutex
+        // still want a mutex here so indication that texture is to use filler doesn't change
+        if (texture_square_zoom->display_mutex.try_lock()) {
+          if (texture_square_zoom->image_filler()
+              // &&
+              // texture_square_zoom->filler_texture_wrapper()->is_valid()
+            ) {
+            auto grid_image_size_zoomed=BufferPixelSize((INT64)round((FLOAT64)this->_image_max_size.w()*this->_zoom),
+                                                        (INT64)round((FLOAT64)this->_image_max_size.h()*this->_zoom));
+            blit_this(drawable_surface.get(),
+                      texture_square_zoom,
+                      viewport_pixel_coordinate_upperleft,
+                      grid_image_size_zoomed);
           }
+          texture_square_zoom->display_mutex.unlock();
+        } else {
+          // TODO: this should never happen, so this error is in here while I investigate
+          MSG("Couldn't lock filler: " << i << " " << j);
         }
       }
     }

@@ -89,8 +89,8 @@ INT64 GridPixelSize::h() const {
   return this->_x2;
 }
 
-ImagePixelCoordinate::ImagePixelCoordinate(GridCoordinate& grid_coordinate,
-                                           GridPixelSize& grid_pixel_size) {
+ImagePixelCoordinate::ImagePixelCoordinate(const GridCoordinate& grid_coordinate,
+                                           const GridPixelSize& grid_pixel_size) {
   this->_x1=round((grid_coordinate.x()-floor(grid_coordinate.x()))*grid_pixel_size.w());
   this->_x2=round((grid_coordinate.y()-floor(grid_coordinate.y()))*grid_pixel_size.h());
 }

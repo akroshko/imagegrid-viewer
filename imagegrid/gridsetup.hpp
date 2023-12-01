@@ -101,6 +101,9 @@ public:
   std::unique_ptr<ImageGridIteratorVisible> iterator_visible(const ViewPortCurrentState& viewport_current_state);
   std::unique_ptr<ImageGridIteratorFull> iterator_full(const ViewPortCurrentState& viewport_current_state);
 protected:
+  friend class ImageGridBasicIterator;
+  friend class ImageSubGridBasicIterator;
+  void _post_setup();
   INT64 _grid_index(INT64 i, INT64 j) const;
   INT64 _grid_index(const GridIndex& grid_index) const;
   INT64 _grid_index(const GridIndex* grid_index) const;
@@ -122,6 +125,10 @@ protected:
   std::unique_ptr<bool[]> _existing;
   std::list<GridSetupFile> _read_data;
   std::unique_ptr<std::unique_ptr<std::string[]>[]> _file_data;
+  // objects to return for const iterators
+  std::unique_ptr<GridIndex[]> _grid_index_values;
+  // objects to return for const iterators
+  std::unique_ptr<std::unique_ptr<SubGridIndex[]>[]> _subgrid_index_values;
 };
 
 /**
@@ -136,6 +143,31 @@ public:
   GridSetupFromCommandLine(const GridSetupFromCommandLine&&)=delete;
   GridSetupFromCommandLine& operator=(const GridSetupFromCommandLine&)=delete;
   GridSetupFromCommandLine& operator=(const GridSetupFromCommandLine&&)=delete;
+};
+
+/**
+ * Iterate over all grid squares in a normal order.
+ */
+class ImageGridBasicIterator {
+public:
+  ImageGridBasicIterator(GridSetup* grid_setup);
+  const GridIndex* begin() const;
+  const GridIndex* end() const;
+private:
+  GridSetup* _grid_setup=nullptr;
+};
+
+/**
+ * Iterate over all subgrid squares for a particular grid square.
+ */
+class ImageSubGridBasicIterator {
+public:
+  ImageSubGridBasicIterator(GridSetup* grid_setup, const GridIndex& grid_index);
+  const SubGridIndex* begin() const;
+  const SubGridIndex* end() const;
+private:
+  GridSetup* _grid_setup=nullptr;
+  GridIndex _grid_index;
 };
 
 #endif

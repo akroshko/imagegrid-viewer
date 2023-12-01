@@ -81,7 +81,7 @@ ViewPortCurrentState ViewPortTransferState::GetGridValues() {
 INT64 ViewPortTransferState::find_zoom_out_shift_bounded(FLOAT64 zoom,
                                                          INT64 min_zoom_out_shift,
                                                          INT64 max_zoom_out_shift) {
-  auto return_value=floor(log2(1.0/zoom));
+  auto return_value=(INT64)floor(log2(1.0/zoom));
   if (return_value < min_zoom_out_shift) {
     return_value=min_zoom_out_shift;
   }
@@ -95,7 +95,7 @@ FLOAT64 ViewPortTransferState::find_zoom_upper(INT64 zoom_out_shift) {
   if (zoom_out_shift < 0) {
     zoom_out_shift=0;
   }
-  return 1.0/(pow(2.0,zoom_out_shift+1));
+  return 1.0/(pow(2.0,(FLOAT64)(zoom_out_shift+1)));
 }
 
 FLOAT64 ViewPortTransferState::_find_max_zoom(FLOAT64 zoom) {
@@ -111,28 +111,28 @@ FLOAT64 ViewPortTransferState::find_leftmost_visible(const ViewPortCurrentState&
   auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_wpixel=((FLOAT64)MAX_SCREEN_WIDTH/2.0);
-  return viewport_current_state.current_grid_coordinate().x()-(half_wpixel/viewport_current_state.image_max_size().w()/max_zoom_this_level);
+  return (FLOAT64)viewport_current_state.current_grid_coordinate().x()-((FLOAT64)half_wpixel/(FLOAT64)viewport_current_state.image_max_size().w()/max_zoom_this_level);
 }
 
 FLOAT64 ViewPortTransferState::find_rightmost_visible(const ViewPortCurrentState& viewport_current_state) {
   auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_wpixel=((FLOAT64)MAX_SCREEN_WIDTH/2.0);
-  return viewport_current_state.current_grid_coordinate().x()+(half_wpixel/viewport_current_state.image_max_size().w()/max_zoom_this_level);
+  return (FLOAT64)viewport_current_state.current_grid_coordinate().x()+(half_wpixel/(FLOAT64)viewport_current_state.image_max_size().w()/max_zoom_this_level);
 }
 
 FLOAT64 ViewPortTransferState::find_topmost_visible(const ViewPortCurrentState& viewport_current_state) {
   auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_hpixel=((FLOAT64)MAX_SCREEN_HEIGHT/2.0);
-  return viewport_current_state.current_grid_coordinate().y()-(half_hpixel/viewport_current_state.image_max_size().h()/max_zoom_this_level);
+  return (FLOAT64)viewport_current_state.current_grid_coordinate().y()-(half_hpixel/(FLOAT64)viewport_current_state.image_max_size().h()/max_zoom_this_level);
 }
 
 FLOAT64 ViewPortTransferState::find_bottommost_visible(const ViewPortCurrentState& viewport_current_state) {
   auto max_zoom_this_level=_find_max_zoom(viewport_current_state.zoom());
   // calculate these with max reasonable resolution, rather than actual viewport
   auto half_hpixel=((FLOAT64)MAX_SCREEN_HEIGHT/2.0);
-  return viewport_current_state.current_grid_coordinate().y()+(half_hpixel/viewport_current_state.image_max_size().h()/max_zoom_this_level);
+  return (FLOAT64)viewport_current_state.current_grid_coordinate().y()+(half_hpixel/(FLOAT64)viewport_current_state.image_max_size().h()/max_zoom_this_level);
 }
 
 bool ViewPortTransferState::grid_index_visible(INT64 i, INT64 j,
@@ -145,6 +145,6 @@ bool ViewPortTransferState::grid_index_visible(INT64 i, INT64 j,
       viewport_current_state);
     auto visible_bottom=ViewPortTransferState::find_bottommost_visible(
       viewport_current_state);
-    return (i >= floor(visible_left) && i <= floor(visible_right) &&
-            j >= floor(visible_top) && j <= floor(visible_bottom));
+    return (i >= (INT64)floor(visible_left) && i <= (INT64)floor(visible_right) &&
+            j >= (INT64)floor(visible_top) && j <= (INT64)floor(visible_bottom));
 }

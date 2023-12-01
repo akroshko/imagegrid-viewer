@@ -174,6 +174,8 @@ public:
   TextureGrid& operator=(const TextureGrid&)=delete;
   TextureGrid& operator=(const TextureGrid&&)=delete;
   TextureGridSquare* squares(const GridIndex& grid_index);
+  /** @return The grid setup object */
+  GridSetup* grid_setup() const;
   /** @return The size of the grid in images. */
   GridImageSize grid_image_size() const;
   /** @return The length of texture zoom array. */
