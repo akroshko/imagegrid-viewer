@@ -9,7 +9,7 @@
 #include "imagegrid/gridsetup.hpp"
 #include "texture_overlay.hpp"
 #include "texturegrid.hpp"
-#include "coordinates.hpp"
+#include "datatypes/coordinates.hpp"
 #include  "viewport_current_state.hpp"
 // C compatible headers
 #include "c_sdl2/sdl2.hpp"

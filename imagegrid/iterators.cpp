@@ -1,5 +1,5 @@
 #include "../common.hpp"
-#include "../coordinates.hpp"
+#include "../datatypes/coordinates.hpp"
 #include "iterators.hpp"
 #include "../viewport_current_state.hpp"
 // C++ headers

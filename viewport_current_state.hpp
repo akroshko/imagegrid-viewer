@@ -6,7 +6,7 @@
 
 // local headers
 #include "common.hpp"
-#include "coordinates.hpp"
+#include "datatypes/coordinates.hpp"
 // C++ headers
 #include <mutex>
 // C headers

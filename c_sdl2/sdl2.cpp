@@ -3,7 +3,7 @@
  */
 // local headers
 #include "../common.hpp"
-#include "../coordinates.hpp"
+#include "../datatypes/coordinates.hpp"
 #include "sdl2.hpp"
 // C++ headers
 #include <iostream>

@@ -5,7 +5,7 @@
 #define TEXTUREGRID_HPP
 
 #include "common.hpp"
-#include "coordinates.hpp"
+#include "datatypes/coordinates.hpp"
 #include "imagegrid/gridsetup.hpp"
 #include "imagegrid/imagegrid.hpp"
 #include "c_sdl2/sdl2.hpp"

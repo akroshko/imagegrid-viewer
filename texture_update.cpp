@@ -2,7 +2,7 @@
  * Implementation of updating the loaded and zoomed textures.
  */
 #include "common.hpp"
-#include "coordinates.hpp"
+#include "datatypes/coordinates.hpp"
 #include "imagegrid/gridsetup.hpp"
 #include "imagegrid/imagegrid.hpp"
 #include "imagegrid/imagegrid_metadata.hpp"

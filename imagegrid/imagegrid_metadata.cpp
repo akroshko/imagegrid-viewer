@@ -1,6 +1,6 @@
 // local headers
 #include "../common.hpp"
-#include "../coordinates.hpp"
+#include "../datatypes/coordinates.hpp"
 #include "imagegrid.hpp"
 #include "imagegrid_metadata.hpp"
 // C++ headers

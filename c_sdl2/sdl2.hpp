@@ -5,7 +5,7 @@
 #define SDL2_HPP
 
 #include "../common.hpp"
-#include "../coordinates.hpp"
+#include "../datatypes/coordinates.hpp"
 // library headers
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>

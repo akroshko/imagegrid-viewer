@@ -1,10 +1,10 @@
 # CC=clang
-HEADERS=$(wildcard *.hpp)  $(wildcard imagegrid/*.hpp) $(wildcard c_misc/*.hpp) $(wildcard c_sdl2/*.hpp) $(wildcard c_io_net/*.hpp)
+HEADERS=$(wildcard *.hpp) $(wildcard datatypes/*.hpp) $(wildcard imagegrid/*.hpp) $(wildcard c_misc/*.hpp) $(wildcard c_sdl2/*.hpp) $(wildcard c_io_net/*.hpp)
 # for clean only
-SRC = $(wildcard *.cpp) $(wildcard imagegrid/*.cpp) $(wildcard c_misc/*.cpp) $(wildcard c_sdl2/*.cpp) $(wildcard c_io_net/*.cpp)
+SRC = $(wildcard *.cpp) $(wildcard datatypes/*.cpp) $(wildcard imagegrid/*.cpp) $(wildcard c_misc/*.cpp) $(wildcard c_sdl2/*.cpp) $(wildcard c_io_net/*.cpp)
 OBJ = $(SRC:.cpp=.o)
 # for compile
-SRC_PROG = $(wildcard *.cpp) $(wildcard imagegrid/*.cpp)
+SRC_PROG = $(wildcard *.cpp) $(wildcard datatypes/*.cpp) $(wildcard imagegrid/*.cpp)
 SRC_CIONET = $(wildcard c_io_net/*.cpp)
 SRC_CSDL = $(wildcard c_sdl2/*.cpp)
 SRC_CMISC = $(wildcard c_misc/*.cpp)

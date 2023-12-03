@@ -7,7 +7,7 @@
 #include "../utility.hpp"
 #include "fileload.hpp"
 #include "../c_misc/buffer_manip.hpp"
-#include "../coordinates.hpp"
+#include "../datatypes/coordinates.hpp"
 // don't really like this here, but it is here for now
 #include "../imagegrid/imagegrid_load_file_data.hpp"
 // C++ headers

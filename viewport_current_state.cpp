@@ -1,6 +1,6 @@
 // local headers
 #include "common.hpp"
-#include "coordinates.hpp"
+#include "datatypes/coordinates.hpp"
 #include "viewport_current_state.hpp"
 // C++ headers
 #include <mutex>

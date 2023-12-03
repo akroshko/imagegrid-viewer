@@ -2,8 +2,8 @@
  * Data structures for transfering imagegrid square data around.
  */
 #include "../common.hpp"
-#include "../coordinates.hpp"
-#include "../containers.hpp"
+#include "../datatypes/coordinates.hpp"
+#include "../datatypes/containers.hpp"
 // C++ headers
 #include <memory>
 #include <string>

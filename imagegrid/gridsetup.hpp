@@ -7,8 +7,8 @@
 #define GRIDSETUP_HPP
 
 #include "../common.hpp"
-#include "../coordinates.hpp"
-#include "../containers.hpp"
+#include "../datatypes/coordinates.hpp"
+#include "../datatypes/containers.hpp"
 #include "../viewport_current_state.hpp"
 #include "iterators.hpp"
 // C++ headers

@@ -4,7 +4,7 @@
  */
 // local headers
 #include "../common.hpp"
-#include "../coordinates.hpp"
+#include "../datatypes/coordinates.hpp"
 #include "../utility.hpp"
 #include "gridsetup.hpp"
 #include "imagegrid.hpp"

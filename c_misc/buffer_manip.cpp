@@ -1,6 +1,6 @@
 // local headers
 #include "../common.hpp"
-#include "../coordinates.hpp"
+#include "../datatypes/coordinates.hpp"
 #include "buffer_manip.hpp"
 // C++ headers
 #include <memory>

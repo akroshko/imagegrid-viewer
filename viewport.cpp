@@ -1,6 +1,6 @@
 #include "common.hpp"
 #include "imagegrid/gridsetup.hpp"
-#include "coordinates.hpp"
+#include "datatypes/coordinates.hpp"
 #include "texture_overlay.hpp"
 #include "utility.hpp"
 #include "viewport.hpp"

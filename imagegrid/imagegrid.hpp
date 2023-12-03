@@ -6,8 +6,8 @@
 #define IMAGEGRID_HPP
 
 #include "../common.hpp"
-#include "../coordinates.hpp"
-#include "../containers.hpp"
+#include "../datatypes/coordinates.hpp"
+#include "../datatypes/containers.hpp"
 #include "gridsetup.hpp"
 #include "../viewport_current_state.hpp"
 // C++ headers

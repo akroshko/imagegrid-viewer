@@ -5,7 +5,7 @@
 #define TEXTURE_UPDATE_HPP
 
 #include "common.hpp"
-#include "coordinates.hpp"
+#include "datatypes/coordinates.hpp"
 #include "imagegrid/imagegrid.hpp"
 #include "texture_overlay.hpp"
 #include "texturegrid.hpp"

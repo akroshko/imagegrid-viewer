@@ -5,7 +5,7 @@
 #define IMAGEGRID_METADATA_HPP
 // local headers
 #include "../common.hpp"
-#include "../coordinates.hpp"
+#include "../datatypes/coordinates.hpp"
 #include "imagegrid.hpp"
 // C++ headers
 #include <string>

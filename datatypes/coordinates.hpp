@@ -4,7 +4,7 @@
 #ifndef COORDINATES_HPP
 #define COORDINATES_HPP
 
-#include "common.hpp"
+#include "../common.hpp"
 // C headers
 #include <cmath>
 

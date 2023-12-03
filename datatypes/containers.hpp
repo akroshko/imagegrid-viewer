@@ -1,7 +1,7 @@
 #ifndef CONTAINERS_HPP
 #define CONTAINERS_HPP
 
-#include "common.hpp"
+#include "../common.hpp"
 #include "coordinates.hpp"
 // C++ headers
 #include <memory>

@@ -2,7 +2,7 @@
  * Implementation of the classes that represent different coordinates.
  *
  */
-#include "common.hpp"
+#include "../common.hpp"
 #include "coordinates.hpp"
 // C headers
 #include <cmath>
