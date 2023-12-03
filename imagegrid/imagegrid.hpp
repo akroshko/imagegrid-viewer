@@ -7,6 +7,7 @@
 
 #include "../common.hpp"
 #include "../coordinates.hpp"
+#include "../containers.hpp"
 #include "gridsetup.hpp"
 #include "../viewport_current_state.hpp"
 // C++ headers
@@ -119,19 +120,17 @@ private:
   friend class ImageGridSquare;
   std::atomic<ImageGridStatus> _status {ImageGridStatus::not_loaded};
   ImageGridSquare* _parent_square;
-  INT64 _sub_index_arr(INT64 sub_i, INT64 sub_j) const;
-  INT64 _sub_index_arr(const SubGridIndex& sub_index) const;
   /** The actual RGBA data for this square at the zoom out value. */
-  std::unique_ptr<PIXEL_RGBA*[]> _rgba_data;
+  StaticArray<PIXEL_RGBA*> _rgba_data;
   // TOOD: will eventually use an object from coordinates.hpp, but for
   // now I want this freedom
-  std::unique_ptr<INT64[]> _rgba_wpixel;
-  std::unique_ptr<INT64[]> _rgba_hpixel;
+  StaticArray<INT64> _rgba_wpixel;
+  StaticArray<INT64> _rgba_hpixel;
   // not scaled, but they need to be here for now
   GridPixelSize _max_sub_size;
   // the origin foreach
-  std::unique_ptr<INT64[]> _rgba_xpixel_origin;
-  std::unique_ptr<INT64[]> _rgba_ypixel_origin;
+  StaticArray<INT64> _rgba_xpixel_origin;
+  StaticArray<INT64> _rgba_ypixel_origin;
   INT64 _zoom_out_shift;
 };
 
@@ -177,8 +176,8 @@ private:
   GridSetup* _grid_setup;
   GridIndex _grid_index;
   GridPixelSize _square_size;
-  std::unique_ptr<INT64[]> _subimages_wpixel;
-  std::unique_ptr<INT64[]> _subimages_hpixel;
+  StaticArray<INT64> _subimages_wpixel;
+  StaticArray<INT64> _subimages_hpixel;
   GridPixelSize _max_sub_size;
   /**
    * Read in a the file cooresponing to this square.

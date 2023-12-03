@@ -323,14 +323,11 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
                               SubGridIndex& current_subgrid,
                               LoadFileDataTransfer& data_transfer,
                               INT64* row_temp_buffer) {
-  auto sub_i=current_subgrid.i();
-  auto sub_j=current_subgrid.j();
   auto successful=false;
   auto sub_w=data_transfer.sub_size.w();
   auto sub_h=data_transfer.sub_size.h();
-  auto sub_index=sub_j*sub_w+sub_i;
-  auto original_width=data_transfer.original_rgba_wpixel[sub_index];
-  auto original_height=data_transfer.original_rgba_hpixel[sub_index];
+  auto original_width=data_transfer.original_rgba_wpixel[current_subgrid];
+  auto original_height=data_transfer.original_rgba_hpixel[current_subgrid];
   auto can_cache=test_tiff_cache(cached_filename,
                                  data_transfer);
   if (can_cache) {
@@ -377,12 +374,11 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
             // TODO: might want to add an assert here but should be safe due to earlier check
             INT64 w_reduced=reduce_and_pad(original_width,1L << zoom_out_shift);
             INT64 h_reduced=reduce_and_pad(original_height,1L << zoom_out_shift);
-            auto sub_index_arr=sub_j*sub_w+sub_i;
-            file_data->rgba_wpixel[sub_index_arr]=w_reduced;
-            file_data->rgba_hpixel[sub_index_arr]=h_reduced;
+            file_data->rgba_wpixel.set(current_subgrid,w_reduced);
+            file_data->rgba_hpixel.set(current_subgrid,h_reduced);
             INT64 npixels_reduced=w_reduced*h_reduced;
-            file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
-            std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
+            file_data->rgba_data.set(current_subgrid,new PIXEL_RGBA[npixels_reduced]);
+            std::memset(file_data->rgba_data[current_subgrid],0,sizeof(PIXEL_RGBA)*npixels_reduced);
             if (last_buffer && zoom_out_shift > last_zoom_out_shift) {
               auto step_zoom_out_shift=actual_zoom_out_shift-last_zoom_out_shift;
               auto source_size=last_dest_size;
@@ -391,7 +387,7 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
                                           source_size,
                                           BufferPixelCoordinate(0,0),
                                           source_size,
-                                          file_data->rgba_data[sub_index_arr],
+                                          file_data->rgba_data[current_subgrid],
                                           dest_size,
                                           dest_size,
                                           BufferPixelCoordinate(0,0),
@@ -404,7 +400,7 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
                                           source_size,
                                           BufferPixelCoordinate(0,0),
                                           source_size,
-                                          file_data->rgba_data[sub_index_arr],
+                                          file_data->rgba_data[current_subgrid],
                                           dest_size,
                                           dest_size,
                                           BufferPixelCoordinate(0,0),
@@ -413,7 +409,7 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
             }
             last_dest_size=BufferPixelSize(w_reduced,h_reduced);
             last_zoom_out_shift=actual_zoom_out_shift;
-            last_buffer=file_data->rgba_data[sub_index_arr];
+            last_buffer=file_data->rgba_data[current_subgrid];
           }
         }
         delete[] png_raster;
@@ -429,9 +425,6 @@ bool load_tiff_as_rgba(const std::string& filename,
                        SubGridIndex& current_subgrid,
                        LoadFileDataTransfer& data_transfer,
                        INT64* row_temp_buffer) {
-  auto sub_i=current_subgrid.i();
-  auto sub_j=current_subgrid.j();
-  auto sub_w=data_transfer.sub_size.w();
   auto success=false;
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
   if (!tif) {
@@ -459,12 +452,11 @@ bool load_tiff_as_rgba(const std::string& filename,
           auto zoom_out_shift=file_data->zoom_out_shift;
           INT64 w_reduced=reduce_and_pad(tiff_width,1L << zoom_out_shift);
           INT64 h_reduced=reduce_and_pad(tiff_height,1L << zoom_out_shift);
-          auto sub_index_arr=sub_j*sub_w+sub_i;
-          file_data->rgba_wpixel[sub_index_arr]=w_reduced;
-          file_data->rgba_hpixel[sub_index_arr]=h_reduced;
+          file_data->rgba_wpixel.set(current_subgrid,w_reduced);
+          file_data->rgba_hpixel.set(current_subgrid,h_reduced);
           auto npixels_reduced=w_reduced*h_reduced;
-          file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
-          std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
+          file_data->rgba_data.set(current_subgrid,new PIXEL_RGBA[npixels_reduced]);
+          std::memset(file_data->rgba_data[current_subgrid],0,sizeof(PIXEL_RGBA)*npixels_reduced);
           if (last_buffer && zoom_out_shift > last_zoom_out_shift) {
             auto step_zoom_out_shift=zoom_out_shift-last_zoom_out_shift;
             auto source_size=last_dest_size;
@@ -473,7 +465,7 @@ bool load_tiff_as_rgba(const std::string& filename,
                                         source_size,
                                         BufferPixelCoordinate(0,0),
                                         source_size,
-                                        file_data->rgba_data[sub_index_arr],
+                                        file_data->rgba_data[current_subgrid],
                                         dest_size,
                                         dest_size,
                                         BufferPixelCoordinate(0,0),
@@ -484,7 +476,7 @@ bool load_tiff_as_rgba(const std::string& filename,
             auto dest_size=BufferPixelSize(w_reduced,h_reduced);
             buffer_copy_reduce_tiff(raster,
                                     source_size,
-                                    file_data->rgba_data[sub_index_arr],
+                                    file_data->rgba_data[current_subgrid],
                                     dest_size,
                                     zoom_out_shift,
                                     row_temp_buffer);
@@ -492,7 +484,7 @@ bool load_tiff_as_rgba(const std::string& filename,
           }
           last_dest_size=BufferPixelSize(w_reduced,h_reduced);
           last_zoom_out_shift=zoom_out_shift;
-          last_buffer=file_data->rgba_data[sub_index_arr];
+          last_buffer=file_data->rgba_data[current_subgrid];
         }
         success=true;
       }
@@ -525,9 +517,6 @@ bool load_png_as_rgba(const std::string& filename,
                       SubGridIndex& current_subgrid,
                       LoadFileDataTransfer& data_transfer,
                       INT64* row_temp_buffer) {
-  auto sub_i=current_subgrid.i();
-  auto sub_j=current_subgrid.j();
-  auto sub_w=data_transfer.sub_size.w();
   bool success=false;
   png_image image;
   memset(&image, 0, (sizeof image));
@@ -556,12 +545,11 @@ bool load_png_as_rgba(const std::string& filename,
           auto zoom_out_shift=file_data->zoom_out_shift;
           INT64 w_reduced=reduce_and_pad(width,1L << zoom_out_shift);
           INT64 h_reduced=reduce_and_pad(height,1L << zoom_out_shift);
-          auto sub_index_arr=sub_j*sub_w+sub_i;
-          file_data->rgba_wpixel[sub_index_arr]=w_reduced;
-          file_data->rgba_hpixel[sub_index_arr]=h_reduced;
+          file_data->rgba_wpixel.set(current_subgrid,w_reduced);
+          file_data->rgba_hpixel.set(current_subgrid,h_reduced);
           INT64 npixels_reduced=w_reduced*h_reduced;
-          file_data->rgba_data[sub_index_arr]=new PIXEL_RGBA[npixels_reduced];
-          std::memset(file_data->rgba_data[sub_index_arr],0,sizeof(PIXEL_RGBA)*npixels_reduced);
+          file_data->rgba_data.set(current_subgrid,new PIXEL_RGBA[npixels_reduced]);
+          std::memset(file_data->rgba_data[current_subgrid],0,sizeof(PIXEL_RGBA)*npixels_reduced);
           if (last_buffer && zoom_out_shift > last_zoom_out_shift) {
             auto step_zoom_out_shift=zoom_out_shift-last_zoom_out_shift;
             auto source_size=last_dest_size;
@@ -570,7 +558,7 @@ bool load_png_as_rgba(const std::string& filename,
                                         source_size,
                                         BufferPixelCoordinate(0,0),
                                         source_size,
-                                        file_data->rgba_data[sub_index_arr],
+                                        file_data->rgba_data[current_subgrid],
                                         dest_size,
                                         dest_size,
                                         BufferPixelCoordinate(0,0),
@@ -583,7 +571,7 @@ bool load_png_as_rgba(const std::string& filename,
                                         source_size,
                                         BufferPixelCoordinate(0,0),
                                         source_size,
-                                        file_data->rgba_data[sub_index_arr],
+                                        file_data->rgba_data[current_subgrid],
                                         dest_size,
                                         dest_size,
                                         BufferPixelCoordinate(0,0),
@@ -592,7 +580,7 @@ bool load_png_as_rgba(const std::string& filename,
           }
           last_dest_size=BufferPixelSize(w_reduced,h_reduced);
           last_zoom_out_shift=zoom_out_shift;
-          last_buffer=file_data->rgba_data[sub_index_arr];
+          last_buffer=file_data->rgba_data[current_subgrid];
         }
         success=true;
       }

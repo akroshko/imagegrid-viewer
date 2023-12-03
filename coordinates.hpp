@@ -18,9 +18,11 @@ class GridPixelSize;
 class ImagePixelCoordinate;
 class BufferPixelSize;
 class BufferPixelCoordinate;
-
 template <typename T>
 class CoordinatePair;
+// forward declaring container types
+template <typename T>
+class StaticArray;
 
 template <typename T>
 CoordinatePair<T> operator+(const CoordinatePair<T>& coordinate_pair, const T& scalar) {
@@ -108,6 +110,8 @@ public:
   friend CoordinatePair operator* <>(const CoordinatePair& coordinate_pair_1, const CoordinatePair& coordinate_pair_2);
   friend CoordinatePair operator/ <>(const CoordinatePair& coordinate_pair, const T& scalar);
   friend CoordinatePair operator/ <>(const CoordinatePair& coordinate_pair_1, const CoordinatePair& coordinate_pair_2);
+  // container types
+  template <typename TT> friend class StaticArray;
 protected:
   T _x1;
   T _x2;

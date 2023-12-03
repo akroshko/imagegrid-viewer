@@ -8,6 +8,7 @@
 
 #include "../common.hpp"
 #include "../coordinates.hpp"
+#include "../containers.hpp"
 #include "../viewport_current_state.hpp"
 #include "iterators.hpp"
 // C++ headers
@@ -121,12 +122,14 @@ protected:
   bool _setup_cache=false;
   bool _use_cache=false;
   // some underlying data
-  std::unique_ptr<SubGridImageSize[]> _sub_size;
-  std::unique_ptr<bool[]> _existing;
+  StaticArray<SubGridImageSize> _sub_size;
+  StaticArray<bool> _existing;
   std::list<GridSetupFile> _read_data;
   std::unique_ptr<std::unique_ptr<std::string[]>[]> _file_data;
   // objects to return for const iterators
   std::unique_ptr<GridIndex[]> _grid_index_values;
+  // TODO: need to add iterators to static array before this one will work
+  // StaticArray<GridIndex> _grid_index_values;
   // objects to return for const iterators
   std::unique_ptr<std::unique_ptr<SubGridIndex[]>[]> _subgrid_index_values;
 };
