@@ -6,6 +6,7 @@
 
 #include "common.hpp"
 #include "datatypes/coordinates.hpp"
+#include "datatypes/containers.hpp"
 #include "imagegrid/gridsetup.hpp"
 #include "imagegrid/imagegrid.hpp"
 #include "c_sdl2/sdl2.hpp"
@@ -81,7 +82,7 @@ public:
    * @param index The index of the surface to lock.
    * @return If the surface was locked successfully.
    */
-  bool lock_surface (const BufferTileIndex& index);
+  bool lock_surface (const BufferTileIndex& tile_index);
   /** @return If locking all surfaces was successful. */
   bool lock_all_surfaces ();
   /**
@@ -89,19 +90,19 @@ public:
 
    * @param index The index of the surface to unlock.
    */
-  void unlock_surface (const BufferTileIndex& index);
+  void unlock_surface (const BufferTileIndex& tile_index);
   /** Unlock all surfaces. */
   void unlock_all_surfaces ();
   /** Clear all surfaces. */
   void clear_all_surfaces ();
   /** Get the RGBA pixels for a particular tile. */
-  PIXEL_RGBA* get_rgba_pixels(const BufferTileIndex& index);
+  PIXEL_RGBA* get_rgba_pixels(const BufferTileIndex& tile_index);
   /**
    * Get the display texture for a tile.
    *
    * @param index The index of the rile to get the wrapper for.
    */
-  SDLDisplayTextureWrapper* display_texture_wrapper(const BufferTileIndex& index);
+  SDLDisplayTextureWrapper* display_texture_wrapper(const BufferTileIndex& tile_index);
   /** @return The size in of the tiles. */
   BufferTileSize tile_size();
   /** @return The size in pixels that this square actually displays. */
@@ -118,7 +119,7 @@ private:
   TextureGridSquare* _parent_square;
   BufferTileSize _tile_size;
   // the actual display texture
-  std::unique_ptr<std::unique_ptr<SDLDisplayTextureWrapper>[]> _display_texture_wrapper;
+  StaticGrid<std::unique_ptr<SDLDisplayTextureWrapper>> _display_texture_wrapper;
 };
 
 /**
@@ -140,7 +141,7 @@ public:
    * full-size texture the subsequent elements are zoomed textures
    * each reduced by a factor of 2.
    */
-  std::unique_ptr<std::unique_ptr<TextureGridSquareZoomLevel>[]> texture_array;
+  StaticArray<std::unique_ptr<TextureGridSquareZoomLevel>> texture_array;
   /** @return The parent texture grid.*/
   TextureGrid* parent_grid() const;
 private:
@@ -157,7 +158,6 @@ class TextureGrid {
 public:
   TextureGrid()=delete;
   /**
-   *
    * @param grid_setup The object holding the data on the images in
    *                   the grid, including the filenames and grid
    *                   size.
@@ -185,7 +185,7 @@ private:
   /** this size of this grid in number of textures */
   GridImageSize _grid_image_size;
   /** the individual squares */
-  std::unique_ptr<std::unique_ptr<TextureGridSquare>[]> _squares;
+  StaticGrid<std::unique_ptr<TextureGridSquare>> _squares;
   /** the maximum zoom */
   INT64 _zoom_out_shift_length;
 };

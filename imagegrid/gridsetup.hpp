@@ -88,7 +88,7 @@ public:
    * @return Whether the subgrid has data.
    */
   bool subgrid_has_data(const GridIndex& grid_index,
-                        const SubGridIndex& sub_index) const;
+                        const SubGridIndex& subgrid_index) const;
   /**
    * Get filename associated with a particular subgrid square has.
    *
@@ -97,7 +97,7 @@ public:
    * @return The filename.
    */
   std::string filename(const GridIndex& grid_index,
-                           const SubGridIndex& sub_index) const;
+                           const SubGridIndex& subgrid_index) const;
   // getting iterators
   std::unique_ptr<ImageGridIteratorVisible> iterator_visible(const ViewPortCurrentState& viewport_current_state);
   std::unique_ptr<ImageGridIteratorFull> iterator_full(const ViewPortCurrentState& viewport_current_state);
@@ -108,27 +108,24 @@ protected:
   INT64 _grid_index(INT64 i, INT64 j) const;
   INT64 _grid_index(const GridIndex& grid_index) const;
   INT64 _grid_index(const GridIndex* grid_index) const;
-  INT64 _sub_index(INT64 sub_i, INT64 sub_j, INT64 sub_w) const;
-  INT64 _sub_index(const SubGridIndex& sub_index, INT64 sub_w) const;
   std::atomic<GridSetupStatus> _status {GridSetupStatus::not_loaded};
   GridImageSize _grid_image_size;
   std::vector<std::string> _filenames;
   std::string _text_filename;
-  /** Stores a path of images to load.
-   */
+  /** Stores a path of images to load. */
   std::string _path_value;
   /** For future expansion. */
   // char _data_set[PATH_BUFFER_SIZE]={ 0 };
   bool _setup_cache=false;
   bool _use_cache=false;
   // some underlying data
-  StaticArray<SubGridImageSize> _sub_size;
-  StaticArray<bool> _existing;
+  StaticGrid<SubGridImageSize> _sub_size;
+  StaticGrid<bool> _existing;
   std::list<GridSetupFile> _read_data;
-  std::unique_ptr<std::unique_ptr<std::string[]>[]> _file_data;
+  StaticGridTwoLayer<std::string> _file_data;
   // objects to return for const iterators
-  std::unique_ptr<GridIndex[]> _grid_index_values;
   // TODO: need to add iterators to static array before this one will work
+  std::unique_ptr<GridIndex[]> _grid_index_values;
   // StaticArray<GridIndex> _grid_index_values;
   // objects to return for const iterators
   std::unique_ptr<std::unique_ptr<SubGridIndex[]>[]> _subgrid_index_values;

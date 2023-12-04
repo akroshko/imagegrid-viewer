@@ -49,16 +49,6 @@ INT64 GridSetup::_grid_index(const GridIndex* grid_index) const {
   return this->_grid_index(i,j);
 }
 
-INT64 GridSetup::_sub_index(INT64 sub_i, INT64 sub_j, INT64 sub_w) const {
-  return sub_j*sub_w+sub_i;
-}
-
-INT64 GridSetup::_sub_index(const SubGridIndex& sub_index, INT64 sub_w) const {
-  auto sub_i=sub_index.i();
-  auto sub_j=sub_index.j();
-  return this->_sub_index(sub_i, sub_j, sub_w);
-}
-
 bool GridSetup::square_has_data(const GridIndex& grid_index) const {
   return this->_existing[grid_index];
 }
@@ -71,16 +61,13 @@ SubGridImageSize GridSetup::sub_size(const GridIndex& grid_index) const {
   return SubGridImageSize(this->_sub_size[grid_index]);
 }
 
-bool GridSetup::subgrid_has_data(const GridIndex& grid_index, const SubGridIndex& sub_index) const {
-  auto str=this->filename(grid_index,sub_index);
+bool GridSetup::subgrid_has_data(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const {
+  auto str=this->filename(grid_index,subgrid_index);
   return (check_valid_filename(str));
 }
 
-std::string GridSetup::filename(const GridIndex& grid_index, const SubGridIndex& sub_index) const {
-  auto local_grid_index=this->_grid_index(grid_index);
-  auto sub_w=this->_sub_size[grid_index].w();
-  auto local_sub_index=this->_sub_index(sub_index,sub_w);
-  return this->_file_data[local_grid_index][local_sub_index];
+std::string GridSetup::filename(const GridIndex& grid_index, const SubGridIndex& subgrid_index) const {
+  return this->_file_data(grid_index,subgrid_index);
 };
 
 std::unique_ptr<ImageGridIteratorVisible> GridSetup::iterator_visible(const ViewPortCurrentState& viewport_current_state) {
@@ -174,19 +161,18 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       this->_existing.set(grid_index,true);
     }
     // setup the new data structure
-    this->_file_data=std::make_unique<std::unique_ptr<std::string[]>[]>(wimage*himage);
+    this->_file_data.init_layer_1(this->_grid_image_size);
     for (INT64 j=0; j < himage; j++) {
       for (INT64 i=0; i < wimage; i++) {
-        auto grid_index_raw=this->_grid_index(i, j);
         auto grid_index=GridIndex(i,j);
         auto sub_w=this->_sub_size[grid_index].w();
         auto sub_h=this->_sub_size[grid_index].h();
-        this->_file_data[grid_index_raw]=std::make_unique<std::string[]>(sub_w*sub_h);
+        this->_file_data.init_layer_2(grid_index,this->_sub_size[grid_index]);
         // initialize to empty
         for (INT64 sub_j=0; sub_j < sub_h; sub_j++) {
           for (INT64 sub_i=0; sub_i < sub_w; sub_i++) {
-            auto sub_index=this->_sub_index(sub_i, sub_j, sub_w);
-            this->_file_data[grid_index_raw][sub_index]="";
+            auto subgrid_index=SubGridIndex(sub_i,sub_j);
+            this->_file_data.set(grid_index,subgrid_index,"");
           }
         }
       }
@@ -198,11 +184,9 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       auto j=data.grid_j;
       auto sub_i=data.subgrid_i;
       auto sub_j=data.subgrid_j;
-      auto grid_index_raw=this->_grid_index(i, j);
       auto grid_index=GridIndex(i,j);
-      auto sub_w=this->_sub_size[grid_index].w();
-      auto sub_index=this->_sub_index(sub_i, sub_j, sub_w);
-      this->_file_data[grid_index_raw][sub_index]=std::string(data.filename);
+      auto subgrid_index=SubGridIndex(sub_i,sub_j);
+      this->_file_data.set(grid_index,subgrid_index,std::string(data.filename));
       this->_read_data.pop_back();
     }
   } else {
@@ -219,29 +203,27 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
       ERROR("Number of filenames " << this->_filenames.size() << " does not match grid size " << grid_size);
       return;
     }
-    // this type of input will not hae subgrids
+    // this type of input will not hvae subgrids
     // TODO: this can probably be refactored into above
     this->_grid_image_size=GridImageSize(wimage,himage);
     this->_existing.init(this->_grid_image_size);
     this->_sub_size.init(this->_grid_image_size);
-    this->_file_data=std::make_unique<std::unique_ptr<std::string[]>[]>(wimage*himage);
+    this->_file_data.init_layer_1(this->_grid_image_size);
     for (INT64 k=0;k<wimage*himage;k++) {
       INT64 i=k%wimage;
       INT64 j=k/wimage;
-      auto grid_index_raw=this->_grid_index(i, j);
       auto grid_index=GridIndex(i,j);
       this->_sub_size[grid_index]=SubGridImageSize(1,1);
-      this->_file_data[grid_index_raw]=std::make_unique<std::string[]>(1);
-      auto sub_index=this->_sub_index(0, 0, 1);
-      this->_file_data[grid_index_raw][sub_index]="";
+      this->_file_data.init_layer_2(grid_index,this->_sub_size[grid_index]);
+      auto subgrid_index=SubGridIndex(0,0);
+      this->_file_data.set(grid_index,subgrid_index,"");
     }
     for (INT64 k=0;k<(INT64)this->_filenames.size();k++) {
       INT64 i=k%wimage;
       INT64 j=k/wimage;
-      auto grid_index_raw=this->_grid_index(i, j);
       auto grid_index=GridIndex(i,j);
-      auto sub_index=this->_sub_index(0, 0, 1);
-      this->_file_data[grid_index_raw][sub_index]=this->_filenames[k];
+      auto subgrid_index=SubGridIndex(0,0);
+      this->_file_data.set(grid_index,subgrid_index,this->_filenames[k]);
       this->_existing.set(grid_index,true);
     }
   }

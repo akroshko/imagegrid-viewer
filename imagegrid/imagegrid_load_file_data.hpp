@@ -27,9 +27,9 @@ class LoadFileZoomLevelData {
 public:
   LoadFileZoomLevelData();
   std::string filename;
-  StaticArray<PIXEL_RGBA*> rgba_data;
-  StaticArray<INT64> rgba_wpixel;
-  StaticArray<INT64> rgba_hpixel;
+  StaticGrid<PIXEL_RGBA*> rgba_data;
+  StaticGrid<INT64> rgba_wpixel;
+  StaticGrid<INT64> rgba_hpixel;
   INT64 max_sub_wpixel=INT_MIN;
   INT64 max_sub_hpixel=INT_MIN;
   INT64 zoom_out_shift=INT_MIN;
@@ -44,8 +44,8 @@ public:
   LoadFileDataTransfer();
   std::vector<std::shared_ptr<LoadFileZoomLevelData>> data_transfer;
   SubGridImageSize sub_size;
-  StaticArray<INT64> original_rgba_wpixel;
-  StaticArray<INT64> original_rgba_hpixel;
+  StaticGrid<INT64> original_rgba_wpixel;
+  StaticGrid<INT64> original_rgba_hpixel;
 };
 
 /**

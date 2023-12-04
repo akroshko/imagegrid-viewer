@@ -104,13 +104,13 @@ void TextureUpdate::load_new_textures(bool grid_square_visible,
     }
     // only load/update current zoom and max_zoom
     auto zoom_out_shift=zoom_out_shift_array[zi];
-    auto dest_square=texture_grid_square->texture_array[zoom_out_shift].get();
+    auto dest_square=texture_grid_square->texture_array[zoom_out_shift];
     auto load_all=(zoom_out_shift == max_zoom_out_shift);
     if (load_all || grid_square_visible) {
       auto load_index=zoom_out_shift;
       bool texture_copy_successful=false;
       do {
-        auto image_square=grid_square->image_array[load_index].get();
+        auto image_square=grid_square->image_array[load_index];
         if (image_square->is_loaded &&
             (!dest_square->is_loaded ||
              dest_square->last_load_index>load_index)) {
@@ -150,7 +150,7 @@ void TextureUpdate::clear_textures(bool grid_square_visible,
   // never clear out top level index
   for (INT64 zoom_out_shift=0L; zoom_out_shift < max_zoom_out_shift; zoom_out_shift++) {
     if (!keep_running) { break; }
-    auto dest_square=texture_grid_square->texture_array[zoom_out_shift].get();
+    auto dest_square=texture_grid_square->texture_array[zoom_out_shift];
     if (!grid_square_visible) {
       // unload anything not visible that is loadable or displayable
       if (dest_square->is_loaded) {
@@ -179,7 +179,7 @@ void TextureUpdate::add_filler_textures(bool grid_square_visible,
       continue;
     }
     auto load_all=(zoom_out_shift == max_zoom_out_index);
-    auto dest_square=texture_grid_square->texture_array[zoom_out_shift].get();
+    auto dest_square=texture_grid_square->texture_array[zoom_out_shift];
     if (load_all || grid_square_visible) {
       if (!dest_square->is_loaded && !dest_square->image_filler()) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
@@ -231,13 +231,13 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
   if (dest_square->all_surfaces_valid()) {
     // everything is read, loop over
     auto grid_index=*source_square->parent_square()->grid_index();
-    for (const auto& sub_index : ImageSubGridBasicIterator(source_square->parent_square()->grid_setup(),
+    for (const auto& subgrid_index : ImageSubGridBasicIterator(source_square->parent_square()->grid_setup(),
                                                            grid_index)) {
-      auto source_data=source_square->rgba_data(sub_index);
-      auto source_size=BufferPixelSize(source_square->rgba_wpixel(sub_index),
-                                       source_square->rgba_hpixel(sub_index));
-      auto source_data_origin_x=source_square->rgba_xpixel_origin(sub_index);
-      auto source_data_origin_y=source_square->rgba_ypixel_origin(sub_index);
+      auto source_data=source_square->rgba_data(subgrid_index);
+      auto source_size=BufferPixelSize(source_square->rgba_wpixel(subgrid_index),
+                                       source_square->rgba_hpixel(subgrid_index));
+      auto source_data_origin_x=source_square->rgba_xpixel_origin(subgrid_index);
+      auto source_data_origin_y=source_square->rgba_ypixel_origin(subgrid_index);
       if (source_data) {
         auto source_zoom_out_shift=source_square->zoom_out_shift();
         auto zoom_left_shift=zoom_out_shift-source_zoom_out_shift;
@@ -257,8 +257,8 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
         // how large is the source on the first tile
         auto source_w_first=source_texture_size-(source_data_origin_x % source_texture_size);
         auto source_h_first=source_texture_size-(source_data_origin_y % source_texture_size);
-        for (INT64 ti=tile_origin_i; ti <= tile_end_i; ti++) {
-          for (INT64 tj=tile_origin_j; tj <= tile_end_j; tj++) {
+        for (INT64 tj=tile_origin_j; tj <= tile_end_j; tj++) {
+          for (INT64 ti=tile_origin_i; ti <= tile_end_i; ti++) {
             auto tile_index=BufferTileIndex(ti,tj);
             // TODO: get return code from this
             // TODO: use RAII

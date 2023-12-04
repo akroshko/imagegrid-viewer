@@ -22,7 +22,7 @@ template <typename T>
 class CoordinatePair;
 // forward declaring container types
 template <typename T>
-class StaticArray;
+class StaticGrid;
 
 template <typename T>
 CoordinatePair<T> operator+(const CoordinatePair<T>& coordinate_pair, const T& scalar) {
@@ -111,7 +111,8 @@ public:
   friend CoordinatePair operator/ <>(const CoordinatePair& coordinate_pair, const T& scalar);
   friend CoordinatePair operator/ <>(const CoordinatePair& coordinate_pair_1, const CoordinatePair& coordinate_pair_2);
   // container types
-  template <typename TT> friend class StaticArray;
+  template <typename TT> friend class StaticGrid;
+  template <typename TT> friend class StaticGridTwoLayer;
 protected:
   T _x1;
   T _x2;

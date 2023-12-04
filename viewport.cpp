@@ -29,8 +29,8 @@ void blit_this(SDLDrawableSurface* screen_surface,
   } else {
      FLOAT64 texture_square_wpixel=blit_square->texture_square_pixel_size().w();
      FLOAT64 texture_square_hpixel=blit_square->texture_square_pixel_size().h();
-     for (INT64 i=0; i < blit_square->tile_size().w(); i++) {
-       for (INT64 j=0; j < blit_square->tile_size().h(); j++) {
+     for (INT64 j=0; j < blit_square->tile_size().h(); j++) {
+       for (INT64 i=0; i < blit_square->tile_size().w(); i++) {
          auto tile_index=BufferTileIndex(i,j);
          FLOAT64 texture_xpixel_start,texture_xpixel_end;
          FLOAT64 texture_ypixel_start,texture_ypixel_end;
@@ -140,7 +140,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
     // for testing max zoom
     bool texture_loaded=false;
     do {
-      auto texture_square_zoom=texture_grid->squares(GridIndex(i,j))->texture_array[actual_zoom].get();
+      auto texture_square_zoom=texture_grid->squares(GridIndex(i,j))->texture_array[actual_zoom];
       // filler should never get past here
       if (texture_square_zoom->is_loaded &&
           texture_square_zoom->is_displayable) {
@@ -169,7 +169,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
     } while ((actual_zoom <= max_zoom_out_shift) && !texture_loaded);
     // texture didn't load load so do filler
     if (!texture_loaded) {
-      auto texture_square_zoom=texture_grid->squares(GridIndex(i,j))->texture_array[zoom_out_shift].get();
+      auto texture_square_zoom=texture_grid->squares(GridIndex(i,j))->texture_array[zoom_out_shift];
       if (texture_square_zoom->image_filler()) {
         // TODO: would like more RAII way of dealing with this mutex
         // still want a mutex here so indication that texture is to use filler doesn't change

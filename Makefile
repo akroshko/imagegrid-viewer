@@ -1,4 +1,4 @@
-# CC=clang
+CC=clang
 HEADERS=$(wildcard *.hpp) $(wildcard datatypes/*.hpp) $(wildcard imagegrid/*.hpp) $(wildcard c_misc/*.hpp) $(wildcard c_sdl2/*.hpp) $(wildcard c_io_net/*.hpp)
 # for clean only
 SRC = $(wildcard *.cpp) $(wildcard datatypes/*.cpp) $(wildcard imagegrid/*.cpp) $(wildcard c_misc/*.cpp) $(wildcard c_sdl2/*.cpp) $(wildcard c_io_net/*.cpp)

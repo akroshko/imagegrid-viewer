@@ -75,40 +75,40 @@ public:
   /**
    * Get the zoomed width in pixels of RGBA array.
    *
-   * @param sub_index The index of the subgrid.
+   * @param subgrid_index The index of the subgrid.
    * @return The width in pixels.
    */
-  INT64 rgba_wpixel(const SubGridIndex& sub_index) const;
+  INT64 rgba_wpixel(const SubGridIndex& subgrid_index) const;
   /**
    * Get the zoomed height in pixels of RGBA array.
    *
-   * @param sub_index The index of the subgrid.
+   * @param subgrid_index The index of the subgrid.
    * @return The height in pixels.
    */
-  INT64 rgba_hpixel(const SubGridIndex& sub_index) const;
+  INT64 rgba_hpixel(const SubGridIndex& subgrid_index) const;
   /**
    * Get the zoomed x coordinate of the origin of this image within
    * the grid square.
    *
-   * @param sub_index The index of the subgrid.
+   * @param subgrid_index The index of the subgrid.
    * @return The x origin coordinate in pixels.
    */
-  INT64 rgba_xpixel_origin(const SubGridIndex& sub_index) const;
+  INT64 rgba_xpixel_origin(const SubGridIndex& subgrid_index) const;
   /**
    * Get the zoomed y coordinate of the origin of this image within
    * the grid square.
    *
-   * @param sub_index The index of the subgrid.
+   * @param subgrid_index The index of the subgrid.
    * @return The y origin coordinate in pixels.
    */
-  INT64 rgba_ypixel_origin(const SubGridIndex& sub_index) const;
+  INT64 rgba_ypixel_origin(const SubGridIndex& subgrid_index) const;
   /**
    * Get the RGBA data for this square.
    *
-   * @param sub_index The index of the subgrid.
+   * @param subgrid_index The index of the subgrid.
    * @return A pointer to the RGBA data.
    */
-  PIXEL_RGBA* rgba_data(const SubGridIndex& sub_index) const;
+  PIXEL_RGBA* rgba_data(const SubGridIndex& subgrid_index) const;
   /** @return The subgrid size of this square. */
   SubGridImageSize sub_size() const;
   // /** @return The max subgrid pixel size for each image at the zoom out of this square. */
@@ -121,16 +121,16 @@ private:
   std::atomic<ImageGridStatus> _status {ImageGridStatus::not_loaded};
   ImageGridSquare* _parent_square;
   /** The actual RGBA data for this square at the zoom out value. */
-  StaticArray<PIXEL_RGBA*> _rgba_data;
+  StaticGrid<PIXEL_RGBA*> _rgba_data;
   // TOOD: will eventually use an object from coordinates.hpp, but for
   // now I want this freedom
-  StaticArray<INT64> _rgba_wpixel;
-  StaticArray<INT64> _rgba_hpixel;
+  StaticGrid<INT64> _rgba_wpixel;
+  StaticGrid<INT64> _rgba_hpixel;
   // not scaled, but they need to be here for now
   GridPixelSize _max_sub_size;
   // the origin foreach
-  StaticArray<INT64> _rgba_xpixel_origin;
-  StaticArray<INT64> _rgba_ypixel_origin;
+  StaticGrid<INT64> _rgba_xpixel_origin;
+  StaticGrid<INT64> _rgba_ypixel_origin;
   INT64 _zoom_out_shift;
 };
 
@@ -159,7 +159,7 @@ public:
   ImageGridSquare(const ImageGridSquare&&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&)=delete;
   ImageGridSquare& operator=(const ImageGridSquare&&)=delete;
-  std::unique_ptr<std::unique_ptr<ImageGridSquareZoomLevel>[]> image_array;
+  StaticArray<std::unique_ptr<ImageGridSquareZoomLevel>> image_array;
   // /** @return The subgrid size. */
   SubGridImageSize sub_size() const;
   /** @return The parent image grid. */
@@ -176,8 +176,8 @@ private:
   GridSetup* _grid_setup;
   GridIndex _grid_index;
   GridPixelSize _square_size;
-  StaticArray<INT64> _subimages_wpixel;
-  StaticArray<INT64> _subimages_hpixel;
+  StaticGrid<INT64> _subimages_wpixel;
+  StaticGrid<INT64> _subimages_hpixel;
   GridPixelSize _max_sub_size;
   /**
    * Read in a the file cooresponing to this square.
@@ -300,9 +300,8 @@ private:
    * @param grid_index The index of grid square to write cache for.
    */
   void _write_cache(const GridIndex& grid_index);
-  ImageGridSquare* _get_squares(const GridIndex& grid_index);
   /** The individual squares in the image grid. */
-  std::unique_ptr<std::unique_ptr<ImageGridSquare>[]> _squares;
+  StaticGrid<std::unique_ptr<ImageGridSquare>> _squares;
   /** Maximum size of images loaded into the grid. */
   GridPixelSize _image_max_size;
   /** Threadsafe class for getting the state of the viewport. */
