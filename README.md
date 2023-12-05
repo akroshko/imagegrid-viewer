@@ -32,6 +32,15 @@ Currently *imagegrid-viewer* has only been built on Debian Linux 12
 
 Then run `make` in the *imagegrid-viewer* directory to build.
 
+# Simple Tests
+
+To run some basic unit tests.
+
+> $ make test
+
+To display some tiny images and verify basic functionality see [Manual
+Tests](./manual_tests/ManualTests.md).
+
 # Usage
 
 To display a list of sequentially numbered images:
