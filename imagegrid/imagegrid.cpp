@@ -8,7 +8,7 @@
 #include "../utility.hpp"
 #include "gridsetup.hpp"
 #include "imagegrid.hpp"
-#include "iterators.hpp"
+// #include "iterators.hpp"
 #include "../viewport_current_state.hpp"
 #include "imagegrid_load_file_data.hpp"
 // C compatible headers
@@ -474,7 +474,7 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
 // }
 
 void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& keep_running) {
-  auto keep_trying=true;
+  // auto keep_trying=true;
   // get information on viewport
   auto viewport_current_state=this->_viewport_current_state_imagegrid_update->GetGridValues();
   // find the grid extents and choose things that should be loaded/unloaded
@@ -487,7 +487,7 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
   for (auto zoom_out_shift=this->_max_zoom_out_shift-1; zoom_out_shift >= 0L; zoom_out_shift--) {
     for (const auto& grid_index : ImageGridBasicIterator(this->_grid_setup)) {
       if (!keep_running) {
-        keep_trying=false;
+        break;
       }
       if (!this->_check_load(viewport_current_state,
                              zoom_out_shift, &grid_index, zoom_out_shift_lower_limit,
@@ -499,36 +499,36 @@ void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& 
   }
   // files actually loaded
   INT64 load_count=0;
-  auto iterator_visible=this->grid_setup()->iterator_visible(viewport_current_state);
-  // we are looking at if things are not loaded
-  while (keep_trying && load_count < LOAD_FILES_BATCH && keep_running ) {
-    auto grid_index=iterator_visible->get_next();
-    keep_trying=(!grid_index->invalid());
-    if (keep_trying) {
-      if (this->_check_bounds(grid_index.get()) && grid_setup->square_has_data(grid_index.get())) {
-
-        auto load_successful=this->_load_square(viewport_current_state,
-                                                grid_index.get(),
-                                                zoom_out_shift_lower_limit,
-                                                load_all, grid_setup);
-        if (load_successful) { load_count++; }
-      }
-    }
-  }
-  keep_trying=(load_count < LOAD_FILES_BATCH && keep_running);
-  if (keep_trying) {
-    auto iterator_normal=this->grid_setup()->iterator_full(viewport_current_state);
-    while (keep_trying && load_count < LOAD_FILES_BATCH && keep_running) {
-      auto grid_index=iterator_normal->get_next();
-      keep_trying=(!grid_index->invalid());
-      if (keep_trying) {
-        if (this->_check_bounds(grid_index.get()) && grid_setup->square_has_data(grid_index.get())) {
+  if (load_count < LOAD_FILES_BATCH && keep_running) {
+    for (auto grid_index : ImageGridFromViewportVisibleIterator(this->grid_setup(),
+                                                                viewport_current_state)) {
+      if (load_count < LOAD_FILES_BATCH && keep_running ) {
+        if (this->_check_bounds(&grid_index) && grid_setup->square_has_data(grid_index)) {
           auto load_successful=this->_load_square(viewport_current_state,
-                                                  grid_index.get(),
+                                                  // grid_index.get(),
+                                                  &grid_index,
                                                   zoom_out_shift_lower_limit,
                                                   load_all, grid_setup);
           if (load_successful) { load_count++; }
         }
+      } else {
+        break;
+      }
+    }
+  }
+  if (load_count < LOAD_FILES_BATCH && keep_running) {
+    for (auto grid_index : ImageGridFromViewportFullIterator(this->grid_setup(),
+                                                             viewport_current_state)) {
+      if (load_count < LOAD_FILES_BATCH && keep_running) {
+        if (this->_check_bounds(&grid_index) && grid_setup->square_has_data(grid_index)) {
+          auto load_successful=this->_load_square(viewport_current_state,
+                                                  &grid_index,
+                                                  zoom_out_shift_lower_limit,
+                                                  load_all, grid_setup);
+          if (load_successful) { load_count++; }
+        }
+      } else {
+        break;
       }
     }
   }

@@ -70,17 +70,17 @@ std::string GridSetup::filename(const GridIndex& grid_index, const SubGridIndex&
   return this->_file_data(grid_index,subgrid_index);
 };
 
-std::unique_ptr<ImageGridIteratorVisible> GridSetup::iterator_visible(const ViewPortCurrentState& viewport_current_state) {
-  return std::make_unique<ImageGridIteratorVisible>(this->grid_image_size().w(),
-                                                    this->grid_image_size().h(),
-                                                    viewport_current_state);
-}
-
-std::unique_ptr<ImageGridIteratorFull> GridSetup::iterator_full(const ViewPortCurrentState& viewport_current_state) {
-  return std::make_unique<ImageGridIteratorFull>(this->grid_image_size().w(),
-                                                 this->grid_image_size().h(),
-                                                 viewport_current_state);
-}
+// std::unique_ptr<ImageGridIteratorVisible> GridSetup::iterator_visible(const ViewPortCurrentState& viewport_current_state) {
+//   return std::make_unique<ImageGridIteratorVisible>(this->grid_image_size().w(),
+//                                                     this->grid_image_size().h(),
+//                                                     viewport_current_state);
+// }
+//
+// std::unique_ptr<ImageGridIteratorFull> GridSetup::iterator_full(const ViewPortCurrentState& viewport_current_state) {
+//   return std::make_unique<ImageGridIteratorFull>(this->grid_image_size().w(),
+//                                                  this->grid_image_size().h(),
+//                                                  viewport_current_state);
+// }
 
 void GridSetup::_post_setup() {
   this->_grid_index_values=std::make_unique<GridIndex[]>(this->grid_size().w()*this->grid_size().h());
@@ -234,6 +234,10 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Basic iterators
+////////////////////////////////////////////////////////////////////////////////
+
 ImageGridBasicIterator::ImageGridBasicIterator(GridSetup* grid_setup) {
   this->_grid_setup=grid_setup;
 }
@@ -262,4 +266,161 @@ const SubGridIndex* ImageSubGridBasicIterator::end() const {
   auto grid_i=this->_grid_index.j()*this->_grid_setup->grid_size().w()+this->_grid_index.i();
   auto subgrid_i_end=this->_grid_setup->_sub_size[this->_grid_index].w()*this->_grid_setup->_sub_size[this->_grid_index].h();
   return &this->_grid_setup->_subgrid_index_values[grid_i][subgrid_i_end];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Full iterators
+////////////////////////////////////////////////////////////////////////////////
+
+GridIndexPointerProxy::GridIndexPointerProxy(ImageGridFromViewportIterator* parent_iterator,
+                                             INT64 index_value) {
+  this->_parent_iterator=parent_iterator;
+  this->_index_value=index_value;
+}
+
+
+GridIndex GridIndexPointerProxy::operator*() {
+  // TODO: handle end case?
+  return this->_parent_iterator->_index_values[this->_index_value];
+}
+
+GridIndexPointerProxy GridIndexPointerProxy::operator++() {
+  return GridIndexPointerProxy(this->_parent_iterator,
+                               this->_index_value++);
+}
+
+bool GridIndexPointerProxy::operator!=(GridIndexPointerProxy& compare) {
+  return this->_index_value != compare._index_value;
+}
+
+ImageGridFromViewportFullIterator::ImageGridFromViewportFullIterator(GridSetup* grid_setup,
+                                                                     const ViewPortCurrentState& viewport_current_state) {
+  // TODO: this is copied from an older iterator class to test the concept
+  //       make a bit better
+  auto w_image_grid=grid_setup->grid_image_size().w();
+  auto h_image_grid=grid_setup->grid_image_size().h();
+  this->_w=w_image_grid;
+  this->_h=h_image_grid;
+  auto current_grid_x=viewport_current_state.current_grid_coordinate().x();
+  auto current_grid_y=viewport_current_state.current_grid_coordinate().y();
+  // TODO need a good iterator class for this type of work
+  // load the one we are looking at
+  // do the center
+  // pretend we are in the corner of the grid if we are outside the grid
+  auto adjusted_grid_x=(INT64)floor(current_grid_x);
+  auto adjusted_grid_y=(INT64)floor(current_grid_y);
+  if (current_grid_x > this->_w) {
+    adjusted_grid_x=this->_w;
+  } else if (current_grid_x < 0) {
+    adjusted_grid_x=0;
+  }
+  if (current_grid_y > this->_h) {
+    adjusted_grid_y=this->_h;
+  } else if (current_grid_y < 0) {
+    adjusted_grid_y=0;
+  }
+  auto i_initial=adjusted_grid_x;
+  auto j_initial=adjusted_grid_y;
+  this->_index_values.push_back(GridIndex(i_initial,j_initial));
+  // load near the viewport one first then work way out
+  for (INT64 r=1L; r <= (std::max(w_image_grid,h_image_grid)); r++) {
+    // start at top left corner, go to top right corner
+    for (INT64 i=adjusted_grid_x-r; i <= adjusted_grid_x+r; i++) {
+      auto j=adjusted_grid_y-r;
+      this->_index_values.push_back(GridIndex(i,j));
+    }
+    // go to bottom right corner
+    for (INT64 j=adjusted_grid_y-r; j <= adjusted_grid_y+r; j++) {
+      auto i=adjusted_grid_x+r;
+      this->_index_values.push_back(GridIndex(i,j));
+    }
+    // go to bottom left corner
+    for (INT64 i=adjusted_grid_x+r; i >= adjusted_grid_x-r; i--) {
+      auto j=adjusted_grid_y+r;
+      this->_index_values.push_back(GridIndex(i,j));
+    }
+    // go to top right corner
+    for (INT64 j=adjusted_grid_y+r; j >= adjusted_grid_y-r; j--) {
+      auto i=adjusted_grid_x-r;
+      this->_index_values.push_back(GridIndex(i,j));
+    }
+  }
+}
+
+const GridIndexPointerProxy ImageGridFromViewportFullIterator::begin() const {
+  auto grid_index_pointer_proxy=GridIndexPointerProxy((ImageGridFromViewportIterator*)this,
+                                                      0);
+  return grid_index_pointer_proxy;
+}
+
+const GridIndexPointerProxy ImageGridFromViewportFullIterator::end() const {
+  auto grid_index_pointer_proxy=GridIndexPointerProxy((ImageGridFromViewportIterator*)this,
+                                                      this->_index_values.size());
+  return grid_index_pointer_proxy;
+}
+
+ImageGridFromViewportVisibleIterator::ImageGridFromViewportVisibleIterator(GridSetup* grid_setup,
+                                                                     const ViewPortCurrentState& viewport_current_state) {
+  // TODO: this is copied from an older iterator class to test the concept
+  //       make a bit better
+  auto w_image_grid=grid_setup->grid_image_size().w();
+  auto h_image_grid=grid_setup->grid_image_size().h();
+  this->_w=w_image_grid;
+  this->_h=h_image_grid;
+  auto current_grid_x=viewport_current_state.current_grid_coordinate().x();
+  auto current_grid_y=viewport_current_state.current_grid_coordinate().y();
+  auto leftmost_visible=ViewPortTransferState::find_leftmost_visible(viewport_current_state);
+  auto rightmost_visible=ViewPortTransferState::find_rightmost_visible(viewport_current_state);
+  auto topmost_visible=ViewPortTransferState::find_topmost_visible(viewport_current_state);
+  auto bottommost_visible=ViewPortTransferState::find_bottommost_visible(viewport_current_state);
+  auto visible_imin=floor(leftmost_visible);
+  auto visible_imax=floor(rightmost_visible);
+  auto visible_jmin=floor(topmost_visible);
+  auto visible_jmax=floor(bottommost_visible);
+  auto center_i=(INT64)floor(current_grid_x);
+  auto center_j=(INT64)floor(current_grid_y);
+  auto r_i=std::max(std::abs(center_i-visible_imin),
+                    std::abs(visible_imax-center_i));
+  auto r_j=std::max(std::abs(center_j-visible_jmin),
+                    std::abs(visible_jmax-center_j));
+  auto r_visible=std::max(std::abs(r_i),std::abs(r_j));
+  // check visible layer first
+  for (INT64 r=0L; r <= r_visible; r++) {
+    for (INT64 i=center_i-r; i <= center_i+r; i++) {
+      auto j=center_j-r;
+      if (i >= 0 && i < w_image_grid && j >= 0 && j < h_image_grid) {
+        this->_index_values.push_back(GridIndex(i,j));
+      }
+    }
+    for (INT64 j=center_j-r; j <= center_j+r; j++) {
+      auto i=center_i+r;
+      if (i >= 0 && i < w_image_grid && j >= 0 && j < h_image_grid) {
+        this->_index_values.push_back(GridIndex(i,j));
+      }
+    }
+    for (INT64 i=center_i+r; i >= center_i-r; i--) {
+      auto j=center_j+r;
+      if (i >= 0 && i < w_image_grid && j >= 0 && j < h_image_grid) {
+        this->_index_values.push_back(GridIndex(i,j));
+      }
+    }
+    for (INT64 j=center_j+r; j >= center_j-r; j--) {
+      auto i=center_i-r;
+      if (i >= 0 && i < w_image_grid && j >= 0 && j < h_image_grid) {
+        this->_index_values.push_back(GridIndex(i,j));
+      }
+    }
+  }
+}
+
+const GridIndexPointerProxy ImageGridFromViewportVisibleIterator::begin() const {
+  auto grid_index_pointer_proxy=GridIndexPointerProxy((ImageGridFromViewportIterator*)this,
+                                                      0);
+  return grid_index_pointer_proxy;
+}
+
+const GridIndexPointerProxy ImageGridFromViewportVisibleIterator::end() const {
+  auto grid_index_pointer_proxy=GridIndexPointerProxy((ImageGridFromViewportIterator*)this,
+                                                      this->_index_values.size());
+  return grid_index_pointer_proxy;
 }

@@ -10,7 +10,7 @@
 #include "../datatypes/coordinates.hpp"
 #include "../datatypes/containers.hpp"
 #include "../viewport_current_state.hpp"
-#include "iterators.hpp"
+// #include "iterators.hpp"
 // C++ headers
 #include <atomic>
 #include <list>
@@ -99,8 +99,8 @@ public:
   std::string filename(const GridIndex& grid_index,
                            const SubGridIndex& subgrid_index) const;
   // getting iterators
-  std::unique_ptr<ImageGridIteratorVisible> iterator_visible(const ViewPortCurrentState& viewport_current_state);
-  std::unique_ptr<ImageGridIteratorFull> iterator_full(const ViewPortCurrentState& viewport_current_state);
+  // std::unique_ptr<ImageGridIteratorVisible> iterator_visible(const ViewPortCurrentState& viewport_current_state);
+  // std::unique_ptr<ImageGridIteratorFull> iterator_full(const ViewPortCurrentState& viewport_current_state);
 protected:
   friend class ImageGridBasicIterator;
   friend class ImageSubGridBasicIterator;
@@ -167,6 +167,96 @@ public:
   const SubGridIndex* end() const;
 private:
   GridSetup* _grid_setup=nullptr;
+  GridIndex _grid_index;
+};
+
+class ImageGridFromViewportIterator;
+
+/**
+ * A class that proxies a pointer to GridIndex in a way that is useful
+ * for range based iterators.
+ */
+class GridIndexPointerProxy {
+public:
+  GridIndexPointerProxy()=default;
+  GridIndexPointerProxy(ImageGridFromViewportIterator* parent_iterator,
+                        INT64 index_value
+                        // GridIndex& grid_index,
+                        // GridIndex& next_grid_index
+    );
+  /**
+   * Get the underlying grid index object back.
+   */
+  GridIndex operator*();
+  /**
+   * Find the next item, generally not the next element in the array
+   * due to different strategies, patterns, and sparsity for iterating
+   * the grid.
+   */
+  GridIndexPointerProxy operator++();
+  bool operator!=(GridIndexPointerProxy& compare);
+private:
+  ImageGridFromViewportIterator* _parent_iterator;
+  INT64 _index_value;
+};
+
+
+/**
+ * Base class for iterators from viewport.
+ */
+class ImageGridFromViewportIterator {
+public:
+  ImageGridFromViewportIterator()=default;
+protected:
+  friend class GridIndexPointerProxy;
+  // TODO: these are copied from an older iterator class I used
+  //       make more modern
+  INT64 _w;
+  INT64 _h;
+  INT64 _x_current;
+  INT64 _y_current;
+  std::vector<GridIndex> _index_values;
+};
+
+/**
+ * Iterate from where the viewport is looking out in a spiral pattern
+ * over the full Grid.
+ */
+class ImageGridFromViewportFullIterator : public ImageGridFromViewportIterator {
+public:
+  ImageGridFromViewportFullIterator(GridSetup* grid_setup,
+                                    const ViewPortCurrentState& viewport_current_state);
+  /**
+   * A standard method for range based iterators.
+   */
+  const GridIndexPointerProxy begin() const;
+  /**
+   * A standard method for range based iterators.
+   */
+  const GridIndexPointerProxy end() const;
+private:
+  friend class GridIndexPointerProxy;
+  GridIndex _grid_index;
+};
+
+/**
+ * Iterate from where the viewport is looking out in a spiral pattern
+ * but only over the squares that are visible.
+ */
+class ImageGridFromViewportVisibleIterator : public ImageGridFromViewportIterator {
+public:
+  ImageGridFromViewportVisibleIterator(GridSetup* grid_setup,
+                                       const ViewPortCurrentState& viewport_current_state);
+  /**
+   * A standard method for range based iterators.
+   */
+  const GridIndexPointerProxy begin() const;
+  /**
+   * A standard method for range based iterators.
+   */
+  const GridIndexPointerProxy end() const;
+private:
+  friend class GridIndexPointerProxy;
   GridIndex _grid_index;
 };
 
