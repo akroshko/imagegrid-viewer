@@ -11,8 +11,8 @@
 #include <SDL2/SDL_ttf.h>
 
 // this is defined as a macro so I can get easily get file/line information
-#define PRINT_SDL_ERROR ERROR("SDL " << SDL_GetError())
-#define PRINT_SDL_TTF_ERROR ERROR("SDL TTF " << TTF_GetError())
+#define PRINT_SDL_ERROR ERROR_LOCAL("SDL " << SDL_GetError())
+#define PRINT_SDL_TTF_ERROR ERROR_LOCAL("SDL TTF " << TTF_GetError())
 
 /**
  * An object to contain all the SDL boilerplate and implementation.

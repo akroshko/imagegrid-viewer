@@ -150,7 +150,7 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
 bool read_data(const std::string& filename,
                bool use_cache,
                INT64& width, INT64& height) {
-  MSG("Reading: " << filename);
+  MSG_LOCAL("Reading: " << filename);
   auto cache_successful=false;
   auto successful=true;
   if (use_cache) {
@@ -159,7 +159,7 @@ bool read_data(const std::string& filename,
     auto filename_txt=create_cache_filename(filename,TEXT_EXTENSION);
     std::ifstream file_in_text(filename_txt);
     if (std::filesystem::exists(filename_txt)) {
-      MSG("Using file: " << filename_txt << " as cache for: " << filename);
+      MSG_LOCAL("Using file: " << filename_txt << " as cache for: " << filename);
       std::string line;
       std::getline(file_in_text,line);
       width=std::stoi(line);
@@ -191,7 +191,7 @@ bool read_data(const std::string& filename,
                                   height);
         if (tiff_fd >= 0) {
           close(tiff_fd);
-          MSG("Unlinking: " << temp_filename);
+          MSG_LOCAL("Unlinking: " << temp_filename);
           unlink(temp_filename.c_str());
         }
       }
@@ -200,7 +200,7 @@ bool read_data(const std::string& filename,
       width=0;
       height=0;
     } else {
-      ERROR("read_data can't read: " << filename);
+      ERROR_LOCAL("read_data can't read: " << filename);
       successful=false;
     }
   }
@@ -218,7 +218,7 @@ bool load_data_as_rgba(const std::string& filename,
   //       for empty squares take place
   bool load_successful=false;
   if (check_tiff(filename)) {
-    MSG("Loading TIFF: " << filename);
+    MSG_LOCAL("Loading TIFF: " << filename);
     load_successful=load_tiff_as_rgba_cached(cached_filename,
                                              current_subgrid,
                                              data_transfer,
@@ -229,21 +229,20 @@ bool load_data_as_rgba(const std::string& filename,
                                         data_transfer,
                                         row_temp_buffer);
     }
-    MSG("Done TIFF: " << filename);
+    MSG_LOCAL("Done TIFF: " << filename);
   } else if (check_png(filename)) {
-      MSG("Loading PNG: " << filename);
+      MSG_LOCAL("Loading PNG: " << filename);
       // TODO: check success
       load_successful=load_png_as_rgba(filename,
-                                       cached_filename,
                                        current_subgrid,
                                        data_transfer,
                                        row_temp_buffer);
-      MSG("Done PNG: " << filename);
+      MSG_LOCAL("Done PNG: " << filename);
   } else if (check_nts(filename)) {
     // get temporary tiff
     std::string temp_filename;
     int tiff_fd=-1;
-    MSG("Loading NTS: " << filename);
+    MSG_LOCAL("Loading NTS: " << filename);
     load_successful=load_tiff_as_rgba_cached(cached_filename,
                                              current_subgrid,
                                              data_transfer,
@@ -253,22 +252,22 @@ bool load_data_as_rgba(const std::string& filename,
                                               temp_filename,
                                               tiff_fd);
        if (load_successful) {
-         MSG("Loading TIFF: " << temp_filename);
+         MSG_LOCAL("Loading TIFF: " << temp_filename);
          load_successful=load_tiff_as_rgba(temp_filename,
                                            current_subgrid,
                                            data_transfer,
                                            row_temp_buffer);
          if (tiff_fd >= 0) {
            close(tiff_fd);
-           MSG("Unlinking: " << temp_filename);
+           MSG_LOCAL("Unlinking: " << temp_filename);
            unlink(temp_filename.c_str());
          }
        }
     }
-    MSG("Done NTS: " << filename);
+    MSG_LOCAL("Done NTS: " << filename);
   } else if (check_empty(filename)) {
   } else {
-    ERROR("load_data_as_rgba can't load: " << filename);
+    ERROR_LOCAL("load_data_as_rgba can't load: " << filename);
   }
   return load_successful;
 }
@@ -282,7 +281,7 @@ bool read_tiff_data(const std::string& filename,
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
 
   if (!tif) {
-    ERROR("load_tiff_as_rgba() Failed to allocate raster for: " << filename);
+    ERROR_LOCAL("load_tiff_as_rgba() Failed to allocate raster for: " << filename);
   } else {
     uint32_t w,h;
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
@@ -300,17 +299,17 @@ bool test_tiff_cache(const std::string& cached_filename,
   auto can_cache=true;
   if (check_valid_filename(cached_filename) && !std::filesystem::exists(cached_filename)) {
     can_cache=false;
-    MSG("Cached file does not exist: " << cached_filename);
+    MSG_LOCAL("Cached file does not exist: " << cached_filename);
   }
   auto sub_w=data_transfer.sub_size.w();
   auto sub_h=data_transfer.sub_size.h();
   if (can_cache) {
-    MSG("Cached file exists: " << cached_filename);
+    MSG_LOCAL("Cached file exists: " << cached_filename);
     for (const auto& file_data : data_transfer.data_transfer) {
       auto max_wpixel=sub_w*file_data->max_sub_wpixel;
       auto max_hpixel=sub_h*file_data->max_sub_hpixel;
       if (max_wpixel >= CACHE_MAX_PIXEL_SIZE || max_hpixel >= CACHE_MAX_PIXEL_SIZE) {
-        MSG("cached failed to be useful");
+        MSG_LOCAL("cached failed to be useful");
         can_cache=false;
         break;
       }
@@ -331,7 +330,7 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
   auto can_cache=test_tiff_cache(cached_filename,
                                  data_transfer);
   if (can_cache) {
-    MSG("Using cached file: " << cached_filename);
+    MSG_LOCAL("Using cached file: " << cached_filename);
     INT64 cached_zoom_out_shift=0;
     // TODO: this could be a problem amongst wildly varying image sizes
     //       solutions are to:
@@ -351,16 +350,16 @@ bool load_tiff_as_rgba_cached(const std::string& cached_filename,
     memset(&png_image_local, 0, sizeof(png_image_local));
     png_image_local.version=PNG_IMAGE_VERSION;
     if (png_image_begin_read_from_file(&png_image_local, cached_filename.c_str()) == 0) {
-      ERROR("load_tiff_as_rgba() failed to read from png file: " << cached_filename);
+      ERROR_LOCAL("load_tiff_as_rgba() failed to read from png file: " << cached_filename);
     } else {
       png_bytep png_raster;
       png_image_local.format=PNG_FORMAT_RGBA;
       png_raster=new unsigned char[PNG_IMAGE_SIZE(png_image_local)];
       if (png_raster == NULL) {
-        ERROR("load_tiff_as_rgba() failed to allocate png buffer!");
+        ERROR_LOCAL("load_tiff_as_rgba() failed to allocate png buffer!");
       } else {
         if (png_image_finish_read(&png_image_local, NULL, png_raster, 0, NULL) == 0) {
-          ERROR("load_tiff_as_rgba() failed to read full png image!");
+          ERROR_LOCAL("load_tiff_as_rgba() failed to read full png image!");
         } else {
           // TODO: test for mismatched size
           auto png_width=(INT64)png_image_local.width;
@@ -428,7 +427,7 @@ bool load_tiff_as_rgba(const std::string& filename,
   auto success=false;
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
   if (!tif) {
-    ERROR("load_tiff_as_rgba() Failed to allocate raster for: " << filename);
+    ERROR_LOCAL("load_tiff_as_rgba() Failed to allocate raster for: " << filename);
   } else {
     uint32_t tiff_width,tiff_height;
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &tiff_width);
@@ -438,10 +437,10 @@ bool load_tiff_as_rgba(const std::string& filename,
     npixels=tiff_width*tiff_height;
     raster=(uint32_t*)_TIFFmalloc(npixels*sizeof(uint32_t));
     if (raster == NULL) {
-      ERROR("Failed to allocate raster for: " << filename);
+      ERROR_LOCAL("Failed to allocate raster for: " << filename);
     } else {
       if (!TIFFReadRGBAImageOriented(tif, tiff_width, tiff_height, raster, ORIENTATION_TOPLEFT, 0)) {
-        ERROR("Failed to read: " << filename);
+        ERROR_LOCAL("Failed to read: " << filename);
       } else {
         // convert raster
         // this assumes zoom_out is coming in ascending order
@@ -502,7 +501,7 @@ bool read_png_data(const std::string& filename,
   memset(&image, 0, (sizeof image));
   image.version=PNG_IMAGE_VERSION;
   if (png_image_begin_read_from_file(&image, filename.c_str()) == 0) {
-    ERROR("read_png_data() failed to read from file: " << filename);
+    ERROR_LOCAL("read_png_data() failed to read from file: " << filename);
   } else {
     width=(INT64)image.width;
     height=(INT64)image.height;
@@ -513,7 +512,6 @@ bool read_png_data(const std::string& filename,
 }
 
 bool load_png_as_rgba(const std::string& filename,
-                      const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
                       LoadFileDataTransfer& data_transfer,
                       INT64* row_temp_buffer) {
@@ -523,17 +521,17 @@ bool load_png_as_rgba(const std::string& filename,
   // TODO: check libpng library, may not want this
   image.version=PNG_IMAGE_VERSION;
   if (png_image_begin_read_from_file(&image, filename.c_str()) == 0) {
-    ERROR("load_png_as_rgba() failed to read from file: " << filename);
+    ERROR_LOCAL("load_png_as_rgba() failed to read from file: " << filename);
     success=false;
   } else {
     png_bytep raster;
     image.format=PNG_FORMAT_RGBA;
     raster=new unsigned char[PNG_IMAGE_SIZE(image)];
     if (raster == NULL) {
-      ERROR("load_png_as_rgba() failed to allocate buffer!");
+      ERROR_LOCAL("load_png_as_rgba() failed to allocate buffer!");
     } else {
       if (png_image_finish_read(&image, NULL, raster, 0, NULL) == 0) {
-        ERROR("load_png_as_rgba() failed to read full image!");
+        ERROR_LOCAL("load_png_as_rgba() failed to read full image!");
       } else {
         // TODO: test for mismatched size
         INT64 width=image.width;
@@ -660,7 +658,7 @@ bool load_image_grid_from_text (std::string text_file,
   // open the text file
   std::ifstream text_fh(text_file);
   if (!text_fh.is_open()) {
-    ERROR("Failed to open: " << text_file);
+    ERROR_LOCAL("Failed to open: " << text_file);
     return false;
   }
   // read line by line
@@ -731,13 +729,13 @@ bool get_tiff_from_nts_file(const std::string& filename,
   if (!(zip_struct=zip_open(zip_name,ZIP_RDONLY,&zip_error))) {
     zip_error_t error;
     zip_error_init_with_code(&error, zip_error);
-    ERROR("zip_open error: '%s': %s\n" << zip_name << zip_error_strerror(&error));
+    ERROR_LOCAL("zip_open error: '%s': %s\n" << zip_name << zip_error_strerror(&error));
     zip_error_fini(&error);
     success=false;
   }
   zip_int64_t num_entries;
   if ((num_entries=zip_get_num_entries(zip_struct,0)) < 0) {
-    ERROR("No entries in: " << filename);
+    ERROR_LOCAL("No entries in: " << filename);
     success=false;
   }
   // TODO: currently only two entries are available but search could lean a little more heavily on libzip functions
@@ -762,7 +760,7 @@ bool get_tiff_from_nts_file(const std::string& filename,
           zip_stat_t tiff_stat;
           zip_stat_init(&tiff_stat);
           if (zip_stat(zip_struct,zip_internal_name,0,&tiff_stat) < 0) {
-            ERROR("zip_stat error: " << filename);
+            ERROR_LOCAL("zip_stat error: " << filename);
             success=false;
           } else {
             zip_uint64_t tiff_size;
@@ -772,31 +770,31 @@ bool get_tiff_from_nts_file(const std::string& filename,
             if ((tiff_buff=malloc(tiff_size))) {
               zip_file* zip_file_struct;
               if (!(zip_file_struct=zip_fopen(zip_struct,zip_internal_name,0))) {
-                ERROR("zip_fopen: " << filename);
+                ERROR_LOCAL("zip_fopen: " << filename);
                 free(tiff_buff);
                 success=false;
               } else {
                 // TODO: check number of bytes actually read
                 if (zip_fread(zip_file_struct,tiff_buff,tiff_size) < 0) {
-                  ERROR("zip_fread: " << filename);
+                  ERROR_LOCAL("zip_fread: " << filename);
                   free(tiff_buff);
                   zip_fclose(zip_file_struct);
                   success=false;
                 } else {
                   if (zip_fclose(zip_file_struct) < 0) {
-                    ERROR("zip_fclose: " << filename);
+                    ERROR_LOCAL("zip_fclose: " << filename);
                     free(tiff_buff);
                     success=false;
                   } else {
                     // now write the tiff data to a temp file
                     // this file stays open beyond the life of this function if successful
                     if ((tiff_fd=mkstemps(tiff_temp_filename,4)) < 0) {
-                      ERROR("tiff_fd: " << filename);
+                      ERROR_LOCAL("tiff_fd: " << filename);
                       free(tiff_buff);
                       success=false;
                     } else {
                       if (write(tiff_fd,tiff_buff,tiff_size) < 0) {
-                        ERROR("write: " << filename);
+                        ERROR_LOCAL("write: " << filename);
                         free(tiff_buff);
                         close(tiff_fd);
                         tiff_fd=-1;
@@ -804,7 +802,7 @@ bool get_tiff_from_nts_file(const std::string& filename,
                       };
                       if (tiff_buff) { free(tiff_buff); }
                       if (lseek(tiff_fd,0,SEEK_SET) < 0) {
-                        ERROR("lseek: " << filename);
+                        ERROR_LOCAL("lseek: " << filename);
                         close(tiff_fd);
                         tiff_fd=-1;
                         success=false;
@@ -814,7 +812,7 @@ bool get_tiff_from_nts_file(const std::string& filename,
                 }
               }
             } else {
-              ERROR("malloc: " << filename);
+              ERROR_LOCAL("malloc: " << filename);
               success=false;
             }
           }

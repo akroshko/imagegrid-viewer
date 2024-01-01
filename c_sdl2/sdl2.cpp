@@ -17,7 +17,7 @@ SDLApp::SDLApp() {
   int windowFlags=SDL_WINDOW_RESIZABLE;
   this->_format=SDL_AllocFormat(SDL_PIXELFORMAT_RGBA32);
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0) {
-    ERROR("Couldn't initialize SDL:" << SDL_GetError());
+    ERROR_LOCAL("Couldn't initialize SDL:" << SDL_GetError());
     this->_successful=false;
   } else {
     this->_window=SDL_CreateWindow("Image Grid Viewer",
@@ -27,9 +27,9 @@ SDLApp::SDLApp() {
                                    INITIAL_SCREEN_HEIGHT,
                                    windowFlags);
     if (!this->_window) {
-      ERROR("Failed to open %d " << INITIAL_SCREEN_WIDTH
-                                 << "x" << INITIAL_SCREEN_HEIGHT
-                                 << " window: " << SDL_GetError());
+      ERROR_LOCAL("Failed to open %d " << INITIAL_SCREEN_WIDTH
+                  << "x" << INITIAL_SCREEN_HEIGHT
+                  << " window: " << SDL_GetError());
       this->_successful=false;
     } else {
       if (SDL_NumJoysticks() < 1) {
@@ -318,7 +318,7 @@ SDLFontTextureWrapper::SDLFontTextureWrapper () {
   }
   if (!(this->_sdl_current_font = TTF_OpenFont(OVERLAY_FONT_PATH, 24))) {
     // does not appear to use TTF_ERROR
-    ERROR("TTF_OpenFont");
+    ERROR_LOCAL("TTF_OpenFont");
   }
   this->_sdl_font_color = {255, 255, 255, 0};
 }
@@ -339,7 +339,7 @@ void SDLFontTextureWrapper::update_text(const std::string& text) {
                                                       this->_sdl_font_color);
   if (!this->_overlay_message_surface) {
     // does not appear to use TTF_ERROR
-    ERROR("TTF_RenderText_Solid");
+    ERROR_LOCAL("TTF_RenderText_Solid");
   }
 }
 

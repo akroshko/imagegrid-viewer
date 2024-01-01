@@ -248,7 +248,7 @@ private:
       std::this_thread::yield();
       std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    MSG("Ending execution in UpdateImageGridThread.");
+    MSG_LOCAL("Ending execution in UpdateImageGridThread.");
   }
   ImageGrid* _grid;
   GridSetup* _grid_setup;
@@ -307,14 +307,14 @@ private:
    * textures.
    */
   void run () {
-    MSG("Beginning thread in UpdateTextureThread.");
+    MSG_LOCAL("Beginning thread in UpdateTextureThread.");
     while (this->_keep_running) {
       this->_texture_update->find_current_textures(this->_grid,
                                                    this->_texture_grid,
                                                    this->_texture_overlay,
                                                    this->_keep_running);
     }
-    MSG("Ending execution in UpdateTextureThread.");
+    MSG_LOCAL("Ending execution in UpdateTextureThread.");
   }
   /** Flag to indicate whether the thread should keep running. */
   std::atomic<bool> _keep_running{true};
@@ -341,26 +341,26 @@ int main(int argc, char* argv[]) {
   // like and where the images come from
   auto grid_setup=std::make_unique<GridSetupFromCommandLine>(argc,argv);
   if (grid_setup->status() != GridSetupStatus::loaded) {
-    ERROR("Failed to setup grid information.");
+    ERROR_LOCAL("Failed to setup grid information.");
     return 1;
   }
   // set up whole program even when doing cache do to dependencies among objects
   auto imagegrid_viewer_context=std::make_unique<ImageGridViewerContext>(grid_setup.get());
   if (grid_setup->setup_cache()) {
     // now run the cache
-    MSG("Starting cache!");
+    MSG_LOCAL("Starting cache!");
     imagegrid_viewer_context->grid->setup_grid_cache(grid_setup.get());
     return 0;
   } else {
     // initialize SDL
     if (!imagegrid_viewer_context->sdl_app->successful()) {
-      ERROR("Failed to SDL app initialize properly");
+      ERROR_LOCAL("Failed to SDL app initialize properly");
       return 1;
     }
     // initialialize the main data structures in the program, described
     // at the top of this file
     if (!imagegrid_viewer_context->successful) {
-      ERROR("Failed to find images!");
+      ERROR_LOCAL("Failed to find images!");
       return 1;
     }
     // start the thead that loads the imagegrid
@@ -396,15 +396,15 @@ int main(int argc, char* argv[]) {
     update_texture_thread_class->terminate();
     // wait for update_imagegrid_thread to cleanly terminate
     if (update_imagegrid_thread.joinable()) {
-      MSG("Joining update_imagegrid_thread.");
+      MSG_LOCAL("Joining update_imagegrid_thread.");
       update_imagegrid_thread.join();
-      MSG("Finished joining update_imagegrid_thread.");
+      MSG_LOCAL("Finished joining update_imagegrid_thread.");
     }
     // wait for update_texture_thread to cleanly terminate
     if (update_texture_thread.joinable()) {
-      MSG("Joining update_texture_thread.");
+      MSG_LOCAL("Joining update_texture_thread.");
       update_texture_thread.join();
-      MSG("Finished joining update_texture_thread.");
+      MSG_LOCAL("Finished joining update_texture_thread.");
     }
     return 0;
   }

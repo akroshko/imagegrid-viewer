@@ -143,15 +143,12 @@ bool read_png_data(const std::string& filename, INT64& width, INT64& height);
  * Load a png file using libpng.
  *
  * @param filename The filename to load.
- * @param cached_filename The filename that cached the parts of the
- *                        image fitting in 512x512.
  * @param current_subgrid The current subgrid to load.
  * @param data_transfer The object used to transfer loaded data.
  * @param row_temp_buffer A buffer to use as a working area when loading images.
  * @return If loading image was successful.
  */
 bool load_png_as_rgba(const std::string& filename,
-                      const std::string& cached_filename,
                       SubGridIndex& current_subgrid,
                       LoadFileDataTransfer& data_transfer,
                       INT64* row_temp_buffer);

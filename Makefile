@@ -1,4 +1,4 @@
-CC=clang
+# CC=clang
 HEADERS=$(wildcard *.hpp) $(wildcard datatypes/*.hpp) $(wildcard imagegrid/*.hpp) $(wildcard c_misc/*.hpp) $(wildcard c_sdl2/*.hpp) $(wildcard c_io_net/*.hpp)
 # for clean only
 SRC = $(wildcard *.cpp) $(wildcard datatypes/*.cpp) $(wildcard imagegrid/*.cpp) $(wildcard c_misc/*.cpp) $(wildcard c_sdl2/*.cpp) $(wildcard c_io_net/*.cpp)
@@ -47,7 +47,7 @@ CXXFLAGS_DEBUG=-g3 -O0
 all: CXXFLAGS_SAFE += $(CXXFLAGS_ALL)
 all: CXXFLAGS_UNSAFE += $(CXXFLAGS_ALL)
 all: CXXFLAGS_SDL += $(CXXFLAGS_ALL)
-all: imagegrid-viewer
+all: imagegrid-viewer test
 
 .PHONY: release
 fast: CXXFLAGS_SAFE += $(CXXFLAGS_FAST)
@@ -142,3 +142,4 @@ $(OBJ_CSDL): $(SRC_CSDL) $(HEADERS)
 .PHONY: clean
 clean:
 	rm -f $(OBJ_ALL)
+	rm -f $(OBJ_TEST_BASIC)

@@ -312,10 +312,10 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
     this->_max_zoom_out_shift=1;
   }
   // diagnostic information
-  MSG("max_scale: " << max_scale);
-  MSG("max_zoom_out_shift: " << this->_max_zoom_out_shift);
-  MSG("max_wpixel: " << image_max_size_wpixel);
-  MSG("max_hpixel: " << image_max_size_hpixel);
+  MSG_LOCAL("max_scale: " << max_scale);
+  MSG_LOCAL("max_zoom_out_shift: " << this->_max_zoom_out_shift);
+  MSG_LOCAL("max_wpixel: " << image_max_size_wpixel);
+  MSG_LOCAL("max_hpixel: " << image_max_size_hpixel);
   // add this info to the various data structure
   for (const auto& grid_index : ImageGridBasicIterator(grid_setup)) {
     this->_squares[grid_index]->image_array.init(this->_max_zoom_out_shift);
@@ -337,13 +337,13 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
   ////////////////////////////////////////////////////////////////////////////////
   // testing range-based for loops
   // for (const auto& grid_index : ImageGridBasicIterator(grid_setup)) {
-  //   MSG("================================================================================");
-  //   MSG(grid_index.i());
-  //   MSG(grid_index.j());
+  //   MSG_LOCAL("================================================================================");
+  //   MSG_LOCAL(grid_index.i());
+  //   MSG_LOCAL(grid_index.j());
   //   for (const auto& subgrid_index : ImageSubGridBasicIterator(grid_setup,grid_index)) {
-  //     MSG("--------------------");
-  //     MSG(subgrid_index.i());
-  //     MSG(subgrid_index.j());
+  //     MSG_LOCAL("--------------------");
+  //     MSG_LOCAL(subgrid_index.i());
+  //     MSG_LOCAL(subgrid_index.j());
   //   }
   // }
 }
@@ -448,7 +448,7 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
           // TODO: combine these
           auto filename_png=create_cache_filename(filename,"png");
           auto filename_txt=create_cache_filename(filename,"txt");
-          MSG("Trying to writing cache filenames: " <<
+          MSG_LOCAL("Trying to writing cache filenames: " <<
               filename_png << " " <<  " " << filename_txt <<
               " for " << filename << " at zoom index " << k <<
               " i: " << grid_index.i() << " j: " << grid_index.j() <<
@@ -458,9 +458,9 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
                                              wpixel, hpixel,
                                              full_wpixel, full_hpixel,
                                              dest_square->_rgba_data[subgrid_index]);
-            MSG("Cache tried with return: " << loaded_cache_size);
+            MSG_LOCAL("Cache tried with return: " << loaded_cache_size);
             if (loaded_cache_size) {
-              MSG("Cached worked with w: " << wpixel << " h: " << hpixel);
+              MSG_LOCAL("Cached worked with w: " << wpixel << " h: " << hpixel);
             }
           }
         }

@@ -50,9 +50,9 @@ bool parse_standard_arguments(int argc, char* const* argv,
       break;
     case '?':
       if (optopt == 'w' || optopt == 'h' || optopt == 'p' || optopt == 'd') {
-        ERROR("Option " << optopt << " requires an argument.");
+        ERROR_LOCAL("Option " << optopt << " requires an argument.");
       } else {
-        ERROR("Unknown option: " << (char)optopt << std::endl);
+        ERROR_LOCAL("Unknown option: " << (char)optopt << std::endl);
       }
       return false;
     default:
@@ -68,7 +68,7 @@ bool parse_standard_arguments(int argc, char* const* argv,
   // get any files on the end
   if (optind != argc) {
     if (path_value.length() != 0) {
-      ERROR("Cannot specify both a path and individual files.");
+      ERROR_LOCAL("Cannot specify both a path and individual files.");
     } else {
       for (auto i=optind; i < argc; i++) {
         filenames.push_back(std::string(argv[i]));

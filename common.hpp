@@ -34,14 +34,15 @@
 // Give errors and other messages for the user
 ////////////////////////////////////////////////////////////////////////////////
 // show an error
+// added _LOCAL suffix to avoid conflicting with doctest
 // TODO: eventually only show internals in non-release builds
-#define ERROR(x) do { std::cerr << "ERROR: " << __FILE__ << ":" << __LINE__ << " " << x << std::endl; } while (0)
+#define ERROR_LOCAL(x) do { std::cerr << "ERROR: " << __FILE__ << ":" << __LINE__ << " " << x << std::endl; } while (0)
 // show a non-fatal warning
-#define WARN(x) do { std::cerr << "WARN: " << x << std::endl; } while (0)
+#define WARN_LOCAL(x) do { std::cerr << "WARN: " << x << std::endl; } while (0)
 // show a standard message
-#define MSG(x) do { std::cerr << "MSG: " << x << std::endl; } while (0)
+#define MSG_LOCAL(x) do { std::cerr << "MSG: " << x << std::endl; } while (0)
 // produce a message but with no newline
-#define MSGNONEWLINE(x) do { std::cerr << x; } while (0)
+#define MSGNONEWLINE_LOCAL(x) do { std::cerr << x; } while (0)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Types for this program.  I prefer to use these types of definitions

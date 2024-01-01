@@ -114,7 +114,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
   if (!parse_standard_arguments(argc, argv, wimage, himage,
                                 this->_setup_cache, this->_use_cache,
                                 this->_path_value, this->_filenames, this->_text_filename)) {
-    MSG("Error parsing arguments");
+    MSG_LOCAL("Error parsing arguments");
     std::cout << HELP_STRING << std::endl;
     this->_status=GridSetupStatus::load_error;
     return;
@@ -200,7 +200,7 @@ GridSetupFromCommandLine::GridSetupFromCommandLine(int argc, char* const* argv) 
     }
     if (grid_size != (INT64)this->_filenames.size()) {
       this->_status=GridSetupStatus::load_error;
-      ERROR("Number of filenames " << this->_filenames.size() << " does not match grid size " << grid_size);
+      ERROR_LOCAL("Number of filenames " << this->_filenames.size() << " does not match grid size " << grid_size);
       return;
     }
     // this type of input will not hvae subgrids

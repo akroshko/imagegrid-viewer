@@ -1,17 +1,158 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 #include "../common.hpp"
+#include "../utility.hpp"
 #include "../datatypes/coordinates.hpp"
 #include "../datatypes/containers.hpp"
+#include "../c_io_net/fileload.hpp"
+#include "../imagegrid/imagegrid_load_file_data.hpp"
+#include "../c_misc/buffer_manip.hpp"
 // C++ headers
 #include <memory>
+
+// entered manually as a basic test for the whole thing
+const unsigned char TEST_IMAGE[80]={
+  211,80,233,255,
+  244,225,249,255,
+  228,174,241,255,
+  206,25,231,255,
+  230,180,242,255,
+  225,162,240,255,
+  224,159,239,255,
+  220,140,237,255,
+  217,130,237,255,
+  218,133,237,255,
+  221,146,238,255,
+  215,117,235,255,
+  220,139,237,255,
+  218,132,237,255,
+  222,150,239,255,
+  235,198,245,255,
+  218,132,237,255,
+  218,128,236,255,
+  230,180,242,255,
+  237,204,246,255};
+
+// entered manually as a basic test for the whole thing
+const unsigned char TEST_IMAGE_BUFFER_EXPAND_2[320]={
+  //
+  211,80,233,255,
+  211,80,233,255,
+  244,225,249,255,
+  244,225,249,255,
+  228,174,241,255,
+  228,174,241,255,
+  206,25,231,255,
+  206,25,231,255,
+  230,180,242,255,
+  230,180,242,255,
+  //
+  211,80,233,255,
+  211,80,233,255,
+  244,225,249,255,
+  244,225,249,255,
+  228,174,241,255,
+  228,174,241,255,
+  206,25,231,255,
+  206,25,231,255,
+  230,180,242,255,
+  230,180,242,255,
+  //
+  225,162,240,255,
+  225,162,240,255,
+  224,159,239,255,
+  224,159,239,255,
+  220,140,237,255,
+  220,140,237,255,
+  217,130,237,255,
+  217,130,237,255,
+  218,133,237,255,
+  218,133,237,255,
+  //
+  225,162,240,255,
+  225,162,240,255,
+  224,159,239,255,
+  224,159,239,255,
+  220,140,237,255,
+  220,140,237,255,
+  217,130,237,255,
+  217,130,237,255,
+  218,133,237,255,
+  218,133,237,255,
+  //
+  221,146,238,255,
+  221,146,238,255,
+  215,117,235,255,
+  215,117,235,255,
+  220,139,237,255,
+  220,139,237,255,
+  218,132,237,255,
+  218,132,237,255,
+  222,150,239,255,
+  222,150,239,255,
+  //
+  221,146,238,255,
+  221,146,238,255,
+  215,117,235,255,
+  215,117,235,255,
+  220,139,237,255,
+  220,139,237,255,
+  218,132,237,255,
+  218,132,237,255,
+  222,150,239,255,
+  222,150,239,255,
+  //
+  235,198,245,255,
+  235,198,245,255,
+  218,132,237,255,
+  218,132,237,255,
+  218,128,236,255,
+  218,128,236,255,
+  230,180,242,255,
+  230,180,242,255,
+  237,204,246,255,
+  237,204,246,255,
+  //
+  235,198,245,255,
+  235,198,245,255,
+  218,132,237,255,
+  218,132,237,255,
+  218,128,236,255,
+  218,128,236,255,
+  230,180,242,255,
+  230,180,242,255,
+  237,204,246,255,
+  237,204,246,255};
 
 TEST_CASE("Does doctest work?") {
   CHECK(2+2 == 4);
   CHECK(2+3 != 4);
 }
 
-TEST_CASE("Does basic functionality of coordinates and containers work") {
+TEST_CASE("Do the utility functions work?") {
+  CHECK(pad(32,0)==32);
+  CHECK(pad(32,2)==32);
+  CHECK(pad(37,2)==38);
+  CHECK(reduce_and_pad(32,0)==32);
+  CHECK(reduce_and_pad(32,2)==16);
+  CHECK(reduce_and_pad(35,2)==18);
+  // checking valid filnames does not check for existence currently
+  // but simply avoids empty strings
+  CHECK(check_valid_filename("/bin/bash"));
+  CHECK(check_valid_filename("") == false);
+  CHECK(shift_left_signed(0x10,0) == 0x10);
+  CHECK(shift_left_signed(0x10,1) == 0x20);
+  CHECK(shift_left_signed(0x10,-1) == 0x08);
+  CHECK(shift_right_signed(0x10,0) == 0x10);
+  CHECK(shift_right_signed(0x10,1) == 0x08);
+  CHECK(shift_right_signed(0x10,-1) == 0x20);
+  CHECK(ceil_minus_one(1.5) == 1.0);
+  CHECK(ceil_minus_one(1.0) == 1.0);
+  CHECK(ceil_minus_one(-1.0) == -1.0);
+  CHECK(ceil_minus_one(-1.5) == -2.0);
+}
+
+TEST_CASE("Does basic functionality of coordinates and containers work?") {
   ////////////////////////////////////////////////////////////////////////////////
   // Coordinates
   ////////////////////////////////////////////////////////////////////////////////
@@ -123,10 +264,193 @@ TEST_CASE("Does basic functionality of coordinates and containers work") {
   CHECK(static_grid_two_layer(static_grid_index_2,static_grid_layer_2_index_2) == 85);
 }
 
-TEST_CASE("Do images load correctly?") {
+// it would be nice to combine repeated code in PNG and TIFF tests,
+// but I don't want to deal with macro within macro errors or false
+// positives from an incorrectly coded function right now
+TEST_CASE("Do PNG images load correctly?") {
+  const INT64 test_image_wpixel=5;
+  const INT64 test_image_hpixel=4;
+  // meant to be run from project root
+  std::string filename="./tests/test_small.png";
+  // temporary scratch buffer so doesn't need to be initialized
+  INT64 row_temp_buffer[128];
+  auto subgrid_index=SubGridIndex(0,0);
+  auto subgrid_size=SubGridImageSize(1,1);
+  // create the data transfer function
+  LoadFileDataTransfer load_file_data_transfer;
+  load_file_data_transfer.sub_size=SubGridImageSize(subgrid_size);
+  load_file_data_transfer.original_rgba_wpixel.init(subgrid_size);
+  load_file_data_transfer.original_rgba_wpixel.set(subgrid_index,test_image_wpixel);
+  load_file_data_transfer.original_rgba_hpixel.init(subgrid_size);
+  load_file_data_transfer.original_rgba_hpixel.set(subgrid_index,test_image_hpixel);
+  auto load_file_zoom_level_data=std::make_shared<LoadFileZoomLevelData>();
+  load_file_zoom_level_data->filename=filename;
+  load_file_zoom_level_data->rgba_wpixel.init(subgrid_size);
+  load_file_zoom_level_data->rgba_hpixel.init(subgrid_size);
+  load_file_zoom_level_data->max_sub_wpixel=test_image_wpixel;
+  load_file_zoom_level_data->max_sub_hpixel=test_image_hpixel;
+  load_file_zoom_level_data->rgba_data.init(subgrid_size);
+  load_file_zoom_level_data->zoom_out_shift=0;
+  load_file_data_transfer.data_transfer.emplace_back(load_file_zoom_level_data);
+  load_png_as_rgba(filename,subgrid_index,load_file_data_transfer,row_temp_buffer);
+  // MSG_LOCAL("==============================");
+  // check individual pixels
+  for (INT64 j=0; j < test_image_hpixel; j++) {
+    for (INT64 i=0; i < test_image_wpixel; i++) {
+      auto rgb_index=j*test_image_wpixel+i;
+      auto pixel=load_file_data_transfer.data_transfer[0]->rgba_data[subgrid_index][rgb_index];
+      // uncomment to see individual pixels
+      // MSG_LOCAL("i: " << i << " j: " << j << " " <<
+      //           ((pixel & 0x000000FF))       << " " <<
+      //           ((pixel & 0x0000FF00) >> 8)  << " " <<
+      //           ((pixel & 0x00FF0000) >> 16) << " " <<
+      //           ((pixel & 0xFF000000) >> 24));
+      CHECK(((pixel & 0x000000FF))       == TEST_IMAGE[rgb_index*4]);
+      CHECK(((pixel & 0x0000FF00) >> 8)  == TEST_IMAGE[rgb_index*4+1]);
+      CHECK(((pixel & 0x00FF0000) >> 16) == TEST_IMAGE[rgb_index*4+2]);
+      CHECK(((pixel & 0xFF000000) >> 24) == TEST_IMAGE[rgb_index*4+3]);
+    }
+  }
+  // MSG_LOCAL("==============================");
+}
 
+// it would be nice to combine repeated code in PNG and TIFF tests,
+// but I don't want to deal with macro within macro errors or false
+// positives from an incorrectly coded function right now
+TEST_CASE("Do TIFF images load correctly?") {
+  const INT64 test_image_wpixel=5;
+  const INT64 test_image_hpixel=4;
+  // meant to be run from project root
+  std::string filename="./tests/test_small.tif";
+  // temporary scratch buffer so doesn't need to be initialized
+  INT64 row_temp_buffer[128];
+  auto subgrid_index=SubGridIndex(0,0);
+  auto subgrid_size=SubGridImageSize(1,1);
+  // create the data transfer function
+  LoadFileDataTransfer load_file_data_transfer;
+  load_file_data_transfer.sub_size=SubGridImageSize(subgrid_size);
+  load_file_data_transfer.original_rgba_wpixel.init(subgrid_size);
+  load_file_data_transfer.original_rgba_wpixel.set(subgrid_index,test_image_wpixel);
+  load_file_data_transfer.original_rgba_hpixel.init(subgrid_size);
+  load_file_data_transfer.original_rgba_hpixel.set(subgrid_index,test_image_hpixel);
+  auto load_file_zoom_level_data=std::make_shared<LoadFileZoomLevelData>();
+  load_file_zoom_level_data->filename=filename;
+  load_file_zoom_level_data->rgba_wpixel.init(subgrid_size);
+  load_file_zoom_level_data->rgba_hpixel.init(subgrid_size);
+  load_file_zoom_level_data->max_sub_wpixel=test_image_wpixel;
+  load_file_zoom_level_data->max_sub_hpixel=test_image_hpixel;
+  load_file_zoom_level_data->rgba_data.init(subgrid_size);
+  load_file_zoom_level_data->zoom_out_shift=0;
+  load_file_data_transfer.data_transfer.emplace_back(load_file_zoom_level_data);
+  load_tiff_as_rgba(filename,subgrid_index,load_file_data_transfer,row_temp_buffer);
+  // MSG_LOCAL("==============================");
+  // check individual pixels
+  for (INT64 j=0; j < test_image_hpixel; j++) {
+    for (INT64 i=0; i < test_image_wpixel; i++) {
+      auto rgb_index=j*test_image_wpixel+i;
+      auto pixel=load_file_data_transfer.data_transfer[0]->rgba_data[subgrid_index][rgb_index];
+      // uncomment to see individual pixels
+      // MSG_LOCAL("i: " << i << " j: " << j << " " <<
+      //           ((pixel & 0x000000FF))       << " " <<
+      //           ((pixel & 0x0000FF00) >> 8)  << " " <<
+      //           ((pixel & 0x00FF0000) >> 16) << " " <<
+      //           ((pixel & 0xFF000000) >> 24));
+      CHECK(((pixel & 0x000000FF))       == TEST_IMAGE[rgb_index*4]);
+      CHECK(((pixel & 0x0000FF00) >> 8)  == TEST_IMAGE[rgb_index*4+1]);
+      CHECK(((pixel & 0x00FF0000) >> 16) == TEST_IMAGE[rgb_index*4+2]);
+      CHECK(((pixel & 0xFF000000) >> 24) == TEST_IMAGE[rgb_index*4+3]);
+    }
+  }
+  // MSG_LOCAL("==============================");
+}
+
+// it would be nice to combine repeated code in PNG and TIFF tests,
+// but I don't want to deal with macro within macro errors or false
+// positives from an incorrectly coded function right now
+std::shared_ptr<LoadFileZoomLevelData> load_rgb_buffer_from_tiff(std::string filename) {
+  const INT64 test_image_wpixel=5;
+  const INT64 test_image_hpixel=4;
+  // meant to be run from project root
+  // temporary scratch buffer so doesn't need to be initialized
+  INT64 row_temp_buffer[128];
+  auto subgrid_index=SubGridIndex(0,0);
+  auto subgrid_size=SubGridImageSize(1,1);
+  // create the data transfer function
+  LoadFileDataTransfer load_file_data_transfer;
+  load_file_data_transfer.sub_size=SubGridImageSize(subgrid_size);
+  load_file_data_transfer.original_rgba_wpixel.init(subgrid_size);
+  load_file_data_transfer.original_rgba_wpixel.set(subgrid_index,test_image_wpixel);
+  load_file_data_transfer.original_rgba_hpixel.init(subgrid_size);
+  load_file_data_transfer.original_rgba_hpixel.set(subgrid_index,test_image_hpixel);
+  auto load_file_zoom_level_data=std::make_shared<LoadFileZoomLevelData>();
+  load_file_zoom_level_data->filename=filename;
+  load_file_zoom_level_data->rgba_wpixel.init(subgrid_size);
+  load_file_zoom_level_data->rgba_hpixel.init(subgrid_size);
+  load_file_zoom_level_data->max_sub_wpixel=test_image_wpixel;
+  load_file_zoom_level_data->max_sub_hpixel=test_image_hpixel;
+  load_file_zoom_level_data->rgba_data.init(subgrid_size);
+  load_file_zoom_level_data->zoom_out_shift=0;
+  load_file_data_transfer.data_transfer.emplace_back(load_file_zoom_level_data);
+  load_tiff_as_rgba(filename,subgrid_index,load_file_data_transfer,row_temp_buffer);
+  return std::move(load_file_data_transfer.data_transfer[0]);
+}
+
+// it would be nice to combine repeated code in PNG and TIFF tests,
+// but I don't want to deal with macro within macro errors or false
+// positives from an incorrectly coded function right now
+TEST_CASE("Does our function for loading images to test work?") {
+  auto subgrid_index=SubGridIndex(0,0);
+  auto load_data=load_rgb_buffer_from_tiff("./tests/test_small.tif");
+  auto test_image_wpixel=load_data->rgba_wpixel[subgrid_index];
+  auto test_image_hpixel=load_data->rgba_hpixel[subgrid_index];
+  // MSG_LOCAL("==============================");
+  // check individual pixels
+  for (INT64 j=0; j < test_image_hpixel; j++) {
+    for (INT64 i=0; i < test_image_wpixel; i++) {
+      auto rgb_index=j*test_image_wpixel+i;
+      auto pixel=load_data->rgba_data[subgrid_index][rgb_index];
+      // uncomment to see individual pixels
+      // MSG_LOCAL("i: " << i << " j: " << j << " " <<
+      //           ((pixel & 0x000000FF))       << " " <<
+      //           ((pixel & 0x0000FF00) >> 8)  << " " <<
+      //           ((pixel & 0x00FF0000) >> 16) << " " <<
+      //           ((pixel & 0xFF000000) >> 24));
+      CHECK(((pixel & 0x000000FF))       == TEST_IMAGE[rgb_index*4]);
+      CHECK(((pixel & 0x0000FF00) >> 8)  == TEST_IMAGE[rgb_index*4+1]);
+      CHECK(((pixel & 0x00FF0000) >> 16) == TEST_IMAGE[rgb_index*4+2]);
+      CHECK(((pixel & 0xFF000000) >> 24) == TEST_IMAGE[rgb_index*4+3]);
+    }
+  }
+  // MSG_LOCAL("==============================");
 }
 
 TEST_CASE("Does buffer copy work correctly?") {
-
+  auto subgrid_index=SubGridIndex(0,0);
+  auto load_data=load_rgb_buffer_from_tiff("./tests/test_small.tif");
+  auto source_size=BufferPixelSize(load_data->rgba_wpixel[subgrid_index],
+                                   load_data->rgba_hpixel[subgrid_index]);
+  auto origin_start=BufferPixelCoordinate(0,0);
+  auto dest_size=BufferPixelSize(2*load_data->rgba_wpixel[subgrid_index],
+                                 2*load_data->rgba_hpixel[subgrid_index]);
+  auto dest_buffer=std::make_unique<PIXEL_RGBA>(2*load_data->rgba_wpixel[subgrid_index]*
+                                                2*load_data->rgba_hpixel[subgrid_index]);
+  buffer_copy_expand_generic(load_data->rgba_data[subgrid_index],
+                             source_size,
+                             origin_start,
+                             source_size,
+                             dest_buffer.get(),
+                             dest_size,
+                             dest_size,
+                             origin_start,
+                             1);
+  for (INT64 j=0; j < 2*load_data->rgba_wpixel[subgrid_index]; j++) {
+    for (INT64 i=0; i < 2*load_data->rgba_hpixel[subgrid_index]; i++) {
+      auto rgb_index=j*load_data->rgba_wpixel[subgrid_index]+i;
+      auto dest_pixel=dest_buffer.get()[rgb_index];
+      CHECK(((dest_pixel & 0x000000FF))       == TEST_IMAGE_BUFFER_EXPAND_2[rgb_index*4]);
+      CHECK(((dest_pixel & 0x0000FF00) >> 8)  == TEST_IMAGE_BUFFER_EXPAND_2[rgb_index*4+1]);
+      CHECK(((dest_pixel & 0x00FF0000) >> 16) == TEST_IMAGE_BUFFER_EXPAND_2[rgb_index*4+2]);
+      CHECK(((dest_pixel & 0xFF000000) >> 24) == TEST_IMAGE_BUFFER_EXPAND_2[rgb_index*4+3]);
+    }
+  }
 }

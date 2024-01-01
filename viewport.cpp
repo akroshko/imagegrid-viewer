@@ -160,7 +160,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
           } else {
             texture_loaded=false;
             texture_square_zoom->display_mutex.unlock();
-            MSG("Couldn't access surface: " << i << " " << j << " " << actual_zoom);
+            MSG_LOCAL("Couldn't access surface: " << i << " " << j << " " << actual_zoom);
           }
         }
       }
@@ -188,7 +188,7 @@ void ViewPort::find_viewport_blit(TextureGrid* const texture_grid,
           texture_square_zoom->display_mutex.unlock();
         } else {
           // TODO: this should never happen, so this error is in here while I investigate
-          MSG("Couldn't lock filler: " << i << " " << j);
+          MSG_LOCAL("Couldn't lock filler: " << i << " " << j);
         }
       }
     }

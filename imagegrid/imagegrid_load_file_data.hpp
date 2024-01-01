@@ -1,6 +1,8 @@
 /**
  * Data structures for transfering imagegrid square data around.
  */
+#ifndef IMAGEGRID_LOAD_FILE_DATA_HPP
+#define IMAGEGRID_LOAD_FILE_DATA_HPP
 #include "../common.hpp"
 #include "../datatypes/coordinates.hpp"
 #include "../datatypes/containers.hpp"
@@ -58,3 +60,4 @@ public:
   std::vector<std::pair<ImageGridSquareZoomLevel* const,
                         std::shared_ptr<LoadFileZoomLevelData>>> data_pairs;
 };
+#endif
