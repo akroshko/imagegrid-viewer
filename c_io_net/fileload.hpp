@@ -20,9 +20,9 @@ class LoadFileZoomLevelData;
 
 enum IMAGEDIRECTION {tl_horiz_reset,tl_horiz_follow};
 
-const std::string TEXT_EXTENSION="txt";
+const std::string TEXT_EXTENSION{"txt"};
 
-const std::string IMAGEGRID_CACHE_DIRECTORY="__imagegrid__cache__";
+const std::string IMAGEGRID_CACHE_DIRECTORY{"__imagegrid__cache__"};
 
 /**
  * Load numbered images from a path in order

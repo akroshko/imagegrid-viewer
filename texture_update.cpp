@@ -214,7 +214,7 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
   dest_square->_source_square=source_square;
   // TODO: double check this is unnecessary
   // dest_square->unload_all_textures();
-  GridPixelSize texture_display_size=source_square->parent_square()->parent_grid()->image_max_pixel_size() >> zoom_out_shift;
+  GridPixelSize texture_display_size=static_cast<GridPixelSize>(source_square->parent_square()->parent_grid()->image_max_pixel_size() >> zoom_out_shift);
   dest_square->_texture_display_size=BufferPixelSize(texture_display_size.w(),
                                                       texture_display_size.h());
   auto dest_tile_size=TILE_PIXEL_BASE_SIZE;

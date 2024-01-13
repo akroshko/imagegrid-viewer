@@ -179,7 +179,7 @@ template <typename T>
 class CoordinatePairINT : public CoordinatePair<T> {
 public:
   CoordinatePairINT();
-  CoordinatePairINT(const CoordinatePair<T>& coordinate_pair) : CoordinatePair<T>(coordinate_pair) {};
+  explicit CoordinatePairINT(const CoordinatePair<T>& coordinate_pair) : CoordinatePair<T>(coordinate_pair) {};
   CoordinatePairINT(const CoordinatePairINT& coordinate_pair) : CoordinatePair<T>(coordinate_pair) {};
   CoordinatePairINT(T x1, T x2) : CoordinatePair<T>(x1, x2) {};
   using CoordinatePair<T>::operator=;
@@ -200,7 +200,7 @@ template <typename T>
 class CoordinatePairFLOAT : public CoordinatePair<FLOAT64> {
 public:
   CoordinatePairFLOAT();
-  CoordinatePairFLOAT(const CoordinatePair<T>& coordinate_pair) : CoordinatePair<T>(coordinate_pair) {};
+  explicit CoordinatePairFLOAT(const CoordinatePair<T>& coordinate_pair) : CoordinatePair<T>(coordinate_pair) {};
   CoordinatePairFLOAT(const CoordinatePairFLOAT& coordinate_pair) : CoordinatePair<T>(coordinate_pair) {};
   CoordinatePairFLOAT(T x1, T x2) : CoordinatePair<T>(x1, x2) {};
   using CoordinatePair<T>::operator=;
@@ -222,8 +222,8 @@ CoordinatePairFLOAT<T>::CoordinatePairFLOAT () {
 class GridImageSize : public CoordinatePairINT<INT64> {
 public:
   GridImageSize()=default;
-  GridImageSize(const CoordinatePair<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
-  GridImageSize(const CoordinatePairINT<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
+  explicit GridImageSize(const CoordinatePair<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
+  explicit GridImageSize(const CoordinatePairINT<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
   GridImageSize(const GridImageSize& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
   using CoordinatePairINT<INT64>::operator=;
   GridImageSize& operator=(const GridImageSize& grid_image_size)=default;
@@ -248,8 +248,8 @@ public:
 class GridCoordinateSize : public CoordinatePairFLOAT<FLOAT64> {
 public:
   GridCoordinateSize()=default;
-  GridCoordinateSize(const CoordinatePair<FLOAT64>& grid_coordinate_size) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate_size) {};
-  GridCoordinateSize(const CoordinatePairFLOAT<FLOAT64>& grid_coordinate_size) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate_size) {};
+  explicit GridCoordinateSize(const CoordinatePair<FLOAT64>& grid_coordinate_size) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate_size) {};
+  explicit GridCoordinateSize(const CoordinatePairFLOAT<FLOAT64>& grid_coordinate_size) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate_size) {};
   GridCoordinateSize(const GridCoordinateSize& grid_coordinate_size) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate_size) {};
   using CoordinatePairFLOAT<FLOAT64>::operator=;
   GridCoordinateSize& operator=(const GridCoordinateSize& grid_coordinate_size)=default;
@@ -274,8 +274,8 @@ public:
 class GridCoordinate : public CoordinatePairFLOAT<FLOAT64> {
 public:
   GridCoordinate()=default;
-  GridCoordinate(const CoordinatePair<FLOAT64>& grid_coordinate) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate) {};
-  GridCoordinate(const CoordinatePairFLOAT<FLOAT64>& grid_coordinate) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate) {};
+  explicit GridCoordinate(const CoordinatePair<FLOAT64>& grid_coordinate) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate) {};
+  explicit GridCoordinate(const CoordinatePairFLOAT<FLOAT64>& grid_coordinate) : CoordinatePairFLOAT<FLOAT64>(grid_coordinate) {};
   GridCoordinate(const GridCoordinate& grid_coordinate) :  CoordinatePairFLOAT<FLOAT64>(grid_coordinate) {};
   using CoordinatePairFLOAT<FLOAT64>::operator=;
   GridCoordinate& operator=(const GridCoordinate& grid_coordinate)=default;
@@ -313,8 +313,8 @@ public:
 class GridIndex : public CoordinatePairINT<INT64> {
 public:
   GridIndex()=default;
-  GridIndex(const CoordinatePair<INT64>& grid_index) : CoordinatePairINT<INT64>(grid_index) {};
-  GridIndex(const CoordinatePairINT<INT64>& grid_index) : CoordinatePairINT<INT64>(grid_index) {};
+  explicit GridIndex(const CoordinatePair<INT64>& grid_index) : CoordinatePairINT<INT64>(grid_index) {};
+  explicit GridIndex(const CoordinatePairINT<INT64>& grid_index) : CoordinatePairINT<INT64>(grid_index) {};
   GridIndex(const GridIndex& grid_index) : CoordinatePairINT<INT64>(grid_index) {};
   GridIndex& operator=(const GridIndex& grid_index)=default;
   /**
@@ -338,8 +338,8 @@ public:
 class SubGridImageSize : public CoordinatePairINT<INT64> {
 public:
   SubGridImageSize()=default;
-  SubGridImageSize(const CoordinatePair<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
-  SubGridImageSize(const CoordinatePairINT<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
+  explicit SubGridImageSize(const CoordinatePair<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
+  explicit SubGridImageSize(const CoordinatePairINT<INT64>& grid_image_size) : CoordinatePairINT<INT64>(grid_image_size) {};
   SubGridImageSize(const SubGridImageSize& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
   using CoordinatePairINT<INT64>::operator=;
   SubGridImageSize& operator=(const SubGridImageSize& grid_image_size)=default;
@@ -367,8 +367,8 @@ public:
 class SubGridIndex : public CoordinatePairINT<INT64> {
 public:
   SubGridIndex()=default;
-  SubGridIndex(const CoordinatePair<INT64>& subgrid_index) : CoordinatePairINT<INT64>(subgrid_index) {};
-  SubGridIndex(const CoordinatePairINT<INT64>& subgrid_index) : CoordinatePairINT<INT64>(subgrid_index) {};
+  explicit SubGridIndex(const CoordinatePair<INT64>& subgrid_index) : CoordinatePairINT<INT64>(subgrid_index) {};
+  explicit SubGridIndex(const CoordinatePairINT<INT64>& subgrid_index) : CoordinatePairINT<INT64>(subgrid_index) {};
   SubGridIndex(const SubGridIndex& subgrid_index) : CoordinatePairINT<INT64>(subgrid_index) {};
   using CoordinatePairINT<INT64>::operator=;
   SubGridIndex& operator=(const SubGridIndex& subgrid_index)=default;
@@ -393,8 +393,8 @@ public:
 class GridPixelSize : public CoordinatePairINT<INT64> {
 public:
   GridPixelSize()=default;
-  GridPixelSize(const CoordinatePair<INT64>& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
-  GridPixelSize(const CoordinatePairINT<INT64>& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
+  explicit GridPixelSize(const CoordinatePair<INT64>& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
+  explicit GridPixelSize(const CoordinatePairINT<INT64>& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
   GridPixelSize(const GridPixelSize& grid_pixel_size) : CoordinatePairINT<INT64>(grid_pixel_size) {};
   using CoordinatePairINT<INT64>::operator=;
   GridPixelSize& operator=(const GridPixelSize& grid_pixel_size)=default;
@@ -417,8 +417,8 @@ public:
 class ImagePixelCoordinate : public CoordinatePairINT<INT64> {
 public:
   ImagePixelCoordinate()=default;
-  ImagePixelCoordinate(const CoordinatePair<INT64>& image_pixel_coordinate) : CoordinatePairINT<INT64>(image_pixel_coordinate) {};
-  ImagePixelCoordinate(const CoordinatePairINT<INT64>& image_pixel_coordinate) : CoordinatePairINT<INT64>(image_pixel_coordinate) {};
+  explicit ImagePixelCoordinate(const CoordinatePair<INT64>& image_pixel_coordinate) : CoordinatePairINT<INT64>(image_pixel_coordinate) {};
+  explicit ImagePixelCoordinate(const CoordinatePairINT<INT64>& image_pixel_coordinate) : CoordinatePairINT<INT64>(image_pixel_coordinate) {};
   ImagePixelCoordinate(const ImagePixelCoordinate& image_pixel_coordinate) : CoordinatePairINT<INT64>(image_pixel_coordinate) {};
   using CoordinatePairINT<INT64>::operator=;
   ImagePixelCoordinate& operator=(const ImagePixelCoordinate& image_pixel_coordinate)=default;
@@ -447,8 +447,8 @@ public:
 class BufferTileSize : public CoordinatePairINT<INT64> {
 public:
   BufferTileSize()=default;
-  BufferTileSize(const CoordinatePair<INT64>& buffer_tile_size) : CoordinatePairINT<INT64>( buffer_tile_size) {};
-  BufferTileSize(const CoordinatePairINT<INT64>& buffer_tile_size) : CoordinatePairINT<INT64>( buffer_tile_size) {};
+  explicit BufferTileSize(const CoordinatePair<INT64>& buffer_tile_size) : CoordinatePairINT<INT64>( buffer_tile_size) {};
+  explicit BufferTileSize(const CoordinatePairINT<INT64>& buffer_tile_size) : CoordinatePairINT<INT64>( buffer_tile_size) {};
   BufferTileSize(const BufferTileSize& buffer_tile_size) : CoordinatePairINT<INT64>(buffer_tile_size) {};
   using CoordinatePairINT<INT64>::operator=;
   BufferTileSize& operator=(const BufferTileSize& buffer_tile_size)=default;
@@ -469,8 +469,8 @@ public:
 class BufferTileIndex : public CoordinatePairINT<INT64> {
 public:
   BufferTileIndex()=default;
-  BufferTileIndex(const CoordinatePair<INT64>& buffer_tile_index) : CoordinatePairINT<INT64>( buffer_tile_index) {};
-  BufferTileIndex(const CoordinatePairINT<INT64>& buffer_tile_index) : CoordinatePairINT<INT64>( buffer_tile_index) {};
+  explicit BufferTileIndex(const CoordinatePair<INT64>& buffer_tile_index) : CoordinatePairINT<INT64>( buffer_tile_index) {};
+  explicit BufferTileIndex(const CoordinatePairINT<INT64>& buffer_tile_index) : CoordinatePairINT<INT64>( buffer_tile_index) {};
   BufferTileIndex(const BufferTileIndex& buffer_tile_index) : CoordinatePairINT<INT64>(buffer_tile_index) {};
   using CoordinatePairINT<INT64>::operator=;
   BufferTileIndex& operator=(const BufferTileIndex& buffer_tile_index)=default;
@@ -492,8 +492,8 @@ public:
 class BufferPixelSize : public CoordinatePairINT<INT64> {
 public:
   BufferPixelSize()=default;
-  BufferPixelSize(const CoordinatePair<INT64>& viewport_pixel_size) : CoordinatePairINT<INT64>( viewport_pixel_size) {};
-  BufferPixelSize(const CoordinatePairINT<INT64>& viewport_pixel_size) : CoordinatePairINT<INT64>( viewport_pixel_size) {};
+  explicit BufferPixelSize(const CoordinatePair<INT64>& viewport_pixel_size) : CoordinatePairINT<INT64>( viewport_pixel_size) {};
+  explicit BufferPixelSize(const CoordinatePairINT<INT64>& viewport_pixel_size) : CoordinatePairINT<INT64>( viewport_pixel_size) {};
   BufferPixelSize(const BufferPixelSize& viewport_pixel_size) : CoordinatePairINT<INT64>(viewport_pixel_size) {};
   using CoordinatePairINT<INT64>::operator=;
   BufferPixelSize& operator=(const BufferPixelSize& viewport_pixel_size)=default;
@@ -515,8 +515,8 @@ public:
 class BufferPixelCoordinate : public CoordinatePairINT<INT64> {
 public:
   BufferPixelCoordinate()=default;
-  BufferPixelCoordinate(const CoordinatePair<INT64>& viewport_pixel_coordinate ) : CoordinatePairINT<INT64>(viewport_pixel_coordinate) {};
-  BufferPixelCoordinate(const CoordinatePairINT<INT64>& viewport_pixel_coordinate ) : CoordinatePairINT<INT64>(viewport_pixel_coordinate) {};
+  explicit BufferPixelCoordinate(const CoordinatePair<INT64>& viewport_pixel_coordinate ) : CoordinatePairINT<INT64>(viewport_pixel_coordinate) {};
+  explicit BufferPixelCoordinate(const CoordinatePairINT<INT64>& viewport_pixel_coordinate ) : CoordinatePairINT<INT64>(viewport_pixel_coordinate) {};
   BufferPixelCoordinate(const BufferPixelCoordinate& viewport_pixel_coordinate) : CoordinatePairINT<INT64>(viewport_pixel_coordinate) {};
   using CoordinatePairINT<INT64>::operator=;
   BufferPixelCoordinate& operator=(const BufferPixelCoordinate& viewport_pixel_coordinate)=default;

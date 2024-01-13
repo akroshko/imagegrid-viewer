@@ -66,7 +66,7 @@ public:
    *                   as map coorindates, configuration files, or the
    *                   input from GUI could be considered.
    */
-  ImageGridViewerContext(GridSetup* const grid_setup);
+  explicit ImageGridViewerContext(GridSetup* const grid_setup);
   ImageGridViewerContext(const ImageGridViewerContext&)=delete;
   ImageGridViewerContext(const ImageGridViewerContext&&)=delete;
   ImageGridViewerContext& operator=(const ImageGridViewerContext&)=delete;
@@ -329,7 +329,6 @@ private:
  * The main function.
  *
  * Contains the initialization and main loop.
- *
  */
 int main(int argc, char* argv[]) {
   // The main loop continues as long as this is true.

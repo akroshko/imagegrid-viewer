@@ -65,7 +65,7 @@ public:
   std::atomic<bool> is_displayable{false};
   // TODO: this one needs help being private and investigation whether
   // there's a better way
-  INT64 last_load_index=INT_MAX;
+  INT64 last_load_index{INT_MAX};
   // TODO: this will have to be made private
   ImageGridSquareZoomLevel* _source_square;
   /**

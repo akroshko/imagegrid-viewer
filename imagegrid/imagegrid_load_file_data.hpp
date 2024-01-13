@@ -27,14 +27,14 @@ class ImageGridSquareZoomLevel;
  */
 class LoadFileZoomLevelData {
 public:
-  LoadFileZoomLevelData();
+  LoadFileZoomLevelData()=default;
   std::string filename;
   StaticGrid<PIXEL_RGBA*> rgba_data;
   StaticGrid<INT64> rgba_wpixel;
   StaticGrid<INT64> rgba_hpixel;
-  INT64 max_sub_wpixel=INT_MIN;
-  INT64 max_sub_hpixel=INT_MIN;
-  INT64 zoom_out_shift=INT_MIN;
+  INT64 max_sub_wpixel{INT_MIN};
+  INT64 max_sub_hpixel{INT_MIN};
+  INT64 zoom_out_shift{INT_MIN};
 };
 
 /**
@@ -43,7 +43,7 @@ public:
  */
 class LoadFileDataTransfer {
 public:
-  LoadFileDataTransfer();
+  LoadFileDataTransfer()=default;
   std::vector<std::shared_ptr<LoadFileZoomLevelData>> data_transfer;
   SubGridImageSize sub_size;
   StaticGrid<INT64> original_rgba_wpixel;
@@ -56,7 +56,7 @@ public:
  */
 class LoadFileData {
 public:
-  LoadFileData();
+  LoadFileData()=default;
   std::vector<std::pair<ImageGridSquareZoomLevel* const,
                         std::shared_ptr<LoadFileZoomLevelData>>> data_pairs;
 };

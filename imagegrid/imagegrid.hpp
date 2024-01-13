@@ -242,7 +242,7 @@ private:
   friend class ImageGridSquareZoomLevel;
   std::atomic<ImageGridStatus> _status {ImageGridStatus::not_loaded};
 
-  GridSetup* _grid_setup;
+  GridSetup* _grid_setup{nullptr};
   /**
    * Check that particular indices are valid.
    *

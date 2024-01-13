@@ -159,67 +159,67 @@ TEST_CASE("Does basic functionality of coordinates and containers work?") {
   // GridImageSize
   auto grid_image_size_1=GridImageSize(1,1);
   auto grid_image_size_2=GridImageSize(3,4);
-  GridImageSize grid_image_size_3=grid_image_size_1+grid_image_size_2;
+  GridImageSize grid_image_size_3=static_cast<GridImageSize>(grid_image_size_1+grid_image_size_2);
   CHECK(grid_image_size_3.w() == 4);
   CHECK(grid_image_size_3.h() == 5);
   // GridCoordinateSize
   auto grid_coordinate_size_1=GridCoordinateSize(1.125,2.875);
   auto grid_coordinate_size_2=GridCoordinateSize(2.625,7.5);
-  GridCoordinateSize grid_coordinate_size_3=grid_coordinate_size_1+grid_coordinate_size_2;
+  GridCoordinateSize grid_coordinate_size_3=static_cast<GridCoordinateSize>(grid_coordinate_size_1+grid_coordinate_size_2);
   CHECK(grid_coordinate_size_3.w() == 3.75);
   CHECK(grid_coordinate_size_3.h() == 10.375);
   // GridCoordinate
   auto grid_coordinate_1=GridCoordinate(3.25,9.125);
   auto grid_coordinate_2=GridCoordinate(4.625,2.875);
-  GridCoordinate grid_coordinate_3=grid_coordinate_1+grid_coordinate_2;
+  GridCoordinate grid_coordinate_3=static_cast<GridCoordinate>(grid_coordinate_1+grid_coordinate_2);
   CHECK(grid_coordinate_3.x() == 7.875);
   CHECK(grid_coordinate_3.y() == 12.0);
   // GridIndex
   auto grid_index_1=GridIndex(2,3);
   auto grid_index_2=GridIndex(5,6);
-  GridIndex grid_index_3=grid_index_1+grid_index_2;
+  GridIndex grid_index_3=static_cast<GridIndex>(grid_index_1+grid_index_2);
   CHECK(grid_index_3.i() == 7);
   CHECK(grid_index_3.j() == 9);
   // SubGridImageSize
   auto subgrid_index_1=SubGridIndex(3,4);
   auto subgrid_index_2=SubGridIndex(5,6);
-  SubGridIndex subgrid_index_3=subgrid_index_1+subgrid_index_2;
+  SubGridIndex subgrid_index_3=static_cast<SubGridIndex>(subgrid_index_1+subgrid_index_2);
   CHECK(subgrid_index_3.i() == 8);
   CHECK(subgrid_index_3.j() == 10);
   // GridPixelSize
   auto grid_pixel_size_1=GridPixelSize(300,400);
   auto grid_pixel_size_2=GridPixelSize(900,1000);
-  GridPixelSize grid_pixel_size_3=grid_pixel_size_1+grid_pixel_size_2;
+  GridPixelSize grid_pixel_size_3=static_cast<GridPixelSize>(grid_pixel_size_1+grid_pixel_size_2);
   CHECK(grid_pixel_size_3.w() == 1200);
   CHECK(grid_pixel_size_3.h() == 1400);
   // ImagePixelCoordinate
   auto image_pixel_coordinate_1=ImagePixelCoordinate(345,890);
   auto image_pixel_coordinate_2=ImagePixelCoordinate(670,234);
-  ImagePixelCoordinate image_pixel_coordinate_3=image_pixel_coordinate_1+image_pixel_coordinate_2;
+  ImagePixelCoordinate image_pixel_coordinate_3=static_cast<ImagePixelCoordinate>(image_pixel_coordinate_1+image_pixel_coordinate_2);
   CHECK(image_pixel_coordinate_3.x() == 1015);
   CHECK(image_pixel_coordinate_3.y() == 1124);
   // BufferTileSize
   auto buffer_tile_size_1=BufferTileSize(1,2);
   auto buffer_tile_size_2=BufferTileSize(3,4);
-  BufferTileSize buffer_tile_size_3=buffer_tile_size_1+buffer_tile_size_2;
+  BufferTileSize buffer_tile_size_3=static_cast<BufferTileSize>(buffer_tile_size_1+buffer_tile_size_2);
   CHECK(buffer_tile_size_3.w() == 4);
   CHECK(buffer_tile_size_3.h() == 6);
   // BufferTileIndex
   auto buffer_tile_index_1=BufferTileIndex(3,9);
   auto buffer_tile_index_2=BufferTileIndex(4,2);
-  BufferTileIndex buffer_tile_index_3=buffer_tile_index_1+buffer_tile_index_2;
+  BufferTileIndex buffer_tile_index_3=static_cast<BufferTileIndex>(buffer_tile_index_1+buffer_tile_index_2);
   CHECK(buffer_tile_index_3.i() == 7);
   CHECK(buffer_tile_index_3.j() == 11);
   // BufferPixelSize
   auto buffer_pixel_size_1=BufferPixelSize(492,509);
   auto buffer_pixel_size_2=BufferPixelSize(623,456);
-  BufferPixelSize buffer_pixel_size_3=buffer_pixel_size_1+buffer_pixel_size_2;
+  BufferPixelSize buffer_pixel_size_3=static_cast<BufferPixelSize>(buffer_pixel_size_1+buffer_pixel_size_2);
   CHECK(buffer_pixel_size_3.w() == 1115);
   CHECK(buffer_pixel_size_3.h() == 965);
   // BufferPixelCoordinate
   auto buffer_pixel_coordinate_1=BufferPixelCoordinate(230,823);
   auto buffer_pixel_coordinate_2=BufferPixelCoordinate(345,870);
-  BufferPixelCoordinate buffer_pixel_coordinate_3=buffer_pixel_coordinate_1+buffer_pixel_coordinate_2;
+  BufferPixelCoordinate buffer_pixel_coordinate_3=static_cast<BufferPixelCoordinate>(buffer_pixel_coordinate_1+buffer_pixel_coordinate_2);
   CHECK(buffer_pixel_coordinate_3.x() == 575);
   CHECK(buffer_pixel_coordinate_3.y() == 1693);
   ////////////////////////////////////////////////////////////////////////////////

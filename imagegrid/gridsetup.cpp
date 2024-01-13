@@ -70,18 +70,6 @@ std::string GridSetup::filename(const GridIndex& grid_index, const SubGridIndex&
   return this->_file_data(grid_index,subgrid_index);
 };
 
-// std::unique_ptr<ImageGridIteratorVisible> GridSetup::iterator_visible(const ViewPortCurrentState& viewport_current_state) {
-//   return std::make_unique<ImageGridIteratorVisible>(this->grid_image_size().w(),
-//                                                     this->grid_image_size().h(),
-//                                                     viewport_current_state);
-// }
-//
-// std::unique_ptr<ImageGridIteratorFull> GridSetup::iterator_full(const ViewPortCurrentState& viewport_current_state) {
-//   return std::make_unique<ImageGridIteratorFull>(this->grid_image_size().w(),
-//                                                  this->grid_image_size().h(),
-//                                                  viewport_current_state);
-// }
-
 void GridSetup::_post_setup() {
   this->_grid_index_values=std::make_unique<GridIndex[]>(this->grid_size().w()*this->grid_size().h());
   // set up the grid objects to be resturned by iterators
@@ -272,7 +260,7 @@ const SubGridIndex* ImageSubGridBasicIterator::end() const {
 // Full iterators
 ////////////////////////////////////////////////////////////////////////////////
 
-GridIndexPointerProxy::GridIndexPointerProxy(ImageGridFromViewportIterator* parent_iterator,
+GridIndexPointerProxy::GridIndexPointerProxy(const ImageGridFromViewportIterator* parent_iterator,
                                              INT64 index_value) {
   this->_parent_iterator=parent_iterator;
   this->_index_value=index_value;
@@ -348,19 +336,19 @@ ImageGridFromViewportFullIterator::ImageGridFromViewportFullIterator(GridSetup* 
 }
 
 const GridIndexPointerProxy ImageGridFromViewportFullIterator::begin() const {
-  auto grid_index_pointer_proxy=GridIndexPointerProxy((ImageGridFromViewportIterator*)this,
+  auto grid_index_pointer_proxy=GridIndexPointerProxy(dynamic_cast<const ImageGridFromViewportIterator*>(this),
                                                       0);
   return grid_index_pointer_proxy;
 }
 
 const GridIndexPointerProxy ImageGridFromViewportFullIterator::end() const {
-  auto grid_index_pointer_proxy=GridIndexPointerProxy((ImageGridFromViewportIterator*)this,
+  auto grid_index_pointer_proxy=GridIndexPointerProxy(dynamic_cast<const ImageGridFromViewportIterator*>(this),
                                                       this->_index_values.size());
   return grid_index_pointer_proxy;
 }
 
 ImageGridFromViewportVisibleIterator::ImageGridFromViewportVisibleIterator(GridSetup* grid_setup,
-                                                                     const ViewPortCurrentState& viewport_current_state) {
+                                                                           const ViewPortCurrentState& viewport_current_state) {
   // TODO: this is copied from an older iterator class to test the concept
   //       make a bit better
   auto w_image_grid=grid_setup->grid_image_size().w();
@@ -414,13 +402,13 @@ ImageGridFromViewportVisibleIterator::ImageGridFromViewportVisibleIterator(GridS
 }
 
 const GridIndexPointerProxy ImageGridFromViewportVisibleIterator::begin() const {
-  auto grid_index_pointer_proxy=GridIndexPointerProxy((ImageGridFromViewportIterator*)this,
+  auto grid_index_pointer_proxy=GridIndexPointerProxy(dynamic_cast<const ImageGridFromViewportIterator*>(this),
                                                       0);
   return grid_index_pointer_proxy;
 }
 
 const GridIndexPointerProxy ImageGridFromViewportVisibleIterator::end() const {
-  auto grid_index_pointer_proxy=GridIndexPointerProxy((ImageGridFromViewportIterator*)this,
+  auto grid_index_pointer_proxy=GridIndexPointerProxy(dynamic_cast<const ImageGridFromViewportIterator*>(this),
                                                       this->_index_values.size());
   return grid_index_pointer_proxy;
 }

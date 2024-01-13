@@ -17,7 +17,7 @@
 TextureGridSquareZoomLevel::TextureGridSquareZoomLevel (TextureGridSquare* parent_square,
                                                         const GridPixelSize& image_max_pixel_size,
                                                         INT64 zoom_out_shift) {
-  GridPixelSize texture_display_size=image_max_pixel_size >> zoom_out_shift;
+  GridPixelSize texture_display_size=static_cast<GridPixelSize>(image_max_pixel_size >> zoom_out_shift);
   // TODO: put in function along with similar functionality in texture_update.cpp
   auto texture_tile_size=TILE_PIXEL_BASE_SIZE;
   auto next_texture_tile_size=texture_tile_size >> 1L;

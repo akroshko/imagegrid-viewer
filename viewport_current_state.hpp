@@ -135,7 +135,7 @@ public:
                                  const ViewPortCurrentState& viewport_current_state);
 private:
   static FLOAT64 _find_max_zoom(FLOAT64 zoom_out_shift);
-  FLOAT64 _zoom=NAN;
+  FLOAT64 _zoom{NAN};
   GridCoordinate _grid;
   GridPixelSize _image_max_size;
   GridCoordinate _grid_last;

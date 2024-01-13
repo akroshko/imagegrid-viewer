@@ -10,7 +10,6 @@
 #include "../datatypes/coordinates.hpp"
 #include "../datatypes/containers.hpp"
 #include "../viewport_current_state.hpp"
-// #include "iterators.hpp"
 // C++ headers
 #include <atomic>
 #include <list>
@@ -98,9 +97,6 @@ public:
    */
   std::string filename(const GridIndex& grid_index,
                            const SubGridIndex& subgrid_index) const;
-  // getting iterators
-  // std::unique_ptr<ImageGridIteratorVisible> iterator_visible(const ViewPortCurrentState& viewport_current_state);
-  // std::unique_ptr<ImageGridIteratorFull> iterator_full(const ViewPortCurrentState& viewport_current_state);
 protected:
   friend class ImageGridBasicIterator;
   friend class ImageSubGridBasicIterator;
@@ -150,11 +146,11 @@ public:
  */
 class ImageGridBasicIterator {
 public:
-  ImageGridBasicIterator(GridSetup* grid_setup);
+  explicit ImageGridBasicIterator(GridSetup* grid_setup);
   const GridIndex* begin() const;
   const GridIndex* end() const;
 private:
-  GridSetup* _grid_setup=nullptr;
+  GridSetup* _grid_setup{nullptr};
 };
 
 /**
@@ -166,7 +162,7 @@ public:
   const SubGridIndex* begin() const;
   const SubGridIndex* end() const;
 private:
-  GridSetup* _grid_setup=nullptr;
+  GridSetup* _grid_setup{nullptr};
   GridIndex _grid_index;
 };
 
@@ -178,12 +174,9 @@ class ImageGridFromViewportIterator;
  */
 class GridIndexPointerProxy {
 public:
-  GridIndexPointerProxy()=default;
-  GridIndexPointerProxy(ImageGridFromViewportIterator* parent_iterator,
-                        INT64 index_value
-                        // GridIndex& grid_index,
-                        // GridIndex& next_grid_index
-    );
+  GridIndexPointerProxy()=delete;
+  GridIndexPointerProxy(const ImageGridFromViewportIterator* parent_iterator,
+                        INT64 index_value);
   /**
    * Get the underlying grid index object back.
    */
@@ -196,7 +189,7 @@ public:
   GridIndexPointerProxy operator++();
   bool operator!=(GridIndexPointerProxy& compare);
 private:
-  ImageGridFromViewportIterator* _parent_iterator;
+  const ImageGridFromViewportIterator* _parent_iterator;
   INT64 _index_value;
 };
 
