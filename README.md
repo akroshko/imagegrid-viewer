@@ -1,4 +1,4 @@
-# About imagegrid-viewer: An application for viewing large images in a grid.
+.pn# About imagegrid-viewer: An application for viewing large images in a grid.
 
 The application *imagegrid-viewer* is written in C++ for viewing large
 images in a grid.  It was inspired from wanting an application for
@@ -90,12 +90,12 @@ Download a set up of NTS topographic maps by running the script
 `test-download-canmatrix.sh` in the *imagegrid-viewer* directory with
 the command:
 
-> $ ./test_download_canmatrix.sh
+> $ ./scripts/test_download_canmatrix.sh
 
 Then run the command:
 
 ```
-$ ./imagegrid-viewer -f test_download_canmatrix.txt
+$ ./imagegrid-viewer -f ./scripts/test_download_canmatrix.txt
 ```
 
 The specific filenames on the NTS ftp site were tested on October
@@ -106,14 +106,14 @@ Columbia.
 A screenshot of viewing a much larger dataset of almost 4000 1:50K NTS
 topographic maps from Vancouver, British Columbia to Winnipeg,
 Manitoba in Canada is: ![Western
-Canada](screenshot_western_canada.png) These maps take up 65GB as
+Canada](github_images/screenshot_western_canada.png) These maps take up 65GB as
 compressed TIFF files, and would take up over 500GB uncompressed, but
 are viewable comfortably using half the memory of a 16GB machine.
 Some of the unreadable maps from the Government of Canada FTP server
 can be seen.
 
 A closer look at lower mainland British Columbia is given by:
-![Western Canada](screenshot_lower_mainland.png)
+![Western Canada](github_images/screenshot_lower_mainland.png)
 
 # Features to be added
 
