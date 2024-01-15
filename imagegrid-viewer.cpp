@@ -272,15 +272,18 @@ public:
    *                     scaled textures.
    * @param texture_overlay The TextureOverlay class that will hold the
    *                        overlay textures.
+   * @param texture_update_area
    */
   UpdateTextureThread(TextureUpdate* const texture_update,
                       ImageGrid* const grid,
                       TextureGrid* const texture_grid,
-                      TextureOverlay* const texture_overlay) {
+                      TextureOverlay* const texture_overlay,
+                      TextureUpdateArea texture_update_area) {
     this->_texture_update=texture_update;
     this->_grid=grid;
     this->_texture_grid=texture_grid;
     this->_texture_overlay=texture_overlay;
+    this->_texture_update_area=texture_update_area;
     this->_row_buffer_temp=std::make_unique<INT64[]>(grid->image_max_pixel_size().w()*3);
   }
   UpdateTextureThread(const UpdateTextureThread&)=delete;
@@ -312,6 +315,7 @@ private:
       this->_texture_update->find_current_textures(this->_grid,
                                                    this->_texture_grid,
                                                    this->_texture_overlay,
+                                                   TextureUpdateArea::visible_area,
                                                    this->_row_buffer_temp.get(),
                                                    this->_keep_running);
     }
@@ -324,6 +328,7 @@ private:
   ImageGrid* _grid;
   TextureGrid* _texture_grid;
   TextureOverlay* _texture_overlay;
+  TextureUpdateArea _texture_update_area;
   std::unique_ptr <INT64[]> _row_buffer_temp;
 };
 
@@ -365,17 +370,32 @@ int main(int argc, char* argv[]) {
       return 1;
     }
     // start the thead that loads the imagegrid
-    auto update_imagegrid_thread_class=std::make_unique<UpdateImageGridThread>(
+    auto update_imagegrid_thread_wrapper=std::make_unique<UpdateImageGridThread>(
       grid_setup.get(),
       imagegrid_viewer_context->grid.get());
-    auto update_imagegrid_thread=update_imagegrid_thread_class->start();
+    auto update_imagegrid_thread=update_imagegrid_thread_wrapper->start();
     // start the thread that updates textures
-    auto update_texture_thread_class=std::make_unique<UpdateTextureThread>(
+    auto update_texture_thread_visible_wrapper=std::make_unique<UpdateTextureThread>(
       imagegrid_viewer_context->texture_update.get(),
       imagegrid_viewer_context->grid.get(),
       imagegrid_viewer_context->texture_grid.get(),
-      imagegrid_viewer_context->texture_overlay.get());
-    auto update_texture_thread=update_texture_thread_class->start();
+      imagegrid_viewer_context->texture_overlay.get(),
+      TextureUpdateArea::visible_area);
+    auto update_texture_thread_visible=update_texture_thread_visible_wrapper->start();
+    auto update_texture_thread_adjacent_wrapper=std::make_unique<UpdateTextureThread>(
+      imagegrid_viewer_context->texture_update.get(),
+      imagegrid_viewer_context->grid.get(),
+      imagegrid_viewer_context->texture_grid.get(),
+      imagegrid_viewer_context->texture_overlay.get(),
+      TextureUpdateArea::adjacent_area);
+    auto update_texture_thread_adjacent=update_texture_thread_adjacent_wrapper->start();
+    auto update_texture_thread_center_wrapper=std::make_unique<UpdateTextureThread>(
+      imagegrid_viewer_context->texture_update.get(),
+      imagegrid_viewer_context->grid.get(),
+      imagegrid_viewer_context->texture_grid.get(),
+      imagegrid_viewer_context->texture_overlay.get(),
+      TextureUpdateArea::center_area);
+    auto update_texture_thread_center=update_texture_thread_center_wrapper->start();
     while (continue_flag) {
       // read input, this also adjusts the coordinates of the viewport
       continue_flag=imagegrid_viewer_context->viewport->do_input(imagegrid_viewer_context->sdl_app.get());
@@ -393,8 +413,10 @@ int main(int argc, char* argv[]) {
 #endif
     }
     // send termination signal to both threads
-    update_imagegrid_thread_class->terminate();
-    update_texture_thread_class->terminate();
+    update_imagegrid_thread_wrapper->terminate();
+    update_texture_thread_visible_wrapper->terminate();
+    update_texture_thread_adjacent_wrapper->terminate();
+    update_texture_thread_center_wrapper->terminate();
     // wait for update_imagegrid_thread to cleanly terminate
     if (update_imagegrid_thread.joinable()) {
       MSG_LOCAL("Joining update_imagegrid_thread.");
@@ -402,10 +424,20 @@ int main(int argc, char* argv[]) {
       MSG_LOCAL("Finished joining update_imagegrid_thread.");
     }
     // wait for update_texture_thread to cleanly terminate
-    if (update_texture_thread.joinable()) {
-      MSG_LOCAL("Joining update_texture_thread.");
-      update_texture_thread.join();
-      MSG_LOCAL("Finished joining update_texture_thread.");
+    if (update_texture_thread_visible.joinable()) {
+      MSG_LOCAL("Joining update_texture_thread_visible.");
+      update_texture_thread_visible.join();
+      MSG_LOCAL("Finished joining update_texture_thread_visible.");
+    }
+    if (update_texture_thread_adjacent.joinable()) {
+      MSG_LOCAL("Joining update_texture_thread_adjacent.");
+      update_texture_thread_adjacent.join();
+      MSG_LOCAL("Finished joining update_texture_thread_adjacent.");
+    }
+    if (update_texture_thread_center.joinable()) {
+      MSG_LOCAL("Joining update_texture_thread_center.");
+      update_texture_thread_center.join();
+      MSG_LOCAL("Finished joining update_texture_thread_center.");
     }
     return 0;
   }

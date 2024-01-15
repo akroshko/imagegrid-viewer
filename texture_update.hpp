@@ -14,6 +14,12 @@
 #include <atomic>
 #include <memory>
 
+enum class TextureUpdateArea {
+  visible_area,
+  adjacent_area,
+  center_area
+};
+
 /**
  * This class updates the currently loaded textures in the grid.
  */
@@ -43,12 +49,13 @@ public:
   void find_current_textures(ImageGrid* grid,
                              TextureGrid* texture_grid,
                              TextureOverlay* texture_overlay,
+                             TextureUpdateArea texture_update_area,
                              INT64* const row_buffer_temp,
                              std::atomic<bool>& keep_running);
   /**
    * Load textures based on the current coordinates and zoom level.
    *
-   * @param grid_square_visible Is the current square visible?
+   * @param grid_square_relevant Is the current square relevant?
    * @param viewport_current_state The current state of the viewport
    * @param grid_square The grid square.
    * @param texture_grid_square The texture grid square.
@@ -59,7 +66,7 @@ public:
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */
-  void load_new_textures(bool grid_square_visible,
+  void load_new_textures(bool grid_square_relevant,
                          const ViewPortCurrentState& viewport_current_state,
                          const ImageGridSquare* const grid_square,
                          TextureGridSquare* const texture_grid_square,
@@ -69,23 +76,23 @@ public:
   /**
    * Clear textures based on the current coordinates.
    *
-   * @param grid_square_visible Is the current square visible?
+   * @param grid_square_relevant Is the current square relevant?
    * @param texture_grid_square The texture grid square.
    * @param keeping_running flag to stop what's happening, generally to indicate program exit
    */
-  void clear_textures(bool grid_square_visible,
+  void clear_textures(bool grid_square_relevant,
                       TextureGridSquare* const texture_grid_square,
                       std::atomic<bool>& keep_running);
   /**
    * Add filler textures where nothing can be loaded.
    *
-   * @param grid_square_visible Is the current square visible?
+   * @param grid_square_relevant Is the current square relevant?
    * @param viewport_current_state The current state of the viewport.
    * @param texture_grid_square The texture grid square.
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */
-  void add_filler_textures(bool grid_square_visible,
+  void add_filler_textures(bool grid_square_relevant,
                            const ViewPortCurrentState& viewport_current_state,
                            TextureGridSquare* const texture_grid_square,
                            std::atomic<bool>& keep_running);
@@ -106,6 +113,10 @@ private:
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;
   bool _grid_square_visible(const GridIndex& grid_index,
                             const ViewPortCurrentState& viewport_current_state);
+  bool _grid_square_adjacent(const GridIndex& grid_index,
+                             const ViewPortCurrentState& viewport_current_state);
+  bool _grid_square_center(const GridIndex& grid_index,
+                           const ViewPortCurrentState& viewport_current_state);
 };
 
 #endif
