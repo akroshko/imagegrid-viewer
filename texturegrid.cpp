@@ -186,7 +186,10 @@ TextureGrid::TextureGrid (GridSetup* grid_setup,
   this->_zoom_out_shift_length=zoom_out_shift_length;
   this->_squares.init(grid_setup->grid_image_size());
   for (const auto& grid_index : ImageGridBasicIterator(this->_grid_setup)) {
-    this->_squares.set(grid_index,std::make_unique<TextureGridSquare>(this,image_max_pixel_size,zoom_out_shift_length));
+    this->_squares.set(grid_index,
+                       std::make_unique<TextureGridSquare>(this,
+                                                           image_max_pixel_size,
+                                                           zoom_out_shift_length));
   }
 }
 

@@ -47,11 +47,18 @@ public:
    * @param window_h The height of the window.
    * @return Whether to keep going or to quit.
    */
-  bool do_input(FLOAT64& current_speed_x, FLOAT64& current_speed_y,
-                FLOAT64& current_speed_zoom, FLOAT64& zoom, const FLOAT64& zoom_speed,
-                const GridPixelSize& image_max_size, FLOAT64& xgrid, FLOAT64& ygrid,
-                INT64& mouse_x, INT64& mouse_y,
-                INT64& window_w, INT64& window_h);
+  bool do_input(FLOAT64& current_speed_x,
+                FLOAT64& current_speed_y,
+                FLOAT64& current_speed_zoom,
+                FLOAT64& zoom,
+                const FLOAT64& zoom_speed,
+                const GridPixelSize& image_max_size,
+                FLOAT64& xgrid,
+                FLOAT64& ygrid,
+                INT64& mouse_x,
+                INT64& mouse_y,
+                INT64& window_w,
+                INT64& window_h);
   /**
    * Process raw joystick values.
    *

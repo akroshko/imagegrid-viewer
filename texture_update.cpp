@@ -20,15 +20,14 @@
 // C headers
 #include <cmath>
 
-TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update,
-                             const GridPixelSize& grid_pixel_size) {
+TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update) {
   this->_viewport_current_state_texturegrid_update=viewport_current_state_texturegrid_update;
-  this->row_buffer_temp=std::make_unique<INT64[]>(grid_pixel_size.w()*3);
 }
 
 void TextureUpdate::find_current_textures(ImageGrid* const grid,
                                           TextureGrid* const texture_grid,
                                           TextureOverlay* const texture_overlay,
+                                          INT64* const row_buffer_temp,
                                           std::atomic<bool>& keep_running) {
   // bail in this function too to avoid spinning loop too much
   INT64 texture_copy_count=0;
@@ -39,10 +38,13 @@ void TextureUpdate::find_current_textures(ImageGrid* const grid,
     for (const auto& grid_index : ImageGridBasicIterator(grid->grid_setup())) {
       auto grid_square_visible=this->_grid_square_visible(grid_index,viewport_current_state);
       auto current_texture_grid_square=texture_grid->squares(GridIndex(grid_index));
-      this->load_new_textures(grid_square_visible,viewport_current_state,
+      this->load_new_textures(grid_square_visible,
+                              viewport_current_state,
                               grid->squares(grid_index),
                               current_texture_grid_square,
-                              texture_copy_count,keep_running);
+                              texture_copy_count,
+                              row_buffer_temp,
+                              keep_running);
       this->clear_textures(grid_square_visible,
                            current_texture_grid_square,
                            keep_running);
@@ -92,6 +94,7 @@ void TextureUpdate::load_new_textures(bool grid_square_visible,
                                       const ImageGridSquare* const grid_square,
                                       TextureGridSquare* const texture_grid_square,
                                       INT64& texture_copy_count,
+                                      INT64* const row_buffer_temp,
                                       std::atomic<bool>& keep_running) {
   auto max_zoom_out_shift=texture_grid_square->parent_grid()->textures_zoom_out_shift_length()-1;
   auto current_zoom_out_shift=ViewPortTransferState::find_zoom_out_shift_bounded(viewport_current_state.zoom(),0,max_zoom_out_shift);
@@ -125,7 +128,7 @@ void TextureUpdate::load_new_textures(bool grid_square_visible,
                   texture_copy_successful=this->load_texture(dest_square,
                                                              image_square,
                                                              zoom_out_shift,
-                                                             this->row_buffer_temp.get());
+                                                             row_buffer_temp);
                   if (texture_copy_successful) {
                     dest_square->set_image_loaded(load_index);
                     texture_copy_count+=1;

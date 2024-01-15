@@ -266,7 +266,6 @@ GridIndexPointerProxy::GridIndexPointerProxy(const ImageGridFromViewportIterator
   this->_index_value=index_value;
 }
 
-
 GridIndex GridIndexPointerProxy::operator*() {
   // TODO: handle end case?
   return this->_parent_iterator->_index_values[this->_index_value];

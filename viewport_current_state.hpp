@@ -131,7 +131,8 @@ public:
    * @param viewport_current_state The current state of the viewport.
    * @return Whether the index is visible.
    */
-  static bool grid_index_visible(INT64 i, INT64 j,
+  static bool grid_index_visible(INT64 i,
+                                 INT64 j,
                                  const ViewPortCurrentState& viewport_current_state);
 private:
   static FLOAT64 _find_max_zoom(FLOAT64 zoom_out_shift);

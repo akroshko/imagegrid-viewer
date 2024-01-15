@@ -172,8 +172,7 @@ ImageGridViewerContext::ImageGridViewerContext(GridSetup* const grid_setup) {
                                                      this->grid->image_max_pixel_size(),
                                                      this->grid->max_zoom_out_shift());
     this->texture_overlay=std::make_unique<TextureOverlay>();
-    this->texture_update=std::make_unique<TextureUpdate>(this->viewport_current_state_texturegrid_update,
-                                                         this->grid->image_max_pixel_size());
+    this->texture_update=std::make_unique<TextureUpdate>(this->viewport_current_state_texturegrid_update);
     // adjust initial position to a sensible default depending on how
     // many images are loaded
     this->viewport->adjust_initial_location(grid_setup);
@@ -282,6 +281,7 @@ public:
     this->_grid=grid;
     this->_texture_grid=texture_grid;
     this->_texture_overlay=texture_overlay;
+    this->_row_buffer_temp=std::make_unique<INT64[]>(grid->image_max_pixel_size().w()*3);
   }
   UpdateTextureThread(const UpdateTextureThread&)=delete;
   UpdateTextureThread(const UpdateTextureThread&&)=delete;
@@ -312,6 +312,7 @@ private:
       this->_texture_update->find_current_textures(this->_grid,
                                                    this->_texture_grid,
                                                    this->_texture_overlay,
+                                                   this->_row_buffer_temp.get(),
                                                    this->_keep_running);
     }
     MSG_LOCAL("Ending execution in UpdateTextureThread.");
@@ -323,6 +324,7 @@ private:
   ImageGrid* _grid;
   TextureGrid* _texture_grid;
   TextureOverlay* _texture_overlay;
+  std::unique_ptr <INT64[]> _row_buffer_temp;
 };
 
 /**

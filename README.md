@@ -113,7 +113,7 @@ Some of the unreadable maps from the Government of Canada FTP server
 can be seen.
 
 A closer look at lower mainland British Columbia is given by:
-![Western Canada](github_images/screenshot_lower_mainland.png)
+![Lower Mainland](github_images/screenshot_lower_mainland.png)
 
 # Features to be added
 

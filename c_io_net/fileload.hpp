@@ -56,7 +56,8 @@ std::vector<std::string> find_sequential_images(std::vector<std::string> image_f
  */
 bool read_data(const std::string& filename,
                bool use_cache,
-               INT64& width, INT64& height);
+               INT64& width,
+               INT64& height);
 
 /**
  * Load data as RGB.
@@ -217,7 +218,8 @@ bool check_empty(const std::string& filename);
  */
 bool load_image_grid_from_text(std::string text_file,
                                std::list<GridSetupFile>& read_data,
-                               INT64& max_i,INT64& max_j);
+                               INT64& max_i,
+                               INT64& max_j);
 
 /**
  * Create the cached filename with png extension from the real

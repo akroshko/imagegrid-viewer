@@ -23,8 +23,7 @@ public:
   /**
    * @param The object that transfers viewport state.
    */
-  TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update,
-                const GridPixelSize& grid_pixel_size);
+  TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update);
   ~TextureUpdate()=default;
   TextureUpdate(const TextureUpdate&)=delete;
   TextureUpdate(const TextureUpdate&&)=delete;
@@ -36,12 +35,15 @@ public:
    * @param grid The image grid.
    * @param texture_grid The texture grid.
    * @param texture_overlay An overlay to use.
+   * @param row_buffer_temp A working buffer of size at least
+   *                        (source_copy_w >> zoom_out_shift)*3).
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */
   void find_current_textures(ImageGrid* grid,
                              TextureGrid* texture_grid,
                              TextureOverlay* texture_overlay,
+                             INT64* const row_buffer_temp,
                              std::atomic<bool>& keep_running);
   /**
    * Load textures based on the current coordinates and zoom level.
@@ -52,6 +54,8 @@ public:
    * @param texture_grid_square The texture grid square.
    * @param texture_copy_count Keeps track of numbers of textures.
    *                           copied
+   * @param row_buffer_temp A working buffer of size at least
+   *                        (source_copy_w >> zoom_out_shift)*3).
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */
@@ -60,6 +64,7 @@ public:
                          const ImageGridSquare* const grid_square,
                          TextureGridSquare* const texture_grid_square,
                          INT64& texture_copy_count,
+                         INT64* const row_buffer_temp,
                          std::atomic<bool>& keep_running);
   /**
    * Clear textures based on the current coordinates.
@@ -96,7 +101,6 @@ public:
                            ImageGridSquareZoomLevel* source_square,
                            INT64 zoom_out_shift,
                            INT64* const row_buffer);
-  std::unique_ptr <INT64[]> row_buffer_temp;
 private:
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;

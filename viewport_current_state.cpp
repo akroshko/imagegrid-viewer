@@ -135,7 +135,8 @@ FLOAT64 ViewPortTransferState::find_bottommost_visible(const ViewPortCurrentStat
   return (FLOAT64)viewport_current_state.current_grid_coordinate().y()+(half_hpixel/(FLOAT64)viewport_current_state.image_max_size().h()/max_zoom_this_level);
 }
 
-bool ViewPortTransferState::grid_index_visible(INT64 i, INT64 j,
+bool ViewPortTransferState::grid_index_visible(INT64 i,
+                                               INT64 j,
                                                const ViewPortCurrentState& viewport_current_state) {
     auto visible_left=ViewPortTransferState::find_leftmost_visible(
       viewport_current_state);

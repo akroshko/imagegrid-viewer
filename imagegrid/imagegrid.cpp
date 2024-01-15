@@ -283,7 +283,6 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
   INT64 new_wpixel=INT_MIN;
   INT64 new_hpixel=INT_MIN;
   for (const auto& grid_index : ImageGridBasicIterator(this->_grid_setup)) {
-    // [square_index]=std::make_unique<ImageGridSquare>(grid_setup,this,GridIndex(grid_index));
     this->_squares.set(grid_index,std::make_unique<ImageGridSquare>(grid_setup,this,GridIndex(grid_index)));
     // TODO: not skipping rest for now, just setting as load error
     if (this->_squares[grid_index]->_status == ImageGridStatus::load_error) {
@@ -319,7 +318,6 @@ void ImageGrid::_read_grid_info_setup_squares(GridSetup* const grid_setup) {
   // add this info to the various data structure
   for (const auto& grid_index : ImageGridBasicIterator(grid_setup)) {
     this->_squares[grid_index]->image_array.init(this->_max_zoom_out_shift);
-    // this->_squares[grid_index]->image_array=std::make_unique<std::unique_ptr<ImageGridSquareZoomLevel>[]>(this->_max_zoom_out_shift);
     INT64 zoom_out_shift=0;
     for (auto k=0L; k < this->_max_zoom_out_shift; k++) {
       this->_squares[grid_index]->image_array.set(k,std::make_unique<ImageGridSquareZoomLevel>(this->_squares[grid_index],
@@ -467,11 +465,6 @@ void ImageGrid::_write_cache(const GridIndex& grid_index) {
       }
   }
 }
-
-// ImageGridSquare* ImageGrid::_get_squares(const GridIndex& grid_index) {
-//   return this->_squares[grid_index].get();
-//   // return this->_squares[grid_index.j()*this->_grid_setup->grid_image_size().w()+grid_index.i()].get();
-// }
 
 void ImageGrid::load_grid(const GridSetup* const grid_setup, std::atomic<bool>& keep_running) {
   // auto keep_trying=true;

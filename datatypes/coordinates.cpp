@@ -103,7 +103,8 @@ INT64 ImagePixelCoordinate::y() const {
   return this->_x2;
 }
 
-BufferPixelCoordinate::BufferPixelCoordinate(GridCoordinate& grid_coordinate, FLOAT64 zoom,
+BufferPixelCoordinate::BufferPixelCoordinate(GridCoordinate& grid_coordinate,
+                                             FLOAT64 zoom,
                                              GridCoordinate& grid_coordinate_pixel_0,
                                              BufferPixelSize& buffer_pixel_size) {
   this->_x1=(INT64)round((grid_coordinate.x() - grid_coordinate_pixel_0.x())*buffer_pixel_size.w()*zoom);

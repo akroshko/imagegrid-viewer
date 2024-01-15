@@ -275,7 +275,8 @@ bool load_data_as_rgba(const std::string& filename,
 ////////////////////////////////////////////////////////////////////////////////
 // load specific files as RGB
 bool read_tiff_data(const std::string& filename,
-                    INT64& width, INT64& height) {
+                    INT64& width,
+                    INT64& height) {
   auto success=false;
 
   TIFF* tif=TIFFOpen(filename.c_str(), "r");
