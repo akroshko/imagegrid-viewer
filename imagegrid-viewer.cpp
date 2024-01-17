@@ -220,7 +220,7 @@ public:
    * Start the thread itself.
    */
   std::thread start() {
-    std::thread worker_thread(&UpdateImageGridThread::run, this);
+    std::thread worker_thread(&UpdateImageGridThread::_run, this);
     return worker_thread;
   }
   /**
@@ -239,7 +239,7 @@ private:
    * Actually runs the function and holds the loop that updates the
    * textures.
    */
-  void run () {
+  void _run () {
     // TODO fix this up so I can do a load_all
     // this->_all_loaded=true;
     while (this->_keep_running) {
@@ -294,7 +294,7 @@ public:
    * Start the thread itself.
    */
   std::thread start() {
-    std::thread worker_thread(&UpdateTextureThread::run, this);
+    std::thread worker_thread(&UpdateTextureThread::_run, this);
     return worker_thread;
   }
   /**
@@ -309,7 +309,7 @@ private:
    * Actually runs the function and holds the loop that updates the
    * textures.
    */
-  void run () {
+  void _run () {
     MSG_LOCAL("Beginning thread in UpdateTextureThread.");
     while (this->_keep_running) {
       this->_texture_update->find_current_textures(this->_grid,
@@ -323,13 +323,74 @@ private:
   }
   /** Flag to indicate whether the thread should keep running. */
   std::atomic<bool> _keep_running{true};
-  // std::thread _worker_thread;
   TextureUpdate* _texture_update;
   ImageGrid* _grid;
   TextureGrid* _texture_grid;
   TextureOverlay* _texture_overlay;
   TextureUpdateArea _texture_update_area;
   std::unique_ptr <INT64[]> _row_buffer_temp;
+};
+
+/**
+ * Class to hold the thread that clears nonvisible texture based on
+ * where the viewport is looking.
+ */
+class ClearTextureThread {
+public:
+  /**
+   * Constructor to set up the class holding the thread.
+   *
+   * @param texture_update The TextureUpdate class this thread will
+   *                       run.
+   * @param grid The ImageGrid class this thread will get images from.
+   * @param texture_grid The TextureGrid class that will hold the
+   *                     scaled textures.
+   */
+  ClearTextureThread(TextureUpdate* const texture_update,
+                     ImageGrid* const grid,
+                     TextureGrid* const texture_grid) {
+    this->_texture_update=texture_update;
+    this->_grid=grid;
+    this->_texture_grid=texture_grid;
+  }
+  ClearTextureThread(const ClearTextureThread&)=delete;
+  ClearTextureThread(const ClearTextureThread&&)=delete;
+  ClearTextureThread& operator=(const ClearTextureThread&)=delete;
+  ClearTextureThread& operator=(const ClearTextureThread&&)=delete;
+  /**
+   * Start the thread itself.
+   */
+  std::thread start() {
+    std::thread worker_thread(&ClearTextureThread::_run, this);
+    return worker_thread;
+  }
+  /**
+   * Terminate cleanly. Joining needs to occur outside this scope for
+   * now.
+   */
+  void terminate() {
+    this->_keep_running=false;
+  }
+private:
+  /**
+   * Actually runs the function and holds the loop that updates the
+   * textures.
+   */
+  void _run () {
+    MSG_LOCAL("Beginning thread in ClearTextureThread.");
+    while (this->_keep_running) {
+      this->_texture_update->clear_nonvisible_textures(this->_grid,
+                                                       this->_texture_grid,
+                                                       this->_keep_running);
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    MSG_LOCAL("Ending execution in ClearTextureThread.");
+  }
+  /** Flag to indicate whether the thread should keep running. */
+  std::atomic<bool> _keep_running{true};
+  TextureUpdate* _texture_update;
+  ImageGrid* _grid;
+  TextureGrid* _texture_grid;
 };
 
 /**
@@ -374,7 +435,13 @@ int main(int argc, char* argv[]) {
       grid_setup.get(),
       imagegrid_viewer_context->grid.get());
     auto update_imagegrid_thread=update_imagegrid_thread_wrapper->start();
-    // start the thread that updates textures
+    // start the threads that clear non-visible textures
+    auto clear_texture_thread_wrapper=std::make_unique<ClearTextureThread>(
+      imagegrid_viewer_context->texture_update.get(),
+      imagegrid_viewer_context->grid.get(),
+      imagegrid_viewer_context->texture_grid.get());
+    auto clear_texture_thread=clear_texture_thread_wrapper->start();
+    // start the threads that update textures
     auto update_texture_thread_visible_wrapper=std::make_unique<UpdateTextureThread>(
       imagegrid_viewer_context->texture_update.get(),
       imagegrid_viewer_context->grid.get(),
@@ -414,6 +481,7 @@ int main(int argc, char* argv[]) {
     }
     // send termination signal to both threads
     update_imagegrid_thread_wrapper->terminate();
+    clear_texture_thread_wrapper->terminate();
     update_texture_thread_visible_wrapper->terminate();
     update_texture_thread_adjacent_wrapper->terminate();
     update_texture_thread_center_wrapper->terminate();
@@ -423,7 +491,12 @@ int main(int argc, char* argv[]) {
       update_imagegrid_thread.join();
       MSG_LOCAL("Finished joining update_imagegrid_thread.");
     }
-    // wait for update_texture_thread to cleanly terminate
+    if (clear_texture_thread.joinable()) {
+      MSG_LOCAL("Joining clear_texture_thread.");
+      clear_texture_thread.join();
+      MSG_LOCAL("Finished joining clear_texture_thread.");
+    }
+    // wait for update_texture_threads to cleanly terminate
     if (update_texture_thread_visible.joinable()) {
       MSG_LOCAL("Joining update_texture_thread_visible.");
       update_texture_thread_visible.join();
@@ -441,5 +514,4 @@ int main(int argc, char* argv[]) {
     }
     return 0;
   }
-
 }

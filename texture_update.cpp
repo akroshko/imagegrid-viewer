@@ -24,6 +24,21 @@ TextureUpdate::TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_cur
   this->_viewport_current_state_texturegrid_update=viewport_current_state_texturegrid_update;
 }
 
+void TextureUpdate::clear_nonvisible_textures(ImageGrid* const grid,
+                                              TextureGrid* const texture_grid,
+                                              std::atomic<bool>& keep_running) {
+  auto viewport_current_state=this->_viewport_current_state_texturegrid_update->GetGridValues();
+  if (!viewport_current_state.current_grid_coordinate().invalid()) {
+    for (const auto& grid_index : ImageGridBasicIterator(grid->grid_setup())) {
+      bool grid_square_visible=this->_grid_square_visible(grid_index,viewport_current_state);
+      auto current_texture_grid_square=texture_grid->squares(GridIndex(grid_index));
+      this->clear_textures(grid_square_visible,
+                           current_texture_grid_square,
+                           keep_running);
+    }
+  }
+}
+
 void TextureUpdate::find_current_textures(ImageGrid* const grid,
                                           TextureGrid* const texture_grid,
                                           TextureOverlay* const texture_overlay,
@@ -39,28 +54,34 @@ void TextureUpdate::find_current_textures(ImageGrid* const grid,
     // TODO: change to visible iterator
     for (const auto& grid_index : ImageGridBasicIterator(grid->grid_setup())) {
       bool grid_square_relevant=false;
-      if (texture_update_area == TextureUpdateArea::visible_area) {
+      switch(texture_update_area) {
+      case TextureUpdateArea::visible_area:
         grid_square_relevant=this->_grid_square_visible(grid_index,viewport_current_state);
-      } else if (texture_update_area == TextureUpdateArea::adjacent_area) {
+        break;
+      case TextureUpdateArea::adjacent_area:
         grid_square_relevant=this->_grid_square_adjacent(grid_index,viewport_current_state);
-      } else if (texture_update_area == TextureUpdateArea::center_area) {
+        break;
+      case TextureUpdateArea::center_area:
         grid_square_relevant=this->_grid_square_center(grid_index,viewport_current_state);
+        break;
       }
+      // only do anything for relevant grid squares
       auto current_texture_grid_square=texture_grid->squares(GridIndex(grid_index));
-      this->load_new_textures(grid_square_relevant,
-                              viewport_current_state,
-                              grid->squares(grid_index),
-                              current_texture_grid_square,
-                              texture_copy_count,
-                              row_buffer_temp,
-                              keep_running);
-      this->clear_textures(grid_square_relevant,
-                           current_texture_grid_square,
-                           keep_running);
-      this->add_filler_textures(grid_square_relevant,
-                                viewport_current_state,
-                                current_texture_grid_square,
-                                keep_running);
+      if (grid_square_relevant) {
+          this->load_new_textures(grid_square_relevant,
+                                  viewport_current_state,
+                                  grid->squares(grid_index),
+                                  current_texture_grid_square,
+                                  texture_copy_count,
+                                  row_buffer_temp,
+                                  keep_running);
+      }
+      if (grid_square_relevant) {
+          this->add_filler_textures(grid_square_relevant,
+                                    viewport_current_state,
+                                    current_texture_grid_square,
+                                    keep_running);
+      }
     }
     // find the texture grid overlays
     // for (const auto& grid_index : ImageGridBasicIterator(grid->grid_setup())) {
@@ -73,27 +94,30 @@ void TextureUpdate::find_current_textures(ImageGrid* const grid,
     //
     // find the viewport overlay information
     // TODO: sort out passing references and clean up so these autos aren't required
-    auto pointer_pixel_coordinate=viewport_current_state.pointer();
-    auto zoom=viewport_current_state.zoom();
-    auto viewport_pixel_size=viewport_current_state.screen_size();
-    auto viewport_grid_coordinate=viewport_current_state.current_grid_coordinate();
-    auto image_max_size=viewport_current_state.image_max_size();
-    auto cursor_grid=GridCoordinate(pointer_pixel_coordinate,
-                                    zoom,
-                                    viewport_pixel_size,
-                                    viewport_grid_coordinate,
-                                    image_max_size);
-    std::ostringstream overlay_sstream;
-    ImageGridMetadata imagegrid_metadata;
-    MetadataInfo metadata_info;
-    auto metadata_name=std::string("pixel_only");
-    imagegrid_metadata.get_metadata(grid,metadata_name,cursor_grid,metadata_info);
-    overlay_sstream << "Grid: " << metadata_info.pixel_coordinate.x() << " "
-                    << metadata_info.pixel_coordinate.y() << " " << zoom;
-    // lock the overlay texture
-    std::unique_lock<std::mutex> overlay_lock(texture_overlay->display_mutex, std::defer_lock);
-    if (overlay_lock.try_lock()) {
-      texture_overlay->update_overlay(overlay_sstream.str());
+    // only update overlay in visible thread
+    if (texture_update_area == TextureUpdateArea::visible_area) {
+      auto pointer_pixel_coordinate=viewport_current_state.pointer();
+      auto zoom=viewport_current_state.zoom();
+      auto viewport_pixel_size=viewport_current_state.screen_size();
+      auto viewport_grid_coordinate=viewport_current_state.current_grid_coordinate();
+      auto image_max_size=viewport_current_state.image_max_size();
+      auto cursor_grid=GridCoordinate(pointer_pixel_coordinate,
+                                      zoom,
+                                      viewport_pixel_size,
+                                      viewport_grid_coordinate,
+                                      image_max_size);
+      std::ostringstream overlay_sstream;
+      ImageGridMetadata imagegrid_metadata;
+      MetadataInfo metadata_info;
+      auto metadata_name=std::string("pixel_only");
+      imagegrid_metadata.get_metadata(grid,metadata_name,cursor_grid,metadata_info);
+      overlay_sstream << "Grid: " << metadata_info.pixel_coordinate.x() << " "
+                      << metadata_info.pixel_coordinate.y() << " " << zoom;
+      // lock the overlay texture
+      std::unique_lock<std::mutex> overlay_lock(texture_overlay->display_mutex, std::defer_lock);
+      if (overlay_lock.try_lock()) {
+        texture_overlay->update_overlay(overlay_sstream.str());
+      }
     }
   }
 }
@@ -157,7 +181,7 @@ void TextureUpdate::load_new_textures(bool grid_square_relevant,
   }
 }
 
-void TextureUpdate::clear_textures(bool grid_square_relevant,
+void TextureUpdate::clear_textures(bool grid_square_visible,
                                    TextureGridSquare* const texture_grid_square,
                                    std::atomic<bool>& keep_running) {
   auto max_zoom_out_shift=texture_grid_square->parent_grid()->textures_zoom_out_shift_length()-1;
@@ -165,7 +189,7 @@ void TextureUpdate::clear_textures(bool grid_square_relevant,
   for (INT64 zoom_out_shift=0L; zoom_out_shift < max_zoom_out_shift; zoom_out_shift++) {
     if (!keep_running) { break; }
     auto dest_square=texture_grid_square->texture_array[zoom_out_shift];
-    if (!grid_square_relevant) {
+    if (!grid_square_visible) {
       // unload anything not visible that is loadable or displayable
       if (dest_square->is_loaded) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);

@@ -14,6 +14,7 @@
 #include <atomic>
 #include <memory>
 
+/** Indicates selection of which area to update textures. */
 enum class TextureUpdateArea {
   visible_area,
   adjacent_area,
@@ -29,12 +30,24 @@ public:
   /**
    * @param The object that transfers viewport state.
    */
-  TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update);
+  explicit TextureUpdate(std::shared_ptr<ViewPortTransferState> viewport_current_state_texturegrid_update);
   ~TextureUpdate()=default;
   TextureUpdate(const TextureUpdate&)=delete;
   TextureUpdate(const TextureUpdate&&)=delete;
   TextureUpdate& operator=(const TextureUpdate&)=delete;
   TextureUpdate& operator=(const TextureUpdate&&)=delete;
+  /**
+   * Clear any non-visible textures.
+   *
+   * @param grid The image grid.
+   * @param texture_grid The texture grid.
+   *
+   * @param keeping_running Set true to stop what's happening,
+   *                        generally to indicate program exit.
+   */
+  void clear_nonvisible_textures(ImageGrid* const grid,
+                                 TextureGrid* const texture_grid,
+                                 std::atomic<bool>& keep_running);
   /**
    * Find the textures needed to render the current viewport
    *
@@ -76,11 +89,11 @@ public:
   /**
    * Clear textures based on the current coordinates.
    *
-   * @param grid_square_relevant Is the current square relevant?
+   * @param grid_square_visible Is the current square visible?
    * @param texture_grid_square The texture grid square.
    * @param keeping_running flag to stop what's happening, generally to indicate program exit
    */
-  void clear_textures(bool grid_square_relevant,
+  void clear_textures(bool grid_square_visible,
                       TextureGridSquare* const texture_grid_square,
                       std::atomic<bool>& keep_running);
   /**

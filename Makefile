@@ -40,7 +40,7 @@ CXXFLAGS_ALL=-g3 -O2
 CXXFLAGS_FAST=-O3 -march=native
 CXXFLAGS_SANITIZE=-g3 -O2
 CXXFLAGS_PROFILE=-g3 -O2 -pg
-CXXFLAGS_DEBUG=-g3 -O0
+CXXFLAGS_DEBUG=-g3 -O2
 
 # TODO: reenable test code
 # all: imagegrid-viewer test_file
