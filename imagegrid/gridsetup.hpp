@@ -122,7 +122,6 @@ protected:
   // objects to return for const iterators
   // TODO: need to add iterators to static array before this one will work
   std::unique_ptr<GridIndex[]> _grid_index_values;
-  // StaticArray<GridIndex> _grid_index_values;
   // objects to return for const iterators
   std::unique_ptr<std::unique_ptr<SubGridIndex[]>[]> _subgrid_index_values;
 };
@@ -146,6 +145,11 @@ public:
  */
 class ImageGridBasicIterator {
 public:
+  /**
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   */
   explicit ImageGridBasicIterator(GridSetup* grid_setup);
   const GridIndex* begin() const;
   const GridIndex* end() const;
@@ -158,6 +162,12 @@ private:
  */
 class ImageSubGridBasicIterator {
 public:
+  /**
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   * @param grid_index The index of the grid square.
+   */
   ImageSubGridBasicIterator(GridSetup* grid_setup, const GridIndex& grid_index);
   const SubGridIndex* begin() const;
   const SubGridIndex* end() const;
@@ -193,15 +203,23 @@ private:
   INT64 _index_value;
 };
 
-
 /**
  * Base class for iterators from viewport.
  */
 class ImageGridFromViewportIterator {
 public:
   ImageGridFromViewportIterator()=default;
+  /**
+   * A standard method for range based iterators.
+   */
+  const GridIndexPointerProxy begin() const;
+  /**
+   * A standard method for range based iterators.
+   */
+  const GridIndexPointerProxy end() const;
 protected:
   friend class GridIndexPointerProxy;
+  void _check_and_push_back(INT64 i,INT64 j);
   // TODO: these are copied from an older iterator class I used
   //       make more modern
   INT64 _w;
@@ -217,19 +235,16 @@ protected:
  */
 class ImageGridFromViewportFullIterator : public ImageGridFromViewportIterator {
 public:
+  /**
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   * @param viewport_current_state The current state of the viewport.
+   */
   ImageGridFromViewportFullIterator(GridSetup* grid_setup,
                                     const ViewPortCurrentState& viewport_current_state);
-  /**
-   * A standard method for range based iterators.
-   */
-  const GridIndexPointerProxy begin() const;
-  /**
-   * A standard method for range based iterators.
-   */
-  const GridIndexPointerProxy end() const;
 private:
   friend class GridIndexPointerProxy;
-  GridIndex _grid_index;
 };
 
 /**
@@ -238,19 +253,52 @@ private:
  */
 class ImageGridFromViewportVisibleIterator : public ImageGridFromViewportIterator {
 public:
+  /**
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   * @param viewport_current_state The current state of the viewport.
+   */
   ImageGridFromViewportVisibleIterator(GridSetup* grid_setup,
                                        const ViewPortCurrentState& viewport_current_state);
-  /**
-   * A standard method for range based iterators.
-   */
-  const GridIndexPointerProxy begin() const;
-  /**
-   * A standard method for range based iterators.
-   */
-  const GridIndexPointerProxy end() const;
 private:
   friend class GridIndexPointerProxy;
-  GridIndex _grid_index;
+};
+
+/**
+ * Iterate the squares that are adjacent to where the viewport is
+ * looking.
+ */
+class ImageGridFromViewportAdjacentIterator : public ImageGridFromViewportIterator {
+public:
+  /**
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   * @param viewport_current_state The current state of the viewport.
+   */
+  ImageGridFromViewportAdjacentIterator(GridSetup* grid_setup,
+                                        const ViewPortCurrentState& viewport_current_state);
+private:
+  friend class GridIndexPointerProxy;
+};
+
+/**
+ * Iterate the square that the viewport is looking at, this is a
+ * trivial iterator of one square.
+ */
+class ImageGridFromViewportCenterIterator : public ImageGridFromViewportIterator {
+public:
+  /**
+   * @param grid_setup The object holding the data on the images in
+   *                   the grid, including the filenames and grid
+   *                   size.
+   * @param viewport_current_state The current state of the viewport.
+   */
+  ImageGridFromViewportCenterIterator(GridSetup* grid_setup,
+                                      const ViewPortCurrentState& viewport_current_state);
+private:
+  friend class GridIndexPointerProxy;
 };
 
 #endif

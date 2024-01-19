@@ -30,9 +30,14 @@ void TextureUpdate::clear_nonvisible_textures(ImageGrid* const grid,
   auto viewport_current_state=this->_viewport_current_state_texturegrid_update->GetGridValues();
   if (!viewport_current_state.current_grid_coordinate().invalid()) {
     for (const auto& grid_index : ImageGridBasicIterator(grid->grid_setup())) {
-      bool grid_square_visible=this->_grid_square_visible(grid_index,viewport_current_state);
       auto current_texture_grid_square=texture_grid->squares(GridIndex(grid_index));
-      this->clear_textures(grid_square_visible,
+      auto grid_square_visible=this->_grid_square_visible(grid_index,viewport_current_state);
+      auto grid_square_adjacent=this->_grid_square_adjacent(grid_index,viewport_current_state);
+      auto grid_square_center=this->_grid_square_center(grid_index,viewport_current_state);
+      this->clear_textures(viewport_current_state,
+                           grid_square_visible,
+                           grid_square_adjacent,
+                           grid_square_center,
                            current_texture_grid_square,
                            keep_running);
     }
@@ -51,49 +56,41 @@ void TextureUpdate::find_current_textures(ImageGrid* const grid,
   // don't do anything here if viewport_current_state hasn't been initialized
   // find the texture grid textures
   if (!viewport_current_state.current_grid_coordinate().invalid()) {
-    // TODO: change to visible iterator
-    for (const auto& grid_index : ImageGridBasicIterator(grid->grid_setup())) {
-      bool grid_square_relevant=false;
-      switch(texture_update_area) {
-      case TextureUpdateArea::visible_area:
-        grid_square_relevant=this->_grid_square_visible(grid_index,viewport_current_state);
-        break;
-      case TextureUpdateArea::adjacent_area:
-        grid_square_relevant=this->_grid_square_adjacent(grid_index,viewport_current_state);
-        break;
-      case TextureUpdateArea::center_area:
-        grid_square_relevant=this->_grid_square_center(grid_index,viewport_current_state);
-        break;
-      }
-      // only do anything for relevant grid squares
+    std::unique_ptr<ImageGridFromViewportIterator> grid_iterator;
+    switch(texture_update_area) {
+    case TextureUpdateArea::visible_area:
+      grid_iterator=std::make_unique<ImageGridFromViewportVisibleIterator>(grid->grid_setup(),
+                                                                           viewport_current_state);
+      break;
+    case TextureUpdateArea::adjacent_area:
+      grid_iterator=std::make_unique<ImageGridFromViewportAdjacentIterator>(grid->grid_setup(),
+                                                                            viewport_current_state);
+      break;
+    case TextureUpdateArea::center_area:
+      grid_iterator=std::make_unique<ImageGridFromViewportCenterIterator>(grid->grid_setup(),
+                                                                          viewport_current_state);
+      break;
+    }
+    for (const auto& grid_index : *grid_iterator) {
       auto current_texture_grid_square=texture_grid->squares(GridIndex(grid_index));
-      if (grid_square_relevant) {
-          this->load_new_textures(grid_square_relevant,
-                                  viewport_current_state,
-                                  grid->squares(grid_index),
-                                  current_texture_grid_square,
-                                  texture_copy_count,
-                                  row_buffer_temp,
-                                  keep_running);
-      }
-      if (grid_square_relevant) {
-          this->add_filler_textures(grid_square_relevant,
-                                    viewport_current_state,
-                                    current_texture_grid_square,
-                                    keep_running);
-      }
+      auto grid_square_visible=this->_grid_square_visible(grid_index,viewport_current_state);
+      auto grid_square_adjacent=this->_grid_square_adjacent(grid_index,viewport_current_state);
+      auto grid_square_center=this->_grid_square_center(grid_index,viewport_current_state);
+      this->load_new_textures(viewport_current_state,
+                              grid->squares(grid_index),
+                              current_texture_grid_square,
+                              grid_square_visible,
+                              grid_square_adjacent,
+                              grid_square_center,
+                              texture_copy_count,
+                              row_buffer_temp,
+                              keep_running);
+      this->add_filler_textures(viewport_current_state,
+                                current_texture_grid_square,
+                                keep_running);
     }
     // find the texture grid overlays
-    // for (const auto& grid_index : ImageGridBasicIterator(grid->grid_setup())) {
-    //   auto grid_index=GridIndex(grid_index);
-    //   auto i=grid_index.i();
-    //   auto j=grid_index.j();
-    //   auto grid_square_visible=this->_grid_square_visible(i,j,viewport_current_state);
-    //   // TODO: not implemented
-    // }
-    //
     // find the viewport overlay information
-    // TODO: sort out passing references and clean up so these autos aren't required
     // only update overlay in visible thread
     if (texture_update_area == TextureUpdateArea::visible_area) {
       auto pointer_pixel_coordinate=viewport_current_state.pointer();
@@ -122,10 +119,12 @@ void TextureUpdate::find_current_textures(ImageGrid* const grid,
   }
 }
 
-void TextureUpdate::load_new_textures(bool grid_square_relevant,
-                                      const ViewPortCurrentState& viewport_current_state,
+void TextureUpdate::load_new_textures(const ViewPortCurrentState& viewport_current_state,
                                       const ImageGridSquare* const grid_square,
                                       TextureGridSquare* const texture_grid_square,
+                                      bool grid_square_visible,
+                                      bool grid_square_adjacent,
+                                      bool grid_square_center,
                                       INT64& texture_copy_count,
                                       INT64* const row_buffer_temp,
                                       std::atomic<bool>& keep_running) {
@@ -133,18 +132,18 @@ void TextureUpdate::load_new_textures(bool grid_square_relevant,
   auto current_zoom_out_shift=ViewPortTransferState::find_zoom_out_shift_bounded(viewport_current_state.zoom(),
                                                                                  0,
                                                                                  max_zoom_out_shift);
-  const int zoom_out_shift_number=2;
-  const INT64 zoom_out_shift_array[zoom_out_shift_number]={current_zoom_out_shift,max_zoom_out_shift};
-  for (INT64 zi=0; zi < zoom_out_shift_number; zi++) {
+  for (INT64 zoom_out_shift=0; zoom_out_shift <= max_zoom_out_shift; zoom_out_shift++) {
     if (!keep_running ||
         (texture_copy_count >= LOAD_TEXTURES_BATCH)) {
       break;
     }
-    // only load/update current zoom and max_zoom
-    auto zoom_out_shift=zoom_out_shift_array[zi];
-    auto dest_square=texture_grid_square->texture_array[zoom_out_shift];
-    auto load_all=(zoom_out_shift == max_zoom_out_shift);
-    if (load_all || grid_square_relevant) {
+    if (this->_grid_square_current_load(grid_square_visible,
+                                        grid_square_adjacent,
+                                        grid_square_center,
+                                        max_zoom_out_shift,
+                                        current_zoom_out_shift,
+                                        zoom_out_shift)) {
+      auto dest_square=texture_grid_square->texture_array[zoom_out_shift];
       auto load_index=zoom_out_shift;
       bool texture_copy_successful=false;
       do {
@@ -181,16 +180,25 @@ void TextureUpdate::load_new_textures(bool grid_square_relevant,
   }
 }
 
-void TextureUpdate::clear_textures(bool grid_square_visible,
+void TextureUpdate::clear_textures(const ViewPortCurrentState& viewport_current_state,
+                                   bool grid_square_visible,
+                                   bool grid_square_adjacent,
+                                   bool grid_square_center,
                                    TextureGridSquare* const texture_grid_square,
                                    std::atomic<bool>& keep_running) {
   auto max_zoom_out_shift=texture_grid_square->parent_grid()->textures_zoom_out_shift_length()-1;
-  // never clear out top level index
-  for (INT64 zoom_out_shift=0L; zoom_out_shift < max_zoom_out_shift; zoom_out_shift++) {
+  auto current_zoom_out_shift=ViewPortTransferState::find_zoom_out_shift_bounded(viewport_current_state.zoom(),
+                                                                                 0,
+                                                                                 max_zoom_out_shift);
+  for (INT64 zoom_out_shift=0L; zoom_out_shift <= max_zoom_out_shift; zoom_out_shift++) {
     if (!keep_running) { break; }
-    auto dest_square=texture_grid_square->texture_array[zoom_out_shift];
-    if (!grid_square_visible) {
-      // unload anything not visible that is loadable or displayable
+    if (!this->_grid_square_current_load(grid_square_visible,
+                                         grid_square_adjacent,
+                                         grid_square_center,
+                                         max_zoom_out_shift,
+                                         current_zoom_out_shift,
+                                         zoom_out_shift)) {
+      auto dest_square=texture_grid_square->texture_array[zoom_out_shift];
       if (dest_square->is_loaded) {
         std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
         if (display_lock.try_lock()) {
@@ -202,8 +210,7 @@ void TextureUpdate::clear_textures(bool grid_square_visible,
   }
 }
 
-void TextureUpdate::add_filler_textures(bool grid_square_relevant,
-                                        const ViewPortCurrentState& viewport_current_state,
+void TextureUpdate::add_filler_textures(const ViewPortCurrentState& viewport_current_state,
                                         TextureGridSquare* const texture_grid_square,
                                         std::atomic<bool>& keep_running) {
   // this just sets the square as filler for now, but it is likely I
@@ -216,52 +223,15 @@ void TextureUpdate::add_filler_textures(bool grid_square_relevant,
     if (zoom_out_shift != max_zoom_out_index && zoom_out_shift != current_zoom_out_shift) {
       continue;
     }
-    auto load_all=(zoom_out_shift == max_zoom_out_index);
     auto dest_square=texture_grid_square->texture_array[zoom_out_shift];
-    if (load_all || grid_square_relevant) {
-      if (!dest_square->is_loaded && !dest_square->image_filler()) {
-        std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
-        if (display_lock.try_lock()) {
-          dest_square->set_image_filler();
-          display_lock.unlock();
-        }
+    if (!dest_square->is_loaded && !dest_square->image_filler()) {
+      std::unique_lock<std::mutex> display_lock(dest_square->display_mutex, std::defer_lock);
+      if (display_lock.try_lock()) {
+        dest_square->set_image_filler();
+        display_lock.unlock();
       }
     }
   }
-}
-
-bool TextureUpdate::_grid_square_visible(const GridIndex& grid_index,
-                                         const ViewPortCurrentState& viewport_current_state) {
-  auto i=grid_index.i();
-  auto j=grid_index.j();
-  auto xgrid=viewport_current_state.current_grid_coordinate().x();
-  auto ygrid=viewport_current_state.current_grid_coordinate().y();
-  auto return_value=(ViewPortTransferState::grid_index_visible(i, j,
-                                                               viewport_current_state) ||
-                     (i >= floor(xgrid)-1 && i <= floor(xgrid)+1 &&
-                      j >= floor(ygrid)-1 && j <= floor(ygrid)+1));
-  return return_value;
-}
-
-bool TextureUpdate::_grid_square_adjacent(const GridIndex& grid_index,
-                                          const ViewPortCurrentState& viewport_current_state) {
-  auto i=grid_index.i();
-  auto j=grid_index.j();
-  auto xgrid=viewport_current_state.current_grid_coordinate().x();
-  auto ygrid=viewport_current_state.current_grid_coordinate().y();
-  auto return_value = (i-1 <= ((int)xgrid) && i+1 >= ((int)xgrid) &&
-                       j-1 <= ((int)ygrid) && j+1 >= ((int)ygrid));
-  return return_value;
-}
-
-bool TextureUpdate::_grid_square_center(const GridIndex& grid_index,
-                                        const ViewPortCurrentState& viewport_current_state) {
-  auto i=grid_index.i();
-  auto j=grid_index.j();
-  auto xgrid=viewport_current_state.current_grid_coordinate().x();
-  auto ygrid=viewport_current_state.current_grid_coordinate().y();
-  auto return_value = (i == ((int)xgrid) && j == ((int)ygrid));
-  return return_value;
 }
 
 bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
@@ -406,4 +376,59 @@ bool TextureUpdate::load_texture (TextureGridSquareZoomLevel* const dest_square,
     dest_square->unload_all_textures();
   }
   return any_successful;
+}
+
+bool TextureUpdate::_grid_square_current_load(bool grid_square_visible,
+                                              bool grid_square_adjacent,
+                                              bool grid_square_center,
+                                              INT64 max_zoom_out_shift,
+                                              INT64 current_zoom_out_shift,
+                                              INT64 trial_zoom_out_shift) {
+  return (
+    // always load in everything bigger than or equal to max_zoom_out_shift
+    ((trial_zoom_out_shift >= max_zoom_out_shift) ||
+     // always load in everything for the center
+     grid_square_center ||
+     // load in adjacent if zoomed out equal to or more than current
+     // XXXX: may want to optionally disable loading all adjacent for certain sizes of images
+     //       and/or make good judgments on selectively loading tiles
+     (grid_square_adjacent
+      // commenting out this bumps memory usage from 70% to 80% on my
+      // 16GB macine for a typical dataset I use
+      // && (trial_zoom_out_shift >= current_zoom_out_shift)
+       ) ||
+     // only load in other visible at current zoom
+     (grid_square_visible && (trial_zoom_out_shift == current_zoom_out_shift))));
+}
+
+bool TextureUpdate::_grid_square_visible(const GridIndex& grid_index,
+                                         const ViewPortCurrentState& viewport_current_state) {
+  auto i=grid_index.i();
+  auto j=grid_index.j();
+  auto return_value=(ViewPortTransferState::grid_index_visible(i,
+                                                               j,
+                                                               viewport_current_state));
+  return return_value;
+}
+
+bool TextureUpdate::_grid_square_adjacent(const GridIndex& grid_index,
+                                          const ViewPortCurrentState& viewport_current_state) {
+  auto i=grid_index.i();
+  auto j=grid_index.j();
+  auto xgrid=viewport_current_state.current_grid_coordinate().x();
+  auto ygrid=viewport_current_state.current_grid_coordinate().y();
+  auto return_value = (i-1 <= ((int)xgrid) && i+1 >= ((int)xgrid) &&
+                       j-1 <= ((int)ygrid) && j+1 >= ((int)ygrid) &&
+                       i != (int)xgrid && j != (int)ygrid);
+  return return_value;
+}
+
+bool TextureUpdate::_grid_square_center(const GridIndex& grid_index,
+                                        const ViewPortCurrentState& viewport_current_state) {
+  auto i=grid_index.i();
+  auto j=grid_index.j();
+  auto xgrid=viewport_current_state.current_grid_coordinate().x();
+  auto ygrid=viewport_current_state.current_grid_coordinate().y();
+  auto return_value = (i == ((int)xgrid) && j == ((int)ygrid));
+  return return_value;
 }

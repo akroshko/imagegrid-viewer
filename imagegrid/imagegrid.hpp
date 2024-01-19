@@ -274,7 +274,7 @@ private:
    * @param grid_index The index of grid square to load.
    * @param zoom_out_shift_lower_limit Do not load if only things that
    *                                   need to be loaded are below this
-   *                                   limit
+   *                                   limit.
    * @param load_all specify if all valid files are to be loaded
    * @param grid_setup The object holding the data on the images in
    *                   the grid, including the filenames and grid

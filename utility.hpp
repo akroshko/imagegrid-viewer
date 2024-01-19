@@ -11,7 +11,7 @@
 /**
  * Pad a number and then reduce by a factor.
  *
- * @param x the number to pad and reduce
+ * @param x The number to pad and reduce.
  * @param reduction_factor The factor to reduce the number by.
  * @return The reduced and padded value.
  */

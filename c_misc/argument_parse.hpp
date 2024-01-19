@@ -14,7 +14,7 @@
  * @param use_cache Reference to set whether to use the cache.
  * @param successful Reference to set whether arguments were valid.
  * @param path_value Reference to set a path value.
- * @param filenames Reference to se a vector of filesnames
+ * @param filenames Reference to se a vector of filesnames.
  * @param text_filename Referenc to set a filename corresponding to a
  *        text file that contains the parameters for the imagegrid.
  * @return If arguments were parsed successfully.

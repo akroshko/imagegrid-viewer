@@ -280,6 +280,25 @@ bool GridIndexPointerProxy::operator!=(GridIndexPointerProxy& compare) {
   return this->_index_value != compare._index_value;
 }
 
+const GridIndexPointerProxy ImageGridFromViewportIterator::begin() const {
+  auto grid_index_pointer_proxy=GridIndexPointerProxy(dynamic_cast<const ImageGridFromViewportIterator*>(this),
+                                                      0);
+  return grid_index_pointer_proxy;
+}
+
+const GridIndexPointerProxy ImageGridFromViewportIterator::end() const {
+  auto grid_index_pointer_proxy=GridIndexPointerProxy(dynamic_cast<const ImageGridFromViewportIterator*>(this),
+                                                      this->_index_values.size());
+  return grid_index_pointer_proxy;
+}
+
+void ImageGridFromViewportIterator::_check_and_push_back(INT64 i,INT64 j) {
+  if (i >= 0 && i < this->_w &&
+      j >= 0 && j < this->_h) {
+    this->_index_values.push_back(GridIndex(i,j));
+  }
+}
+
 ImageGridFromViewportFullIterator::ImageGridFromViewportFullIterator(GridSetup* grid_setup,
                                                                      const ViewPortCurrentState& viewport_current_state) {
   // TODO: this is copied from an older iterator class to test the concept
@@ -314,36 +333,24 @@ ImageGridFromViewportFullIterator::ImageGridFromViewportFullIterator(GridSetup* 
     // start at top left corner, go to top right corner
     for (INT64 i=adjusted_grid_x-r; i <= adjusted_grid_x+r; i++) {
       auto j=adjusted_grid_y-r;
-      this->_index_values.push_back(GridIndex(i,j));
+      this->_check_and_push_back(i,j);
     }
     // go to bottom right corner
     for (INT64 j=adjusted_grid_y-r; j <= adjusted_grid_y+r; j++) {
       auto i=adjusted_grid_x+r;
-      this->_index_values.push_back(GridIndex(i,j));
+      this->_check_and_push_back(i,j);
     }
     // go to bottom left corner
     for (INT64 i=adjusted_grid_x+r; i >= adjusted_grid_x-r; i--) {
       auto j=adjusted_grid_y+r;
-      this->_index_values.push_back(GridIndex(i,j));
+      this->_check_and_push_back(i,j);
     }
     // go to top right corner
     for (INT64 j=adjusted_grid_y+r; j >= adjusted_grid_y-r; j--) {
       auto i=adjusted_grid_x-r;
-      this->_index_values.push_back(GridIndex(i,j));
+      this->_check_and_push_back(i,j);
     }
   }
-}
-
-const GridIndexPointerProxy ImageGridFromViewportFullIterator::begin() const {
-  auto grid_index_pointer_proxy=GridIndexPointerProxy(dynamic_cast<const ImageGridFromViewportIterator*>(this),
-                                                      0);
-  return grid_index_pointer_proxy;
-}
-
-const GridIndexPointerProxy ImageGridFromViewportFullIterator::end() const {
-  auto grid_index_pointer_proxy=GridIndexPointerProxy(dynamic_cast<const ImageGridFromViewportIterator*>(this),
-                                                      this->_index_values.size());
-  return grid_index_pointer_proxy;
 }
 
 ImageGridFromViewportVisibleIterator::ImageGridFromViewportVisibleIterator(GridSetup* grid_setup,
@@ -375,39 +382,59 @@ ImageGridFromViewportVisibleIterator::ImageGridFromViewportVisibleIterator(GridS
   for (INT64 r=0L; r <= r_visible; r++) {
     for (INT64 i=center_i-r; i <= center_i+r; i++) {
       auto j=center_j-r;
-      if (i >= 0 && i < w_image_grid && j >= 0 && j < h_image_grid) {
-        this->_index_values.push_back(GridIndex(i,j));
-      }
+      this->_check_and_push_back(i,j);
     }
     for (INT64 j=center_j-r; j <= center_j+r; j++) {
       auto i=center_i+r;
-      if (i >= 0 && i < w_image_grid && j >= 0 && j < h_image_grid) {
-        this->_index_values.push_back(GridIndex(i,j));
-      }
+      this->_check_and_push_back(i,j);
     }
     for (INT64 i=center_i+r; i >= center_i-r; i--) {
       auto j=center_j+r;
-      if (i >= 0 && i < w_image_grid && j >= 0 && j < h_image_grid) {
-        this->_index_values.push_back(GridIndex(i,j));
-      }
+      this->_check_and_push_back(i,j);
     }
     for (INT64 j=center_j+r; j >= center_j-r; j--) {
       auto i=center_i-r;
-      if (i >= 0 && i < w_image_grid && j >= 0 && j < h_image_grid) {
-        this->_index_values.push_back(GridIndex(i,j));
-      }
+      this->_check_and_push_back(i,j);
     }
   }
 }
 
-const GridIndexPointerProxy ImageGridFromViewportVisibleIterator::begin() const {
-  auto grid_index_pointer_proxy=GridIndexPointerProxy(dynamic_cast<const ImageGridFromViewportIterator*>(this),
-                                                      0);
-  return grid_index_pointer_proxy;
+ImageGridFromViewportAdjacentIterator::ImageGridFromViewportAdjacentIterator(GridSetup* grid_setup,
+                                                                             const ViewPortCurrentState& viewport_current_state) {
+  // TODO: this is copied from an older iterator class to test the concept
+  //       make a bit better
+  auto w_image_grid=grid_setup->grid_image_size().w();
+  auto h_image_grid=grid_setup->grid_image_size().h();
+  this->_w=w_image_grid;
+  this->_h=h_image_grid;
+  auto current_grid_x=viewport_current_state.current_grid_coordinate().x();
+  auto current_grid_y=viewport_current_state.current_grid_coordinate().y();
+  auto center_i=(INT64)floor(current_grid_x);
+  auto center_j=(INT64)floor(current_grid_y);
+  // TODO: going to change this ordering so visible ones happen first
+  this->_check_and_push_back(center_i-1,center_j);
+  this->_check_and_push_back(center_i-1,center_j-1);
+  this->_check_and_push_back(center_i,center_j-1);
+  this->_check_and_push_back(center_i+1,center_j-1);
+  this->_check_and_push_back(center_i+1,center_j);
+  this->_check_and_push_back(center_i+1,center_j+1);
+  this->_check_and_push_back(center_i,center_j+1);
+  this->_check_and_push_back(center_i-1,center_j+1);
 }
 
-const GridIndexPointerProxy ImageGridFromViewportVisibleIterator::end() const {
-  auto grid_index_pointer_proxy=GridIndexPointerProxy(dynamic_cast<const ImageGridFromViewportIterator*>(this),
-                                                      this->_index_values.size());
-  return grid_index_pointer_proxy;
+ImageGridFromViewportCenterIterator::ImageGridFromViewportCenterIterator(GridSetup* grid_setup,
+                                                                             const ViewPortCurrentState& viewport_current_state) {
+  // TODO: this is copied from an older iterator class to test the concept
+  //       make a bit better
+  auto w_image_grid=grid_setup->grid_image_size().w();
+  auto h_image_grid=grid_setup->grid_image_size().h();
+  this->_w=w_image_grid;
+  this->_h=h_image_grid;
+  auto current_grid_x=viewport_current_state.current_grid_coordinate().x();
+  auto current_grid_y=viewport_current_state.current_grid_coordinate().y();
+  auto center_i=(INT64)floor(current_grid_x);
+  auto center_j=(INT64)floor(current_grid_y);
+  // just one value
+  // TODO: eventually try closest square?
+  this->_check_and_push_back(center_i,center_j);
 }

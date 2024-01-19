@@ -41,7 +41,6 @@ public:
    *
    * @param grid The image grid.
    * @param texture_grid The texture grid.
-   *
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */
@@ -68,10 +67,12 @@ public:
   /**
    * Load textures based on the current coordinates and zoom level.
    *
-   * @param grid_square_relevant Is the current square relevant?
-   * @param viewport_current_state The current state of the viewport
+   * @param viewport_current_state The current state of the viewport.
    * @param grid_square The grid square.
    * @param texture_grid_square The texture grid square.
+   * @param grid_square_visible Is the current square a visible one?
+   * @param grid_square_adjacent Is the current square one of the ones adjacent to center?
+   * @param grid_square_center Is the current square one the center one?
    * @param texture_copy_count Keeps track of numbers of textures.
    *                           copied
    * @param row_buffer_temp A working buffer of size at least
@@ -79,34 +80,40 @@ public:
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */
-  void load_new_textures(bool grid_square_relevant,
-                         const ViewPortCurrentState& viewport_current_state,
+  void load_new_textures(const ViewPortCurrentState& viewport_current_state,
                          const ImageGridSquare* const grid_square,
                          TextureGridSquare* const texture_grid_square,
+                         bool grid_square_visible,
+                         bool grid_square_adjacent,
+                         bool grid_square_center,
                          INT64& texture_copy_count,
                          INT64* const row_buffer_temp,
                          std::atomic<bool>& keep_running);
   /**
    * Clear textures based on the current coordinates.
    *
-   * @param grid_square_visible Is the current square visible?
+   * @param viewport_current_state The current state of the viewport.
+   * @param grid_square_visible Is the current square a visible one?
+   * @param grid_square_adjacent Is the current square one of the ones adjacent to center?
+   * @param grid_square_center Is the current square one the center one?
    * @param texture_grid_square The texture grid square.
    * @param keeping_running flag to stop what's happening, generally to indicate program exit
    */
-  void clear_textures(bool grid_square_visible,
+  void clear_textures(const ViewPortCurrentState& viewport_current_state,
+                      bool grid_square_visible,
+                      bool grid_square_adjacent,
+                      bool grid_square_center,
                       TextureGridSquare* const texture_grid_square,
                       std::atomic<bool>& keep_running);
   /**
    * Add filler textures where nothing can be loaded.
    *
-   * @param grid_square_relevant Is the current square relevant?
    * @param viewport_current_state The current state of the viewport.
    * @param texture_grid_square The texture grid square.
    * @param keeping_running Set true to stop what's happening,
    *                        generally to indicate program exit.
    */
-  void add_filler_textures(bool grid_square_relevant,
-                           const ViewPortCurrentState& viewport_current_state,
+  void add_filler_textures(const ViewPortCurrentState& viewport_current_state,
                            TextureGridSquare* const texture_grid_square,
                            std::atomic<bool>& keep_running);
   /**
@@ -122,6 +129,13 @@ public:
                            INT64 zoom_out_shift,
                            INT64* const row_buffer);
 private:
+  /** Check whether a texture sould be or stay loaded. */
+  bool _grid_square_current_load(bool grid_square_visible,
+                                 bool grid_square_adjacent,
+                                 bool grid_square_center,
+                                 INT64 max_zoom_out_shift,
+                                 INT64 current_zoom_out_shift,
+                                 INT64 trial_zoom_out_shift);
   /** Threadsafe class for getting the state of the viewport */
   std::shared_ptr<ViewPortTransferState> _viewport_current_state_texturegrid_update;
   bool _grid_square_visible(const GridIndex& grid_index,

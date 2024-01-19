@@ -62,7 +62,7 @@ public:
   /**
    * Process raw joystick values.
    *
-   * @param jaxis_original The raw joystick axis value
+   * @param jaxis_original The raw joystick axis value.
    * @return the processed value, generally with deadzones for now.
    */
   Sint16 get_jaxis(Sint16 jaxis_original);
