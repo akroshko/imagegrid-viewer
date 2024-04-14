@@ -1,12 +1,12 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
-#include "../common.hpp"
-#include "../utility.hpp"
-#include "../datatypes/coordinates.hpp"
-#include "../datatypes/containers.hpp"
-#include "../c_io_net/fileload.hpp"
-#include "../imagegrid/imagegrid_load_file_data.hpp"
-#include "../c_misc/buffer_manip.hpp"
+#include "../src/common.hpp"
+#include "../src/utility.hpp"
+#include "../src/datatypes/coordinates.hpp"
+#include "../src/datatypes/containers.hpp"
+#include "../src/c_io_net/fileload.hpp"
+#include "../src/imagegrid/imagegrid_load_file_data.hpp"
+#include "../src/c_misc/buffer_manip.hpp"
 // C++ headers
 #include <memory>
 

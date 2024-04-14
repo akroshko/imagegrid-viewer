@@ -1,4 +1,4 @@
-.pn# About imagegrid-viewer: An application for viewing large images in a grid.
+# About imagegrid-viewer: An application for viewing large images in a grid.
 
 The application *imagegrid-viewer* is written in C++ for viewing large
 images in a grid.  It was inspired from wanting an application for
